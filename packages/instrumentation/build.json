@@ -1,0 +1,10 @@
+{
+  "targets": [
+    {
+      "format": "esm"
+    },
+    {
+      "format": "cjs"
+    }
+  ]
+}

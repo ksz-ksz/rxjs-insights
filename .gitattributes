@@ -1,0 +1,37 @@
+*.txt                           text eol=lf
+*.md                            text eol=lf
+*.csv                           text eol=lf
+*.json                          text eol=lf
+*.xml                           text eol=lf
+*.yaml                          text eol=lf
+*.yml                           text eol=lf
+
+*.conf                          text eol=lf
+*.config                        text eol=lf
+*.editorconfig                  text eol=lf
+*.git*                          text eol=lf
+LICENSE                         text eol=lf
+
+*.sh                            text eol=lf
+
+*.bat                           text eol=crlf
+*.cmd                           text eol=crlf
+*.ps1                           text eol=crlf
+
+gradlew                         text eol=lf
+*.gradle                        text eol=lf
+*.gradle.kts                    text eol=lf
+*.groovy                        text eol=lf
+jenkinsfile                     text eol=lf
+Jenkinsfile                     text eol=lf
+
+*.css                           text eol=lf diff=css
+*.gss                           text eol=lf
+*.htm                           text eol=lf diff=html
+*.html                          text eol=lf diff=html
+*.js                            text eol=lf
+*.jsx                           text eol=lf
+*.scss                          text eol=lf
+*.shtml                         text eol=lf diff=html
+*.ts                            text eol=lf
+*.tsx                           text eol=lf

@@ -1,0 +1,88 @@
+import { Env, InstrumentationContext, setGlobalEnv } from './env';
+import { createInstrumentedSubscribe } from './instrumented-subscribe';
+import { createInstrumentedSubscriberConstructor } from './instrumented-subscriber';
+import { Recorder } from './recorder';
+import { Locator } from './locator';
+import { Tracer } from './tracer';
+import {
+  Constructor,
+  ObservableLike,
+  SubjectLike,
+  SubscriberLike,
+} from './types';
+import { createInstrumentConstructor } from './instrument-constructor';
+import { createInstrumentCreator } from './instrument-creator';
+import { createInstrumentOperator } from './instrument-operator';
+import { createInstrumentSingleton } from './instrument-singleton';
+import {
+  createInstrumentedSubjectComplete,
+  createInstrumentedSubjectError,
+  createInstrumentedSubjectNext,
+} from './instrumented-subject';
+
+export interface Config {
+  Observable: Constructor<ObservableLike>;
+  Subject: Constructor<SubjectLike>;
+  Subscriber: Constructor<SubscriberLike>;
+  tracer: Tracer;
+  locator: Locator;
+  recorder: Recorder;
+}
+
+export function instrument({
+  Observable,
+  Subject,
+  Subscriber,
+  tracer,
+  locator,
+  recorder,
+}: Config): Env {
+  const context: InstrumentationContext = {
+    Subject,
+    recorder,
+    tracer,
+    locator,
+  };
+
+  Observable.prototype.subscribe = createInstrumentedSubscribe(
+    context,
+    Observable.prototype.subscribe,
+    createInstrumentedSubscriberConstructor(Subscriber)
+  );
+
+  Subject.prototype.next = createInstrumentedSubjectNext(
+    context,
+    Subject.prototype.next
+  );
+
+  Subject.prototype.error = createInstrumentedSubjectError(
+    context,
+    Subject.prototype.error
+  );
+
+  Subject.prototype.complete = createInstrumentedSubjectComplete(
+    context,
+    Subject.prototype.complete
+  );
+
+  if (locator.init) {
+    locator.init(context);
+  }
+  if (tracer.init) {
+    tracer.init(context);
+  }
+  if (recorder.init) {
+    recorder.init(context);
+  }
+
+  return {
+    instrumentConstructor: createInstrumentConstructor(context),
+    instrumentCreator: createInstrumentCreator(context),
+    instrumentOperator: createInstrumentOperator(context),
+    instrumentSingleton: createInstrumentSingleton(context),
+  };
+}
+
+export function install(config: Config) {
+  setGlobalEnv(instrument(config));
+}

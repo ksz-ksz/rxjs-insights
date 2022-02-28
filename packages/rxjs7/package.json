@@ -1,0 +1,68 @@
+{
+  "name": "@rxjs-insights/rxjs7",
+  "version": "0.1.0",
+  "description": "See through the observables.",
+  "keywords": [
+    "rxjs",
+    "debug",
+    "debugger",
+    "devtools"
+  ],
+  "homepage": "https://github.com/ksz-ksz/rxjs-insights",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ksz-ksz/rxjs-insights"
+  },
+  "bugs": {
+    "url": "https://github.com/ksz-ksz/rxjs-insights/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "ksz ksz",
+    "url": "https://github.com/ksz-ksz"
+  },
+  "files": [
+    "dist/",
+    "rxjs/"
+  ],
+  "module": "./dist/esm/index.js",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": "./dist/esm/index.js",
+      "node": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.js"
+    },
+    "./rxjs": {
+      "browser": "./dist/esm/rxjs/index.js",
+      "node": "./dist/cjs/rxjs/index.js",
+      "types": "./dist/types/rxjs/index.d.ts"
+    },
+    "./rxjs/operators": {
+      "browser": "./dist/esm/rxjs/operators/index.js",
+      "node": "./dist/cjs/rxjs/operators/index.js",
+      "types": "./dist/types/rxjs/operators/index.d.ts"
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "npm run build:clean && npm run build:js && npm run build:ts",
+    "build:clean": "rimraf dist",
+    "build:js": "node ../../scripts/build-lib.js",
+    "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types",
+    "publish-package": "npm publish"
+  },
+  "dependencies": {
+    "@rxjs-insights/instrumentation": "0.1.0",
+    "@rxjs-insights/recorder": "0.1.0",
+    "@rxjs-insights/tracer": "0.1.0",
+    "@rxjs-insights/locator": "0.1.0"
+  },
+  "devDependencies": {
+    "rxjs": "^7"
+  },
+  "peerDependencies": {
+    "rxjs": "^7"
+  }
+}

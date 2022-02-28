@@ -1,0 +1,14 @@
+{
+  "name": "@rxjs-insights/rxjs6-rxjs-operators",
+  "module": "../../dist/esm/rxjs/operators/index.js",
+  "main": "../../dist/cjs/rxjs/operators/index.js",
+  "types": "../../dist/types/rxjs/operators/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": "../../dist/esm/rxjs/operators/index.js",
+      "node": "../../dist/cjs/rxjs/operators/index.js",
+      "types": "../../dist/types/rxjs/operators/index.d.ts"
+    }
+  },
+  "sideEffects": false
+}

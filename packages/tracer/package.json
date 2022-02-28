@@ -1,0 +1,52 @@
+{
+  "name": "@rxjs-insights/tracer",
+  "version": "0.1.0",
+  "description": "The default implementation of the rxjs-insights' tracer.",
+  "keywords": [
+    "rxjs",
+    "debug",
+    "debugger",
+    "devtools"
+  ],
+  "homepage": "https://github.com/ksz-ksz/rxjs-insights",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ksz-ksz/rxjs-insights"
+  },
+  "bugs": {
+    "url": "https://github.com/ksz-ksz/rxjs-insights/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "ksz ksz",
+    "url": "https://github.com/ksz-ksz"
+  },
+  "files": [
+    "dist/"
+  ],
+  "module": "./dist/esm/index.js",
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": "./dist/esm/index.js",
+      "node": "./dist/cjs/index.js",
+      "types": "./dist/types/index.d.js"
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "npm run build:clean && npm run build:js && npm run build:ts",
+    "build:clean": "rimraf dist",
+    "build:js": "node ../../scripts/build-lib.js",
+    "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types",
+    "publish-package": "npm publish"
+  },
+  "peerDependencies": {
+    "@rxjs-insights/instrumentation": "0.1.0"
+  },
+  "devDependencies": {
+    "@rxjs-insights/instrumentation": "0.1.0",
+    "zone.js": "^0.11.4"
+  }
+}

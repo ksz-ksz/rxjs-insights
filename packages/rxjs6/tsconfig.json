@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@rxjs-insights/rxjs-alias": ["./packages/rxjs6/node_modules/rxjs"],
+      "@rxjs-insights/rxjs-alias/operators": ["./packages/rxjs6/node_modules/rxjs/operators"],
+    }
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

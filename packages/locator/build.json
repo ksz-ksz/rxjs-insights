@@ -1,0 +1,20 @@
+{
+  "targets": [
+    {
+      "format": "esm",
+      "exclude": "src/lib/source-map.ts"
+    },
+    {
+      "format": "esm",
+      "include": "src/lib/source-map.ts",
+      "bundle": true,
+      "alias": {
+        "fs": "empty.js",
+        "path": "empty.js"
+      }
+    },
+    {
+      "format": "cjs"
+    }
+  ]
+}

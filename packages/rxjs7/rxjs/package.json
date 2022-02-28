@@ -1,0 +1,14 @@
+{
+  "name": "@rxjs-insights/rxjs6-rxjs",
+  "module": "../dist/esm/rxjs/index.js",
+  "main": "../dist/cjs/rxjs/index.js",
+  "types": "../dist/types/rxjs/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": "../dist/esm/rxjs/index.js",
+      "node": "../dist/cjs/rxjs/index.js",
+      "types": "../dist/types/rxjs/index.d.ts"
+    }
+  },
+  "sideEffects": false
+}

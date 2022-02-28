@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist/tsc",
+    "paths": {
+      "@rxjs-insights/rxjs-alias": ["node_modules/rxjs"],
+      "@rxjs-insights/rxjs-alias/operators": ["node_modules/rxjs/operators"],
+      "rxjs": ["node_modules/@rxjs-insights/rxjs7/rxjs"],
+      "rxjs/operators": ["node_modules/@rxjs-insights/rxjs7/rxjs/operators"]
+    }
+  },
+  "files": [
+    "src/index.ts", "src/polyfills.ts"
+  ],
+  "exclude": [
+    "**/*"
+  ],
+}

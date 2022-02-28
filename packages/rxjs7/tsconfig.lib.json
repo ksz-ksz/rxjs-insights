@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "files": [
+    "src/index.ts",
+    "src/rxjs/index.ts",
+    "src/rxjs/operators/index.ts"
+  ],
+  "exclude": [
+    "**/*"
+  ]
+}
