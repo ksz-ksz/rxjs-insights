@@ -3,7 +3,7 @@ import {
   destinations,
   events,
   flow,
-  instances,
+  subscribers,
   precedingEvents,
   sources,
   succeedingEvents,
@@ -58,7 +58,7 @@ export function playground() {
 
   setTimeout(() => {
     flow(observable);
-    instances(observable);
+    subscribers(observable);
     sources(observable);
     destinations(observable);
     events(observable);
