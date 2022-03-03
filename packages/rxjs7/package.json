@@ -51,7 +51,7 @@
     "build:clean": "rimraf dist",
     "build:js": "node ../../scripts/build-lib.js",
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types",
-    "publish-package": "npm publish"
+    "publish-package": "npm publish --access public"
   },
   "dependencies": {
     "@rxjs-insights/instrumentation": "0.1.0",
