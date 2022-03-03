@@ -4,7 +4,7 @@ import {
   Subscriber,
   SubscriberEvent,
 } from '@rxjs-insights/recorder';
-import { instanceSubscribers, observableSubscribers } from './instances';
+import { subscriberSubscribers, observableSubscribers } from './subscribers';
 import { subscriberSources, observableSources } from './sources';
 import {
   eventPrecedingEvents,
@@ -66,7 +66,7 @@ export class SubscriberMore {
     constructor(readonly target: Subscriber) {}
 
     get ['inspect subscribers']() {
-      instanceSubscribers(this.target);
+      subscriberSubscribers(this.target);
       return 'Done!';
     }
 

@@ -12,7 +12,7 @@ import {
 import { isObservableTarget, isSubscriberTarget } from './target';
 import { getSubscriber } from './get-subscriber';
 
-export function instanceSubscribers(subscriber: Subscriber) {
+export function subscriberSubscribers(subscriber: Subscriber) {
   console.groupCollapsed(
     ...formatSubscriber(subscriber, true, 'Subscribers of:')
   );
@@ -35,9 +35,9 @@ export function observableSubscribers(observable: Observable) {
   console.groupEnd();
 }
 
-export function instances(target: ObservableLike | SubscriptionLike) {
+export function subscribers(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
-    instanceSubscribers(getSubscriber(target));
+    subscriberSubscribers(getSubscriber(target));
   } else if (isObservableTarget(target)) {
     observableSubscribers(getObservable(target));
   }
