@@ -25,7 +25,9 @@ export function playground() {
   // subject1.next(2);
   // subject2.next('b');
 
-  const subject = new Subject<number>();
+  class NumberSubject extends Subject<number> {}
+
+  const subject = new NumberSubject();
   subject.subscribe();
   subject.subscribe();
   subject.subscribe();
