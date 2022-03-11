@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/rxjs6",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "See through the observables.",
   "keywords": [
     "rxjs",
@@ -51,6 +51,7 @@
     "build:clean": "rimraf dist",
     "build:js": "node ../../scripts/build-lib.js",
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types",
+    "version-package": "npm version",
     "publish-package": "npm publish --access public"
   },
   "dependencies": {

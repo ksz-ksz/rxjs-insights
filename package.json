@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "build": "npm run build --workspaces",
+    "version-packages": "npm run version-package --workspaces --if-present",
     "publish-packages": "npm run publish-package --workspaces --if-present"
   },
   "private": true,

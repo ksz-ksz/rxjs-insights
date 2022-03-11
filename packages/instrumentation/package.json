@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/instrumentation",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The heart of the rxjs-insights.",
   "keywords": [
     "rxjs",
@@ -40,6 +40,7 @@
     "build:clean": "rimraf dist",
     "build:js": "node ../../scripts/build-lib.js",
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types",
+    "version-package": "npm version",
     "publish-package": "npm publish --access public"
   },
   "peerDependencies": {
