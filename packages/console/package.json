@@ -43,10 +43,8 @@
     "version-package": "npm version",
     "publish-package": "npm publish --access public"
   },
-  "peerDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.2"
-  },
-  "devDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.2"
+  "dependencies": {
+    "@rxjs-insights/instrumentation": "0.1.2",
+    "@rxjs-insights/recorder": "0.1.2"
   }
 }
