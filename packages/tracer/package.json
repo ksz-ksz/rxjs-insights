@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/tracer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "The default implementation of the rxjs-insights' tracer.",
   "keywords": [
     "rxjs",
@@ -44,10 +44,10 @@
     "publish-package": "npm publish --access public"
   },
   "peerDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.0"
+    "@rxjs-insights/instrumentation": "0.1.2"
   },
   "devDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.0",
+    "@rxjs-insights/instrumentation": "0.1.2",
     "zone.js": "^0.11.4"
   }
 }

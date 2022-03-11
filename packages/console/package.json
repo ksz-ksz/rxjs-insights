@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/console",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "See the data gathered by rxjs-insights right in the console.",
   "keywords": [
     "rxjs",
@@ -44,9 +44,9 @@
     "publish-package": "npm publish --access public"
   },
   "peerDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.0"
+    "@rxjs-insights/instrumentation": "0.1.2"
   },
   "devDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.0"
+    "@rxjs-insights/instrumentation": "0.1.2"
   }
 }

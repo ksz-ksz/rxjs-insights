@@ -6,7 +6,7 @@
   },
   "dependencies": {
     "rxjs": "^7.5.4",
-    "@rxjs-insights/rxjs7": "0.1.0",
-    "@rxjs-insights/console": "0.1.0"
+    "@rxjs-insights/rxjs7": "0.1.2",
+    "@rxjs-insights/console": "0.1.2"
   }
 }

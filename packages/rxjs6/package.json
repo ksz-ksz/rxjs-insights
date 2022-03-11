@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/rxjs6",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "See through the observables.",
   "keywords": [
     "rxjs",
@@ -55,10 +55,10 @@
     "publish-package": "npm publish --access public"
   },
   "dependencies": {
-    "@rxjs-insights/instrumentation": "0.1.0",
-    "@rxjs-insights/recorder": "0.1.0",
-    "@rxjs-insights/tracer": "0.1.0",
-    "@rxjs-insights/locator": "0.1.0"
+    "@rxjs-insights/instrumentation": "0.1.2",
+    "@rxjs-insights/recorder": "0.1.2",
+    "@rxjs-insights/tracer": "0.1.2",
+    "@rxjs-insights/locator": "0.1.2"
   },
   "devDependencies": {
     "rxjs": "^6"
