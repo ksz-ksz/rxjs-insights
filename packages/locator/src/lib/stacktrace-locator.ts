@@ -49,18 +49,16 @@ export class StacktraceLocator implements Locator {
   private getOriginalLocation(
     generatedLocation: Location | undefined
   ): Promise<Location | undefined> {
+    const cacheKey = `${generatedLocation?.file}:${generatedLocation?.line}:${generatedLocation?.column}`;
     try {
       if (generatedLocation === undefined) {
         return Promise.resolve(undefined);
-      } else if (
-        this.originalLocationsCache.hasOwnProperty(generatedLocation.toString())
-      ) {
-        return this.originalLocationsCache[generatedLocation.toString()];
+      } else if (this.originalLocationsCache.hasOwnProperty(cacheKey)) {
+        return this.originalLocationsCache[cacheKey];
       } else {
         const originalLocationPromise =
           this.resolveOriginalLocation(generatedLocation);
-        this.originalLocationsCache[generatedLocation.toString()] =
-          originalLocationPromise;
+        this.originalLocationsCache[cacheKey] = originalLocationPromise;
         return originalLocationPromise;
       }
     } catch (e) {
