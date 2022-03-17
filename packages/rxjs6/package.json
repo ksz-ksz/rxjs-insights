@@ -43,9 +43,13 @@
       "browser": "./dist/esm/rxjs/operators/index.js",
       "node": "./dist/cjs/rxjs/operators/index.js",
       "types": "./dist/types/rxjs/operators/index.d.ts"
-    }
+    },
+    "./package.json": "./package.json"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/esm/index.js",
+    "./dist/cjs/index.js"
+  ],
   "scripts": {
     "build": "npm run build:clean && npm run build:js && npm run build:ts",
     "build:clean": "rimraf dist",

@@ -6,33 +6,26 @@ import {
   queueScheduler,
   Subject,
   Subscriber,
-} from '@rxjs-insights/rxjs-alias';
-import {
-  install as _install,
-  Locator,
-  Recorder,
-  Tracer,
-} from '@rxjs-insights/instrumentation';
+} from '@rxjs-insights/rxjs-alias-module';
+import { install } from '@rxjs-insights/instrumentation';
 import { getRecorder } from '@rxjs-insights/recorder';
 import { getLocator } from '@rxjs-insights/locator';
 import { getTracer } from '@rxjs-insights/tracer';
 
-export function install({
-  recorder = getRecorder(),
-  locator = getLocator(),
-  tracer = getTracer({
-    asyncScheduler,
-    asapScheduler,
-    queueScheduler,
-    animationFrameScheduler,
-  }),
-}: { recorder?: Recorder; locator?: Locator; tracer?: Tracer } = {}) {
-  _install({
+declare const INSTALL_RXJS_INSIGHTS: boolean | undefined;
+
+if (typeof INSTALL_RXJS_INSIGHTS !== 'undefined' && INSTALL_RXJS_INSIGHTS) {
+  install({
     Observable,
     Subject,
     Subscriber,
-    recorder,
-    locator,
-    tracer,
+    recorder: getRecorder(),
+    locator: getLocator(),
+    tracer: getTracer({
+      asyncScheduler,
+      asapScheduler,
+      queueScheduler,
+      animationFrameScheduler,
+    }),
   });
 }

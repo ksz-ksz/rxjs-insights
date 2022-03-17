@@ -28,8 +28,8 @@ npm install @rxjs-insights/rxjs7 --save-dev
 ### Set up module aliases
 
 The goal is to set up the aliases as follows:
-* `@rxjs-insights/rxjs-alias` should resolve to `rxjs`,
-* `@rxjs-insights/rxjs-alias/operators` should resolve to `rxjs/operators`,
+* `@rxjs-insights/rxjs-alias-module` should resolve to `rxjs`,
+* `@rxjs-insights/rxjs-alias-module/operators` should resolve to `rxjs/operators`,
 * `rxjs` should resolve to `@rxjs-insights/rxjs7/rxjs`,
 * `rxjs/operators` should resolve to `@rxjs-insights/rxjs7/rxjs/operators`.
 
@@ -44,8 +44,8 @@ If your build process supports Typescript's path mapping resolution (e.g. Angula
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@rxjs-insights/rxjs-alias": ["node_modules/rxjs"],
-      "@rxjs-insights/rxjs-alias/operators": ["node_modules/rxjs/operators"],
+      "@rxjs-insights/rxjs-alias-module": ["node_modules/rxjs"],
+      "@rxjs-insights/rxjs-alias-module/operators": ["node_modules/rxjs/operators"],
       "rxjs": ["node_modules/@rxjs-insights/rxjs7/rxjs"],
       "rxjs/operators": ["node_modules/@rxjs-insights/rxjs7/rxjs/operators"]
     }

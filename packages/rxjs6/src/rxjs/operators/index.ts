@@ -1,3 +1,4 @@
+import '@rxjs-insights/rxjs-install-module';
 import {
   audit as _audit,
   auditTime as _auditTime,
@@ -102,7 +103,7 @@ import {
   withLatestFrom as _withLatestFrom,
   zip as _zip,
   zipAll as _zipAll,
-} from '@rxjs-insights/rxjs-alias/operators';
+} from '@rxjs-insights/rxjs-alias-module/operators';
 import { operator } from '@rxjs-insights/instrumentation';
 
 export const audit = operator('audit', _audit);
@@ -218,4 +219,4 @@ export const withLatestFrom = operator('withLatestFrom', _withLatestFrom);
 export const zip = operator('zip', _zip);
 export const zipAll = operator('zipAll', _zipAll);
 
-export * from '@rxjs-insights/rxjs-alias/operators';
+export * from '@rxjs-insights/rxjs-alias-module/operators';

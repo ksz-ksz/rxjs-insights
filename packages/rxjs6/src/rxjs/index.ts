@@ -1,3 +1,4 @@
+import '@rxjs-insights/rxjs-install-module';
 import {
   AsyncSubject as _AsyncSubject,
   BehaviorSubject as _BehaviorSubject,
@@ -29,7 +30,7 @@ import {
   timer as _timer,
   using as _using,
   zip as _zip,
-} from '@rxjs-insights/rxjs-alias';
+} from '@rxjs-insights/rxjs-alias-module';
 import {
   constructor,
   creator,
@@ -82,4 +83,4 @@ export const using = creator('using', _using);
 export const zip = creator('zip', _zip);
 export const scheduled = creator('scheduled', _scheduled);
 
-export * from '@rxjs-insights/rxjs-alias';
+export * from '@rxjs-insights/rxjs-alias-module';

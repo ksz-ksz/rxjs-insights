@@ -1,7 +1,7 @@
 {
-  "name": "@rxjs-insights/rxjs7",
+  "name": "@rxjs-insights/plugin-webpack5",
   "version": "0.1.3",
-  "description": "See through the observables.",
+  "description": "The heart of the rxjs-insights.",
   "keywords": [
     "rxjs",
     "debug",
@@ -22,34 +22,17 @@
     "url": "https://github.com/ksz-ksz"
   },
   "files": [
-    "dist/",
-    "rxjs/"
+    "dist/"
   ],
-  "module": "./dist/esm/index.js",
   "main": "./dist/cjs/index.js",
   "types": "./dist/types/index.d.ts",
   "exports": {
     ".": {
-      "browser": "./dist/esm/index.js",
       "node": "./dist/cjs/index.js",
       "types": "./dist/types/index.d.js"
-    },
-    "./rxjs": {
-      "browser": "./dist/esm/rxjs/index.js",
-      "node": "./dist/cjs/rxjs/index.js",
-      "types": "./dist/types/rxjs/index.d.ts"
-    },
-    "./rxjs/operators": {
-      "browser": "./dist/esm/rxjs/operators/index.js",
-      "node": "./dist/cjs/rxjs/operators/index.js",
-      "types": "./dist/types/rxjs/operators/index.d.ts"
-    },
-    "./package.json": "./package.json"
+    }
   },
-  "sideEffects": [
-    "./dist/esm/index.js",
-    "./dist/cjs/index.js"
-  ],
+  "sideEffects": false,
   "scripts": {
     "build": "npm run build:clean && npm run build:js && npm run build:ts",
     "build:clean": "rimraf dist",
@@ -58,16 +41,10 @@
     "version-package": "npm version",
     "publish-package": "npm publish --access public"
   },
-  "dependencies": {
-    "@rxjs-insights/instrumentation": "0.1.3",
-    "@rxjs-insights/recorder": "0.1.3",
-    "@rxjs-insights/tracer": "0.1.3",
-    "@rxjs-insights/locator": "0.1.3"
+  "peerDependencies": {
+    "webpack": ">=5.0.0"
   },
   "devDependencies": {
-    "rxjs": "^7"
-  },
-  "peerDependencies": {
-    "rxjs": "^7"
+    "webpack": "5.70.0"
   }
 }
