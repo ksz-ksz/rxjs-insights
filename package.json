@@ -5,7 +5,7 @@
     "build": "npm run build --workspaces",
     "changeset": "changeset",
     "changeset-version": "changeset version",
-    "changeset-release": "changeset publish"
+    "changeset-publish": "changeset publish"
   },
   "private": true,
   "workspaces": {
