@@ -38,9 +38,9 @@ export function playground() {
     )
     .subscribe(subject);
 
-  subject.subscribe();
-  subject.subscribe();
-  subject.subscribe();
+  subject.subscribe(subscriber('1'));
+  subject.subscribe(subscriber('2'));
+  subject.subscribe(subscriber('3'));
 
   subject.next(0);
 

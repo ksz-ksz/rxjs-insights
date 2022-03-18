@@ -16,9 +16,10 @@
       "packages/console",
       "packages/rxjs6",
       "packages/rxjs7",
+      "packages/plugin-esbuild",
       "packages/plugin-webpack5",
-      "packages/playground-webpack5",
-      "packages/playground"
+      "packages/playground-esbuild",
+      "packages/playground-webpack5"
     ]
   },
   "devDependencies": {

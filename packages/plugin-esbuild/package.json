@@ -1,7 +1,7 @@
 {
-  "name": "@rxjs-insights/plugin-webpack5",
+  "name": "@rxjs-insights/plugin-esbuild",
   "version": "0.1.3",
-  "description": "Setup RxJS Insights easily in Webpack.",
+  "description": "Setup RxJS Insights easily in esbuild.",
   "keywords": [
     "rxjs",
     "debug",
@@ -42,9 +42,9 @@
     "publish-package": "npm publish --access public"
   },
   "peerDependencies": {
-    "webpack": ">=5.0.0"
+    "esbuild": ">=0.0.0"
   },
   "devDependencies": {
-    "webpack": "5.70.0"
+    "esbuild": "0.14.27"
   }
 }
