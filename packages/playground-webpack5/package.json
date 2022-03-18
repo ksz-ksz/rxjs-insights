@@ -4,6 +4,7 @@
   "scripts": {
     "build": "webpack"
   },
+  "private": true,
   "dependencies": {
     "rxjs": "^7.5.4",
     "@rxjs-insights/rxjs7": "0.1.3",

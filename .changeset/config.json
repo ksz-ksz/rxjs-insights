@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@1.7.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@rxjs-insights/instrumentation",
+      "@rxjs-insights/recorder",
+      "@rxjs-insights/tracer",
+      "@rxjs-insights/locator",
+      "@rxjs-insights/console",
+      "@rxjs-insights/rxjs6",
+      "@rxjs-insights/rxjs7",
+      "@rxjs-insights/plugin-esbuild",
+      "@rxjs-insights/plugin-webpack5"
+    ]
+  ],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "master",
+  "updateInternalDependencies": "patch",
+  "ignore": []
+}
