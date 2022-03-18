@@ -1,13 +1,13 @@
 {
   "name": "playground-esbuild",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "build": "node build.js"
   },
   "dependencies": {
     "rxjs": "^7.5.4",
-    "@rxjs-insights/rxjs7": "0.1.3",
-    "@rxjs-insights/console": "0.1.3"
+    "@rxjs-insights/rxjs7": "0.1.4",
+    "@rxjs-insights/console": "0.1.4"
   }
 }
