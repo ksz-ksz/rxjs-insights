@@ -215,6 +215,11 @@ export function observableFlow(observable: Observable) {
   console.groupEnd();
 }
 
+/**
+ * For the subscriber associated with the `Subscription` or for all subscribers of the `Observable` shows a time-ordered cascade of events that are directly or indirectly related to the events of the target subscriber(s).
+ *
+ * @param target - the `Subscription` or `Observable` instance to inspect.
+ */
 export function flow(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
     subscriberFlow(getSubscriber(target));

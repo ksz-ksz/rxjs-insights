@@ -5,4 +5,3 @@ export { flow } from './lib/flow';
 export { subscribers } from './lib/subscribers';
 export { precedingEvents } from './lib/preceding-events';
 export { sources } from './lib/sources';
-export { install } from './lib/install';

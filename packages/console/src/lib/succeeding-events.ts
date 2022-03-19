@@ -31,6 +31,11 @@ export function observableSucceedingEvents(observable: Observable) {
   observableConnectedEvents('Succeeding', getSucceedingEvents, observable);
 }
 
+/**
+ * For each event of the subscriber associated with the `Subscription` or for all subscribers of the `Observable` shows a tree of events that succeed given event.
+ *
+ * @param target - the `Subscription` or `Observable` instance to inspect.
+ */
 export function succeedingEvents(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
     subscriberSucceedingEvents(getSubscriber(target));

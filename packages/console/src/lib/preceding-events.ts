@@ -31,6 +31,11 @@ export function observablePrecedingEvents(observable: Observable) {
   observableConnectedEvents('Preceding', getPrecedingEvents, observable);
 }
 
+/**
+ * For each event of the subscriber associated with the `Subscription` or for all subscribers of the `Observable` shows a tree of events that precede given event.
+ *
+ * @param target - the `Subscription` or `Observable` instance to inspect.
+ */
 export function precedingEvents(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
     subscriberPrecedingEvents(getSubscriber(target));

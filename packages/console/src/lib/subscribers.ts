@@ -35,6 +35,11 @@ export function observableSubscribers(observable: Observable) {
   console.groupEnd();
 }
 
+/**
+ * Shows the subscriber associated with the target `Subscription` or subscribers of the target `Observable`.
+ *
+ * @param target - the `Subscription` or `Observable` instance to inspect.
+ */
 export function subscribers(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
     subscriberSubscribers(getSubscriber(target));

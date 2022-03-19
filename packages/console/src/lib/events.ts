@@ -49,6 +49,11 @@ export function observableEvents(observable: Observable) {
   console.groupEnd();
 }
 
+/**
+ * For the subscriber associated with the `Subscription` or for all subscribers of the `Observable` shows events originating from given subscriber.
+ *
+ * @param target - the `Subscription` or `Observable` instance to inspect.
+ */
 export function events(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
     subscriberEvents(getSubscriber(target));
