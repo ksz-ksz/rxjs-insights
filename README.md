@@ -164,7 +164,7 @@ new RxjsInsightsPlugin({installModule: path.join(__dirname, 'install.js')});
 
 ## Console
 
-The `@rxjs-insights/console` package provides a set of functions that allows to analyze the collected data right in the browser console in understandable and interactive form.
+The `@rxjs-insights/console` package provides a set of functions that allow to analyze the collected data right in the browser console in an understandable and interactive form.
 
 ### Installation
 
@@ -200,13 +200,13 @@ Every function accepts a target `Observable` or `Subscription` as a parameter.
 * **events** - shows the events of the target,
 * **precedingEvents** - shows the events of the target; for each event shows the chain of events that triggered the given event, 
 * **succeedingEvents** - shows the events of the target; for each event shows the tree of events that were triggered by the given event,
-* **flow** - shows an ordered tree of events related with the target events.
+* **flow** - shows an ordered tree of events related to the target events.
 
 A good starting point is to use the `subscribers` function:
 
 ![subscribers function output](./img/subscribers.png)
 
-From that point it's possible to interactively explore other options by expanding the `More` object:
+From there it's possible to interactively explore other options by expanding the `More` object:
 
 ![More object expanded](./img/more-object-expanded.png)
 
