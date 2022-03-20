@@ -29,33 +29,39 @@ Try it out on [StackBlitz ⚡](https://stackblitz.com/edit/rxjs-insights-playgro
 
 ### Instrumentation
 
-Setting up instrumentation requires:
-* installing the instrumentation package that matches the installed version of the `rxjs` package, e.g. `@rxjs-insights/rxjs7`,
-* intercepting resolution of a few modules, which can be achieved either by installing appropriate plugin, e.g. `@rxjs-insights/plugin-webpack5`, or by setting it up manually.
-
-#### RxJS v6
-
-```
-npm install --save-dev @rxjs-insights/rxjs6
-```
-
-#### RxJS v7
+This step installs the package that instruments the creators and operators that comes with the specific version of RxJS.
 
 ```
 npm install --save-dev @rxjs-insights/rxjs7
 ```
 
-#### Angular 12+
+> Note: The version of the `@rxjs-insights/rxjs<version>` package needs to match the version of RxJS.
+> For example, if you are using RxJS 6, you need to run `npm install --save-dev @rxjs-insights/rxjs6`.
+
+### Plugin
+
+This step setups the plugin that intercepts the resolution of a few modules.
+In particular, it redirects the imports of `rxjs` package to the RxJS Insights' provided alternative that patches the creators and operators.
+
+Follow the guide specific for your build setup.
+
+#### Angular
 
 1. Install the `@rxjs-insights/plugin-webpack5` package
 ```
 npm install --save-dev @rxjs-insights/plugin-webpack5
 ```
 
+> Note: The version of the `@rxjs-insights/plugin-webpack<version>` package needs to match the version of Webpack.
+> For example, if you are using Angular 11 (which by default uses Webpack 4), you need to run `npm install --save-dev @rxjs-insights/plugin-webpack4`.
+
 2. Install the `@angular-builders/custom-webpack` package
 ```
 npm install --save-dev @angular-builders/custom-webpack
 ```
+
+> Note: The version of the `@angular-builders/custom-webpack` package needs to match the version of Angular.
+> For example, if you are using Angular 12, you need to run `npm install --save-dev @angular-builders/custom-webpack^12`.
 
 3.  Modify `angular.json`
 
@@ -71,7 +77,7 @@ npm install --save-dev @angular-builders/custom-webpack
 4. Create the `development.config.js` file
 
 * Place it next to the `angular.json` file.
-* Set it's content to:
+* Set its content to:
 ```js
 const { RxjsInsightsPlugin } = require('@rxjs-insights/plugin-webpack5');
 
@@ -82,12 +88,15 @@ module.exports = {
 }
 ```
 
-#### Webpack 5
+#### Webpack
 
 1. Install the `@rxjs-insights/plugin-webpack5` package
 ```
 npm install --save-dev @rxjs-insights/plugin-webpack5
 ```
+
+> Note: The version of the `@rxjs-insights/plugin-webpack<version>` package needs to match the version of Webpack.
+> For example, if you are using Webpack 4, you need to run `npm install --save-dev @rxjs-insights/plugin-webpack4`.
 
 2. Add the plugin to the Webpack configuration
 ```js
