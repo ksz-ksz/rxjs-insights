@@ -2,14 +2,10 @@
   "name": "rxjs-insights",
   "version": "0.0.0",
   "scripts": {
-    "build": "npm run build --workspaces",
-    "changeset": "changeset",
-    "changeset-version": "changeset version",
-    "changeset-publish": "changeset publish"
+    "build": "npm run build --workspaces"
   },
   "private": true,
   "devDependencies": {
-    "@changesets/cli": "^2.21.1",
     "@types/jest": "^27.4.0",
     "@typescript-eslint/eslint-plugin": "^5.10.2",
     "@typescript-eslint/parser": "^5.10.2",

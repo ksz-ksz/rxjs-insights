@@ -45,7 +45,7 @@
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types"
   },
   "peerDependencies": {
-    "@rxjs-insights/instrumentation": "^0.1.3"
+    "@rxjs-insights/instrumentation": "0.1.4"
   },
   "devDependencies": {
     "@rxjs-insights/instrumentation": "0.1.4",
