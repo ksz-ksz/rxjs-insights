@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "build": "lerna run build",
-    "version-packages": "lerna version --force-publish --exact --no-push"
+    "version-packages": "lerna version --force-publish --exact --no-push",
+    "publish-packages": "lerna publish from-package"
   },
   "private": true,
   "devDependencies": {
