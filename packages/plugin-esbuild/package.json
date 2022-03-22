@@ -42,6 +42,9 @@
     "build:js": "node ../../scripts/build-lib.js",
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types"
   },
+  "dependencies": {
+    "resolve-cwd": "3.0.0"
+  },
   "peerDependencies": {
     "esbuild": ">=0.0.0"
   },

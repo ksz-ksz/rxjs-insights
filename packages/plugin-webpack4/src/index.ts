@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { Compiler, DefinePlugin, ResolveOptions } from 'webpack';
+import { Compiler, DefinePlugin } from 'webpack';
 import resolveCwd from 'resolve-cwd';
 
 const PLUGIN_NAME = 'RxjsInsightsPlugin';
@@ -44,7 +44,17 @@ function getRxjsInsightsPackagePath(rxjsMajorVersion: string) {
   }
 }
 
-function normalizeAlias(alias: ResolveOptions['alias']) {
+type Alias =
+  | {
+      alias: string | false | string[];
+      name: string;
+      onlyModule?: boolean;
+    }[]
+  | {
+      [index: string]: string | false | string[];
+    };
+
+function normalizeAlias(alias: Alias) {
   return typeof alias === 'object' && !Array.isArray(alias) && alias !== null
     ? Object.keys(alias).map((key) => {
         const obj = { name: key, onlyModule: false, alias: alias[key] };
@@ -124,10 +134,11 @@ export class RxjsInsightsPlugin {
       rxjsMajorVersion,
       installModule
     );
-    compiler.hooks.afterResolvers.tap(PLUGIN_NAME, (compiler) => {
+
+    compiler.hooks.afterResolvers.tap(PLUGIN_NAME, (compiler: any) => {
       compiler.resolverFactory.hooks.resolveOptions
         .for('normal')
-        .tap(PLUGIN_NAME, (resolveOptions) => {
+        .tap(PLUGIN_NAME, (resolveOptions: any) => {
           resolveOptions.alias = [
             ...normalizeAlias(resolveOptions.alias),
             ...rxjsInsightsAliases,

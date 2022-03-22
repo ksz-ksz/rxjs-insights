@@ -1,11 +1,12 @@
 import { Plugin, PluginBuild } from 'esbuild';
 import * as path from 'path';
+import resolveCwd from 'resolve-cwd';
 
 const PLUGIN_NAME = 'RxjsInsightsPlugin';
 
 function getRxjsMajorVersion() {
   try {
-    const rxjsPackage = require('rxjs/package.json');
+    const rxjsPackage = require(resolveCwd('rxjs/package.json'));
     return rxjsPackage.version.split('.')[0];
   } catch (e) {
     throw new Error(
@@ -15,7 +16,7 @@ function getRxjsMajorVersion() {
 }
 
 function getPackagePath(packageName: string) {
-  const packageJsonPath = require.resolve(`${packageName}/package.json`);
+  const packageJsonPath = resolveCwd(`${packageName}/package.json`);
   return packageJsonPath.substring(
     0,
     packageJsonPath.length - '/package.json'.length
@@ -59,7 +60,7 @@ export interface RxjsInsightsPluginOptions {
 
 function getAliases(
   rxjsMajorVersion: string,
-  installModule: string = `@rxjs-insights/rxjs${rxjsMajorVersion}`
+  installModule?: string
 ): Record<string, string> {
   const rxjsPackagePath = getRxjsPackagePath();
   const rxjsInsightsPackagePath = getRxjsInsightsPackagePath(rxjsMajorVersion);
@@ -72,7 +73,8 @@ function getAliases(
       rxjsPackagePath,
       'operators'
     ),
-    '@rxjs-insights/rxjs-install-module': installModule,
+    '@rxjs-insights/rxjs-install-module':
+      installModule ?? rxjsInsightsPackagePath,
   };
 }
 

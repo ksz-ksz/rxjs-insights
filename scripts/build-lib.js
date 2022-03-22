@@ -31,7 +31,7 @@ async function buildTarget(
     format,
     bundle,
     entryPoints,
-    target: 'esnext',
+    target: 'es2017',
     sourcemap: 'inline',
     tsconfig: 'tsconfig.lib.json',
     keepNames: true,
