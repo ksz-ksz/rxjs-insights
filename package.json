@@ -2,7 +2,7 @@
   "name": "rxjs-insights",
   "version": "0.0.0",
   "scripts": {
-    "build": "npm run build --workspaces"
+    "build": "lerna run build"
   },
   "private": true,
   "devDependencies": {
