@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/locator",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "The default implementation of the rxjs-insights' locator.",
   "keywords": [
     "rxjs",
@@ -49,10 +49,10 @@
     "error-stack-parser": "^2.0.6"
   },
   "peerDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.4"
+    "@rxjs-insights/instrumentation": "0.1.5"
   },
   "devDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.4",
+    "@rxjs-insights/instrumentation": "0.1.5",
     "source-map": "^0.7.3"
   }
 }

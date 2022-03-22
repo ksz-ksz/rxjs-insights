@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/plugin-esbuild",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Setup RxJS Insights easily in esbuild.",
   "keywords": [
     "rxjs",
