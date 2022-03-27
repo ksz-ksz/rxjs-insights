@@ -1,7 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": ["node"]
+    "paths": {
+      "@rxjs-insights/rxjs-install-module": ["./packages/rxjs7/src/index.ts"],
+      "@rxjs-insights/rxjs-alias-module": ["./packages/rxjs7/node_modules/rxjs"],
+      "@rxjs-insights/rxjs-alias-module/operators": ["./packages/rxjs7/node_modules/rxjs/operators"]
+    }
   },
   "files": [
     "src/index.ts",

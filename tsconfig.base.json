@@ -14,7 +14,9 @@
     "skipDefaultLibCheck": true,
     "strict": true,
     "isolatedModules": true,
-    "allowSyntheticDefaultImports": true
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "."
   },
   "exclude": ["node_modules"]
 }

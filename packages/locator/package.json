@@ -46,13 +46,13 @@
     "version": "node ../../scripts/update-peer-dependencies.js"
   },
   "dependencies": {
+    "source-map": "^0.7.3",
     "error-stack-parser": "^2.0.6"
   },
   "peerDependencies": {
     "@rxjs-insights/instrumentation": "0.1.5"
   },
   "devDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.5",
-    "source-map": "^0.7.3"
+    "@rxjs-insights/instrumentation": "0.1.5"
   }
 }

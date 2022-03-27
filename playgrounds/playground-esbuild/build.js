@@ -7,5 +7,6 @@ esbuild.build({
   bundle: true,
   sourcemap: 'linked',
   keepNames: true,
+  tsconfig: 'tsconfig.json',
   plugins: [rxjsInsightsPlugin()],
 });

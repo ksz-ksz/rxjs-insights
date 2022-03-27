@@ -2,6 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
+  "compilerOptions": {
+    "paths": {
+      "@rxjs-insights/instrumentation": ["./packages/instrumentation/src/index.ts"],
+      "@rxjs-insights/recorder": ["./packages/recorder/src/index.ts"],
+    }
+  },
   "references": [
     {
       "path": "./tsconfig.lib.json"

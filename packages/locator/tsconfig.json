@@ -1,7 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true
+    "paths": {
+      "@rxjs-insights/instrumentation": ["./packages/instrumentation/src/index.ts"]
+    }
   },
   "files": [],
   "include": [],
