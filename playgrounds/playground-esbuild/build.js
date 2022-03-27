@@ -5,7 +5,7 @@ esbuild.build({
   entryPoints: ['src/index.ts', 'src/polyfills.ts'],
   outdir: 'dist',
   bundle: true,
-  sourcemap: 'inline',
+  sourcemap: 'linked',
   keepNames: true,
   plugins: [rxjsInsightsPlugin()],
 });
