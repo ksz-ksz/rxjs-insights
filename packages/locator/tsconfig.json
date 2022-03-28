@@ -5,14 +5,15 @@
       "@rxjs-insights/instrumentation": ["./packages/instrumentation/src/index.ts"]
     }
   },
-  "files": [],
-  "include": [],
   "references": [
-    {
-      "path": "./tsconfig.lib.json"
-    },
     {
       "path": "./tsconfig.spec.json"
     }
+  ],
+  "files": [
+    "src/index.ts"
+  ],
+  "exclude": [
+    "**/*"
   ]
 }

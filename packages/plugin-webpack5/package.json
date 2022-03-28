@@ -43,7 +43,7 @@
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types"
   },
   "dependencies": {
-    "resolve-cwd": "3.0.0"
+    "@rxjs-insights/plugin-base": "0.1.5"
   },
   "peerDependencies": {
     "webpack": ">=5.0.0"

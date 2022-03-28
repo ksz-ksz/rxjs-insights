@@ -1,13 +1,21 @@
 {
   "extends": "../../tsconfig.base.json",
-  "files": [],
-  "include": [],
+  "compilerOptions": {
+    "paths": {
+      "@rxjs-insights/plugin-base": [
+        "./packages/plugin-base/src/index.ts"
+      ]
+    }
+  },
   "references": [
-    {
-      "path": "./tsconfig.lib.json"
-    },
     {
       "path": "./tsconfig.spec.json"
     }
+  ],
+  "files": [
+    "src/index.ts"
+  ],
+  "exclude": [
+    "**/*"
   ]
 }

@@ -1,12 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "paths": {
-      "@rxjs-insights/plugin-base": [
-        "./packages/plugin-base/src/index.ts"
-      ]
-    }
-  },
   "references": [
     {
       "path": "./tsconfig.spec.json"

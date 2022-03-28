@@ -1,7 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "files": [],
-  "include": [],
   "compilerOptions": {
     "paths": {
       "@rxjs-insights/instrumentation": ["./packages/instrumentation/src/index.ts"],
@@ -10,10 +8,13 @@
   },
   "references": [
     {
-      "path": "./tsconfig.lib.json"
-    },
-    {
       "path": "./tsconfig.spec.json"
     }
+  ],
+  "files": [
+    "src/index.ts"
+  ],
+  "exclude": [
+    "**/*"
   ]
 }

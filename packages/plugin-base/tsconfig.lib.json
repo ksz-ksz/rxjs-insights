@@ -1,10 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "types": [
-      "node"
-    ],
-    "paths": {}
+    "types": ["node"]
   },
   "files": [
     "src/index.ts"

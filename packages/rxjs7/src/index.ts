@@ -12,9 +12,9 @@ import { getRecorder } from '@rxjs-insights/recorder';
 import { getLocator } from '@rxjs-insights/locator';
 import { getTracer } from '@rxjs-insights/tracer';
 
-declare const INSTALL_RXJS_INSIGHTS: boolean | undefined;
+declare const RXJS_INSIGHTS_INSTALL: boolean | undefined;
 
-if (typeof INSTALL_RXJS_INSIGHTS !== 'undefined' && INSTALL_RXJS_INSIGHTS) {
+if (typeof RXJS_INSIGHTS_INSTALL !== 'undefined' && RXJS_INSIGHTS_INSTALL) {
   install({
     Observable,
     Subject,

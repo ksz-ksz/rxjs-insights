@@ -11,14 +11,17 @@
       "@rxjs-insights/rxjs-alias-module/operators": ["./packages/rxjs6/node_modules/rxjs/operators"]
     }
   },
-  "files": [],
-  "include": [],
   "references": [
-    {
-      "path": "./tsconfig.lib.json"
-    },
     {
       "path": "./tsconfig.spec.json"
     }
+  ],
+  "files": [
+    "src/index.ts",
+    "src/rxjs/index.ts",
+    "src/rxjs/operators/index.ts"
+  ],
+  "exclude": [
+    "**/*"
   ]
 }

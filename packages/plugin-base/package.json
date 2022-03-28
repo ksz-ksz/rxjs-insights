@@ -1,7 +1,7 @@
 {
-  "name": "@rxjs-insights/plugin-webpack4",
+  "name": "@rxjs-insights/plugin-base",
   "version": "0.1.5",
-  "description": "Setup RxJS Insights easily in Webpack.",
+  "description": "RxJS Insights plugin base.",
   "keywords": [
     "rxjs",
     "debug",
@@ -43,13 +43,6 @@
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types"
   },
   "dependencies": {
-    "@rxjs-insights/plugin-base": "0.1.5"
-  },
-  "peerDependencies": {
-    "webpack": ">=4.0.0 <5.0.0"
-  },
-  "devDependencies": {
-    "@types/webpack": "4.41.26",
-    "webpack": "4.46.0"
+    "resolve-cwd": "3.0.0"
   }
 }

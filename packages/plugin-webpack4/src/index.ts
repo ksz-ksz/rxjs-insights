@@ -1,60 +1,18 @@
-import * as path from 'path';
 import { Compiler, DefinePlugin } from 'webpack';
-import resolveCwd from 'resolve-cwd';
+import {
+  getConfig,
+  RxjsInsightsPluginOptions,
+} from '@rxjs-insights/plugin-base';
 
-const PLUGIN_NAME = 'RxjsInsightsPlugin';
+type ResolverAlias = Alias[] | Record<string, string | false | string[]>;
 
-function getRxjsMajorVersion() {
-  try {
-    const rxjsPackage = require(resolveCwd('rxjs/package.json'));
-    return rxjsPackage.version.split('.')[0];
-  } catch (e) {
-    throw new Error(
-      `${PLUGIN_NAME} requires the 'rxjs' package to be installed.`
-    );
-  }
-}
+type Alias = {
+  name: string;
+  alias: string | false | string[];
+  onlyModule?: boolean;
+};
 
-function getPackagePath(packageName: string) {
-  const packageJsonPath = resolveCwd(`${packageName}/package.json`);
-  return packageJsonPath.substring(
-    0,
-    packageJsonPath.length - '/package.json'.length
-  );
-}
-
-function getRxjsPackagePath() {
-  try {
-    return getPackagePath('rxjs');
-  } catch (e) {
-    throw new Error(
-      `${PLUGIN_NAME} requires the 'rxjs' package to be installed.`
-    );
-  }
-}
-
-function getRxjsInsightsPackagePath(rxjsMajorVersion: string) {
-  const packageName = `@rxjs-insights/rxjs${rxjsMajorVersion}`;
-  try {
-    return getPackagePath(packageName);
-  } catch (e) {
-    throw new Error(
-      `${PLUGIN_NAME} requires the '${packageName}' to be installed to match the version of the installed 'rxjs' package.`
-    );
-  }
-}
-
-type Alias =
-  | {
-      alias: string | false | string[];
-      name: string;
-      onlyModule?: boolean;
-    }[]
-  | {
-      [index: string]: string | false | string[];
-    };
-
-function normalizeAlias(alias: Alias) {
+function normalizeResolverAlias(alias: ResolverAlias): Alias[] {
   return typeof alias === 'object' && !Array.isArray(alias) && alias !== null
     ? Object.keys(alias).map((key) => {
         const obj = { name: key, onlyModule: false, alias: alias[key] };
@@ -69,91 +27,42 @@ function normalizeAlias(alias: Alias) {
     : alias || [];
 }
 
-function getRxjsInsightsAliases(
-  rxjsMajorVersion: string,
-  installModule?: string
-) {
-  const rxjsPackagePath = getRxjsPackagePath();
-  const rxjsInsightsPackagePath = getRxjsInsightsPackagePath(rxjsMajorVersion);
-  return [
-    {
-      onlyModule: true,
-      name: 'rxjs',
-      alias: path.join(rxjsInsightsPackagePath, 'rxjs'),
-    },
-    {
-      onlyModule: true,
-      name: 'rxjs/operators',
-      alias: path.join(rxjsInsightsPackagePath, 'rxjs', 'operators'),
-    },
-    {
-      onlyModule: true,
-      name: '@rxjs-insights/rxjs-alias-module',
-      alias: rxjsPackagePath,
-    },
-    {
-      onlyModule: true,
-      name: '@rxjs-insights/rxjs-alias-module/operators',
-      alias: path.join(rxjsPackagePath, 'operators'),
-    },
-    {
-      onlyModule: true,
-      name: '@rxjs-insights/rxjs-install-module',
-      alias: installModule ?? rxjsInsightsPackagePath,
-    },
-  ];
+function getAliases(aliases: Record<string, string>): Alias[] {
+  return Object.entries(aliases).map(([name, alias]) => ({
+    name,
+    alias,
+    onlyModule: true,
+  }));
 }
 
-export interface RxjsInsightsPluginOptions {
-  /**
-   * If true, sets the INSTALL_RXJS_INSIGHTS global variable that instructs the installModule to install the instrumentation.
-   * Defaults to `true`.
-   */
-  install?: boolean;
+function applyAliases(
+  name: string,
+  aliases: Record<string, string>,
+  compiler: Compiler
+) {
+  compiler.hooks.afterResolvers.tap(name, (compiler: any) => {
+    compiler.resolverFactory.hooks.resolveOptions
+      .for('normal')
+      .tap(name, (resolveOptions: any) => {
+        resolveOptions.alias = [
+          ...normalizeResolverAlias(resolveOptions.alias),
+          ...getAliases(aliases),
+        ];
+        return resolveOptions;
+      });
+  });
+}
 
-  /**
-   * Module that would be used to install the instrumentation.
-   * Defaults to `@rxjs-insights/rxjs<rxjs-major-version>`.
-   */
-  installModule?: string;
+function applyDefines(defines: Record<string, string>, compiler: Compiler) {
+  new DefinePlugin(defines).apply(compiler);
 }
 
 export class RxjsInsightsPlugin {
   constructor(private readonly options: RxjsInsightsPluginOptions = {}) {}
 
   apply(compiler: Compiler) {
-    this.applyAlias(compiler);
-    this.applyDefine(compiler);
-  }
-
-  private applyAlias(compiler: Compiler) {
-    const { installModule } = this.options;
-
-    const rxjsMajorVersion = getRxjsMajorVersion();
-    const rxjsInsightsAliases = getRxjsInsightsAliases(
-      rxjsMajorVersion,
-      installModule
-    );
-
-    compiler.hooks.afterResolvers.tap(PLUGIN_NAME, (compiler: any) => {
-      compiler.resolverFactory.hooks.resolveOptions
-        .for('normal')
-        .tap(PLUGIN_NAME, (resolveOptions: any) => {
-          resolveOptions.alias = [
-            ...normalizeAlias(resolveOptions.alias),
-            ...rxjsInsightsAliases,
-          ];
-          return resolveOptions;
-        });
-    });
-  }
-
-  private applyDefine(compiler: Compiler) {
-    const { install = true } = this.options;
-    if (install) {
-      new DefinePlugin({
-        INSTALL_RXJS_INSIGHTS: true,
-      }).apply(compiler);
-    }
+    const { name, aliases, defines } = getConfig(this.options);
+    applyAliases(name, aliases, compiler);
+    applyDefines(defines, compiler);
   }
 }
