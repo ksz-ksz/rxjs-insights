@@ -98,7 +98,7 @@ export function taskTag(task: Task) {
 }
 
 export function dataTag(event: Event) {
-  return event.hasData() ? tags(objectTag(event.data)) : undefined;
+  return tags(...event.args.map((x) => objectTag(x)));
 }
 
 function isPrimitive(object: any) {

@@ -14,8 +14,8 @@ export class Declaration {
 
   constructor(
     readonly name: string,
-    readonly func?: Function,
-    readonly args?: any[],
+    readonly func: Function,
+    readonly args: any[],
     public locations: Locations = {}
   ) {}
 }
@@ -49,11 +49,7 @@ export class Subscriber {
   ) {}
 
   get name() {
-    return `${this.observable.name} → ${
-      this.destinationObservable !== undefined
-        ? this.destinationObservable.name
-        : 'subscribe'
-    }`;
+    return this.observable.name;
   }
 }
 
@@ -74,12 +70,8 @@ export abstract class Event {
     return this.declaration.name;
   }
 
-  get data() {
-    return this.declaration.args?.[0] ?? undefined;
-  }
-
-  hasData() {
-    return this.declaration.args?.length ?? 0 !== 0;
+  get args() {
+    return this.declaration.args;
   }
 
   isSubscriptionEvent() {
