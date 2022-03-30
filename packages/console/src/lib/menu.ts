@@ -18,7 +18,7 @@ import {
   subscriberSucceedingEvents,
   observableSucceedingEvents,
 } from './succeeding-events';
-import { observableFlow, subscriberFlow } from './flow';
+import { observableFlow, subscriberFlow } from './events-flow';
 
 export class ObservableMore {
   static More = class More {

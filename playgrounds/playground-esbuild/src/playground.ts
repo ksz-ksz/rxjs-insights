@@ -2,7 +2,7 @@ import { delay, map, Subject } from 'rxjs';
 import {
   destinations,
   events,
-  flow,
+  eventsFlow,
   subscribers,
   precedingEvents,
   sources,
@@ -13,8 +13,8 @@ export function playground() {
   // const subject1 = new Subject();
   // const subject2 = new Subject();
   //
-  // flow(subject1.subscribe());
-  // flow(subject2.subscribe());
+  // eventsFlow(subject1.subscribe());
+  // eventsFlow(subject2.subscribe());
   //
   // const observable = combineLatest([subject1, subject2]).pipe(map((x) => x));
   //
@@ -59,7 +59,7 @@ export function playground() {
   // // sub2.unsubscribe();
 
   setTimeout(() => {
-    flow(observable);
+    eventsFlow(observable);
     subscribers(observable);
     sources(observable);
     destinations(observable);

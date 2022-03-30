@@ -201,16 +201,22 @@ function targetFlow(target: Observable | Subscriber) {
 }
 
 export function subscriberFlow(subscriber: Subscriber) {
-  console.groupCollapsed(...formatSubscriber(subscriber, true, 'Flow of:'));
+  console.groupCollapsed(
+    ...formatSubscriber(subscriber, true, 'Events flow of:')
+  );
   targetFlow(subscriber);
   console.groupEnd();
 }
 
 export function observableFlow(observable: Observable) {
   const subscribers = observable.subscribers;
-  console.groupCollapsed(...formatObservable(observable, true, 'Flow of:'));
+  console.groupCollapsed(
+    ...formatObservable(observable, true, 'Events flow of:')
+  );
   if (observable.events.length !== 0) {
-    console.groupCollapsed(...formatObservable(observable, true, 'Flow of:'));
+    console.groupCollapsed(
+      ...formatObservable(observable, true, 'Events flow of:')
+    );
     targetFlow(observable);
     console.groupEnd();
   }
@@ -225,7 +231,7 @@ export function observableFlow(observable: Observable) {
  *
  * @param target - the `Subscription` or `Observable` instance to inspect.
  */
-export function flow(target: ObservableLike | SubscriptionLike) {
+export function eventsFlow(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
     subscriberFlow(getSubscriber(target));
   } else if (isObservableTarget(target)) {
