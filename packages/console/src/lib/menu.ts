@@ -20,8 +20,8 @@ import {
 } from './succeeding-events';
 import { observableFlow, subscriberFlow } from './events-flow';
 
-export class ObservableMore {
-  static More = class More {
+export namespace ObservableMore {
+  export class More {
     constructor(readonly target: Observable) {}
 
     get ['inspect subscribers']() {
@@ -58,11 +58,11 @@ export class ObservableMore {
       observableFlow(this.target);
       return 'Done!';
     }
-  };
+  }
 }
 
-export class SubscriberMore {
-  static More = class More {
+export namespace SubscriberMore {
+  export class More {
     constructor(readonly target: Subscriber) {}
 
     get ['inspect subscribers']() {
@@ -99,11 +99,11 @@ export class SubscriberMore {
       subscriberFlow(this.target);
       return 'Done!';
     }
-  };
+  }
 }
 
-export class SubscriptionEventMore {
-  static More = class More {
+export namespace SubscriptionEventMore {
+  export class More {
     readonly subscriber: any;
 
     constructor(readonly target: SubscriberEvent) {
@@ -119,11 +119,11 @@ export class SubscriptionEventMore {
       eventSucceedingEvents(this.target);
       return 'Done!';
     }
-  };
+  }
 }
 
-export class ObservableEventMore {
-  static More = class More {
+export namespace ObservableEventMore {
+  export class More {
     readonly observable: any;
 
     constructor(readonly target: ObservableEvent) {
@@ -139,5 +139,5 @@ export class ObservableEventMore {
       eventSucceedingEvents(this.target);
       return 'Done!';
     }
-  };
+  }
 }
