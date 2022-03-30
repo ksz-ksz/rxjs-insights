@@ -107,7 +107,7 @@ export class SubscriptionEventMore {
     readonly subscriber: any;
 
     constructor(readonly target: SubscriberEvent) {
-      this.subscriber = new SubscriberMore.More(this.target.subscriber);
+      this.subscriber = new SubscriberMore.More(this.target.target);
     }
 
     get ['inspect preceding events']() {
@@ -127,7 +127,7 @@ export class ObservableEventMore {
     readonly observable: any;
 
     constructor(readonly target: ObservableEvent) {
-      this.observable = new ObservableMore.More(this.target.observable);
+      this.observable = new ObservableMore.More(this.target.target);
     }
 
     get ['inspect preceding events']() {

@@ -14,14 +14,19 @@ import {
 import { isObservableTarget, isSubscriberTarget } from './target';
 import { getSubscriber } from './get-subscriber';
 import { getObservable } from './get-observable';
+import {
+  getPrecedingEvents,
+  getSourceEvents,
+  getSucceedingEvents,
+} from './event-utils';
 
 const eventsComparator = (a: Event, b: Event) => a.time - b.time;
 
 function getSources(event: Event) {
   const sources = new Set<Observable | Subscriber>();
-  for (let targetEvent of event.getTarget().events) {
-    for (let sourceEvent of targetEvent.getSourceEvents()) {
-      sources.add(sourceEvent.getTarget());
+  for (let targetEvent of event.target.events) {
+    for (let sourceEvent of getSourceEvents(targetEvent)) {
+      sources.add(sourceEvent.target);
     }
   }
   return sources;
@@ -41,7 +46,7 @@ function collectPrecedingEventsEventVisitor(
         }
       }
     }
-    for (let precedingEvent of event.getPrecedingEvents()) {
+    for (let precedingEvent of getPrecedingEvents(event)) {
       collectPrecedingEventsEventVisitor(precedingEvent, eventsSet);
     }
   }
@@ -54,7 +59,7 @@ function collectSucceedingEventsEventVisitor(
 ) {
   if (force || !eventsSet.has(event)) {
     eventsSet.add(event);
-    for (let succeedingEvent of event.getSucceedingEvents()) {
+    for (let succeedingEvent of getSucceedingEvents(event)) {
       collectSucceedingEventsEventVisitor(succeedingEvent, eventsSet);
     }
   }
@@ -108,9 +113,9 @@ function printEvent(
   eventsSet: Set<Event>
 ) {
   if (event.succeedingEvents.length === 0) {
-    console.log(...formatEvent(event, event.getTarget() === target));
+    console.log(...formatEvent(event, event.target === target));
   } else {
-    console.group(...formatEvent(event, event.getTarget() === target));
+    console.group(...formatEvent(event, event.target === target));
     const parts = partitionEventsByExclusion(event.succeedingEvents, eventsSet);
     for (let part of parts) {
       const included = eventsSet.has(part[0]);

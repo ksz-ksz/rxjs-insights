@@ -11,10 +11,7 @@ import {
 } from './connected-events';
 import { isObservableTarget, isSubscriberTarget } from './target';
 import { getSubscriber } from './get-subscriber';
-
-export function getPrecedingEvents(event: Event): Event[] {
-  return event.getPrecedingEvents();
-}
+import { getPrecedingEvents } from './event-utils';
 
 export function eventPrecedingEvents(
   event: Event,

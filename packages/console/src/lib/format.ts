@@ -73,11 +73,12 @@ export function formatEvent(event: Event, target = false, label?: string) {
     labelTag(label),
     eventTag(event, target),
     event instanceof ObservableEvent
-      ? observableTag(event.observable, target)
+      ? observableTag(event.target, target)
       : event instanceof SubscriberEvent
-      ? subscriberTag(event.subscriber, target)
+      ? subscriberTag(event.target, target)
       : undefined,
     dataTag(event),
+    getLocationsString(event.target.declaration.locations),
     event instanceof ObservableEvent
       ? objectTag(new ObservableEventMore.More(event))
       : event instanceof SubscriberEvent

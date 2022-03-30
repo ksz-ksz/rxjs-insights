@@ -22,9 +22,9 @@ function eventConnections(
   }
   const relatedEvents = getConnectedEvents(event);
   if (relatedEvents.length === 0) {
-    console.log(...formatEvent(event, event.getTarget() === target));
+    console.log(...formatEvent(event, event.target === target));
   } else {
-    console.group(...formatEvent(event, event.getTarget() === target));
+    console.group(...formatEvent(event, event.target === target));
     if (task && source) {
       console.group(...formatTask(event.task));
     }
@@ -48,11 +48,7 @@ export function eventConnectedEvents(
   target?: Observable | Subscriber
 ) {
   console.groupCollapsed(
-    ...formatEvent(
-      event,
-      event.getTarget() === target,
-      `${direction} events of:`
-    )
+    ...formatEvent(event, event.target === target, `${direction} events of:`)
   );
   eventConnections(direction, getConnectedEvents, event, target);
   console.groupEnd();

@@ -9,11 +9,11 @@ import {
 function groupEventsByTarget(events: Event[]) {
   const groups = new Map<Observable | Subscriber, Event[]>();
   for (let event of events) {
-    const group = groups.get(event.getTarget());
+    const group = groups.get(event.target);
     if (group) {
       group.push(event);
     } else {
-      groups.set(event.getTarget(), [event]);
+      groups.set(event.target, [event]);
     }
   }
   return groups;

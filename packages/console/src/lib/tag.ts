@@ -36,9 +36,9 @@ function getLocationString(location: Location) {
 
 export function getLocationsString(locations: Locations) {
   if (locations.originalLocation) {
-    return `${getLocationString(locations.originalLocation)}`;
+    return getLocationString(locations.originalLocation);
   } else if (locations.generatedLocation) {
-    return `${getLocationString(locations.generatedLocation)}`;
+    return getLocationString(locations.generatedLocation);
   } else {
     return '';
   }
@@ -58,7 +58,7 @@ export function observableTag(observable: Observable, target = false) {
 export function subscriberTag(subscriber: Subscriber, target = false) {
   const color = target ? '#ab47bc' : '#ce93d8';
   return {
-    format: `%c${subscriber.name} #${subscriber.id}%c`,
+    format: `%c${subscriber.declaration.name} #${subscriber.id}%c`,
     args: [
       `font-weight: bold; color: black; background-color: ${color}; padding: 2px 4px; border-radius: 4px;`,
       ``,
@@ -68,18 +68,18 @@ export function subscriberTag(subscriber: Subscriber, target = false) {
 
 export function eventTag(event: Event, target = false) {
   let color: string;
-  if (event.name === 'next') {
+  if (event.declaration.name === 'next') {
     color = target ? '#388e3c' : '#66bb6a';
-  } else if (event.name === 'error') {
+  } else if (event.declaration.name === 'error') {
     color = target ? '#d32f2f' : '#f44336';
-  } else if (event.name === 'complete') {
+  } else if (event.declaration.name === 'complete') {
     color = target ? '#0288d1' : '#29b6f6';
   } else {
     color = target ? '#f57c00' : '#ffa726';
   }
 
   return {
-    format: `%c${event.name} #${event.time}%c`,
+    format: `%c${event.declaration.name} #${event.time}%c`,
     args: [
       `font-weight: bold; color: black; background-color: ${color}; padding: 2px 4px; border-radius: 4px;`,
       ``,
@@ -98,7 +98,7 @@ export function taskTag(task: Task) {
 }
 
 export function dataTag(event: Event) {
-  return tags(...event.args.map((x) => objectTag(x)));
+  return tags(...event.declaration.args.map((x) => objectTag(x)));
 }
 
 function isPrimitive(object: any) {

@@ -31,10 +31,6 @@ export class Observable {
     readonly subscribers: Subscriber[] = [],
     readonly events: ObservableEvent[] = []
   ) {}
-
-  get name() {
-    return this.declaration.name;
-  }
 }
 
 export class Subscriber {
@@ -48,8 +44,8 @@ export class Subscriber {
     readonly events: SubscriberEvent[] = []
   ) {}
 
-  get name() {
-    return this.observable.name;
+  get declaration() {
+    return this.observable.declaration;
   }
 }
 
@@ -66,76 +62,30 @@ export abstract class Event {
     readonly succeedingEvents: Event[] = []
   ) {}
 
-  get name() {
-    return this.declaration.name;
-  }
-
-  get args() {
-    return this.declaration.args;
-  }
-
-  isSubscriptionEvent() {
-    return this.name === 'subscribe' || this.name === 'unsubscribe';
-  }
-
-  isNotificationEvent() {
-    return (
-      this.name === 'next' || this.name === 'error' || this.name === 'complete'
-    );
-  }
-
-  getPrecedingEvents() {
-    return this.precedingEvent ? [this.precedingEvent] : [];
-  }
-
-  getSucceedingEvents() {
-    return this.succeedingEvents;
-  }
-
-  getSourceEvents() {
-    return this.isSubscriptionEvent()
-      ? this.getSucceedingEvents()
-      : this.getPrecedingEvents();
-  }
-
-  getDestinationEvents() {
-    return this.isSubscriptionEvent()
-      ? this.getPrecedingEvents()
-      : this.getSucceedingEvents();
-  }
-
-  abstract getTarget(): Observable | Subscriber;
+  abstract readonly target: Subscriber | Observable;
 }
 
 export class SubscriberEvent extends Event {
   constructor(
-    readonly subscriber: Subscriber,
+    readonly target: Subscriber,
     declaration: Declaration,
     task: Task,
     sourceEvent?: Event,
     destinationEvents: Event[] = []
   ) {
     super(declaration, task, sourceEvent, destinationEvents);
-  }
-
-  getTarget() {
-    return this.subscriber;
   }
 }
 
 export class ObservableEvent extends Event {
   constructor(
-    readonly observable: Observable,
+    readonly target: Observable,
     declaration: Declaration,
     task: Task,
     sourceEvent?: Event,
     destinationEvents: Event[] = []
   ) {
     super(declaration, task, sourceEvent, destinationEvents);
-  }
-
-  getTarget() {
-    return this.observable;
   }
 }
 
