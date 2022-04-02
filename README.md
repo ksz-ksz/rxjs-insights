@@ -14,14 +14,15 @@ RxJS Insights is a toolset that helps you debug the RxJS Observables.
 RxJS Insights gathers the data about:
 
 * **constructors** (e.g. `Observable`, `Subject`, etc.),
-* **creators** (e.g. `of`, `merge`, etc.),
+* **creators** (e.g. `of`, `interval`, etc.),
 * **operators** (e.g. `map`, `delay`, etc.),
 * **subscribers**,
 * **subscriber chains** (i.e. subscribers created by other subscribers),
 * **events**:
   * **notification events** (i.e. `next`, `error` and `complete`),
   * **subscription events** (i.e. `subscribe` and `unsubscribe`),
-* **event relations** (i.e. events caused by other events).
+* **event relations** (i.e. events caused by other events),
+* **async tasks**: (e.g. `setTimeout`, `setInterval`, DOM events, REST events, etc.).
 
 **Try it out on [StackBlitz ⚡](https://stackblitz.com/edit/rxjs-insights-playground)**
 
