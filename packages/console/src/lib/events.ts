@@ -54,7 +54,7 @@ export function observableEvents(observable: Observable) {
  *
  * @param target - the `Subscription` or `Observable` instance to inspect.
  */
-export function events(target: ObservableLike | SubscriptionLike) {
+export function inspectEvents(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
     subscriberEvents(getSubscriber(target));
   } else if (isObservableTarget(target)) {

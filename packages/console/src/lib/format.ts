@@ -25,7 +25,7 @@ import {
   SubscriptionEventMore,
 } from './menu';
 
-function format(...input: TagLike[]): any[] {
+export function format(...input: TagLike[]): any[] {
   const tag = tags(...input);
   return [tag.format, ...tag.args];
 }

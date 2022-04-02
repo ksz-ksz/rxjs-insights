@@ -231,7 +231,7 @@ export function observableFlow(observable: Observable) {
  *
  * @param target - the `Subscription` or `Observable` instance to inspect.
  */
-export function eventsFlow(target: ObservableLike | SubscriptionLike) {
+export function inspectEventsFlow(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
     subscriberFlow(getSubscriber(target));
   } else if (isObservableTarget(target)) {

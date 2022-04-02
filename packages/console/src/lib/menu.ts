@@ -4,7 +4,10 @@ import {
   Subscriber,
   SubscriberEvent,
 } from '@rxjs-insights/recorder';
-import { subscriberSubscribers, observableSubscribers } from './subscribers';
+import {
+  subscriberSubscribers,
+  observableSubscribers,
+} from './inspectSubscribers';
 import { subscriberSources, observableSources } from './sources';
 import {
   eventPrecedingEvents,
@@ -17,44 +20,55 @@ import {
   eventSucceedingEvents,
   subscriberSucceedingEvents,
   observableSucceedingEvents,
-} from './succeeding-events';
-import { observableFlow, subscriberFlow } from './events-flow';
+} from './inspect-succeeding-events';
+import { observableFlow, subscriberFlow } from './inspect-events-flow';
+import {
+  observableEventInfo,
+  observableInfo,
+  subscriberEventInfo,
+  subscriberInfo,
+} from './info';
 
 export namespace ObservableMore {
   export class More {
     constructor(readonly target: Observable) {}
 
-    get ['inspect subscribers']() {
+    get ['0. inspect']() {
+      observableInfo(this.target);
+      return 'Done!';
+    }
+
+    get ['1. inspect subscribers']() {
       observableSubscribers(this.target);
       return 'Done!';
     }
 
-    get ['inspect events']() {
-      observableEvents(this.target);
-      return 'Done!';
-    }
-
-    get ['inspect source']() {
+    get ['2. inspect source subscribers']() {
       observableSources(this.target);
       return 'Done!';
     }
 
-    get ['inspect preceding events']() {
-      observablePrecedingEvents(this.target);
-      return 'Done!';
-    }
-
-    get ['inspect destinations']() {
+    get ['3. inspect destination subscribers']() {
       observableDestinations(this.target);
       return 'Done!';
     }
 
-    get ['inspect succeeding events']() {
+    get ['4. inspect events']() {
+      observableEvents(this.target);
+      return 'Done!';
+    }
+
+    get ['5. inspect preceding events']() {
+      observablePrecedingEvents(this.target);
+      return 'Done!';
+    }
+
+    get ['6. inspect succeeding events']() {
       observableSucceedingEvents(this.target);
       return 'Done!';
     }
 
-    get ['inspect events flow']() {
+    get ['7. inspect events flow']() {
       observableFlow(this.target);
       return 'Done!';
     }
@@ -65,37 +79,42 @@ export namespace SubscriberMore {
   export class More {
     constructor(readonly target: Subscriber) {}
 
-    get ['inspect subscribers']() {
+    get ['0. inspect']() {
+      subscriberInfo(this.target);
+      return 'Done!';
+    }
+
+    get ['1. inspect subscribers']() {
       subscriberSubscribers(this.target);
       return 'Done!';
     }
 
-    get ['inspect events']() {
-      subscriberEvents(this.target);
-      return 'Done!';
-    }
-
-    get ['inspect sources']() {
+    get ['2. inspect source subscribers']() {
       subscriberSources(this.target);
       return 'Done!';
     }
 
-    get ['inspect preceding events']() {
-      subscriberPrecedingEvents(this.target);
-      return 'Done!';
-    }
-
-    get ['inspect destinations']() {
+    get ['3. inspect destination subscribers']() {
       subscriberDestinations(this.target);
       return 'Done!';
     }
 
-    get ['inspect succeeding events']() {
+    get ['4. inspect events']() {
+      subscriberEvents(this.target);
+      return 'Done!';
+    }
+
+    get ['5. inspect preceding events']() {
+      subscriberPrecedingEvents(this.target);
+      return 'Done!';
+    }
+
+    get ['6. inspect succeeding events']() {
       subscriberSucceedingEvents(this.target);
       return 'Done!';
     }
 
-    get ['inspect events flow']() {
+    get ['7. inspect events flow']() {
       subscriberFlow(this.target);
       return 'Done!';
     }
@@ -110,12 +129,17 @@ export namespace SubscriptionEventMore {
       this.subscriber = new SubscriberMore.More(this.target.target);
     }
 
-    get ['inspect preceding events']() {
+    get ['0. inspect']() {
+      subscriberEventInfo(this.target);
+      return 'Done!';
+    }
+
+    get ['1. inspect preceding events']() {
       eventPrecedingEvents(this.target);
       return 'Done!';
     }
 
-    get ['inspect succeeding events']() {
+    get ['2. inspect succeeding events']() {
       eventSucceedingEvents(this.target);
       return 'Done!';
     }
@@ -130,12 +154,17 @@ export namespace ObservableEventMore {
       this.observable = new ObservableMore.More(this.target.target);
     }
 
-    get ['inspect preceding events']() {
+    get ['0. inspect']() {
+      observableEventInfo(this.target);
+      return 'Done!';
+    }
+
+    get ['1. inspect preceding events']() {
       eventPrecedingEvents(this.target);
       return 'Done!';
     }
 
-    get ['inspect succeeding events']() {
+    get ['2. inspect succeeding events']() {
       eventSucceedingEvents(this.target);
       return 'Done!';
     }

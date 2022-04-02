@@ -33,7 +33,9 @@ export function observableSucceedingEvents(observable: Observable) {
  *
  * @param target - the `Subscription` or `Observable` instance to inspect.
  */
-export function succeedingEvents(target: ObservableLike | SubscriptionLike) {
+export function inspectSucceedingEvents(
+  target: ObservableLike | SubscriptionLike
+) {
   if (isSubscriberTarget(target)) {
     subscriberSucceedingEvents(getSubscriber(target));
   } else if (isObservableTarget(target)) {

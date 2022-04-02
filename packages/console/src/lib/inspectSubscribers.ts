@@ -40,7 +40,7 @@ export function observableSubscribers(observable: Observable) {
  *
  * @param target - the `Subscription` or `Observable` instance to inspect.
  */
-export function subscribers(target: ObservableLike | SubscriptionLike) {
+export function inspectSubscribers(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
     subscriberSubscribers(getSubscriber(target));
   } else if (isObservableTarget(target)) {

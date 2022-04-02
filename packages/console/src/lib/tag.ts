@@ -1,5 +1,6 @@
 import { Location, Locations } from '@rxjs-insights/instrumentation';
-import { Observable, Task, Event, Subscriber } from '@rxjs-insights/recorder';
+import { Event, Observable, Subscriber, Task } from '@rxjs-insights/recorder';
+import { Color, getEventColor } from './colors';
 
 export interface Tag {
   format: string;
@@ -30,7 +31,7 @@ export function tags(...input: TagLike[]): Tag {
   };
 }
 
-function getLocationString(location: Location) {
+export function getLocationString(location: Location) {
   return `${location.file}:${location.line}:${location.column}`;
 }
 
@@ -45,7 +46,9 @@ export function getLocationsString(locations: Locations) {
 }
 
 export function observableTag(observable: Observable, target = false) {
-  const color = target ? '#42a5f5' : '#90caf9';
+  const color = target
+    ? Color.Target.Observable.Primary
+    : Color.Target.Observable.Secondary;
   return {
     format: `%c${observable.declaration.name} #${observable.id}%c`,
     args: [
@@ -56,7 +59,9 @@ export function observableTag(observable: Observable, target = false) {
 }
 
 export function subscriberTag(subscriber: Subscriber, target = false) {
-  const color = target ? '#ab47bc' : '#ce93d8';
+  const color = target
+    ? Color.Target.Subscription.Primary
+    : Color.Target.Subscription.Secondary;
   return {
     format: `%c${subscriber.declaration.name} #${subscriber.id}%c`,
     args: [
@@ -66,17 +71,16 @@ export function subscriberTag(subscriber: Subscriber, target = false) {
   };
 }
 
-export function eventTag(event: Event, target = false) {
-  let color: string;
-  if (event.declaration.name === 'next') {
-    color = target ? '#388e3c' : '#66bb6a';
-  } else if (event.declaration.name === 'error') {
-    color = target ? '#d32f2f' : '#f44336';
-  } else if (event.declaration.name === 'complete') {
-    color = target ? '#0288d1' : '#29b6f6';
+export function targetTag(target: Observable | Subscriber, isTarget = false) {
+  if (target instanceof Observable) {
+    return observableTag(target, isTarget);
   } else {
-    color = target ? '#f57c00' : '#ffa726';
+    return subscriberTag(target, isTarget);
   }
+}
+
+export function eventTag(event: Event, target = false) {
+  const color = getEventColor(event.declaration.name, target);
 
   return {
     format: `%c${event.declaration.name} #${event.time}%c`,
@@ -117,7 +121,7 @@ function isPrimitive(object: any) {
 
 export function objectTag(object: any, expand = false) {
   return {
-    format: isPrimitive(object) ? '%o' : '%O',
+    format: expand || isPrimitive(object) ? '%o' : '%O',
     args: [object],
   };
 }
@@ -128,8 +132,19 @@ export function labelTag(label: string | undefined) {
       format: `%c${label}%c`,
       args: [
         `font-weight: bold; font-size: 0.6rem; color: black; background-color: #f3e5f5; padding: 1px 2px; border-radius: 4px;`,
-        ``,
+        '',
       ],
+    };
+  } else {
+    return emptyTag;
+  }
+}
+
+export function textTag(text: string, style: string = '') {
+  if (text) {
+    return {
+      format: `%c${text}%c`,
+      args: [style, ''],
     };
   } else {
     return emptyTag;

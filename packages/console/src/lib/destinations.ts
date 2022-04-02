@@ -22,7 +22,7 @@ export function observableDestinations(observable: Observable) {
  *
  * @param target - the `Subscription` or `Observable` instance to inspect.
  */
-export function destinations(target: ObservableLike | SubscriptionLike) {
+export function inspectDestinations(target: ObservableLike | SubscriptionLike) {
   if (isSubscriberTarget(target)) {
     subscriberDestinations(getSubscriber(target));
   } else if (isObservableTarget(target)) {

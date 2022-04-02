@@ -70,10 +70,10 @@ export class SubscriberEvent extends Event {
     readonly target: Subscriber,
     declaration: Declaration,
     task: Task,
-    sourceEvent?: Event,
-    destinationEvents: Event[] = []
+    precedingEvent?: Event,
+    succeedingEvents: Event[] = []
   ) {
-    super(declaration, task, sourceEvent, destinationEvents);
+    super(declaration, task, precedingEvent, succeedingEvents);
   }
 }
 
@@ -82,10 +82,10 @@ export class ObservableEvent extends Event {
     readonly target: Observable,
     declaration: Declaration,
     task: Task,
-    sourceEvent?: Event,
-    destinationEvents: Event[] = []
+    precedingEvent?: Event,
+    succeedingEvents: Event[] = []
   ) {
-    super(declaration, task, sourceEvent, destinationEvents);
+    super(declaration, task, precedingEvent, succeedingEvents);
   }
 }
 
