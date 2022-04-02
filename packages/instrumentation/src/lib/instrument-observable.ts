@@ -10,6 +10,7 @@ export function instrumentObservable<T extends ObservableLike>(
   sourceObservableRef?: ObservableRef
 ) {
   const observableRef = context.recorder.observableRef(
+    observable,
     declarationRef,
     sourceObservableRef
   );

@@ -2,6 +2,7 @@ import {
   DeclarationRef,
   Locations,
   ObservableEventRef,
+  ObservableLike,
   ObservableRef,
   SubscriberEventRef,
   SubscriberRef,
@@ -26,6 +27,7 @@ export class Observable {
   readonly id = Observable.IDS++;
 
   constructor(
+    readonly target: ObservableLike,
     readonly declaration: Declaration,
     readonly sourceObservable?: Observable,
     readonly subscribers: Subscriber[] = [],
@@ -39,6 +41,7 @@ export class Subscriber {
   readonly id = Subscriber.IDS++;
 
   constructor(
+    readonly target: any[],
     readonly observable: Observable,
     readonly destinationObservable: Observable | undefined,
     readonly events: SubscriberEvent[] = []

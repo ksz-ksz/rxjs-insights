@@ -3,6 +3,7 @@ import {
   EventRef,
   Locations,
   ObservableEventRef,
+  ObservableLike,
   ObservableRef,
   Recorder,
   SubscriberEventRef,
@@ -38,23 +39,29 @@ export class ModelRecorder implements Recorder {
   }
 
   observableRef(
+    target: ObservableLike,
     observableDeclarationRef: DeclarationRef,
     sourceObservableRef?: ObservableRef
   ): ObservableRef {
     const declaration = deref(observableDeclarationRef);
     const sourceObservable = deref(sourceObservableRef);
-    const observable = new Observable(declaration, sourceObservable);
+    const observable = new Observable(target, declaration, sourceObservable);
 
     return ref(observable);
   }
 
   subscriberRef(
+    target: any[],
     observableRef: ObservableRef,
     destinationObservableRef: ObservableRef | undefined
   ): SubscriberRef {
     const observable = deref(observableRef);
     const destinationObservable = deref(destinationObservableRef);
-    const subscriber = new Subscriber(observable, destinationObservable);
+    const subscriber = new Subscriber(
+      target,
+      observable,
+      destinationObservable
+    );
 
     observable.subscribers.push(subscriber);
 

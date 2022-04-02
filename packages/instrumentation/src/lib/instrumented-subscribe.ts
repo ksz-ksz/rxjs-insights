@@ -65,6 +65,7 @@ export function createInstrumentedSubscribe(
     const observableRef = getObservableRef(context, observable);
     const destinationObservableRef = getDestinationObservableRef(context, args);
     const subscriberRef = context.recorder.subscriberRef(
+      args,
       observableRef,
       destinationObservableRef
     );

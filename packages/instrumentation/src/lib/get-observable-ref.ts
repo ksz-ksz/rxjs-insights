@@ -12,7 +12,10 @@ function getOrRecordObservableMeta(
     const name: string =
       Object.getPrototypeOf(observable)?.constructor?.name ?? 'Observable';
     const declarationRef = context.recorder.declarationRef(name);
-    const observableRef = context.recorder.observableRef(declarationRef);
+    const observableRef = context.recorder.observableRef(
+      observable,
+      declarationRef
+    );
     const meta: ObservableMeta = {
       observableRef,
     };

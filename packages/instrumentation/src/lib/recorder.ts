@@ -1,5 +1,6 @@
 import { Locations } from './locator';
 import { InstrumentationContext } from './env';
+import { ObservableLike, SubscriberLike } from './types';
 
 declare const ref: unique symbol;
 export type DeclarationRef = { readonly [ref]: 'ObservableDeclarationRef' };
@@ -20,11 +21,13 @@ export interface Recorder {
   ): DeclarationRef;
 
   observableRef(
+    target: ObservableLike,
     observableDeclarationRef: DeclarationRef,
     sourceObservableRef?: ObservableRef
   ): ObservableRef;
 
   subscriberRef(
+    target: any[],
     observableRef: ObservableRef,
     destinationObservableRef: ObservableRef | undefined
   ): SubscriberRef;

@@ -25,6 +25,7 @@ import {
   objectTag,
   observableTag,
   TagLike,
+  tags,
   targetTag,
   taskTag,
   textTag,
@@ -334,6 +335,7 @@ export function subscriberInfo(subscriber: Subscriber) {
     Name: { tag: objectTag(declaration.name) },
     Constructor: { tag: objectTag(declaration.func) },
     Arguments: { tag: objectTag(declaration.args, true) },
+    Subscriber: { tag: tags(...subscriber.target.map((x) => objectTag(x))) },
     'Original location': originalLocation
       ? { tag: getLocationString(originalLocation) }
       : undefined,
@@ -362,6 +364,7 @@ export function observableInfo(observable: Observable) {
     Name: { tag: objectTag(declaration.name) },
     Constructor: { tag: objectTag(declaration.func) },
     Arguments: { tag: objectTag(declaration.args, true) },
+    Observable: { tag: objectTag(observable.target) },
     'Original location': originalLocation
       ? { tag: getLocationString(originalLocation) }
       : undefined,
