@@ -285,7 +285,7 @@ function eventInfo(event: Event, targetLabel: string) {
   const declaration = event.declaration;
   const { originalLocation, generatedLocation } = declaration.locations;
 
-  console.groupCollapsed(...formatEvent(event, true, 'Summary of:'));
+  console.groupCollapsed(...formatEvent(event, true, 'Info about:'));
   printGroup({
     'ID / Virtual time': { tag: objectTag(event.time) },
     Name: { tag: objectTag(declaration.name) },
@@ -328,7 +328,7 @@ export function subscriberInfo(subscriber: Subscriber) {
     getDestinationEvents
   );
 
-  console.groupCollapsed(...formatSubscriber(subscriber, true, 'Summary of:'));
+  console.groupCollapsed(...formatSubscriber(subscriber, true, 'Info about:'));
   printGroup({
     ID: { tag: objectTag(subscriber.id) },
     Name: { tag: objectTag(declaration.name) },
@@ -356,7 +356,7 @@ export function observableInfo(observable: Observable) {
   const declaration = observable.declaration;
   const { originalLocation, generatedLocation } = declaration.locations;
 
-  console.groupCollapsed(...formatObservable(observable, true, 'Summary of:'));
+  console.groupCollapsed(...formatObservable(observable, true, 'Info about:'));
   printGroup({
     ID: { tag: objectTag(observable.id) },
     Name: { tag: objectTag(declaration.name) },

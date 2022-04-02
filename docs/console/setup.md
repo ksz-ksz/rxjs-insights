@@ -18,5 +18,5 @@ import * as rxjsInsightsConsole from "@rxjs-insights/console";
 ```js
 // later, during debugging
 
-rxjsInsightsConsole.stats(someObservableOrSubscription);
+rxjsInsightsConsole.inspect(someObservableOrSubscription);
 ```

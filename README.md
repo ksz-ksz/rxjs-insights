@@ -40,14 +40,14 @@ RxJS Insights gathers the data about:
 * [Console](./docs/console/index.md)
   * [Setup](./docs/console/setup.md)
   * [Usage](./docs/console/usage/index.md)
-    * [stats](./docs/console/usage/stats.md)
-    * [subscribers](./docs/console/usage/subscribers.md)
-    * [sources](./docs/console/usage/sources.md)
-    * [destinations](./docs/console/usage/destinations.md)
-    * [events](./docs/console/usage/events.md)
-    * [precedingEvents](./docs/console/usage/preceding-events.md)
-    * [succeedingEvents](./docs/console/usage/succeeding-events.md)
-    * [eventsFlow](./docs/console/usage/events-flow.md)
+    * [inspect](./docs/console/usage/info.md)
+    * [inspectSubscribers](./docs/console/usage/subscribers.md)
+    * [inspectSources](./docs/console/usage/sources.md)
+    * [inspectDestinations](./docs/console/usage/destinations.md)
+    * [inspectEvents](./docs/console/usage/events.md)
+    * [inspectPrecedingEvents](./docs/console/usage/preceding-events.md)
+    * [inspectSucceedingEvents](./docs/console/usage/succeeding-events.md)
+    * [inspectEventsFlow](./docs/console/usage/events-flow.md)
 
 ## Future work
 
