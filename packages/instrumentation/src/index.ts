@@ -10,7 +10,7 @@ export type {
   ObservableMeta,
   SubscriberMeta,
 } from './lib/meta';
-export { getMeta, hasAnyMeta, hasMeta } from './lib/meta';
+export { getMeta, hasMeta } from './lib/meta';
 export type {
   DeclarationRef,
   EventRef,

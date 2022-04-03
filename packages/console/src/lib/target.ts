@@ -1,6 +1,6 @@
 import {
   getMeta,
-  hasAnyMeta,
+  hasMeta,
   HasMeta,
   ObservableMeta,
   SubscriberMeta,
@@ -9,7 +9,7 @@ import {
 export function isSubscriberTarget(
   target: any
 ): target is HasMeta<SubscriberMeta> {
-  if (hasAnyMeta(target)) {
+  if (hasMeta(target)) {
     const meta = getMeta<SubscriberMeta>(target);
     return 'subscriberRef' in meta;
   } else {
@@ -20,7 +20,7 @@ export function isSubscriberTarget(
 export function isObservableTarget(
   target: any
 ): target is HasMeta<ObservableMeta> {
-  if (hasAnyMeta(target)) {
+  if (hasMeta(target)) {
     const meta = getMeta<ObservableMeta>(target);
     return 'observableRef' in meta;
   } else {
