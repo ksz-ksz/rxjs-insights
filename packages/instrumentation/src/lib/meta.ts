@@ -1,7 +1,7 @@
 import { ObservableRef, SubscriberRef } from './recorder';
 import { ObservableLike, SubscriberLike } from './types';
 
-const META = Symbol('@@meta');
+const META = Symbol('@rxjs-insights/meta');
 
 export type MetaOf<T> = T extends ObservableLike
   ? ObservableMeta

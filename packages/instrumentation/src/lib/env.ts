@@ -3,7 +3,7 @@ import { Recorder } from './recorder';
 import { Locator } from './locator';
 import { Constructor, ObservableLike, SubjectLike } from './types';
 
-const ENV = Symbol('@@env');
+const ENV = Symbol('@rxjs-insights/env');
 
 export interface InstrumentationContext {
   Subject: Constructor<SubjectLike>;
