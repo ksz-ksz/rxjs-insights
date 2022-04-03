@@ -1,7 +1,7 @@
 import { Constructor, ObservableLike } from './types';
 import { getGlobalEnv } from './env';
 
-export function constructor<T extends Constructor<ObservableLike>>(
+export function declareConstructor<T extends Constructor<ObservableLike>>(
   name: string,
   target: T
 ): T {
@@ -13,7 +13,7 @@ export function constructor<T extends Constructor<ObservableLike>>(
   }
 }
 
-export function creator<T extends (...args: any[]) => ObservableLike>(
+export function declareCreator<T extends (...args: any[]) => ObservableLike>(
   name: string,
   target: T
 ): T {
@@ -25,7 +25,7 @@ export function creator<T extends (...args: any[]) => ObservableLike>(
   }
 }
 
-export function operator<
+export function declareOperator<
   T extends (...args: any[]) => (source: any) => ObservableLike
 >(name: string, target: T): T {
   const env = getGlobalEnv();
@@ -36,7 +36,7 @@ export function operator<
   }
 }
 
-export function singleton<T extends ObservableLike>(
+export function declareSingleton<T extends ObservableLike>(
   name: string,
   target: T
 ): T {

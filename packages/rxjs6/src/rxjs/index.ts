@@ -32,23 +32,29 @@ import {
   zip as _zip,
 } from '@rxjs-insights/rxjs-alias-module';
 import {
-  constructor,
-  creator,
-  singleton,
-} from '@rxjs-insights/instrumentation';
+  declareConstructor,
+  declareCreator,
+  declareSingleton,
+} from '@rxjs-insights/instrumentation/declarations';
 
 // export const lastValueFrom = ?
 // export const firstValueFrom = ?
 // export const partition = ?
 
-export const EMPTY = singleton('EMPTY', _EMPTY);
-export const NEVER = singleton('NEVER', _NEVER);
+export const EMPTY = declareSingleton('EMPTY', _EMPTY);
+export const NEVER = declareSingleton('NEVER', _NEVER);
 
-export const Observable = constructor('Observable', _Observable);
-export const Subject = constructor('Subject', _Subject);
-export const AsyncSubject = constructor('AsyncSubject', _AsyncSubject);
-export const BehaviorSubject = constructor('BehaviorSubject', _BehaviorSubject);
-export const ReplaySubject = constructor('ReplaySubject', _ReplaySubject);
+export const Observable = declareConstructor('Observable', _Observable);
+export const Subject = declareConstructor('Subject', _Subject);
+export const AsyncSubject = declareConstructor('AsyncSubject', _AsyncSubject);
+export const BehaviorSubject = declareConstructor(
+  'BehaviorSubject',
+  _BehaviorSubject
+);
+export const ReplaySubject = declareConstructor(
+  'ReplaySubject',
+  _ReplaySubject
+);
 
 export type AsyncSubject<T> = _AsyncSubject<T>;
 export type BehaviorSubject<T> = _BehaviorSubject<T>;
@@ -56,31 +62,34 @@ export type Observable<T> = _Observable<T>;
 export type ReplaySubject<T> = _ReplaySubject<T>;
 export type Subject<T> = _Subject<T>;
 
-export const combineLatest = creator('combineLatest', _combineLatest);
-export const concat = creator('concat', _concat);
-export const defer = creator('defer', _defer);
-export const empty = creator('empty', _empty);
-export const forkJoin = creator('forkJoin', _forkJoin);
-export const from = creator('from', _from);
-export const fromEvent = creator('fromEvent', _fromEvent);
-export const fromEventPattern = creator('fromEventPattern', _fromEventPattern);
-export const generate = creator('generate', _generate);
-export const iif = creator('iif', _iif);
-export const interval = creator('interval', _interval);
-export const merge = creator('merge', _merge);
-export const never = creator('never', _never);
-export const of = creator('of', _of);
-export const onErrorResumeNext = creator(
+export const combineLatest = declareCreator('combineLatest', _combineLatest);
+export const concat = declareCreator('concat', _concat);
+export const defer = declareCreator('defer', _defer);
+export const empty = declareCreator('empty', _empty);
+export const forkJoin = declareCreator('forkJoin', _forkJoin);
+export const from = declareCreator('from', _from);
+export const fromEvent = declareCreator('fromEvent', _fromEvent);
+export const fromEventPattern = declareCreator(
+  'fromEventPattern',
+  _fromEventPattern
+);
+export const generate = declareCreator('generate', _generate);
+export const iif = declareCreator('iif', _iif);
+export const interval = declareCreator('interval', _interval);
+export const merge = declareCreator('merge', _merge);
+export const never = declareCreator('never', _never);
+export const of = declareCreator('of', _of);
+export const onErrorResumeNext = declareCreator(
   'onErrorResumeNext',
   _onErrorResumeNext
 );
-export const pairs = creator('pairs', _pairs);
-export const race = creator('race', _race);
-export const range = creator('range', _range);
-export const throwError = creator('throwError', _throwError);
-export const timer = creator('timer', _timer);
-export const using = creator('using', _using);
-export const zip = creator('zip', _zip);
-export const scheduled = creator('scheduled', _scheduled);
+export const pairs = declareCreator('pairs', _pairs);
+export const race = declareCreator('race', _race);
+export const range = declareCreator('range', _range);
+export const throwError = declareCreator('throwError', _throwError);
+export const timer = declareCreator('timer', _timer);
+export const using = declareCreator('using', _using);
+export const zip = declareCreator('zip', _zip);
+export const scheduled = declareCreator('scheduled', _scheduled);
 
 export * from '@rxjs-insights/rxjs-alias-module';

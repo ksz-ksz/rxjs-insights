@@ -1,4 +1,3 @@
-export { constructor, creator, operator, singleton } from './lib/annotations';
 export type { Tracer, Trace } from './lib/tracer';
 export type { Env, Instrument, InstrumentationContext } from './lib/env';
 export { getGlobalEnv, setGlobalEnv } from './lib/env';
@@ -11,7 +10,7 @@ export type {
   ObservableMeta,
   SubscriberMeta,
 } from './lib/meta';
-export { getMeta, hasAnyMeta, hasMeta, setAnyMeta, setMeta } from './lib/meta';
+export { getMeta, hasAnyMeta, hasMeta } from './lib/meta';
 export type {
   DeclarationRef,
   EventRef,

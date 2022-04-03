@@ -1,0 +1,14 @@
+{
+  "name": "@rxjs-insights/instrumentation-declarations",
+  "module": "../dist/esm/declarations.js",
+  "main": "../dist/cjs/declarations.js",
+  "types": "../dist/types/declarations.d.ts",
+  "exports": {
+    ".": {
+      "browser": "../dist/esm/declarations.js",
+      "node": "../dist/cjs/declarations.js",
+      "types": "../dist/types/declarations.d.ts"
+    }
+  },
+  "sideEffects": false
+}

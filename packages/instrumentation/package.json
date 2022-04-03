@@ -40,6 +40,11 @@
       "browser": "./dist/esm/operators.js",
       "node": "./dist/cjs/operators.js",
       "types": "./dist/types/operators.d.ts"
+    },
+    "./declarations": {
+      "browser": "./dist/esm/declarations.js",
+      "node": "./dist/cjs/declarations.js",
+      "types": "./dist/types/declarations.d.ts"
     }
   },
   "sideEffects": false,

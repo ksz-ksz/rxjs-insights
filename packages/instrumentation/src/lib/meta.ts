@@ -42,8 +42,3 @@ export function setMeta<T>(target: T, meta: MetaOf<T>): MetaOf<T> {
 export function hasAnyMeta<T>(target: T): target is T & HasMeta<any> {
   return (target as any)[META] !== undefined;
 }
-
-export function setAnyMeta<M>(target: any, meta: M): M {
-  (target as any)[META] = meta;
-  return meta;
-}
