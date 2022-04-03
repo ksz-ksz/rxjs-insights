@@ -2,7 +2,8 @@
   "name": "playground-webpack4",
   "version": "0.1.5",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "typecheck": "tsc --noEmit"
   },
   "private": true,
   "dependencies": {
