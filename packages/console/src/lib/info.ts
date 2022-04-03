@@ -37,6 +37,39 @@ import {
   getSucceedingEvents,
 } from './event-utils';
 
+interface Printable {
+  tag: TagLike;
+  group?: PrintableGroup;
+}
+
+interface PrintableGroup {
+  [name: string]: Printable | undefined;
+}
+
+function printGroup(group: PrintableGroup) {
+  const entries = Object.entries(group).filter(
+    ([, value]) => value !== undefined
+  ) as Array<[string, Printable]>;
+  const maxLabelLength = Math.max(...entries.map(([label]) => label.length));
+  for (let [label, printable] of entries) {
+    if (printable.group) {
+      const labelTag = textTag(
+        `${label.padEnd(maxLabelLength + 3, '.')}:`,
+        'font-weight: 400;'
+      );
+      console.groupCollapsed(...format(labelTag, printable.tag));
+      printGroup(printable.group);
+      console.groupEnd();
+    } else {
+      const labelTag = textTag(
+        ` ${label.padEnd(maxLabelLength + 3, '.')}:`,
+        'font-weight: 400;'
+      );
+      console.log(...format('', labelTag, printable.tag));
+    }
+  }
+}
+
 function getStatus(subscriber: Subscriber) {
   return (subscriber.events.find(
     (x) =>
@@ -249,39 +282,6 @@ function createNumberOfSubscriptionsGroup(subscriptions: Subscriber[]) {
   };
 }
 
-interface Printable {
-  tag: TagLike;
-  group?: PrintableGroup;
-}
-
-interface PrintableGroup {
-  [name: string]: Printable | undefined;
-}
-
-function printGroup(group: PrintableGroup) {
-  const entries = Object.entries(group).filter(
-    ([, value]) => value !== undefined
-  ) as Array<[string, Printable]>;
-  const maxLabelLength = Math.max(...entries.map(([label]) => label.length));
-  for (let [label, printable] of entries) {
-    if (printable.group) {
-      const labelTag = textTag(
-        `${label.padEnd(maxLabelLength + 1, '.')}:`,
-        'font-weight: 400;'
-      );
-      console.groupCollapsed(...format(labelTag, printable.tag));
-      printGroup(printable.group);
-      console.groupEnd();
-    } else {
-      const labelTag = textTag(
-        ` ${label.padEnd(maxLabelLength + 1, '.')}:`,
-        'font-weight: 400;'
-      );
-      console.log(...format('', labelTag, printable.tag));
-    }
-  }
-}
-
 function eventInfo(event: Event, targetLabel: string) {
   const declaration = event.declaration;
   const { originalLocation, generatedLocation } = declaration.locations;
@@ -333,6 +333,10 @@ export function subscriberInfo(subscriber: Subscriber) {
   printGroup({
     ID: { tag: objectTag(subscriber.id) },
     Name: { tag: objectTag(declaration.name) },
+    Tags:
+      subscriber.observable.tags.length !== 0
+        ? { tag: objectTag(subscriber.observable.tags, true) }
+        : undefined,
     Constructor: { tag: objectTag(declaration.func) },
     Arguments: { tag: objectTag(declaration.args, true) },
     Subscriber: { tag: tags(...subscriber.target.map((x) => objectTag(x))) },
@@ -362,6 +366,10 @@ export function observableInfo(observable: Observable) {
   printGroup({
     ID: { tag: objectTag(observable.id) },
     Name: { tag: objectTag(declaration.name) },
+    Tags:
+      observable.tags.length !== 0
+        ? { tag: objectTag(observable.tags, true) }
+        : undefined,
     Constructor: { tag: objectTag(declaration.func) },
     Arguments: { tag: objectTag(declaration.args, true) },
     Observable: { tag: objectTag(observable.target) },

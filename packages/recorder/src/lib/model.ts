@@ -31,7 +31,8 @@ export class Observable {
     readonly declaration: Declaration,
     readonly sourceObservable?: Observable,
     readonly subscribers: Subscriber[] = [],
-    readonly events: ObservableEvent[] = []
+    readonly events: ObservableEvent[] = [],
+    readonly tags: string[] = []
   ) {}
 }
 

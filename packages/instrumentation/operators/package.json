@@ -1,0 +1,14 @@
+{
+  "name": "@rxjs-insights/instrumentation-operators",
+  "module": "../dist/esm/operators.js",
+  "main": "../dist/cjs/operators.js",
+  "types": "../dist/types/operators.d.ts",
+  "exports": {
+    ".": {
+      "browser": "../dist/esm/operators.js",
+      "node": "../dist/cjs/operators.js",
+      "types": "../dist/types/operators.d.ts"
+    }
+  },
+  "sideEffects": false
+}

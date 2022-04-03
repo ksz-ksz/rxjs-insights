@@ -19,6 +19,7 @@ import {
   createInstrumentedSubjectError,
   createInstrumentedSubjectNext,
 } from './instrumented-subject';
+import { createAddTag } from './add-tag';
 
 export interface Config {
   Observable: Constructor<ObservableLike>;
@@ -80,6 +81,7 @@ export function instrument({
     instrumentCreator: createInstrumentCreator(context),
     instrumentOperator: createInstrumentOperator(context),
     instrumentSingleton: createInstrumentSingleton(context),
+    addTag: createAddTag(context),
   };
 }
 

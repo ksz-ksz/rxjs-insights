@@ -35,6 +35,11 @@
       "browser": "./dist/esm/index.js",
       "node": "./dist/cjs/index.js",
       "types": "./dist/types/index.d.js"
+    },
+    "./operators": {
+      "browser": "./dist/esm/operators.js",
+      "node": "./dist/cjs/operators.js",
+      "types": "./dist/types/operators.d.ts"
     }
   },
   "sideEffects": false,
@@ -46,5 +51,8 @@
   },
   "peerDependencies": {
     "rxjs": "^6 || ^7"
+  },
+  "devDependencies": {
+    "rxjs": "7.5.5"
   }
 }

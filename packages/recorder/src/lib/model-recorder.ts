@@ -112,6 +112,11 @@ export class ModelRecorder implements Recorder {
     return ref(event);
   }
 
+  addTag(observableRef: ObservableRef, tag: string) {
+    const observable = deref(observableRef);
+    observable.tags.push(tag);
+  }
+
   startTask(name: string) {
     this.currentTask = new Task(name);
   }

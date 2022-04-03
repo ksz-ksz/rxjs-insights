@@ -23,6 +23,7 @@ export interface Env {
     (...args: any[]) => (source: any) => ObservableLike
   >;
   instrumentSingleton: Instrument<ObservableLike>;
+  addTag: (observable: ObservableLike, tag: string) => void;
 }
 
 export function setGlobalEnv(env: Env) {

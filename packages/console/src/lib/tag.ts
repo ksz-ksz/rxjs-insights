@@ -49,8 +49,11 @@ export function observableTag(observable: Observable, target = false) {
   const color = target
     ? Color.Target.Observable.Primary
     : Color.Target.Observable.Secondary;
+  const name = observable.declaration.name;
+  const tags =
+    observable.tags.length !== 0 ? `[${observable.tags.join(', ')}]` : '';
   return {
-    format: `%c${observable.declaration.name} #${observable.id}%c`,
+    format: `%c${name}${tags} #${observable.id}%c`,
     args: [
       `font-weight: bold; color: black; background-color: ${color}; padding: 2px 4px; border-radius: 4px;`,
       ``,
@@ -62,8 +65,13 @@ export function subscriberTag(subscriber: Subscriber, target = false) {
   const color = target
     ? Color.Target.Subscription.Primary
     : Color.Target.Subscription.Secondary;
+  const name = subscriber.declaration.name;
+  const tags =
+    subscriber.observable.tags.length !== 0
+      ? `[${subscriber.observable.tags.join(', ')}]`
+      : '';
   return {
-    format: `%c${subscriber.declaration.name} #${subscriber.id}%c`,
+    format: `%c${name}${tags} #${subscriber.id}%c`,
     args: [
       `font-weight: bold; color: black; background-color: ${color}; padding: 2px 4px; border-radius: 4px;`,
       ``,

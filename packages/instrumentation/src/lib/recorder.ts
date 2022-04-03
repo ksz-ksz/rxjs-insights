@@ -44,6 +44,8 @@ export interface Recorder {
     sourceEventRef: EventRef | undefined
   ): SubscriberEventRef;
 
+  addTag(observableRef: ObservableRef, tag: string): void;
+
   startTask(name: string): void;
 
   endTask(): void;
