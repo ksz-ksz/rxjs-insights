@@ -35,7 +35,7 @@ import {
   declareConstructor,
   declareCreator,
   declareSingleton,
-} from '@rxjs-insights/instrumentation/declarations';
+} from '@rxjs-insights/core/declarations';
 
 // export const lastValueFrom = ?
 // export const firstValueFrom = ?

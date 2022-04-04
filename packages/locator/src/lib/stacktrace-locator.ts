@@ -1,4 +1,4 @@
-import { Location, Locator, Locations } from '@rxjs-insights/instrumentation';
+import { Location, Locator, Locations } from '@rxjs-insights/core';
 import {
   getSourceMapConsumer,
   GREATEST_LOWER_BOUND,

@@ -1,7 +1,4 @@
-import {
-  ObservableLike,
-  SubscriptionLike,
-} from '@rxjs-insights/instrumentation';
+import { ObservableLike, SubscriptionLike } from '@rxjs-insights/core';
 import { isObservableTarget, isSubscriberTarget } from './target';
 import { getSubscriber } from './get-subscriber';
 import { getObservable } from './get-observable';

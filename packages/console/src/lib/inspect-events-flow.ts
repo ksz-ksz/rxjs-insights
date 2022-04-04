@@ -1,7 +1,4 @@
-import {
-  ObservableLike,
-  SubscriptionLike,
-} from '@rxjs-insights/instrumentation';
+import { ObservableLike, SubscriptionLike } from '@rxjs-insights/core';
 import { Event, Observable, Subscriber, Task } from '@rxjs-insights/recorder';
 import {
   formatEvent,

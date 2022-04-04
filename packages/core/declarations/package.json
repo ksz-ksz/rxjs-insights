@@ -1,5 +1,5 @@
 {
-  "name": "@rxjs-insights/instrumentation-declarations",
+  "name": "@rxjs-insights/core-declarations",
   "module": "../dist/esm/declarations.js",
   "main": "../dist/cjs/declarations.js",
   "types": "../dist/types/declarations.d.ts",

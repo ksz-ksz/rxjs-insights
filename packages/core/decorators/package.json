@@ -1,5 +1,5 @@
 {
-  "name": "@rxjs-insights/instrumentation-decorators",
+  "name": "@rxjs-insights/core-decorators",
   "module": "../dist/esm/decorators.js",
   "main": "../dist/cjs/decorators.js",
   "types": "../dist/types/decorators.d.ts",

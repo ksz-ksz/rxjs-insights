@@ -50,9 +50,9 @@
     "error-stack-parser": "^2.0.6"
   },
   "peerDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.5"
+    "@rxjs-insights/core": "0.1.5"
   },
   "devDependencies": {
-    "@rxjs-insights/instrumentation": "0.1.5"
+    "@rxjs-insights/core": "0.1.5"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@rxjs-insights/instrumentation-operators",
+  "name": "@rxjs-insights/core-operators",
   "module": "../dist/esm/operators.js",
   "main": "../dist/cjs/operators.js",
   "types": "../dist/types/operators.d.ts",

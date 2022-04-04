@@ -1,4 +1,4 @@
-import { Location, Locations } from '@rxjs-insights/instrumentation';
+import { Location, Locations } from '@rxjs-insights/core';
 import { Event, Observable, Subscriber, Task } from '@rxjs-insights/recorder';
 import { Color, getEventColor } from './colors';
 

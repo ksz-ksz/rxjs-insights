@@ -1,5 +1,5 @@
 {
-  "name": "@rxjs-insights/instrumentation",
+  "name": "@rxjs-insights/core",
   "version": "0.1.5",
   "description": "The heart of the rxjs-insights.",
   "keywords": [

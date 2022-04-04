@@ -1,5 +1,5 @@
 /// <reference types="zone.js" />
-import { Tracer } from '@rxjs-insights/instrumentation';
+import { Tracer } from '@rxjs-insights/core';
 import { SchedulerLike, SchedulerTracer } from './scheduler-tracer';
 import { ZonejsTracer } from './zonejs-tracer';
 

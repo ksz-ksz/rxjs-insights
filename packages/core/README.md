@@ -1,4 +1,4 @@
-# @rxjs-insights/instrumentation
+# @rxjs-insights/core
 
 The heart of the rxjs-insights.
 

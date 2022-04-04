@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "paths": {
-      "@rxjs-insights/instrumentation": ["./packages/instrumentation/src/index.ts"]
+      "@rxjs-insights/core": ["./packages/core/src/index.ts"]
     }
   },
   "references": [

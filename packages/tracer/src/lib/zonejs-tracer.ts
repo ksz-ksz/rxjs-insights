@@ -4,7 +4,7 @@ import {
   Recorder,
   Trace,
   Tracer,
-} from '@rxjs-insights/instrumentation';
+} from '@rxjs-insights/core';
 
 export class ZonejsTracer implements Tracer {
   private recorder!: Recorder;

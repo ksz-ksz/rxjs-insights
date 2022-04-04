@@ -104,7 +104,7 @@ import {
   zip as _zip,
   zipAll as _zipAll,
 } from '@rxjs-insights/rxjs-alias-module/operators';
-import { declareOperator } from '@rxjs-insights/instrumentation/declarations';
+import { declareOperator } from '@rxjs-insights/core/declarations';
 
 export const audit = declareOperator('audit', _audit);
 export const auditTime = declareOperator('auditTime', _auditTime);

@@ -8,7 +8,7 @@ import {
   Recorder,
   SubscriberEventRef,
   SubscriberRef,
-} from '@rxjs-insights/instrumentation';
+} from '@rxjs-insights/core';
 import {
   Declaration,
   deref,

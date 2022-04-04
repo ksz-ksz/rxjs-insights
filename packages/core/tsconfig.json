@@ -1,10 +1,15 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "paths": {
-      "rxjs": ["./packages/instrumentation/node_modules/rxjs-alias"]
+      "rxjs": ["./packages/core/node_modules/rxjs-alias"]
     }
   },
+  "references": [
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
   "files": [
     "src/index.ts",
     "src/operators.ts",

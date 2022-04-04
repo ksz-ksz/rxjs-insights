@@ -2,8 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "paths": {
-      "@rxjs-insights/instrumentation": ["./packages/instrumentation/src/index.ts"],
-      "@rxjs-insights/instrumentation/declarations": ["./packages/instrumentation/src/declarations.ts"],
+      "@rxjs-insights/core": ["./packages/core/src/index.ts"],
+      "@rxjs-insights/core/declarations": ["./packages/core/src/declarations.ts"],
       "@rxjs-insights/locator": ["./packages/locator/src/index.ts"],
       "@rxjs-insights/recorder": ["./packages/recorder/src/index.ts"],
       "@rxjs-insights/tracer": ["./packages/tracer/src/index.ts"],

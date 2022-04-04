@@ -5,7 +5,7 @@ import {
   SubscriptionLike,
   Trace,
   Tracer,
-} from '@rxjs-insights/instrumentation';
+} from '@rxjs-insights/core';
 import { queueCleanup } from './queue-cleanup';
 
 export interface SchedulerLike {

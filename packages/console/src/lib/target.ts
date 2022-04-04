@@ -4,7 +4,7 @@ import {
   HasMeta,
   ObservableMeta,
   SubscriberMeta,
-} from '@rxjs-insights/instrumentation';
+} from '@rxjs-insights/core';
 
 export function isSubscriberTarget(
   target: any

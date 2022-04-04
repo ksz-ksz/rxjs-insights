@@ -7,7 +7,7 @@ import {
   Subject,
   Subscriber,
 } from '@rxjs-insights/rxjs-alias-module';
-import { install } from '@rxjs-insights/instrumentation';
+import { install } from '@rxjs-insights/core';
 import { getRecorder } from '@rxjs-insights/recorder';
 import { getLocator } from '@rxjs-insights/locator';
 import { getTracer } from '@rxjs-insights/tracer';

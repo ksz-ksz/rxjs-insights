@@ -107,7 +107,7 @@ import {
   zipAll as _zipAll,
   zipWith as _zipWith,
 } from '@rxjs-insights/rxjs-alias-module/operators';
-import { declareOperator } from '@rxjs-insights/instrumentation/declarations';
+import { declareOperator } from '@rxjs-insights/core/declarations';
 
 // export const lastValueFrom = ?
 // export const firstValueFrom = ?

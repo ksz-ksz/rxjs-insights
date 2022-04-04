@@ -6,7 +6,7 @@ import {
   ObservableRef,
   SubscriberEventRef,
   SubscriberRef,
-} from '@rxjs-insights/instrumentation';
+} from '@rxjs-insights/core';
 
 export class Declaration {
   private static IDS = 0;
