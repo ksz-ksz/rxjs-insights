@@ -25,7 +25,9 @@
     "access": "public"
   },
   "files": [
-    "dist/"
+    "dist/",
+    "declarations/",
+    "operators/"
   ],
   "module": "./dist/esm/index.js",
   "main": "./dist/cjs/index.js",
@@ -58,6 +60,6 @@
     "rxjs": "^6 || ^7"
   },
   "devDependencies": {
-    "rxjs": "7.5.5"
+    "rxjs-alias": "npm:rxjs@7.5.5"
   }
 }

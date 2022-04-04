@@ -1,7 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "paths": {}
+    "paths": {
+      "rxjs": ["./packages/instrumentation/node_modules/rxjs-alias"]
+    }
   },
   "files": [
     "src/index.ts",

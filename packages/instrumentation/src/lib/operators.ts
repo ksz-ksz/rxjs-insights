@@ -1,5 +1,5 @@
-import { getGlobalEnv } from './env';
 import { Observable } from 'rxjs';
+import { getGlobalEnv } from './env';
 
 const env = getGlobalEnv();
 
