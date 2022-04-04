@@ -1,0 +1,9 @@
+{
+  "name": "lerna",
+  "devDependencies": {
+    "lerna": "^4.0.0"
+  },
+  "dependencies": {
+    "rxjs-insights": "file:.."
+  }
+}

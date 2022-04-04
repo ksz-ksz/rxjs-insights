@@ -2,9 +2,11 @@
   "name": "rxjs-insights",
   "version": "0.0.0",
   "scripts": {
-    "build": "lerna run build",
-    "version-packages": "lerna version --force-publish --exact --no-push",
-    "publish-packages": "lerna publish from-package"
+    "lerna": "node lerna/node_modules/lerna/cli.js",
+    "bootstrap": "npm install && npm --prefix lerna install && npm run lerna bootstrap",
+    "build": "npm run lerna run build",
+    "version-packages": "npm run lerna version --force-publish --exact --no-push",
+    "publish-packages": "npm run lerna publish from-package"
   },
   "private": true,
   "devDependencies": {
@@ -18,7 +20,6 @@
     "eslint-plugin-prettier": "^4.0.0",
     "glob": "^7.2.0",
     "jest": "^27.5.0",
-    "lerna": "^4.0.0",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.1.3",
