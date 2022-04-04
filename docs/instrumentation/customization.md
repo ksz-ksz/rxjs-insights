@@ -125,5 +125,5 @@ function b(observable: Observable<any>) {
   return observable.pipe(tag('b'));
 }
 
-const observable = a(b(of(1, 2, 3))) // will be shown as `of[a, b]` in the output
+const observable = b(a(of(1, 2, 3))) // will be shown as `of[a, b]` in the output
 ```
