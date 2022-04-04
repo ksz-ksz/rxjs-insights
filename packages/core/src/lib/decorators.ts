@@ -8,8 +8,8 @@ export const ObservableCreator = env
   ? (name?: string) =>
       (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
         descriptor.value = env.instrumentCreator(
-          propertyName ?? name,
-          descriptor.value
+          descriptor.value,
+          propertyName ?? name
         );
       }
   : IdentityDecorator;
@@ -18,8 +18,8 @@ export const ObservableOperator = env
   ? (name?: string) =>
       (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
         descriptor.value = env.instrumentOperator(
-          propertyName ?? name,
-          descriptor.value
+          descriptor.value,
+          propertyName ?? name
         );
       }
   : IdentityDecorator;

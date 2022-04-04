@@ -5,7 +5,7 @@ import { instrumentObservable } from './instrument-observable';
 export function createInstrumentCreator(context: InstrumentationContext) {
   return function instrumentCreator<
     T extends (...args: any[]) => ObservableLike
-  >(name: string, target: T): T {
+  >(target: T, name = target.name): T {
     return function instrumentedCreator(...args) {
       const observable = target(...args);
       const declarationRef = context.recorder.declarationRef(

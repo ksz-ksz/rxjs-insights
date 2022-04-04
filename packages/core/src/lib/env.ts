@@ -13,7 +13,7 @@ export interface InstrumentationContext {
 }
 
 export interface Instrument<BASE> {
-  <T extends BASE>(name: string, target: T): T;
+  <T extends BASE>(target: T, name?: string): T;
 }
 
 export interface Env {

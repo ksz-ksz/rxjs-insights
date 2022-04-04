@@ -24,7 +24,7 @@ function instrumentOperatorFunction(
 export function createInstrumentOperator(context: InstrumentationContext) {
   return function instrumentOperator<
     T extends (...args: any[]) => (source: any) => ObservableLike
-  >(name: string, target: T): T {
+  >(target: T, name = target.name): T {
     return function instrumentedOperator(...args) {
       const declarationRef = context.recorder.declarationRef(
         name,

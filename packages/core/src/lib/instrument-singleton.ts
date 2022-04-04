@@ -4,8 +4,8 @@ import { instrumentObservable } from './instrument-observable';
 
 export function createInstrumentSingleton(context: InstrumentationContext) {
   return function instrumentSingleton<T extends ObservableLike>(
-    name: string,
-    observable: T
+    observable: T,
+    name = 'SINGLETON'
   ): T {
     const declarationRef = context.recorder.declarationRef(name);
     return instrumentObservable(context, observable, declarationRef);

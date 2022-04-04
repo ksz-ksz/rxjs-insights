@@ -41,19 +41,19 @@ import {
 // export const firstValueFrom = ?
 // export const partition = ?
 
-export const EMPTY = declareSingleton('EMPTY', _EMPTY);
-export const NEVER = declareSingleton('NEVER', _NEVER);
+export const EMPTY = declareSingleton(_EMPTY, 'EMPTY');
+export const NEVER = declareSingleton(_NEVER, 'NEVER');
 
-export const Observable = declareConstructor('Observable', _Observable);
-export const Subject = declareConstructor('Subject', _Subject);
-export const AsyncSubject = declareConstructor('AsyncSubject', _AsyncSubject);
+export const Observable = declareConstructor(_Observable, 'Observable');
+export const Subject = declareConstructor(_Subject, 'Subject');
+export const AsyncSubject = declareConstructor(_AsyncSubject, 'AsyncSubject');
 export const BehaviorSubject = declareConstructor(
-  'BehaviorSubject',
-  _BehaviorSubject
+  _BehaviorSubject,
+  'BehaviorSubject'
 );
 export const ReplaySubject = declareConstructor(
-  'ReplaySubject',
-  _ReplaySubject
+  _ReplaySubject,
+  'ReplaySubject'
 );
 
 export type AsyncSubject<T> = _AsyncSubject<T>;
@@ -62,34 +62,34 @@ export type Observable<T> = _Observable<T>;
 export type ReplaySubject<T> = _ReplaySubject<T>;
 export type Subject<T> = _Subject<T>;
 
-export const combineLatest = declareCreator('combineLatest', _combineLatest);
-export const concat = declareCreator('concat', _concat);
-export const defer = declareCreator('defer', _defer);
-export const empty = declareCreator('empty', _empty);
-export const forkJoin = declareCreator('forkJoin', _forkJoin);
-export const from = declareCreator('from', _from);
-export const fromEvent = declareCreator('fromEvent', _fromEvent);
+export const combineLatest = declareCreator(_combineLatest, 'combineLatest');
+export const concat = declareCreator(_concat, 'concat');
+export const defer = declareCreator(_defer, 'defer');
+export const empty = declareCreator(_empty, 'empty');
+export const forkJoin = declareCreator(_forkJoin, 'forkJoin');
+export const from = declareCreator(_from, 'from');
+export const fromEvent = declareCreator(_fromEvent, 'fromEvent');
 export const fromEventPattern = declareCreator(
-  'fromEventPattern',
-  _fromEventPattern
+  _fromEventPattern,
+  'fromEventPattern'
 );
-export const generate = declareCreator('generate', _generate);
-export const iif = declareCreator('iif', _iif);
-export const interval = declareCreator('interval', _interval);
-export const merge = declareCreator('merge', _merge);
-export const never = declareCreator('never', _never);
-export const of = declareCreator('of', _of);
+export const generate = declareCreator(_generate, 'generate');
+export const iif = declareCreator(_iif, 'iif');
+export const interval = declareCreator(_interval, 'interval');
+export const merge = declareCreator(_merge, 'merge');
+export const never = declareCreator(_never, 'never');
+export const of = declareCreator(_of, 'of');
 export const onErrorResumeNext = declareCreator(
-  'onErrorResumeNext',
-  _onErrorResumeNext
+  _onErrorResumeNext,
+  'onErrorResumeNext'
 );
-export const pairs = declareCreator('pairs', _pairs);
-export const race = declareCreator('race', _race);
-export const range = declareCreator('range', _range);
-export const throwError = declareCreator('throwError', _throwError);
-export const timer = declareCreator('timer', _timer);
-export const using = declareCreator('using', _using);
-export const zip = declareCreator('zip', _zip);
-export const scheduled = declareCreator('scheduled', _scheduled);
+export const pairs = declareCreator(_pairs, 'pairs');
+export const race = declareCreator(_race, 'race');
+export const range = declareCreator(_range, 'range');
+export const throwError = declareCreator(_throwError, 'throwError');
+export const timer = declareCreator(_timer, 'timer');
+export const using = declareCreator(_using, 'using');
+export const zip = declareCreator(_zip, 'zip');
+export const scheduled = declareCreator(_scheduled, 'scheduled');
 
 export * from '@rxjs-insights/rxjs-alias-module';

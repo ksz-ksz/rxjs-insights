@@ -21,8 +21,8 @@ function getPrototypeChainLength(superClass: object, subClass: object) {
 
 export function createInstrumentConstructor(context: InstrumentationContext) {
   return function instrumentConstructor<T extends Constructor<ObservableLike>>(
-    name: string,
-    target: T
+    target: T,
+    name = target.name
   ): T {
     const proxy = new Proxy(target, {
       construct(target: T, args: any[], newTarget: Function) {
