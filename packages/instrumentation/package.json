@@ -26,8 +26,9 @@
   },
   "files": [
     "dist/",
-    "declarations/",
-    "operators/"
+    "operators/",
+    "decorators/",
+    "declarations/"
   ],
   "module": "./dist/esm/index.js",
   "main": "./dist/cjs/index.js",
@@ -47,6 +48,11 @@
       "browser": "./dist/esm/declarations.js",
       "node": "./dist/cjs/declarations.js",
       "types": "./dist/types/declarations.d.ts"
+    },
+    "./decorators": {
+      "browser": "./dist/esm/decorators.js",
+      "node": "./dist/cjs/decorators.js",
+      "types": "./dist/types/decorators.d.ts"
     }
   },
   "sideEffects": false,

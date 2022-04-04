@@ -1,0 +1,14 @@
+{
+  "name": "@rxjs-insights/instrumentation-decorators",
+  "module": "../dist/esm/decorators.js",
+  "main": "../dist/cjs/decorators.js",
+  "types": "../dist/types/decorators.d.ts",
+  "exports": {
+    ".": {
+      "browser": "../dist/esm/decorators.js",
+      "node": "../dist/cjs/decorators.js",
+      "types": "../dist/types/decorators.d.ts"
+    }
+  },
+  "sideEffects": false
+}
