@@ -6,8 +6,13 @@ Instrumentation, while completely optional, has many advantages, including:
 * discovery of the source code locations pointing to the instrumented function usages,
 * discovery of the arguments passed to the instrumented function.
 
-The utilities described below make it possible to instrument custom constructors, creators, operators and observables.
-Note that it's safe to keep those functions in the production code - when the instrumentation is not enabled, they carry only a minimal memory and performance cost.
+
+
+The customization utilities can be divided into two categories:
+* **naming utilities** - they set the name of the observable (an observable can have only one name) and binds the source code location to the usage of the instrumented constructor, creator or operator,
+* **tagging utilities** - they add a tag to the observable (an observable can have multiple tags) without altering its name and source code location binding. They are useful if you want to keep track of an observable between function calls.
+
+> Note: It's safe to keep the customization utilities in the production code. They have only a minimal memory and performance footprint if the instrumentation is not enabled.
 
 ## Declarations
 
@@ -16,7 +21,7 @@ Note that it's safe to keep those functions in the production code - when the in
 > Note: This function is typically not needed as all subclasses of the `Observable` class are properly tracked by default.
 > However, you may still want to use it to customize the automatically discovered class name.
 
-Instruments an observable constructor (class), e.g.:
+Naming utility. Instruments an observable constructor (class), e.g.:
 
 ```ts
 import { Observable } from "rxjs";
@@ -30,7 +35,7 @@ export type CustomObservable = _CustomObservable;
 
 ### `declareCreator(creator: Function, name?: string)`
 
-Instruments an observable creator function, e.g.:
+Naming utility. Instruments an observable creator function, e.g.:
 
 ```ts
 import { Observable } from "rxjs";
@@ -45,7 +50,7 @@ export const customCreator = declareCreator(_customCreator, "customCreator");
 
 ### `declareOperator(operator: Function, name?: string)`
 
-Instruments an observable operator function, e.g.:
+Naming utility. Instruments an observable operator function, e.g.:
 
 ```ts
 import { Observable } from "rxjs";
@@ -60,7 +65,7 @@ export const customOperator = declareOperator(_customOperator, "customOperator")
 
 ### `declareSingleton(observable: Observable<any>, name?: string)`
 
-Instruments an observable, e.g.:
+Naming utility. Instruments an observable, e.g.:
 
 ```ts
 import { Observable } from "rxjs";
@@ -75,7 +80,7 @@ export const CUSTOM_OBSERVABLE = declareSingleton(_CUSTOM_OBSERVABLE, "CUSTOM_OB
 
 ### `ObservableCreator(name? string)`
 
-Instruments an observable creator method, e.g.:
+Naming utility. Instruments an observable creator method, e.g.:
 
 ```ts
 import { Observable } from "rxjs";
@@ -91,7 +96,7 @@ export class MyClass {
 
 ### `ObservableOperator(name? string)`
 
-Instruments an observable operator method, e.g.:
+Naming utility. Instruments an observable operator method, e.g.:
 
 ```ts
 import { Observable } from "rxjs";
@@ -109,9 +114,7 @@ export class MyClass {
 
 ### `tag(name: string)`
 
-Adds a tag to the observable.
-A tag is displayed next to the observable name.
-An observable can have multiple tags. E.g.:
+Tagging utility. Instruments a piped observable, e.g.:
 
 ```ts
 import { Observable, of } from "rxjs";
@@ -125,5 +128,5 @@ function b(observable: Observable<any>) {
   return observable.pipe(tag('b'));
 }
 
-const observable = b(a(of(1, 2, 3))) // will be shown as `of[a, b]` in the output
+const observable = a(b(of(1, 2, 3)));
 ```
