@@ -6,11 +6,9 @@ Instrumentation, while completely optional, has many advantages, including:
 * discovery of the source code locations pointing to the instrumented function usages,
 * discovery of the arguments passed to the instrumented function.
 
-
-
 The customization utilities can be divided into two categories:
-* **naming utilities** - they set the name of the observable (an observable can have only one name) and binds the source code location to the usage of the instrumented constructor, creator or operator,
-* **tagging utilities** - they add a tag to the observable (an observable can have multiple tags) without altering its name and source code location binding. They are useful if you want to keep track of an observable between function calls.
+* **naming utilities** - setting the name of the observable (an observable can have only one name) and binding the source code location to the usage of the instrumented constructor, creator or operator,
+* **tagging utilities** - adding a tag to the observable (an observable can have multiple tags) without altering its name and source code location binding. They are useful if you want to keep track of an observable between function calls.
 
 > Note: It's safe to keep the customization utilities in the production code. They have only a minimal memory and performance footprint if the instrumentation is not enabled.
 
