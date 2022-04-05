@@ -26,7 +26,7 @@ RxJS Insights gathers the data about:
 
 **Try it out on [StackBlitz ⚡](https://stackblitz.com/edit/rxjs-insights-playground)**
 
-![Example console output](./docs/console/usage/events-flow.png)
+![Example console output](./docs/console/img/events-flow.png)
 
 ## Documentation
 
@@ -44,15 +44,9 @@ RxJS Insights gathers the data about:
   * [Async actions tracking](./docs/instrumentation/async-actions-tracking.md)
 * [Console](./docs/console/index.md)
   * [Setup](./docs/console/setup.md)
-  * [Usage](./docs/console/usage/index.md)
-    * [inspect](./docs/console/usage/info.md)
-    * [inspectSubscribers](./docs/console/usage/subscribers.md)
-    * [inspectSources](./docs/console/usage/sources.md)
-    * [inspectDestinations](./docs/console/usage/destinations.md)
-    * [inspectEvents](./docs/console/usage/events.md)
-    * [inspectPrecedingEvents](./docs/console/usage/preceding-events.md)
-    * [inspectSucceedingEvents](./docs/console/usage/succeeding-events.md)
-    * [inspectEventsFlow](./docs/console/usage/events-flow.md)
+  * [Usage](./docs/console/usage.md)
+    * [Interactive output](./docs/console/usage.md#interactive-output)
+    * [Inspections](./docs/console/usage.md#inspections)
 
 ## Future work
 
