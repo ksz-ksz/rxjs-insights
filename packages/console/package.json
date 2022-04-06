@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/console",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "See the data gathered by rxjs-insights right in the console.",
   "keywords": [
     "rxjs",
@@ -45,7 +45,7 @@
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types"
   },
   "dependencies": {
-    "@rxjs-insights/core": "0.1.5",
-    "@rxjs-insights/recorder": "0.1.5"
+    "@rxjs-insights/core": "^0.2.0",
+    "@rxjs-insights/recorder": "^0.2.0"
   }
 }
