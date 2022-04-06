@@ -1,7 +1,9 @@
 {
-  "version": "0.1.5",
+  "version": "0.2.0",
   "npmClient": "npm",
-  "npmClientArgs": ["--legacy-peer-deps"],
+  "npmClientArgs": [
+    "--legacy-peer-deps"
+  ],
   "packages": [
     "packages/*",
     "playgrounds/*"

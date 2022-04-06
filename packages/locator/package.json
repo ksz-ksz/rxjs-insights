@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/locator",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "The default implementation of the rxjs-insights' locator.",
   "keywords": [
     "rxjs",
@@ -46,13 +46,13 @@
     "version": "node ../../scripts/update-peer-dependencies.js"
   },
   "dependencies": {
-    "source-map": "^0.7.3",
-    "error-stack-parser": "^2.0.6"
+    "error-stack-parser": "^2.0.6",
+    "source-map": "^0.7.3"
   },
   "peerDependencies": {
-    "@rxjs-insights/core": "0.1.5"
+    "@rxjs-insights/core": "0.2.0"
   },
   "devDependencies": {
-    "@rxjs-insights/core": "0.1.5"
+    "@rxjs-insights/core": "^0.2.0"
   }
 }
