@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "isolatedModules": false,
+    "types": ["chrome"]
+  },
+  "references": [
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "files": [
+    "src/index.ts"
+  ],
+  "exclude": [
+    "**/*"
+  ]
+}

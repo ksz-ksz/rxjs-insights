@@ -9,7 +9,6 @@
   },
   "files": [
     "src/index.ts",
-    "src/index.ts",
     "src/rxjs/index.ts",
     "src/rxjs/operators/index.ts"
   ],

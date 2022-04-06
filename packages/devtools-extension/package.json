@@ -1,0 +1,11 @@
+{
+  "name": "@rxjs-insights/devtools-extension",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.js"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.180"
+  }
+}
