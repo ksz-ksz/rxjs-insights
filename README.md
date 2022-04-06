@@ -26,7 +26,7 @@ RxJS Insights gathers the data about:
 
 **Try it out on [StackBlitz ⚡](https://stackblitz.com/edit/rxjs-insights-playground)**
 
-![Example console output](./docs/console/img/events-flow.png)
+![Example console output](./docs/console/img/inspect-events-flow.png)
 
 ## Documentation
 
