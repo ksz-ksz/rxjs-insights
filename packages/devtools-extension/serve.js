@@ -1,4 +1,5 @@
 const esbuild = require('esbuild');
+const webext = require('web-ext');
 
 esbuild.build({
   entryPoints: [
@@ -9,5 +10,13 @@ esbuild.build({
   ],
   outdir: 'dist',
   bundle: true,
+  watch: true,
+  sourcemap: 'linked',
   tsconfig: 'tsconfig.json',
+});
+
+webext.cmd.run({
+  sourceDir: process.cwd(),
+  target: 'chromium',
+  startUrl: 'http://localhost:3000',
 });

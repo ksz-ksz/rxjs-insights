@@ -3,8 +3,8 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "start": "node build.js",
-    "run": "web-ext run --target chromium --start-url http://localhost:3000"
+    "build": "node build.js",
+    "start": "node serve.js"
   },
   "devDependencies": {
     "web-ext": "^6.8.0",
