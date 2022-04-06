@@ -5,7 +5,7 @@ The `@rxjs-insights/console` package exports a few functions that allow to analy
 ## Interactive output
 
 The analysis is presented in the form of the browser console output.
-Moreover, the output provides somewhat interactive experience allowing for drilling-down to other analysis and/or targets.
+The output provides somewhat interactive experience allowing for drilling-down to other analysis and/or targets.
 This is achieved by the presence of the `More` object at the end of every log line.
 The drill-down can be performed by expanding the `More` object and invoking one of the inspection functions, e.g.:
 
