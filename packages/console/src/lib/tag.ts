@@ -110,7 +110,8 @@ export function taskTag(task: Task) {
 }
 
 export function dataTag(event: Event) {
-  return tags(...event.declaration.args.map((x) => objectTag(x)));
+  const args = event.declaration.args ?? [];
+  return tags(...args.map((x) => objectTag(x)));
 }
 
 function isPrimitive(object: any) {

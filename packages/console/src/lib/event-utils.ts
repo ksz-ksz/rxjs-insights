@@ -7,12 +7,28 @@ function isSubscriptionEvent(event: Event) {
   );
 }
 
-export function getPrecedingEvents(event: Event) {
-  return event.precedingEvent ? [event.precedingEvent] : [];
+function isInternal(event: Event) {
+  return event.target.declaration.internal;
 }
 
-export function getSucceedingEvents(event: Event) {
-  return event.succeedingEvents;
+export function getPrecedingEvent(event: Event): Event | undefined {
+  const precedingEvent = event.precedingEvent;
+  return precedingEvent !== undefined
+    ? isInternal(precedingEvent)
+      ? getPrecedingEvent(precedingEvent)
+      : precedingEvent
+    : undefined;
+}
+
+export function getPrecedingEvents(event: Event): Event[] {
+  const precedingEvent = getPrecedingEvent(event);
+  return precedingEvent !== undefined ? [precedingEvent] : [];
+}
+
+export function getSucceedingEvents(event: Event): Event[] {
+  return event.succeedingEvents.flatMap((e) =>
+    isInternal(e) ? getSucceedingEvents(e) : [e]
+  );
 }
 
 export function getSourceEvents(event: Event) {

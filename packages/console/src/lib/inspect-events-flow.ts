@@ -12,6 +12,7 @@ import { isObservableTarget, isSubscriberTarget } from './target';
 import { getSubscriber } from './get-subscriber';
 import { getObservable } from './get-observable';
 import {
+  getPrecedingEvent,
   getPrecedingEvents,
   getSourceEvents,
   getSucceedingEvents,
@@ -109,11 +110,12 @@ function printEvent(
   target: Observable | Subscriber,
   eventsSet: Set<Event>
 ) {
-  if (event.succeedingEvents.length === 0) {
+  const succeedingEvents = getSucceedingEvents(event);
+  if (succeedingEvents.length === 0) {
     console.log(...formatEvent(event, event.target === target));
   } else {
     console.group(...formatEvent(event, event.target === target));
-    const parts = partitionEventsByExclusion(event.succeedingEvents, eventsSet);
+    const parts = partitionEventsByExclusion(succeedingEvents, eventsSet);
     for (let part of parts) {
       const included = eventsSet.has(part[0]);
       if (included) {
@@ -157,10 +159,11 @@ function getTaskRootEvents(
 ) {
   const taskRootEvents: Event[] = [];
   for (const taskEvent of taskEvents) {
+    const precedingEvent = getPrecedingEvent(taskEvent);
     if (
-      taskEvent.precedingEvent === undefined ||
-      !eventsSet.has(taskEvent.precedingEvent) ||
-      taskEvent.precedingEvent.task !== task
+      precedingEvent === undefined ||
+      !eventsSet.has(precedingEvent) ||
+      precedingEvent.task !== task
     ) {
       taskRootEvents.push(taskEvent);
     }

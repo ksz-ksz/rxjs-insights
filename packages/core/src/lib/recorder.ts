@@ -17,7 +17,8 @@ export interface Recorder {
     name: string,
     func?: Function,
     args?: any[],
-    locations?: Promise<Locations>
+    locations?: Promise<Locations>,
+    internal?: boolean
   ): DeclarationRef;
 
   observableRef(

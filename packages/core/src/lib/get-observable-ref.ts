@@ -11,7 +11,13 @@ function getOrRecordObservableMeta(
   } else {
     const name: string =
       Object.getPrototypeOf(observable)?.constructor?.name ?? 'Observable';
-    const declarationRef = context.recorder.declarationRef(name);
+    const declarationRef = context.recorder.declarationRef(
+      `Internal${name}`,
+      undefined,
+      undefined,
+      undefined,
+      true
+    );
     const observableRef = context.recorder.observableRef(
       observable,
       declarationRef

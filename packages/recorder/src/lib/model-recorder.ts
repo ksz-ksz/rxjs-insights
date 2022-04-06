@@ -26,11 +26,12 @@ export class ModelRecorder implements Recorder {
 
   declarationRef(
     name: string,
-    func: Function,
-    args: any[],
-    locations?: Promise<Locations>
+    func?: Function,
+    args?: any[],
+    locations?: Promise<Locations>,
+    internal = false
   ): DeclarationRef {
-    const declaration = new Declaration(name, func, args);
+    const declaration = new Declaration(name, internal, func, args);
     locations?.then((locations) => {
       declaration.locations = locations;
     });

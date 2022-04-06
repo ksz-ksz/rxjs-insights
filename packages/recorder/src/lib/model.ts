@@ -15,8 +15,9 @@ export class Declaration {
 
   constructor(
     readonly name: string,
-    readonly func: Function,
-    readonly args: any[],
+    readonly internal: boolean,
+    readonly func?: Function,
+    readonly args?: any[],
     public locations: Locations = {}
   ) {}
 }

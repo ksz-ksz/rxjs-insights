@@ -49,19 +49,15 @@ function printGroup(group: PrintableGroup) {
   ) as Array<[string, Printable]>;
   const maxLabelLength = Math.max(...entries.map(([label]) => label.length));
   for (let [label, printable] of entries) {
+    const labelTag = textTag(
+      `${label.padEnd(maxLabelLength + 3, '.')}:`,
+      'font-weight: 400;'
+    );
     if (printable.group) {
-      const labelTag = textTag(
-        `${label.padEnd(maxLabelLength + 3, '.')}:`,
-        'font-weight: 400;'
-      );
       console.groupCollapsed(...format(labelTag, printable.tag));
       printGroup(printable.group);
       console.groupEnd();
     } else {
-      const labelTag = textTag(
-        ` ${label.padEnd(maxLabelLength + 3, '.')}:`,
-        'font-weight: 400;'
-      );
       console.log(...format('', labelTag, printable.tag));
     }
   }
@@ -330,12 +326,17 @@ export function subscriberInfo(subscriber: Subscriber) {
   printGroup({
     ID: { tag: objectTag(subscriber.id) },
     Name: { tag: objectTag(declaration.name) },
+    Internal: declaration.internal ? { tag: objectTag(true) } : undefined,
     Tags:
       subscriber.observable.tags.length !== 0
         ? { tag: objectTag(subscriber.observable.tags, true) }
         : undefined,
-    Constructor: { tag: objectTag(declaration.func) },
-    Arguments: { tag: objectTag(declaration.args, true) },
+    Constructor: declaration.func
+      ? { tag: objectTag(declaration.func) }
+      : undefined,
+    Arguments: declaration.args
+      ? { tag: objectTag(declaration.args, true) }
+      : undefined,
     Subscriber: { tag: tags(...subscriber.target.map((x) => objectTag(x))) },
     'Original location': originalLocation
       ? { tag: getLocationString(originalLocation) }
@@ -363,12 +364,17 @@ export function observableInfo(observable: Observable) {
   printGroup({
     ID: { tag: objectTag(observable.id) },
     Name: { tag: objectTag(declaration.name) },
+    Internal: declaration.internal ? { tag: objectTag(true) } : undefined,
     Tags:
       observable.tags.length !== 0
         ? { tag: objectTag(observable.tags, true) }
         : undefined,
-    Constructor: { tag: objectTag(declaration.func) },
-    Arguments: { tag: objectTag(declaration.args, true) },
+    Constructor: declaration.func
+      ? { tag: objectTag(declaration.func) }
+      : undefined,
+    Arguments: declaration.args
+      ? { tag: objectTag(declaration.args, true) }
+      : undefined,
     Observable: { tag: objectTag(observable.target) },
     'Original location': originalLocation
       ? { tag: getLocationString(originalLocation) }
