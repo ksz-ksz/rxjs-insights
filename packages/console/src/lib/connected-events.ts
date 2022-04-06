@@ -6,18 +6,23 @@ import {
   formatSubscriber,
   formatTask,
 } from './format';
+import { getPrecedingEvent } from './event-utils';
 
 function eventConnections(
   direction: 'Preceding' | 'Succeeding',
   getConnectedEvents: (event: Event) => Event[],
   event: Event,
-  target?: Observable | Subscriber
+  target?: Observable | Subscriber,
+  top = false
 ) {
   const source = direction === 'Preceding';
   const destination = direction === 'Succeeding';
+  const precedingEvent = getPrecedingEvent(event);
   const task =
-    event.task !== undefined && event.task !== event.precedingEvent?.task;
-  if (task && destination) {
+    precedingEvent !== undefined && event.task !== precedingEvent.task;
+  const outerTask = task && destination && !top;
+  const innerTask = task && source;
+  if (outerTask) {
     console.group(...formatTask(event.task));
   }
   const relatedEvents = getConnectedEvents(event);
@@ -25,18 +30,18 @@ function eventConnections(
     console.log(...formatEvent(event, event.target === target));
   } else {
     console.group(...formatEvent(event, event.target === target));
-    if (task && source) {
+    if (innerTask) {
       console.group(...formatTask(event.task));
     }
     for (const relatedEvent of relatedEvents) {
       eventConnections(direction, getConnectedEvents, relatedEvent, target);
     }
-    if (task && source) {
+    if (innerTask) {
       console.groupEnd();
     }
     console.groupEnd();
   }
-  if (task && destination) {
+  if (outerTask) {
     console.groupEnd();
   }
 }
@@ -67,7 +72,7 @@ export function subscriberConnectedEvents(
     console.log(...formatNothingToShow());
   } else {
     for (const event of events) {
-      eventConnections(direction, getConnectedEvents, event, subscriber);
+      eventConnections(direction, getConnectedEvents, event, subscriber, true);
     }
   }
   console.groupEnd();

@@ -4,5 +4,5 @@ export { inspectEventsFlow } from './lib/inspect-events-flow';
 export { inspectPrecedingEvents } from './lib/preceding-events';
 export { inspectSources } from './lib/sources';
 export { inspect } from './lib/info';
-export { inspectSubscribers } from './lib/inspectSubscribers';
+export { inspectSubscribers } from './lib/inspect-subscribers';
 export { inspectSucceedingEvents } from './lib/inspect-succeeding-events';

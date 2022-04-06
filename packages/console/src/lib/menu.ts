@@ -7,7 +7,7 @@ import {
 import {
   subscriberSubscribers,
   observableSubscribers,
-} from './inspectSubscribers';
+} from './inspect-subscribers';
 import { subscriberSources, observableSources } from './sources';
 import {
   eventPrecedingEvents,
