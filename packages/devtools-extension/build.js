@@ -9,6 +9,7 @@ esbuild.build({
   ],
   outdir: 'dist',
   bundle: true,
+  watch: true,
   sourcemap: 'linked',
   tsconfig: 'tsconfig.json',
 });
