@@ -71,13 +71,12 @@ function getAliases(installModule?: string): Record<string, string> {
   return {
     rxjs: path.join(rxjsInsightsPackagePath, 'rxjs'),
     'rxjs/operators': path.join(rxjsInsightsPackagePath, 'rxjs', 'operators'),
-    '@rxjs-insights/rxjs-alias-module': rxjsPackagePath,
-    '@rxjs-insights/rxjs-alias-module/operators': path.join(
+    '@rxjs-insights/rxjs-module': rxjsPackagePath,
+    '@rxjs-insights/rxjs-module/operators': path.join(
       rxjsPackagePath,
       'operators'
     ),
-    '@rxjs-insights/rxjs-install-module':
-      installModule ?? rxjsInsightsPackagePath,
+    '@rxjs-insights/install-module': installModule ?? rxjsInsightsPackagePath,
   };
 }
 

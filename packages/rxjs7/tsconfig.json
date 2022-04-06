@@ -7,9 +7,9 @@
       "@rxjs-insights/locator": ["./packages/locator/src/index.ts"],
       "@rxjs-insights/recorder": ["./packages/recorder/src/index.ts"],
       "@rxjs-insights/tracer": ["./packages/tracer/src/index.ts"],
-      "@rxjs-insights/rxjs-install-module": ["./packages/rxjs7/src/index.ts"],
-      "@rxjs-insights/rxjs-alias-module": ["./packages/rxjs7/node_modules/rxjs"],
-      "@rxjs-insights/rxjs-alias-module/operators": ["./packages/rxjs7/node_modules/rxjs/operators"]
+      "@rxjs-insights/install-module": ["./packages/rxjs7/src/index.ts"],
+      "@rxjs-insights/rxjs-module": ["./packages/rxjs7/node_modules/rxjs"],
+      "@rxjs-insights/rxjs-module/operators": ["./packages/rxjs7/node_modules/rxjs/operators"]
     }
   },
   "references": [

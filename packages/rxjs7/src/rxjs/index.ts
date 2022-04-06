@@ -1,4 +1,4 @@
-import '@rxjs-insights/rxjs-install-module';
+import '@rxjs-insights/install-module';
 import {
   animationFrames as _animationFrames,
   AsyncSubject as _AsyncSubject,
@@ -138,7 +138,7 @@ import {
   zip as _zip,
   zipAll as _zipAll,
   zipWith as _zipWith,
-} from '@rxjs-insights/rxjs-alias-module';
+} from '@rxjs-insights/rxjs-module';
 import {
   declareConstructor,
   declareCreator,
@@ -337,4 +337,4 @@ export const withLatestFrom = declareOperator(
 export const zipAll = declareOperator(_zipAll, 'zipAll');
 export const zipWith = declareOperator(_zipWith, 'zipWith');
 
-export * from '@rxjs-insights/rxjs-alias-module';
+export * from '@rxjs-insights/rxjs-module';

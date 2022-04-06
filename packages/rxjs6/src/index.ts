@@ -6,7 +6,7 @@ import {
   queueScheduler,
   Subject,
   Subscriber,
-} from '@rxjs-insights/rxjs-alias-module';
+} from '@rxjs-insights/rxjs-module';
 import { install } from '@rxjs-insights/core';
 import { getRecorder } from '@rxjs-insights/recorder';
 import { getLocator } from '@rxjs-insights/locator';

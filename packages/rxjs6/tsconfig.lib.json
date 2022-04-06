@@ -2,9 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@rxjs-insights/rxjs-install-module": ["./packages/rxjs6/src/index.ts"],
-      "@rxjs-insights/rxjs-alias-module": ["./packages/rxjs6/node_modules/rxjs"],
-      "@rxjs-insights/rxjs-alias-module/operators": ["./packages/rxjs6/node_modules/rxjs/operators"]
+      "@rxjs-insights/install-module": ["./packages/rxjs6/src/index.ts"],
+      "@rxjs-insights/rxjs-module": ["./packages/rxjs6/node_modules/rxjs"],
+      "@rxjs-insights/rxjs-module/operators": ["./packages/rxjs6/node_modules/rxjs/operators"]
     }
   },
   "files": [
