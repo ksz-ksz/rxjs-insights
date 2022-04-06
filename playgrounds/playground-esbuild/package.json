@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node build.js",
+    "start": "node serve.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
