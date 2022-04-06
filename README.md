@@ -1,6 +1,6 @@
 # RxJS Insights
 
-[![npm version](https://badge.fury.io/js/@rxjs-insights%2Finstrumentation.svg)](https://badge.fury.io/js/@rxjs-insights%2Fcore)
+[![npm version](https://badge.fury.io/js/@rxjs-insights%2Fcore.svg)](https://badge.fury.io/js/@rxjs-insights%2Fcore)
 [![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ksz-ksz/rxjs-insights/blob/master/LICENSE)
 
 RxJS Insights is a toolset that helps you debug the RxJS Observables.
@@ -24,7 +24,7 @@ RxJS Insights gathers the data about:
 * **event relations** (i.e. events caused by other events),
 * **async tasks**: (e.g. `setTimeout`, `setInterval`, DOM events, REST events, etc.).
 
-**Try it out on [StackBlitz ⚡](https://stackblitz.com/edit/rxjs-insights-playground)**
+**Try it out on [StackBlitz ⚡](https://stackblitz.com/edit/rxjs-insights-playground?file=src%2Findex.ts)**
 
 ![Example console output](./docs/console/img/inspect-events-flow.png)
 
