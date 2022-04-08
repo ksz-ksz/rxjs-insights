@@ -3,7 +3,10 @@
   "compilerOptions": {
     "isolatedModules": false,
     "types": ["chrome"],
-    "jsx": "react"
+    "jsx": "react",
+    "paths": {
+      "@app/store":["./src/app/store/index.ts"]
+    }
   },
   "references": [
     {
