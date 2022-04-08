@@ -6,7 +6,13 @@
     "build": "node build.js",
     "start": "node serve.js"
   },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
   "devDependencies": {
+    "@types/react": "^17.0.43",
+    "@types/react-dom": "^17.0.14",
     "web-ext": "^6.8.0",
     "@types/chrome": "^0.0.180"
   }

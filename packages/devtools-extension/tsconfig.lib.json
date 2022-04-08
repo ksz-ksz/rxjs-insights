@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "files": [
-    "src/index.ts"
+    "src/app/main.tsx"
   ],
   "exclude": [
     "**/*"

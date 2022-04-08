@@ -3,7 +3,7 @@ const webext = require('web-ext');
 
 esbuild.build({
   entryPoints: [
-    './src/index.ts',
+    './src/app/main.tsx',
     './src/devtools-page.ts',
     './src/content-script.ts',
     './src/page-script.js',
@@ -19,4 +19,7 @@ webext.cmd.run({
   sourceDir: process.cwd(),
   target: 'chromium',
   startUrl: 'http://localhost:3000',
+  chromiumProfile: 'chromium-profile',
+  keepProfileChanges: true,
+  profileCreateIfMissing: true,
 });
