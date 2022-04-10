@@ -1,4 +1,5 @@
 const esbuild = require('esbuild');
+const { rxjsInsightsPlugin } = require('@rxjs-insights/plugin-esbuild');
 const webext = require('web-ext');
 
 esbuild.build({
@@ -13,6 +14,7 @@ esbuild.build({
   watch: true,
   sourcemap: 'linked',
   tsconfig: 'tsconfig.json',
+  plugins: [rxjsInsightsPlugin()],
 });
 
 webext.cmd.run({

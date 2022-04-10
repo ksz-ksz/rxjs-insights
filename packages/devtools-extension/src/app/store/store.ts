@@ -1,4 +1,4 @@
-import { createStore } from '../store-lib';
+import { createStore } from '@lib/store';
 import { reducer } from './reducer';
 import { State } from './state';
 import { effects } from './effects';

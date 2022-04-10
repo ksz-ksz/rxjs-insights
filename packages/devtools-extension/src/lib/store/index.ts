@@ -1,4 +1,4 @@
-import { BehaviorSubject, map, Observable, reduce, share, Subject } from 'rxjs';
+import { BehaviorSubject, map, Observable, scan, share, Subject } from 'rxjs';
 
 export interface CommandType<PAYLOAD> {
   commandName: string;
@@ -42,7 +42,7 @@ export function createCommand<PAYLOAD>(
   commandName: string
 ): CommandType<PAYLOAD> {
   const commandType: CommandType<PAYLOAD> = Object.assign(
-    (payload) => ({
+    (payload: PAYLOAD) => ({
       commandType,
       payload,
     }),
@@ -100,7 +100,7 @@ export function createStore<STATE>({
   const command$ = commandSubject.asObservable();
 
   const state$ = command$.pipe(
-    reduce(reducer, initialState),
+    scan(reducer, initialState),
     share({
       connector: () => new BehaviorSubject(initialState),
       resetOnError: false,

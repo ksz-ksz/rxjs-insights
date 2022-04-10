@@ -1,4 +1,4 @@
-import { createReducer, when } from '../store-lib';
+import { createReducer, when } from '@lib/store';
 import { State } from './state';
 import { SetTargetStatus } from './commands';
 

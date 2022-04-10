@@ -1,4 +1,4 @@
-import { createCommand } from '../store-lib';
+import { createCommand } from '@lib/store';
 
 export const SetTargetStatus =
   createCommand<{ targetStatus: 'connected' | 'disconnected' }>(

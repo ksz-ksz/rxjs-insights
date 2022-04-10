@@ -1,10 +1,14 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "esModuleInterop": true,
     "isolatedModules": false,
     "types": ["chrome"],
     "jsx": "react",
+    "baseUrl": ".",
     "paths": {
+      "@lib/store":["./src/lib/store/index.ts"],
+      "@lib/store-react":["./src/lib/store-react/index.ts"],
       "@app/store":["./src/app/store/index.ts"]
     }
   },
@@ -13,10 +17,7 @@
       "path": "./tsconfig.spec.json"
     }
   ],
-  "files": [
-    "src/app/main.tsx"
-  ],
-  "exclude": [
-    "**/*"
+  "include": [
+    "./src/**"
   ]
 }
