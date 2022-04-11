@@ -37,8 +37,8 @@ const setStatusInterval = createEffect(
       map(([, targetStatus]) =>
         targetStatus === 'connected' ? 'disconnected' : 'connected'
       ),
-      startWith('connected' as const),
       delay(1000),
+      startWith('connected' as const),
       map((targetStatus) => statusCommands.SetTargetStatus({ targetStatus }))
     ),
   (store) => ({

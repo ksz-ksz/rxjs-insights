@@ -3,9 +3,12 @@ import {
   map,
   merge,
   Observable,
+  observeOn,
+  queueScheduler,
   scan,
   share,
   Subject,
+  subscribeOn,
 } from 'rxjs';
 import { Query } from './query';
 import { Command } from './command';
@@ -78,11 +81,8 @@ export function createStore<DOMAINS extends Array<Slice<any, any>>>(
   const initialState = combinedInitialState(domains);
   const reducer = combinedReducer(domains);
   const effects = combinedEffects(domains);
-
   const commandSubject = new Subject<Command<any>>();
-  const command$ = commandSubject.asObservable();
-
-  const state$ = command$.pipe(
+  const state$ = commandSubject.pipe(
     scan(reducer, initialState),
     share({
       connector: () => new BehaviorSubject(initialState),
@@ -104,14 +104,17 @@ export function createStore<DOMAINS extends Array<Slice<any, any>>>(
   };
 
   subscription.add(
-    effects.effect(command$, store).subscribe({
-      next(command) {
-        commandSubject.next(command);
-      },
-      error(error) {
-        commandSubject.error(error);
-      },
-    })
+    effects
+      .effect(commandSubject.asObservable(), store)
+      .pipe(subscribeOn(queueScheduler), observeOn(queueScheduler))
+      .subscribe({
+        next(command) {
+          commandSubject.next(command);
+        },
+        error(error) {
+          commandSubject.error(error);
+        },
+      })
   );
 
   return store;
