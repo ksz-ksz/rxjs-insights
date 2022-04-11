@@ -1,10 +1,4 @@
 import { createStore } from '@lib/store';
-import { reducer } from './reducer';
-import { State } from './state';
-import { effects } from './effects';
+import { statusSlice } from './status';
 
-export const store = createStore<State>({
-  initialState: {},
-  reducer,
-  effects,
-});
+export const store = createStore([statusSlice]);

@@ -9,7 +9,9 @@
     "paths": {
       "@lib/store":["./src/lib/store/index.ts"],
       "@lib/store-react":["./src/lib/store-react/index.ts"],
-      "@app/store":["./src/app/store/index.ts"]
+      "@app/store":["./src/app/store/index.ts"],
+      "@app/store/*":["./src/app/store/*"]
+
     }
   },
   "references": [
@@ -18,6 +20,6 @@
     }
   ],
   "include": [
-    "./src/**"
+    "./src/**/*.*"
   ]
 }
