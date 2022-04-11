@@ -13,7 +13,7 @@ export interface Domain<NAME extends string, STATE> {
   createSlice(slice: {
     initialState: STATE;
     reducer: Reducer<STATE>;
-    effects: Effect[];
+    effects: Effect<any, any>[];
   }): Slice<NAME, STATE>;
 }
 
@@ -37,7 +37,7 @@ export function createDomain<NAME extends string, STATE>(
     }: {
       initialState: STATE;
       reducer: Reducer<STATE>;
-      effects: Effect[];
+      effects: Effect<any, any>[];
     }): Slice<NAME, STATE> {
       return {
         name: domainName,

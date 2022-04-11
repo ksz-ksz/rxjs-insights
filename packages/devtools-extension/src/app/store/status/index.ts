@@ -1,4 +1,11 @@
-import { createDomain, createReducer, Effect, when } from '@lib/store';
+import {
+  commandOfType,
+  createDomain,
+  createEffect,
+  createReducer,
+  when,
+} from '@lib/store';
+import { delay, map, startWith, withLatestFrom } from 'rxjs';
 
 export interface StatusDomainState {
   targetStatus?: 'connected' | 'disconnected';
@@ -22,7 +29,24 @@ const reducer = createReducer<StatusDomainState>([
   }),
 ]);
 
-const effects: Effect[] = [];
+const setStatusInterval = createEffect(
+  (command$, { targetStatus }) =>
+    command$.pipe(
+      commandOfType(statusCommands.SetTargetStatus),
+      withLatestFrom(targetStatus),
+      map(([, targetStatus]) =>
+        targetStatus === 'connected' ? 'disconnected' : 'connected'
+      ),
+      startWith('connected' as const),
+      delay(1000),
+      map((targetStatus) => statusCommands.SetTargetStatus({ targetStatus }))
+    ),
+  (store) => ({
+    targetStatus: store.query(statusQueries.targetStatus),
+  })
+);
+
+const effects = [setStatusInterval];
 
 export const statusSlice = statusDomain.createSlice({
   initialState: {},

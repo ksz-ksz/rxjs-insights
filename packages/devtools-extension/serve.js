@@ -1,6 +1,7 @@
 const esbuild = require('esbuild');
 const { rxjsInsightsPlugin } = require('@rxjs-insights/plugin-esbuild');
 const webext = require('web-ext');
+const path = require('path');
 
 esbuild.build({
   entryPoints: [
@@ -14,7 +15,11 @@ esbuild.build({
   watch: true,
   sourcemap: 'linked',
   tsconfig: 'tsconfig.json',
-  plugins: [rxjsInsightsPlugin()],
+  plugins: [
+    rxjsInsightsPlugin({
+      installModule: path.join(__dirname, './src/app/install-module.ts'),
+    }),
+  ],
 });
 
 webext.cmd.run({

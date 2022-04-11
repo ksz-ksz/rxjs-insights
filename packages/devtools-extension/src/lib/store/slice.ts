@@ -5,7 +5,7 @@ export interface Slice<NAME extends string, STATE> {
   name: NAME;
   initialState: STATE;
   reducer: Reducer<STATE>;
-  effects: Effect[];
+  effects: Effect<any, any>[];
 }
 
 export type HasSlice<NAME extends string, STATE> = {

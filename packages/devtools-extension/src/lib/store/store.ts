@@ -11,8 +11,7 @@ import { Query } from './query';
 import { Command } from './command';
 import { Slice } from './slice';
 import { Reducer } from './reducer';
-import { Effect } from './effect';
-import { inspect } from '@rxjs-insights/console';
+import { createEffect, Effect } from './effect';
 
 export interface Store<STATE> {
   command<PAYLOAD>(command: Command<PAYLOAD>): void;
@@ -52,17 +51,25 @@ function combinedReducer(domains: Array<Slice<any, any>>): Reducer<any> {
   };
 }
 
-function combinedEffects(domains: Array<Slice<any, any>>): Effect {
-  return (command$) => {
-    const observables: Observable<Command<any>>[] = [];
-    for (const domain of domains) {
-      for (const effect of domain.effects) {
-        observables.push(effect(command$));
+function combinedEffects(
+  domains: Array<Slice<any, any>>
+): Effect<any, Store<any>> {
+  return createEffect(
+    (
+      command$: Observable<Command<any>>,
+      store: Store<any>
+    ): Observable<Command<any>> => {
+      const observables: Observable<Command<any>>[] = [];
+      for (const domain of domains) {
+        for (const { effect, deps } of domain.effects) {
+          observables.push(effect(command$, deps(store)));
+        }
       }
-    }
 
-    return merge(...observables);
-  };
+      return merge(...observables);
+    },
+    (store) => store
+  );
 }
 
 export function createStore<DOMAINS extends Array<Slice<any, any>>>(
@@ -87,10 +94,17 @@ export function createStore<DOMAINS extends Array<Slice<any, any>>>(
 
   const subscription = state$.subscribe();
 
-  inspect(subscription);
+  const store = {
+    command<PAYLOAD>(command: Command<PAYLOAD>) {
+      commandSubject.next(command);
+    },
+    query<RESULT>(query: Query<State<DOMAINS>, RESULT>): Observable<RESULT> {
+      return state$.pipe(map(query.select));
+    },
+  };
 
   subscription.add(
-    effects(command$).subscribe({
+    effects.effect(command$, store).subscribe({
       next(command) {
         commandSubject.next(command);
       },
@@ -100,12 +114,5 @@ export function createStore<DOMAINS extends Array<Slice<any, any>>>(
     })
   );
 
-  return {
-    command<PAYLOAD>(command: Command<PAYLOAD>) {
-      commandSubject.next(command);
-    },
-    query<RESULT>(query: Query<State<DOMAINS>, RESULT>): Observable<RESULT> {
-      return state$.pipe(map(query.select));
-    },
-  };
+  return store;
 }
