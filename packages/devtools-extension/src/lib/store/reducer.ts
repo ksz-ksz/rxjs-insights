@@ -1,4 +1,5 @@
 import { Action, ActionFactory } from './action';
+import produce from 'immer';
 
 export interface Reducer<SLICE extends string, STATE> {
   slice: SLICE;
@@ -29,7 +30,10 @@ export function createReducer<SLICE extends string, STATE>(
   return {
     slice,
     reduce(state: STATE = initialState, action: Action): STATE {
-      return reducers[action.type]?.(state, action) ?? state;
+      return produce(
+        state,
+        (draft: STATE) => reducers[action.type]?.(draft, action) ?? draft
+      );
     },
   };
 }
