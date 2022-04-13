@@ -1,121 +1,93 @@
 import {
   BehaviorSubject,
-  map,
-  merge,
   Observable,
   observeOn,
+  PartialObserver,
   queueScheduler,
   scan,
-  share,
   Subject,
   subscribeOn,
 } from 'rxjs';
-import { Query } from './query';
-import { Command } from './command';
-import { Slice } from './slice';
+import { Action, createAction } from './action';
 import { Reducer } from './reducer';
-import { createEffect, Effect } from './effect';
+import { Reaction } from './reaction';
 
-export interface Store<STATE> {
-  command<PAYLOAD>(command: Command<PAYLOAD>): void;
+export const ReducerAdded = createAction<{ slice: string }>('ReducerAdded');
+export const ReactionAdded = createAction<void>('ReactionAdded');
 
-  query<RESULT>(query: Query<STATE, RESULT>): Observable<RESULT>;
-}
-
-export type State<DOMAINS extends Array<Slice<any, any>>> = {
-  [NAME in DOMAINS[number]['name']]: Extract<
-    DOMAINS[number],
-    { name: NAME }
-  >['initialState'];
+export type Slice<SLICE extends string, STATE> = {
+  [name in SLICE]: STATE;
 };
 
-function combinedInitialState(domains: Array<Slice<any, any>>) {
-  const state: any = {};
-  for (const domain of domains) {
-    state[domain.name] = domain.initialState;
+export type State<STORE extends Store<any>> = STORE extends Store<infer STATE>
+  ? STATE
+  : never;
+
+export class Store<
+  STATE extends Record<string, any> = {}
+> extends Observable<STATE> {
+  private readonly actionSubject = new Subject<Action>();
+  private readonly stateSubject = new BehaviorSubject<STATE>({} as STATE);
+  private readonly actionObserver: PartialObserver<Action> = {
+    next: (value) => this.actionSubject.next(value),
+    error: (error) => {
+      throw error;
+    },
+  };
+  private readonly reducers: Reducer<string, any>[] = [];
+
+  constructor() {
+    super((observer) => this.stateSubject.subscribe(observer));
+    this.actionSubject
+      .pipe(
+        scan((state: STATE, action) => {
+          const nextState: any = {};
+          let stateChanged = false;
+          for (const reducer of this.reducers) {
+            const slice = state[reducer.slice];
+            const nextSlice = reducer.reduce(slice, action);
+            nextState[reducer.slice] = nextSlice;
+            if (slice !== nextSlice) {
+              stateChanged = true;
+            }
+          }
+          return stateChanged ? nextState : state;
+        }, {})
+      )
+      .subscribe(this.stateSubject);
   }
 
-  return state;
-}
+  getState(): STATE {
+    return this.stateSubject.getValue();
+  }
 
-function combinedReducer(domains: Array<Slice<any, any>>): Reducer<any> {
-  return (state, command) => {
-    const nextState: any = {};
-    let stateChanged = false;
-    for (const domain of domains) {
-      const domainState = state[domain.name];
-      const nextDomainState = domain.reducer(domainState, command);
-      nextState[domain.name] = nextDomainState;
-      if (domainState !== nextDomainState) {
-        stateChanged = true;
-      }
-    }
-    return stateChanged ? nextState : state;
-  };
-}
+  dispatch(action: Action) {
+    this.actionSubject.next(action);
+  }
 
-function combinedEffects(
-  domains: Array<Slice<any, any>>
-): Effect<any, Store<any>> {
-  return createEffect(
-    (
-      command$: Observable<Command<any>>,
-      store: Store<any>
-    ): Observable<Command<any>> => {
-      const observables: Observable<Command<any>>[] = [];
-      for (const domain of domains) {
-        for (const { effect, deps } of domain.effects) {
-          observables.push(effect(command$, deps(store)));
-        }
-      }
+  addReducer<REDUCER_NAME extends string, REDUCER_STATE>(
+    reducer: Reducer<REDUCER_NAME, REDUCER_STATE>
+  ): Store<STATE & Slice<REDUCER_NAME, REDUCER_STATE>> {
+    this.reducers.push(reducer);
+    this.dispatch(ReducerAdded({ slice: reducer.slice }));
+    return this;
+  }
 
-      return merge(...observables);
-    },
-    (store) => store
-  );
-}
-
-export function createStore<DOMAINS extends Array<Slice<any, any>>>(
-  domains: DOMAINS
-): Store<State<DOMAINS>> {
-  const initialState = combinedInitialState(domains);
-  const reducer = combinedReducer(domains);
-  const effects = combinedEffects(domains);
-  const commandSubject = new Subject<Command<any>>();
-  const state$ = commandSubject.pipe(
-    scan(reducer, initialState),
-    share({
-      connector: () => new BehaviorSubject(initialState),
-      resetOnError: false,
-      resetOnComplete: false,
-      resetOnRefCountZero: false,
-    })
-  );
-
-  const subscription = state$.subscribe();
-
-  const store = {
-    command<PAYLOAD>(command: Command<PAYLOAD>) {
-      commandSubject.next(command);
-    },
-    query<RESULT>(query: Query<State<DOMAINS>, RESULT>): Observable<RESULT> {
-      return state$.pipe(map(query.select));
-    },
-  };
-
-  subscription.add(
-    effects
-      .effect(commandSubject.asObservable(), store)
+  addReaction<REACTION_STATE extends Partial<STATE>, REACTION_DEPS>(
+    reaction: Reaction<REACTION_STATE, REACTION_DEPS>
+  ) {
+    reaction
+      .react(
+        this.actionSubject.asObservable(),
+        reaction.deps?.(this as any) as any
+      )
       .pipe(subscribeOn(queueScheduler), observeOn(queueScheduler))
-      .subscribe({
-        next(command) {
-          commandSubject.next(command);
-        },
-        error(error) {
-          commandSubject.error(error);
-        },
-      })
-  );
+      .subscribe(this.actionObserver);
+    this.dispatch(ReactionAdded());
+    return this;
+  }
+}
 
-  return store;
+export function createStore() {
+  return new Store();
 }

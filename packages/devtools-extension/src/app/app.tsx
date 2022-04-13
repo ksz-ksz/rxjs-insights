@@ -1,10 +1,10 @@
 import React from 'react';
-import { StoreProvider, useQuery } from '@lib/store-react';
-import { store } from '@app/store/store';
-import { statusQueries } from '@app/store/status';
+import { StoreProvider } from '@lib/store';
+import { store, useSelector } from '@app/store';
+import { statusSelectors } from '@app/store/status';
 
 function Test() {
-  const status = useQuery(statusQueries.targetStatus);
+  const status = useSelector(statusSelectors.status);
   return <span>{status}</span>;
 }
 

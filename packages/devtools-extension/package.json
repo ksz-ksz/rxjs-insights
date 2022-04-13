@@ -9,7 +9,8 @@
   "dependencies": {
     "rxjs": "^7.5.5",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "immer": "^9.0.12"
   },
   "devDependencies": {
     "zone.js": "^0.11.5",

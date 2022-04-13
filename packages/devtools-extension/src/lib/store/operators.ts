@@ -1,8 +1,11 @@
+import { Action, ActionFactory } from './action';
 import { filter, OperatorFunction } from 'rxjs';
-import { Command, CommandType } from './command';
 
-export function commandOfType<T>(commandType: CommandType<T>) {
+export function filterActions<PAYLOAD>(
+  actionFactory: ActionFactory<PAYLOAD>,
+  predicate: (action: Action<PAYLOAD>) => boolean = () => true
+) {
   return filter(
-    (command: Command<any>) => commandType.commandName === command.commandName
-  ) as OperatorFunction<Command<any>, Command<T>>;
+    (action) => action.type == actionFactory.type && predicate(action)
+  ) as OperatorFunction<Action<any>, Action<PAYLOAD>>;
 }

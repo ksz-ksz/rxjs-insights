@@ -1,55 +1,62 @@
 import {
-  commandOfType,
-  createDomain,
-  createEffect,
+  createAction,
+  createReaction,
   createReducer,
-  when,
+  createSelector,
+  filterActions,
+  on,
 } from '@lib/store';
-import { delay, map, startWith, withLatestFrom } from 'rxjs';
+import { delay, map, of } from 'rxjs';
 
-export interface StatusDomainState {
-  targetStatus?: 'connected' | 'disconnected';
+export const STATUS = 'status';
+
+export interface StatusState {
+  status: Status;
 }
 
-export const statusDomain = createDomain<'status', StatusDomainState>('status');
+export type Status = 'connected' | 'disconnected';
 
-export const statusCommands = {
-  SetTargetStatus: statusDomain.createCommand<{
-    targetStatus: 'connected' | 'disconnected';
-  }>('SetTargetStatus'),
+export const statusActions = {
+  SetStatus: createAction<{ status: Status }>('SetStatus', STATUS),
 };
 
-export const statusQueries = {
-  targetStatus: statusDomain.createQuery((state) => state.targetStatus),
+export const statusSelectors = {
+  status: createSelector((state: StatusState) => state.status, STATUS),
 };
 
-const reducer = createReducer<StatusDomainState>([
-  when(statusCommands.SetTargetStatus, (state, payload) => {
-    state.targetStatus = payload.targetStatus;
-  }),
-]);
-
-const setStatusInterval = createEffect(
-  (command$, { targetStatus }) =>
-    command$.pipe(
-      commandOfType(statusCommands.SetTargetStatus),
-      withLatestFrom(targetStatus),
-      map(([, targetStatus]) =>
-        targetStatus === 'connected' ? 'disconnected' : 'connected'
-      ),
-      delay(1000),
-      startWith('connected' as const),
-      map((targetStatus) => statusCommands.SetTargetStatus({ targetStatus }))
-    ),
-  (store) => ({
-    targetStatus: store.query(statusQueries.targetStatus),
-  })
+export const statusReducer = createReducer(
+  STATUS,
+  { status: 'connected' } as StatusState,
+  [
+    on(statusActions.SetStatus, (state, action) => {
+      state.status = action.payload.status;
+    }),
+  ]
 );
 
-const effects = [setStatusInterval];
+export const statusReactions = {
+  init: createReaction(() =>
+    of(statusActions.SetStatus({ status: 'connected' }))
+  ),
+  connectedReaction: createReaction((action$) => {
+    return action$.pipe(
+      filterActions(
+        statusActions.SetStatus,
+        (action) => action.payload.status === 'connected'
+      ),
+      map(() => statusActions.SetStatus({ status: 'disconnected' })),
+      delay(1000)
+    );
+  }),
 
-export const statusSlice = statusDomain.createSlice({
-  initialState: {},
-  reducer,
-  effects,
-});
+  disconnectedReaction: createReaction((action$) => {
+    return action$.pipe(
+      filterActions(
+        statusActions.SetStatus,
+        (action) => action.payload.status === 'disconnected'
+      ),
+      map(() => statusActions.SetStatus({ status: 'connected' })),
+      delay(1000)
+    );
+  }),
+};

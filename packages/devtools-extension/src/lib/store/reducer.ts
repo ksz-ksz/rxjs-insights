@@ -1,43 +1,35 @@
-import { Command, CommandType } from './command';
-import { HasSlice } from './slice';
+import { Action, ActionFactory } from './action';
 
-export interface Reducer<STATE> {
-  (state: STATE, command: Command<any>): STATE;
+export interface Reducer<SLICE extends string, STATE> {
+  slice: SLICE;
+  reduce(state: STATE | undefined, action: Action): STATE;
 }
 
-export interface When<STATE, PAYLOAD> {
-  commandType: CommandType<PAYLOAD>;
-  then: (state: STATE, payload: PAYLOAD, commandName: string) => STATE | void;
+export type On<STATE, PAYLOAD> = {
+  action: ActionFactory<PAYLOAD>;
+  reduce: (state: STATE, action: Action<PAYLOAD>) => STATE | void;
+};
+
+export function on<STATE, PAYLOAD>(
+  action: ActionFactory<PAYLOAD>,
+  reduce: (state: STATE, action: Action<PAYLOAD>) => STATE | void
+): On<STATE, PAYLOAD> {
+  return { action, reduce };
 }
 
-export function when<PAYLOAD, STATE>(
-  commandType: CommandType<PAYLOAD>,
-  then: (state: STATE, payload: PAYLOAD, commandName: string) => STATE | void
-): When<STATE, PAYLOAD> {
+export function createReducer<SLICE extends string, STATE>(
+  slice: SLICE,
+  initialState: STATE,
+  ons: On<STATE, any>[]
+): Reducer<SLICE, STATE> {
+  const reducers = Object.fromEntries(
+    ons.map((on) => [on.action.type, on.reduce])
+  );
+
   return {
-    commandType,
-    then,
-  };
-}
-
-export function createReducer<STATE>(
-  whens: When<STATE, any>[]
-): Reducer<STATE> {
-  const map = new Map<
-    string,
-    (state: STATE, payload: any, commandName: string) => STATE | void
-  >(whens.map(({ commandType, then }) => [commandType.commandName, then]));
-  return (state, command) => {
-    const then = map.get(command.commandName);
-    if (then) {
-      const returnedState = then(state, command.payload, command.commandName);
-      if (returnedState) {
-        return returnedState;
-      } else {
-        return state;
-      }
-    } else {
-      return state;
-    }
+    slice,
+    reduce(state: STATE = initialState, action: Action): STATE {
+      return reducers[action.type]?.(state, action) ?? state;
+    },
   };
 }
