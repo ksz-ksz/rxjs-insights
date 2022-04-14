@@ -11,6 +11,7 @@ import {
 import { Action, createAction } from './action';
 import { Reducer } from './reducer';
 import { Reaction } from './reaction';
+import { Super } from './super';
 
 export const ReducerAdded = createAction<{ slice: string }>('ReducerAdded');
 export const ReactionAdded = createAction<void>('ReactionAdded');
@@ -73,14 +74,11 @@ export class Store<
     return this;
   }
 
-  addReaction<REACTION_STATE extends Partial<STATE>, REACTION_DEPS>(
-    reaction: Reaction<REACTION_STATE, REACTION_DEPS>
+  addReaction<REACTION_STATE extends Super<STATE>>(
+    reaction: Reaction<REACTION_STATE, any>
   ) {
     reaction
-      .react(
-        this.actionSubject.asObservable(),
-        reaction.deps?.(this as any) as any
-      )
+      .react(this.actionSubject.asObservable(), reaction.deps?.(this as any))
       .pipe(subscribeOn(queueScheduler), observeOn(queueScheduler))
       .subscribe(this.actionObserver);
     this.dispatch(ReactionAdded());

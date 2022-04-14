@@ -1,11 +1,25 @@
-import { createStore, createStoreHooks } from '@lib/store';
-import { statusReactions, statusReducer } from '@app/store/status';
+import {
+  createReaction,
+  createStore,
+  createStoreHooks,
+  Store,
+} from '@lib/store';
+import {
+  statusActions,
+  statusReactions,
+  statusReducer,
+  StatusSlice,
+} from '@app/store/status';
+import { of } from 'rxjs';
+
+export const statusReaction = createReaction(
+  () => of(statusActions.SetStatus({ status: 'connected' })),
+  (store: Store<StatusSlice>) => store
+);
 
 export const store = createStore()
   .addReducer(statusReducer)
-  .addReaction(statusReactions.connectedReaction)
-  .addReaction(statusReactions.disconnectedReaction)
-  .addReaction(statusReactions.init);
+  .addReaction(statusReactions)
 
 export const { useStore, useDispatch, useSelector } =
   createStoreHooks<typeof store>();

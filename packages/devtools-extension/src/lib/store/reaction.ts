@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { merge, Observable } from 'rxjs';
 import { Action } from './action';
 import { Store } from './store';
 
@@ -22,4 +22,37 @@ export function createReaction(
     react,
     deps,
   };
+}
+
+export class ReactionsCombinator<STATE = {}>
+  implements Reaction<STATE, Store<STATE>>
+{
+  readonly reactions: Reaction<STATE, any>[] = [];
+
+  react(action$: Observable<Action>, store: Store<STATE>): Observable<Action> {
+    return merge(
+      ...this.reactions.map((reaction) =>
+        reaction.react(action$, reaction.deps?.(store))
+      )
+    );
+  }
+
+  deps(store: Store<STATE>): Store<STATE> {
+    return store;
+  }
+
+  add<REACTION_STATE>(
+    reaction: Reaction<REACTION_STATE, any>
+  ): ReactionsCombinator<STATE & REACTION_STATE> {
+    this.reactions.push(reaction as any);
+    return this as any;
+  }
+
+  asReaction(): Reaction<STATE, Store<STATE>> {
+    return this;
+  }
+}
+
+export function combineReactions(): ReactionsCombinator {
+  return new ReactionsCombinator();
 }

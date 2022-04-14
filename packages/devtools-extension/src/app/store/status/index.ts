@@ -1,10 +1,13 @@
 import {
+  combineReactions,
   createAction,
   createReaction,
   createReducer,
   createSelector,
   filterActions,
   on,
+  Slice,
+  Store,
 } from '@lib/store';
 import { delay, map, of } from 'rxjs';
 
@@ -13,6 +16,8 @@ export const STATUS = 'status';
 export interface StatusState {
   status: Status;
 }
+
+export type StatusSlice = Slice<typeof STATUS, StatusState>;
 
 export type Status = 'connected' | 'disconnected';
 
@@ -34,29 +39,34 @@ export const statusReducer = createReducer(
   ]
 );
 
-export const statusReactions = {
-  init: createReaction(() =>
-    of(statusActions.SetStatus({ status: 'connected' }))
-  ),
-  connectedReaction: createReaction((action$) => {
-    return action$.pipe(
-      filterActions(
-        statusActions.SetStatus,
-        (action) => action.payload.status === 'connected'
-      ),
-      map(() => statusActions.SetStatus({ status: 'disconnected' })),
-      delay(1000)
-    );
-  }),
-
-  disconnectedReaction: createReaction((action$) => {
-    return action$.pipe(
-      filterActions(
-        statusActions.SetStatus,
-        (action) => action.payload.status === 'disconnected'
-      ),
-      map(() => statusActions.SetStatus({ status: 'connected' })),
-      delay(1000)
-    );
-  }),
-};
+export const statusReactions = combineReactions()
+  .add(
+    createReaction(
+      () => of(statusActions.SetStatus({ status: 'connected' })),
+      (store: Store<StatusSlice>) => store.getState().status.status
+    )
+  )
+  .add(
+    createReaction((action$) => {
+      return action$.pipe(
+        filterActions(
+          statusActions.SetStatus,
+          (action) => action.payload.status === 'connected'
+        ),
+        map(() => statusActions.SetStatus({ status: 'disconnected' })),
+        delay(1000)
+      );
+    })
+  )
+  .add(
+    createReaction((action$) => {
+      return action$.pipe(
+        filterActions(
+          statusActions.SetStatus,
+          (action) => action.payload.status === 'disconnected'
+        ),
+        map(() => statusActions.SetStatus({ status: 'connected' })),
+        delay(1000)
+      );
+    })
+  );
