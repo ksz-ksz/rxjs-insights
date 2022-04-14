@@ -1,6 +1,6 @@
 console.log('RxJS Insights content script');
 
-injectPageScript(chrome.extension.getURL('/dist/page-script.js'));
+injectPageScript(chrome.runtime.getURL('/dist/page-script.js'));
 
 function injectPageScript(src: string) {
   const script = document.createElement('script');

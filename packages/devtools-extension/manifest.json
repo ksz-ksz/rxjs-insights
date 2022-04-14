@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "version": "0.0.0",
   "name": "RxJS Insights",
   "description": "See through the observables.",
@@ -21,6 +21,10 @@
     }
   ],
   "web_accessible_resources": [
-    "dist/page-script.js"
+
+    {
+      "resources": [ "dist/page-script.js" ],
+      "matches": [ "<all_urls>" ]
+    }
   ]
 }
