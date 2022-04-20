@@ -1,6 +1,17 @@
-console.log('RxJS Insights content script');
+import { ContentScriptMessages } from './messages/content-script-messages';
+import { DevToolsStatus } from './messages/dev-tools-status';
+import { Message } from './messages/message';
 
-injectPageScript(chrome.runtime.getURL('/dist/page-script.js'));
+ContentScriptMessages.toExtension(
+  DevToolsStatus.IsActiveRequest(),
+  (message: Message) => {
+    if (DevToolsStatus.IsActiveResponse.is(message)) {
+      if (message.payload.active) {
+        injectPageScript(chrome.runtime.getURL('/dist/page-script.js'));
+      }
+    }
+  }
+);
 
 function injectPageScript(src: string) {
   const script = document.createElement('script');

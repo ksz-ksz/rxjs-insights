@@ -8,6 +8,9 @@
     "activeTab",
     "webNavigation"
   ],
+  "background": {
+    "service_worker": "dist/background.js"
+  },
   "devtools_page": "devtools-page.html",
   "content_scripts": [
     {
@@ -21,7 +24,6 @@
     }
   ],
   "web_accessible_resources": [
-
     {
       "resources": [ "dist/page-script.js" ],
       "matches": [ "<all_urls>" ]
