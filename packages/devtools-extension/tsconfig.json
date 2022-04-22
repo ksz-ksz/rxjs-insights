@@ -9,7 +9,9 @@
     "paths": {
       "@lib/store":["./src/lib/store/index.ts"],
       "@app/store":["./src/app/store/index.ts"],
-      "@app/store/*":["./src/app/store/*"]
+      "@app/store/*":["./src/app/store/*"],
+      "@rpc":["./src/rpc/index.ts"],
+      "@rpc/protocols":["./src/rpc-protocols/index.ts"]
     }
   },
   "references": [
