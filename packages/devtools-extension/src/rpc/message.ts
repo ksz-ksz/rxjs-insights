@@ -8,20 +8,24 @@ export interface ResponseMessage {
   failure?: any;
 }
 
-export type MessageListener = (
-  message: RequestMessage,
-  sendResponseMessage: (message: ResponseMessage) => void
-) => void;
-
-export interface Sender {
-  sendMessage(
-    message: RequestMessage,
-    responseMessageHandler: (message: ResponseMessage) => void
-  ): void;
+export interface ClientAdapter {
+  send(message: RequestMessage): Promise<ResponseMessage>;
 }
 
-export interface Receiver {
-  addMessageListener(messageListener: MessageListener): {
-    removeMessageListener(): void;
-  };
+export type ServerAdapter = ServerAdapterSync | ServerAdapterAsync;
+
+export interface RequestHandlerAsync {
+  (message: RequestMessage): ResponseMessage | Promise<ResponseMessage>;
+}
+
+export interface ServerAdapterAsync {
+  startAsync(requestHandler: RequestHandlerAsync): { stop(): void };
+}
+
+export interface RequestHandlerSync {
+  (message: RequestMessage): ResponseMessage;
+}
+
+export interface ServerAdapterSync {
+  startSync(requestHandler: RequestHandlerSync): { stop(): void };
 }

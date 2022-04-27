@@ -1,9 +1,4 @@
-import {
-  createClient,
-  createDocumentEventSender,
-  createEvalReceiver,
-  startServer,
-} from '@rpc';
+import { createInspectedWindowEvalServerAdapter, startServer } from '@rpc';
 import { Notifier } from '@rpc/protocols';
 
 console.log('RxJS Insights page script');
@@ -18,20 +13,7 @@ class RxJSInsights {
 
 (window as any)['__RXJS_INSIGHTS__'] = new RxJSInsights();
 
-// const notifierClient = createClient<Notifier>(
-//   createDocumentEventSender('notifier')
-// );
-//
-// let i = 0;
-// setInterval(() => {
-//   console.time('t');
-//   notifierClient.ping(i++).then((x) => {
-//     console.timeEnd('t');
-//     console.log(x);
-//   });
-// }, 1000);
-
-startServer<Notifier>(createEvalReceiver('page'), {
+startServer<Notifier>(createInspectedWindowEvalServerAdapter('page'), {
   ping(id: number): string {
     return JSON.stringify(new Array(100000).fill(id));
   },

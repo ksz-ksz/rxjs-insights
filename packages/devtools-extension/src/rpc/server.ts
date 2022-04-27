@@ -1,45 +1,45 @@
-import { MessageListener, Receiver, Sender } from './message';
+import {
+  ClientAdapter,
+  RequestHandlerSync,
+  ServerAdapter,
+  ServerAdapterAsync,
+} from './message';
 
 export interface Server {
   stop(): void;
 }
 
-export function startServer<T>(receiver: Receiver, prototype: T): Server {
-  const messageListener: MessageListener = (message, sendResponseMessage) => {
-    try {
-      const success = (prototype as any)[message.func].apply(
-        prototype,
-        message.args
-      );
-      sendResponseMessage({
-        success,
-      });
-    } catch (e) {
-      const failure =
-        e instanceof Error ? `${e.name}: ${e.message}` : String(e);
-      sendResponseMessage({
-        failure,
-      });
-    }
-  };
-  const connection = receiver.addMessageListener(messageListener);
-
-  return {
-    stop() {
-      connection.removeMessageListener();
-    },
-  };
+function start(adapter: ServerAdapter, requestHandler: RequestHandlerSync) {
+  if ('startSync' in adapter) {
+    return adapter.startSync(requestHandler);
+  } else {
+    return adapter.startAsync(requestHandler);
+  }
 }
 
-export function startProxyServer(receiver: Receiver, sender: Sender): Server {
-  const messageListener: MessageListener = (message, sendResponseMessage) => {
-    sender.sendMessage(message, sendResponseMessage);
-  };
-  const connection = receiver.addMessageListener(messageListener);
+export function startServer<T>(
+  adapter: ServerAdapter,
+  implementation: T
+): Server {
+  return start(adapter, (message) => {
+    try {
+      return {
+        success: (implementation as any)[message.func].apply(
+          implementation,
+          message.args
+        ),
+      };
+    } catch (e) {
+      return {
+        failure: e instanceof Error ? `${e.name}: ${e.message}` : String(e),
+      };
+    }
+  });
+}
 
-  return {
-    stop() {
-      connection.removeMessageListener();
-    },
-  };
+export function startProxyServer(
+  serverAdapter: ServerAdapterAsync,
+  clientAdapter: ClientAdapter
+): Server {
+  return serverAdapter.startAsync((message) => clientAdapter.send(message));
 }

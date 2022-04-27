@@ -3,9 +3,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app';
 import {
+  createChromeRuntimeServerAdapter,
   createClient,
-  createEvalSender,
-  createRuntimeReceiver,
+  createInspectedWindowEvalClientAdapter,
   startServer,
 } from '@rpc';
 import { Devtools, Notifier } from '@rpc/protocols';
@@ -14,19 +14,21 @@ const container = document.getElementById('root');
 const root = createRoot(container!);
 root.render(<App />);
 
-startServer<Devtools>(createRuntimeReceiver('devtools'), {
+startServer<Devtools>(createChromeRuntimeServerAdapter('devtools'), {
   isActive(): boolean {
     return true;
   },
 });
 
-startServer<Notifier>(createRuntimeReceiver('notifier'), {
+startServer<Notifier>(createChromeRuntimeServerAdapter('notifier'), {
   ping(id: number): string {
     return `pong from devtools #${id}`;
   },
 });
 
-const page = createClient<Notifier>(createEvalSender('page'));
+const page = createClient<Notifier>(
+  createInspectedWindowEvalClientAdapter('page')
+);
 
 page.ping(42).then(console.log);
 

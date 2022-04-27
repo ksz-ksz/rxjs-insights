@@ -1,9 +1,8 @@
 import {
-  MessageListener,
-  Receiver,
+  ClientAdapter,
   RequestMessage,
   ResponseMessage,
-  Sender,
+  ServerAdapterAsync,
 } from './message';
 
 interface MessageEventDetail {
@@ -23,42 +22,46 @@ class MessageEvent extends CustomEvent<MessageEventDetail> {
   }
 }
 
-export function createDocumentEventSender(channel: string): Sender {
+export function createDocumentEventClientAdapter(
+  channel: string
+): ClientAdapter {
   let nextId = 0;
 
   return {
-    sendMessage(
-      message: RequestMessage,
-      responseMessageHandler: (message: ResponseMessage) => void
-    ) {
-      const id = nextId++;
-      const listener = (event: MessageEvent) => {
-        if (
-          event.detail.channel === channel &&
-          event.detail.id === id &&
-          event.detail.type === 'response'
-        ) {
-          responseMessageHandler(event.detail.message);
-          document.removeEventListener(MessageEvent.TYPE, listener as any);
-        }
-      };
-      document.addEventListener(MessageEvent.TYPE, listener as any);
-      document.dispatchEvent(
-        new MessageEvent({ channel, id, type: 'request', message })
-      );
+    send(message: RequestMessage) {
+      return new Promise((resolve) => {
+        const id = nextId++;
+        const listener = (event: MessageEvent) => {
+          if (
+            event.detail.channel === channel &&
+            event.detail.id === id &&
+            event.detail.type === 'response'
+          ) {
+            resolve(event.detail.message);
+            document.removeEventListener(MessageEvent.TYPE, listener as any);
+          }
+        };
+        document.addEventListener(MessageEvent.TYPE, listener as any);
+        document.dispatchEvent(
+          new MessageEvent({ channel, id, type: 'request', message })
+        );
+      });
     },
   };
 }
 
-export function createDocumentEventReceiver(channel: string): Receiver {
+export function createDocumentEventServerAdapter(
+  channel: string
+): ServerAdapterAsync {
   return {
-    addMessageListener(messageListener: MessageListener) {
+    startAsync(requestHandler) {
       const listener = (event: MessageEvent) => {
         if (
           event.detail.channel === channel &&
           event.detail.type === 'request'
         ) {
-          messageListener(event.detail.message, (responseMessage) => {
+          const result = requestHandler(event.detail.message);
+          const sendResponse = (responseMessage: ResponseMessage) => {
             document.dispatchEvent(
               new MessageEvent({
                 channel,
@@ -67,12 +70,17 @@ export function createDocumentEventReceiver(channel: string): Receiver {
                 message: responseMessage,
               })
             );
-          });
+          };
+          if (result instanceof Promise) {
+            result.then(sendResponse);
+          } else {
+            sendResponse(result);
+          }
         }
       };
       document.addEventListener(MessageEvent.TYPE, listener as any);
       return {
-        removeMessageListener: function () {
+        stop() {
           document.removeEventListener(MessageEvent.TYPE, listener as any);
         },
       };
