@@ -2,7 +2,12 @@ import 'zone.js';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app';
-import { createRuntimeReceiver, startServer } from '@rpc';
+import {
+  createClient,
+  createEvalSender,
+  createRuntimeReceiver,
+  startServer,
+} from '@rpc';
 import { Devtools, Notifier } from '@rpc/protocols';
 
 const container = document.getElementById('root');
@@ -20,3 +25,16 @@ startServer<Notifier>(createRuntimeReceiver('notifier'), {
     return `pong from devtools #${id}`;
   },
 });
+
+const page = createClient<Notifier>(createEvalSender('page'));
+
+page.ping(42).then(console.log);
+
+let i = 0;
+setInterval(() => {
+  console.time('t');
+  page.ping(i++).then((x) => {
+    console.timeEnd('t');
+    console.log(x);
+  });
+}, 1000);

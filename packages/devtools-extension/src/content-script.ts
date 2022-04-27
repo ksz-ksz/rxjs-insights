@@ -10,11 +10,11 @@ import { Devtools, Notifier } from '@rpc/protocols';
 console.log('hi');
 const devtoolsClient = createClient<Devtools>(createRuntimeSender('devtools'));
 
-devtoolsClient.isActive().then((isActive) => {
-  if (isActive) {
-    injectPageScript(chrome.runtime.getURL('/dist/page-script.js'));
-  }
-});
+// devtoolsClient.isActive().then((isActive) => {
+//   if (isActive) {
+injectPageScript(chrome.runtime.getURL('/dist/page-script.js'));
+// }
+// });
 
 startProxyServer(
   createDocumentEventReceiver('notifier'),
