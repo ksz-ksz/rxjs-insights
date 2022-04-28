@@ -5,26 +5,42 @@ import { statusActions, statusSelectors } from '@app/store/status';
 
 function Status() {
   const dispatch = useDispatch();
-  const status = useSelector(statusSelectors.status);
+  const status = useSelector(statusSelectors.instrumentationStatus);
   switch (status) {
-    case 'unknown':
+    case undefined:
       return <span>Awaiting instrumentation...</span>;
-    case 'enabled':
-      return <span>Instrumentation enabled!</span>;
-    case 'disabled':
+    case 'not-installed':
       return (
         <div>
           <span>
-            Instrumentation disabled. Reload page to activate instrumentation.
+            Instrumentation is not installed. Reload the page to install the
+            instrumentation.
           </span>
 
-          <button onClick={() => dispatch(statusActions.EnableAndReload())}>
-            Enable and reload
+          <button
+            onClick={() => dispatch(statusActions.InstallInstrumentation())}
+          >
+            Reload page
           </button>
         </div>
       );
+    case 'not-available':
+      return (
+        <div>
+          <span>
+            Instrumentation is not available. Make sure that you set up the
+            instrumentation properly.
+            <a
+              target="_blank"
+              href="https://github.com/ksz-ksz/rxjs-insights/blob/master/docs/instrumentation/index.md"
+            >
+              Refer to the documentation to learn more.
+            </a>
+          </span>
+        </div>
+      );
     default:
-      return null;
+      return <span>Instrumentation enabled!</span>;
   }
 }
 

@@ -12,7 +12,7 @@ export function createInspectedWindowEvalClientAdapter(
     send(message: RequestMessage) {
       return new Promise((resolve) => {
         chrome.devtools.inspectedWindow.eval(
-          `__eval__${channel}(${JSON.stringify(message)})`,
+          `window["__eval__${channel}"](${JSON.stringify(message)})`,
           (result: ResponseMessage, exceptionInfo) => {
             if (exceptionInfo && exceptionInfo.isError) {
               resolve({ failure: exceptionInfo.description });

@@ -1,15 +1,4 @@
-import {
-  createChromeRuntimeClientAdapter,
-  createDocumentEventServerAdapter,
-  startProxyServer,
-} from '@lib/rpc';
-
 injectPageScript(chrome.runtime.getURL('/dist/page-script.js'));
-
-startProxyServer(
-  createDocumentEventServerAdapter('notifier'),
-  createChromeRuntimeClientAdapter('notifier')
-);
 
 function injectPageScript(src: string) {
   const script = document.createElement('script');

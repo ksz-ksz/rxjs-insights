@@ -1,8 +1,11 @@
-export interface TargetStatus {
-  isEnabled(): boolean;
-  setEnabled(enabled: boolean): void;
-}
+export const TargetStatusChannel = 'TargetStatusChannel';
 
-export interface TargetStatusNotifier {
-  notifyEnabled(): void;
+export type InstrumentationStatus =
+  | 'installed'
+  | 'not-installed'
+  | 'not-available';
+
+export interface TargetStatus {
+  installInstrumentation(): void;
+  getInstrumentationStatus(): InstrumentationStatus;
 }

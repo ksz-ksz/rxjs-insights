@@ -12,7 +12,6 @@ export function createClient<T>(sender: ClientAdapter): Client<T> {
       if (!target[func]) {
         target[func] = async (...args: any[]) => {
           const result = await sender.send({ func, args });
-          console.log(result);
           if (result?.failure) {
             throw result?.failure;
           } else {

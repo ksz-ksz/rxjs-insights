@@ -1,18 +1,28 @@
 import { createInspectedWindowEvalServerAdapter, startServer } from '@lib/rpc';
-import { TargetStatus } from '@app/protocols';
+import { TargetStatus, TargetStatusChannel } from '@app/protocols';
 
 const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
 
-const enabled = sessionStorage.getItem(RXJS_INSIGHTS_ENABLED_KEY) === 'true';
+startServer<TargetStatus>(
+  createInspectedWindowEvalServerAdapter(TargetStatusChannel),
+  {
+    getInstrumentationStatus() {
+      switch ((window as any).RXJS_INSIGHTS_INSTALLED) {
+        case true:
+          return 'installed';
+        case false:
+          return 'not-installed';
+        default:
+          return 'not-available';
+      }
+    },
 
-startServer<TargetStatus>(createInspectedWindowEvalServerAdapter('target'), {
-  isEnabled(): boolean {
-    return enabled;
-  },
+    installInstrumentation() {
+      sessionStorage.setItem(RXJS_INSIGHTS_ENABLED_KEY, 'true');
+      location.reload();
+    },
+  }
+);
 
-  setEnabled(enabled: boolean) {
-    sessionStorage.setItem(RXJS_INSIGHTS_ENABLED_KEY, JSON.stringify(enabled));
-  },
-});
-
-(window as any)['RXJS_INSIGHTS_INSTALL'] = enabled;
+(window as any)['RXJS_INSIGHTS_INSTALL'] =
+  sessionStorage.getItem(RXJS_INSIGHTS_ENABLED_KEY) === 'true';

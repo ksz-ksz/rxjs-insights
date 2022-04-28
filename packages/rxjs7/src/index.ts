@@ -28,4 +28,7 @@ if (typeof RXJS_INSIGHTS_INSTALL !== 'undefined' && RXJS_INSIGHTS_INSTALL) {
       animationFrameScheduler,
     }),
   });
+  (window as any).RXJS_INSIGHTS_INSTALLED = true;
+} else {
+  (window as any).RXJS_INSIGHTS_INSTALLED = false;
 }
