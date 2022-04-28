@@ -2,7 +2,7 @@ import {
   createChromeRuntimeClientAdapter,
   createDocumentEventServerAdapter,
   startProxyServer,
-} from '@rpc';
+} from '@lib/rpc';
 
 injectPageScript(chrome.runtime.getURL('/dist/page-script.js'));
 

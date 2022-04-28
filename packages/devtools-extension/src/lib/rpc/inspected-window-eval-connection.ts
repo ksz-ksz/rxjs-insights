@@ -1,4 +1,9 @@
-import { ClientAdapter, RequestMessage, ServerAdapterSync } from './message';
+import {
+  ClientAdapter,
+  RequestMessage,
+  ResponseMessage,
+  ServerAdapterSync,
+} from './message';
 
 export function createInspectedWindowEvalClientAdapter(
   channel: string
@@ -8,13 +13,13 @@ export function createInspectedWindowEvalClientAdapter(
       return new Promise((resolve) => {
         chrome.devtools.inspectedWindow.eval(
           `__eval__${channel}(${JSON.stringify(message)})`,
-          (result, exceptionInfo) => {
+          (result: ResponseMessage, exceptionInfo) => {
             if (exceptionInfo && exceptionInfo.isError) {
               resolve({ failure: exceptionInfo.description });
             } else if (exceptionInfo && exceptionInfo.isException) {
               resolve({ failure: exceptionInfo.value });
             } else {
-              resolve({ success: result });
+              resolve(result);
             }
           }
         );

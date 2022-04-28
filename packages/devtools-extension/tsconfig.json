@@ -8,10 +8,11 @@
     "baseUrl": ".",
     "paths": {
       "@lib/store":["./src/lib/store/index.ts"],
+      "@lib/operators":["./src/lib/operators/index.ts"],
+      "@lib/rpc":["./src/lib/rpc/index.ts"],
       "@app/store":["./src/app/store/index.ts"],
       "@app/store/*":["./src/app/store/*"],
-      "@rpc":["./src/rpc/index.ts"],
-      "@rpc/protocols":["./src/rpc-protocols/index.ts"]
+      "@app/protocols":["./src/app/protocols/index.ts"]
     }
   },
   "references": [

@@ -1,20 +1,18 @@
-import { createInspectedWindowEvalServerAdapter, startServer } from '@rpc';
-import { Notifier } from '@rpc/protocols';
+import { createInspectedWindowEvalServerAdapter, startServer } from '@lib/rpc';
+import { TargetStatus } from '@app/protocols';
 
-console.log('RxJS Insights page script');
+const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
 
-class RxJSInsights {
-  private readonly targets: any[] = [];
+const enabled = sessionStorage.getItem(RXJS_INSIGHTS_ENABLED_KEY) === 'true';
 
-  inspect(target: any) {
-    this.targets.push(target);
-  }
-}
+startServer<TargetStatus>(createInspectedWindowEvalServerAdapter('target'), {
+  isEnabled(): boolean {
+    return enabled;
+  },
 
-(window as any)['__RXJS_INSIGHTS__'] = new RxJSInsights();
-
-startServer<Notifier>(createInspectedWindowEvalServerAdapter('page'), {
-  ping(id: number): string {
-    return JSON.stringify(new Array(100000).fill(id));
+  setEnabled(enabled: boolean) {
+    sessionStorage.setItem(RXJS_INSIGHTS_ENABLED_KEY, JSON.stringify(enabled));
   },
 });
+
+(window as any)['RXJS_INSIGHTS_INSTALL'] = enabled;
