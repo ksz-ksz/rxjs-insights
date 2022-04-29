@@ -6,13 +6,12 @@ import {
   createSelector,
   filterActions,
   on,
-  Slice,
 } from '@lib/store';
 import {
   first,
   from,
-  interval,
   map,
+  Observable,
   race,
   startWith,
   switchMap,
@@ -36,13 +35,18 @@ export interface StatusState {
   instrumentationStatus: InstrumentationStatus | undefined;
 }
 
-export type StatusSlice = Slice<typeof STATUS, StatusState>;
-
 export const statusActions = {
-  SetInstrumentationStatus: createAction<{
+  AwaitInstrumentationRequested: createAction<void>(
+    'AwaitInstrumentationRequested',
+    STATUS
+  ),
+  InstallInstrumentationRequested: createAction<void>(
+    'InstallInstrumentationRequested',
+    STATUS
+  ),
+  InstrumentationStatusResolved: createAction<{
     instrumentationStatus: InstrumentationStatus | undefined;
-  }>('SetStatus', STATUS),
-  InstallInstrumentation: createAction<void>('EnableAndReload', STATUS),
+  }>('InstrumentationStatusResolved', STATUS),
 };
 
 export const statusSelectors = {
@@ -56,18 +60,76 @@ export const statusReducer = createReducer(
   STATUS,
   { instrumentationStatus: undefined } as StatusState,
   [
-    on(statusActions.SetInstrumentationStatus, (state, action) => {
+    on(statusActions.InstrumentationStatusResolved, (state, action) => {
       state.instrumentationStatus = action.payload.instrumentationStatus;
     }),
   ]
 );
+
+function fromChromeEvent<T extends (...args: any[]) => any>(
+  event: chrome.events.Event<T>
+): Observable<Parameters<T>> {
+  return new Observable<Parameters<T>>((observer) => {
+    const callback = (...args: Parameters<T>) => {
+      observer.next(args);
+    };
+    event.addListener(callback as any);
+
+    return () => {
+      event.removeListener(callback as any);
+    };
+  });
+}
 
 export const statusReactions = combineReactions()
   .add(
     createReaction(() =>
       from(targetClient.getInstrumentationStatus()).pipe(
         map((instrumentationStatus) =>
-          statusActions.SetInstrumentationStatus({ instrumentationStatus })
+          statusActions.InstrumentationStatusResolved({ instrumentationStatus })
+        )
+      )
+    )
+  )
+  .add(
+    createReaction(() =>
+      fromChromeEvent(chrome.webNavigation.onCompleted).pipe(
+        map(() => statusActions.AwaitInstrumentationRequested())
+      )
+    )
+  )
+  .add(
+    createReaction((action$) =>
+      action$.pipe(
+        filterActions(statusActions.AwaitInstrumentationRequested),
+        switchMap(() =>
+          race([
+            timer(1000, 100).pipe(
+              switchMap(() => from(targetClient.getInstrumentationStatus())),
+              first(
+                (instrumentationStatus) =>
+                  instrumentationStatus !== 'not-available'
+              ),
+              map((instrumentationStatus) =>
+                statusActions.InstrumentationStatusResolved({
+                  instrumentationStatus,
+                })
+              )
+            ),
+            timer(4000).pipe(
+              map(() =>
+                statusActions.InstrumentationStatusResolved({
+                  instrumentationStatus: 'not-available',
+                })
+              )
+            ),
+          ]).pipe(
+            startWith(
+              statusActions.InstrumentationStatusResolved({
+                instrumentationStatus: undefined,
+              })
+            )
+          )
         )
       )
     )
@@ -75,39 +137,10 @@ export const statusReactions = combineReactions()
   .add(
     createReaction((action$) =>
       action$.pipe(
-        filterActions(statusActions.InstallInstrumentation),
+        filterActions(statusActions.InstallInstrumentationRequested),
         tapAsync(async () => {
           await targetClient.installInstrumentation();
-        }),
-        switchMap(() =>
-          race([
-            interval(100).pipe(
-              switchMap(() => from(targetClient.getInstrumentationStatus())),
-              first(
-                (instrumentationStatus) =>
-                  instrumentationStatus !== 'not-available'
-              ),
-              map((instrumentationStatus) =>
-                statusActions.SetInstrumentationStatus({
-                  instrumentationStatus,
-                })
-              )
-            ),
-            timer(4000).pipe(
-              map(() =>
-                statusActions.SetInstrumentationStatus({
-                  instrumentationStatus: 'not-available',
-                })
-              )
-            ),
-          ]).pipe(
-            startWith(
-              statusActions.SetInstrumentationStatus({
-                instrumentationStatus: undefined,
-              })
-            )
-          )
-        )
+        })
       )
     )
   );

@@ -12,7 +12,8 @@
       "@lib/rpc":["./src/lib/rpc/index.ts"],
       "@app/store":["./src/app/store/index.ts"],
       "@app/store/*":["./src/app/store/*"],
-      "@app/protocols":["./src/app/protocols/index.ts"]
+      "@app/protocols":["./src/app/protocols/index.ts"],
+      "@app/components":["./src/app/components/index.ts"]
     }
   },
   "references": [
