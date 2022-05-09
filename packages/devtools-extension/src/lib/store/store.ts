@@ -13,6 +13,7 @@ import { Reducer } from './reducer';
 import { Reaction } from './reaction';
 import { Super } from './super';
 import { Selector } from './selector';
+import { inspect } from '@rxjs-insights/console';
 
 export const ReducerAdded = createAction<{ slice: string }>('ReducerAdded');
 export const ReactionAdded = createAction<void>('ReactionAdded');
@@ -57,6 +58,9 @@ export class Store<
         }, {})
       )
       .subscribe(this.stateSubject);
+
+    inspect(this.actionSubject);
+    inspect(this.stateSubject);
   }
 
   get(): STATE;

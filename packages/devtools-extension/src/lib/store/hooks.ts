@@ -5,16 +5,18 @@ import { Selector } from './selector';
 import { first, map } from 'rxjs';
 import { StoreContext } from './context';
 
-function useStore<STATE>(): Store<STATE> {
+export function useStore<STATE>(): Store<STATE> {
   return useContext(StoreContext);
 }
 
-function useDispatch() {
+export function useDispatch() {
   const store = useStore();
   return useCallback((action: Action) => store.dispatch(action), [store]);
 }
 
-function useSelector<STATE, RESULT>(selector: Selector<STATE, RESULT>): RESULT {
+export function useSelector<STATE, RESULT>(
+  selector: Selector<STATE, RESULT>
+): RESULT {
   const store = useStore<STATE>();
   const [result, setResult] = useState<RESULT>(() => {
     let initialState: RESULT;

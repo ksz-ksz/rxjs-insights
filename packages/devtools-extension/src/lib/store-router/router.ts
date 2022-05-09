@@ -1,6 +1,8 @@
 import { Route } from './route';
 import { RouteConfig, Routing } from './routing';
 import {
+  Action,
+  ActionFactory,
   combineReactions,
   createAction,
   createReaction,
@@ -8,6 +10,7 @@ import {
   createSelector,
   filterActions,
   on,
+  Selector,
   Slice,
   Store,
 } from '@lib/store';
@@ -18,6 +21,13 @@ import { RouteMatcher } from './route-matcher';
 export interface RouterState<DATA> {
   url: Url;
   routes: Route<DATA>[];
+}
+
+export interface Router<DATA, METADATA> {
+  url: Selector<any, Url>;
+  routes: Selector<any, Route<DATA>[]>;
+  navigate(url: Url): Action<{ url: Url }>;
+  getRouteConfig(id: number): RouteConfig<DATA, METADATA> | undefined;
 }
 
 export function createRouter<SLICE extends string, DATA, METADATA>(
@@ -57,6 +67,7 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
     { url: createUrl(), routes: [] } as RouterState<DATA>,
     [
       on(routerActions.NavigationComplete, (state, action) => {
+        state.url = action.payload.url;
         state.routes = action.payload.routes;
       }),
     ]
@@ -134,13 +145,22 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
       createReaction(() => of(routerActions.Navigate({ url: createUrl() })))
     );
 
-  const getRouteConfig = (id: number) => routeMatcher.getRouteConfig(id);
+  const router: Router<DATA, METADATA> = {
+    url: routerSelectors.url,
+    routes: routerSelectors.routes,
+    navigate(url: Url) {
+      return routerActions.Navigate({ url });
+    },
+    getRouteConfig(id: number) {
+      return routeMatcher.getRouteConfig(id);
+    },
+  };
 
   return {
     routerActions,
     routerSelectors,
     routerReducer,
     routerReaction,
-    getRouteConfig,
+    router,
   };
 }

@@ -6,6 +6,7 @@ import { JSXElementConstructor, ReactNode } from 'react';
 import { StatusPage } from '../pages/status-page';
 import { DashboardPage } from '../pages/dashboard-page';
 import { map } from 'rxjs';
+import { ObservablePage } from '../pages/observable-page';
 
 const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
   routes: [
@@ -31,12 +32,12 @@ const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
         component: DashboardPage,
       },
     },
-    // {
-    //   path: ['observable', ':observableId'],
-    //   metadata: {
-    //     element: ObservablePage,
-    //   },
-    // },
+    {
+      path: ['observable', ':observableId'],
+      metadata: {
+        component: ObservablePage,
+      },
+    },
     // {
     //   path: ['subscriber', ':subscriberId'],
     //   metadata: {
@@ -61,9 +62,9 @@ export const routerTransitionsReaction = createReaction((action$) =>
 );
 
 export const {
+  router,
   routerActions,
   routerSelectors,
   routerReducer,
   routerReaction,
-  getRouteConfig,
 } = createRouter('router', routing);

@@ -54,10 +54,10 @@ class Ids {
   }
 }
 
-function getLongestCommonPrefixLength(a: string[], b: string[]) {
-  const n = Math.min(a.length, b.length);
+function getLongestCommonPrefixLength(configPath: string[], path: string[]) {
+  const n = Math.min(configPath.length, path.length);
   for (let i = 0; i < n; i++) {
-    if (a[i] !== b[i]) {
+    if (!configPath[i].startsWith(':') && configPath[i] !== path[i]) {
       return i;
     }
   }
