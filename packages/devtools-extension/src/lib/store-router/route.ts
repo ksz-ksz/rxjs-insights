@@ -1,5 +1,5 @@
 export interface Route<DATA> {
-  id: number;
+  routeConfigId: number;
   data?: DATA;
   params?: Record<string, string>;
 }

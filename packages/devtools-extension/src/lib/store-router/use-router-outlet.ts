@@ -17,7 +17,7 @@ export function useRouterOutlet<DATA, METADATA extends RouterMetadata>(
       routes
         .map((route) => ({
           route,
-          config: router.getRouteConfig(route.id)!,
+          config: router.getRouteConfig(route.routeConfigId)!,
         }))
         .filter(({ config }) => config?.metadata?.component !== undefined)[
         currentRouteIndex

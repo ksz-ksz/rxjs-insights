@@ -67,9 +67,9 @@ function getLongestCommonPrefixLength(configPath: string[], path: string[]) {
 function createRoute<DATA, METADATA>(
   routeNode: RouteNode<DATA, METADATA>,
   path: string[]
-) {
+): Route<DATA> {
   return {
-    id: routeNode.id,
+    routeConfigId: routeNode.id,
     data: routeNode.config.data,
     params: getParams(routeNode.config.path, path),
   };

@@ -2,7 +2,6 @@ import { Route } from './route';
 import { RouteConfig, Routing } from './routing';
 import {
   Action,
-  ActionFactory,
   combineReactions,
   createAction,
   createReaction,
@@ -88,7 +87,9 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
               const prevRoutes = store.get(routerSelectors.routes);
 
               for (const route of prevRoutes) {
-                const routeConfig = routeMatcher.getRouteConfig(route.id);
+                const routeConfig = routeMatcher.getRouteConfig(
+                  route.routeConfigId
+                );
                 if (routeConfig?.interceptLeave) {
                   const result = routeConfig.interceptLeave(
                     store,
@@ -111,7 +112,9 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
               const nextRoutes = routeMatcher.match(action.payload.url.path);
 
               for (const route of nextRoutes) {
-                const routeConfig = routeMatcher.getRouteConfig(route.id);
+                const routeConfig = routeMatcher.getRouteConfig(
+                  route.routeConfigId
+                );
                 if (routeConfig?.interceptEnter) {
                   const result = routeConfig.interceptEnter(
                     store,

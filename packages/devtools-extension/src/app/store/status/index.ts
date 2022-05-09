@@ -9,10 +9,12 @@ import {
   Slice,
 } from '@lib/store';
 import {
+  EMPTY,
   first,
   from,
   map,
   Observable,
+  of,
   race,
   startWith,
   switchMap,
@@ -97,7 +99,11 @@ export const statusReactions = combineReactions()
   .add(
     createReaction(() =>
       fromChromeEvent(chrome.webNavigation.onCompleted).pipe(
-        map(() => statusActions.AwaitInstrumentationRequested())
+        switchMap(([event]) =>
+          event.tabId === chrome.devtools.inspectedWindow.tabId
+            ? of(statusActions.AwaitInstrumentationRequested())
+            : EMPTY
+        )
       )
     )
   )

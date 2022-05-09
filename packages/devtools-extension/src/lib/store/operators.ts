@@ -12,7 +12,7 @@ export function filterActions<FACTORIES extends ActionFactory<any>[]>(
 ): OperatorFunction<Action<any>, Action<ActionFactoryPayload<Item<FACTORIES>>>>;
 export function filterActions(
   actionFactory: ActionFactory<any> | ActionFactory<any>[],
-  predicate: (action: Action<any>) => boolean = () => true
+  predicate: (action: any) => boolean = () => true
 ) {
   if (Array.isArray(actionFactory)) {
     return filterActionsAll(actionFactory, predicate);
