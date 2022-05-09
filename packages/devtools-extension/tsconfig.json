@@ -8,6 +8,7 @@
     "baseUrl": ".",
     "paths": {
       "@lib/store":["./src/lib/store/index.ts"],
+      "@lib/store-router":["./src/lib/store-router/index.ts"],
       "@lib/operators":["./src/lib/operators/index.ts"],
       "@lib/rpc":["./src/lib/rpc/index.ts"],
       "@app/store":["./src/app/store/index.ts"],

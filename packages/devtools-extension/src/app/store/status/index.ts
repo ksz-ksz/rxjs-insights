@@ -6,6 +6,7 @@ import {
   createSelector,
   filterActions,
   on,
+  Slice,
 } from '@lib/store';
 import {
   first,
@@ -34,6 +35,8 @@ export const STATUS = 'status';
 export interface StatusState {
   instrumentationStatus: InstrumentationStatus | undefined;
 }
+
+export type StatusSlice = Slice<typeof STATUS, StatusState>;
 
 export const statusActions = {
   AwaitInstrumentationRequested: createAction<void>(

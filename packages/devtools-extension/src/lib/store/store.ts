@@ -12,6 +12,7 @@ import { Action, createAction } from './action';
 import { Reducer } from './reducer';
 import { Reaction } from './reaction';
 import { Super } from './super';
+import { Selector } from './selector';
 
 export const ReducerAdded = createAction<{ slice: string }>('ReducerAdded');
 export const ReactionAdded = createAction<void>('ReactionAdded');
@@ -58,8 +59,14 @@ export class Store<
       .subscribe(this.stateSubject);
   }
 
-  getState(): STATE {
-    return this.stateSubject.getValue();
+  get(): STATE;
+  get<RESULT>(selector: Selector<STATE, RESULT>): RESULT;
+  get(selector?: Selector<STATE, any>): any {
+    if (selector) {
+      return selector.select(this.stateSubject.getValue());
+    } else {
+      return this.stateSubject.getValue();
+    }
   }
 
   dispatch(action: Action) {

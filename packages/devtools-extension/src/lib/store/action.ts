@@ -8,6 +8,10 @@ export interface ActionFactory<PAYLOAD = unknown> {
   (payload: PAYLOAD): Action<PAYLOAD>;
 }
 
+export type ActionFactoryPayload<T> = T extends ActionFactory<infer PAYLOAD>
+  ? PAYLOAD
+  : never;
+
 export function createAction<PAYLOAD>(
   actionType: string,
   slice?: string
