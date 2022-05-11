@@ -11,10 +11,7 @@
       "@lib/store-router":["./src/lib/store-router/index.ts"],
       "@lib/operators":["./src/lib/operators/index.ts"],
       "@lib/rpc":["./src/lib/rpc/index.ts"],
-      "@app/store":["./src/app/store/index.ts"],
-      "@app/store/*":["./src/app/store/*"],
-      "@app/protocols":["./src/app/protocols/index.ts"],
-      "@app/components":["./src/app/components/index.ts"]
+      "@app/*":["./src/app/*"]
     }
   },
   "references": [

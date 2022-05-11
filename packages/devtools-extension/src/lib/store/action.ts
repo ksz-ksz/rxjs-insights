@@ -25,3 +25,26 @@ export function createAction<PAYLOAD>(
     { type }
   );
 }
+
+export type ActionFactories<ACTION_TYPES extends Record<string, any>> = {
+  [K in keyof ACTION_TYPES]: ActionFactory<ACTION_TYPES[K]>;
+};
+
+export function createActions<ACTION_TYPES extends Record<string, any>>(
+  slice?: string
+): ActionFactories<ACTION_TYPES> {
+  return new Proxy(
+    {},
+    {
+      get(
+        target: Record<string, ActionFactory>,
+        property: string
+      ): ActionFactory {
+        if (target[property] === undefined) {
+          target[property] = createAction(property, slice);
+        }
+        return target[property];
+      },
+    }
+  ) as any;
+}

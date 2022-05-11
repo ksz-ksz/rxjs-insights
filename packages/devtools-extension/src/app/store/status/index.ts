@@ -1,9 +1,11 @@
 import {
   combineReactions,
   createAction,
+  createActions,
   createReaction,
   createReducer,
   createSelector,
+  createSelectors,
   filterActions,
   on,
   Slice,
@@ -40,26 +42,21 @@ export interface StatusState {
 
 export type StatusSlice = Slice<typeof STATUS, StatusState>;
 
-export const statusActions = {
-  AwaitInstrumentationRequested: createAction<void>(
-    'AwaitInstrumentationRequested',
-    STATUS
-  ),
-  InstallInstrumentationRequested: createAction<void>(
-    'InstallInstrumentationRequested',
-    STATUS
-  ),
-  InstrumentationStatusResolved: createAction<{
+export interface StatusActions {
+  AwaitInstrumentationRequested: void;
+  InstallInstrumentationRequested: void;
+  InstrumentationStatusResolved: {
     instrumentationStatus: InstrumentationStatus | undefined;
-  }>('InstrumentationStatusResolved', STATUS),
-};
+  };
+}
 
-export const statusSelectors = {
-  instrumentationStatus: createSelector(
-    (state: StatusState) => state.instrumentationStatus,
-    STATUS
-  ),
-};
+export const statusActions = createActions<StatusActions>(STATUS);
+
+export const statusSelectors = createSelectors(STATUS, {
+  instrumentationStatus(status: StatusState) {
+    return status.instrumentationStatus;
+  },
+});
 
 export const statusReducer = createReducer(
   STATUS,
