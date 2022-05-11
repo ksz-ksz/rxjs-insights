@@ -2,7 +2,7 @@ import { createReaction, filterActions, Store } from '@lib/store';
 import { createRouter, createUrl, Routing } from '@lib/store-router';
 import { JSXElementConstructor, ReactNode } from 'react';
 
-import { StatusPage } from '../pages/status-page';
+import { InstrumentationStatusPage } from '../pages/instrumentation-status-page';
 import { DashboardPage } from '../pages/dashboard-page';
 import { map } from 'rxjs';
 import { ObservablePage } from '../pages/observable-page';
@@ -19,7 +19,7 @@ const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
     {
       path: ['status'],
       metadata: {
-        component: StatusPage,
+        component: InstrumentationStatusPage,
       },
       interceptEnter(store: Store<StatusSlice>) {
         return store.get(statusSelectors.instrumentationStatus) !== 'installed';
