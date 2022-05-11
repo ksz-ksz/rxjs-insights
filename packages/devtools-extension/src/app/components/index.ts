@@ -1,1 +1,1 @@
-export * from './fullscreen-center';
+export * from './fill-center';

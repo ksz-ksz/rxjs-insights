@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Box } from '@mui/material';
 
-export function FullscreenCenter(props: { children: ReactNode }) {
+export function FillCenter(props: { children: ReactNode }) {
   return (
     <Box
       width="100%"
