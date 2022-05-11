@@ -1,4 +1,4 @@
-import { InstrumentationStatus } from '@app/protocols';
+import { InstrumentationStatus } from '@app/protocols/instrumentation-status';
 import { createActions } from '@lib/store';
 import { status } from '@app/store/status/slice';
 

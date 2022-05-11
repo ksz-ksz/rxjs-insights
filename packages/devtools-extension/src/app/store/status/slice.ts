@@ -1,5 +1,5 @@
 import { Slice } from '@lib/store';
-import { InstrumentationStatus } from '@app/protocols';
+import { InstrumentationStatus } from '@app/protocols/instrumentation-status';
 
 export const status = 'status';
 

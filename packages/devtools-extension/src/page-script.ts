@@ -1,12 +1,15 @@
 import { createInspectedWindowEvalServerAdapter, startServer } from '@lib/rpc';
-import { TargetStatus, TargetStatusChannel } from '@app/protocols';
+import {
+  Instrumentation,
+  InstrumentationChannel,
+} from '@app/protocols/instrumentation-status';
 
 const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
 
-startServer<TargetStatus>(
-  createInspectedWindowEvalServerAdapter(TargetStatusChannel),
+startServer<Instrumentation>(
+  createInspectedWindowEvalServerAdapter(InstrumentationChannel),
   {
-    getInstrumentationStatus() {
+    getStatus() {
       switch ((window as any).RXJS_INSIGHTS_INSTALLED) {
         case true:
           return 'installed';
@@ -17,7 +20,7 @@ startServer<TargetStatus>(
       }
     },
 
-    reloadPageAndInstallInstrumentation() {
+    install() {
       sessionStorage.setItem(RXJS_INSIGHTS_ENABLED_KEY, 'true');
       location.reload();
     },
