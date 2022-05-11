@@ -32,26 +32,24 @@ function routeNodesComparator(a: RouteNode<any, any>, b: RouteNode<any, any>) {
 }
 
 function createRouteNodes<DATA, METADATA>(
-  routeNodeIds: Ids,
+  routeNodesFlat: RouteNode<DATA, METADATA>[],
   configs: RouteConfig<DATA, METADATA>[]
 ) {
-  return configs
-    .map(
-      (config): RouteNode<DATA, METADATA> => ({
-        id: routeNodeIds.next(),
-        config,
-        children: createRouteNodes(routeNodeIds, config.children ?? []),
-      })
-    )
-    .sort(routeNodesComparator);
-}
-
-class Ids {
-  private id = 0;
-
-  next() {
-    return this.id++;
+  const routeNodes: RouteNode<DATA, METADATA>[] = [];
+  for (const config of configs) {
+    const routeNode: RouteNode<DATA, METADATA> = {
+      id: routeNodesFlat.length,
+      config,
+      children: [],
+    };
+    routeNodes.push(routeNode);
+    routeNodesFlat.push(routeNode);
+    routeNode.children = createRouteNodes(
+      routeNodesFlat,
+      config.children ?? []
+    );
   }
+  return routeNodes.sort(routeNodesComparator);
 }
 
 function getLongestCommonPrefixLength(configPath: string[], path: string[]) {
@@ -134,13 +132,10 @@ function getParams(configPath: string[], path: string[]) {
 
 export class RouteMatcher<DATA, METADATA> {
   private readonly routeNodes: RouteNode<DATA, METADATA>[];
-  private routeNodesById: Record<number, RouteNode<DATA, METADATA> | undefined>;
+  private routeNodesFlat: RouteNode<DATA, METADATA>[] = [];
 
   constructor(configs: RouteConfig<DATA, METADATA>[]) {
-    this.routeNodes = createRouteNodes(new Ids(), configs);
-    this.routeNodesById = Object.fromEntries(
-      this.routeNodes.map((routeNode) => [routeNode.id, routeNode])
-    );
+    this.routeNodes = createRouteNodes(this.routeNodesFlat, configs);
   }
 
   match(path: string[]): Route<DATA>[] {
@@ -148,6 +143,6 @@ export class RouteMatcher<DATA, METADATA> {
   }
 
   getRouteConfig(id: number): RouteConfig<DATA, METADATA> | undefined {
-    return this.routeNodesById[id]?.config;
+    return this.routeNodesFlat[id]?.config;
   }
 }

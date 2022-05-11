@@ -36,6 +36,7 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
   type RouterSlice = Slice<SLICE, RouterState<DATA>>;
 
   const routeMatcher = new RouteMatcher<DATA, METADATA>(routing.routes ?? []);
+  console.log({ routeMatcher });
 
   const routerActions = {
     Navigate: createAction<{ url: Url }>('Navigate', routerSlice),

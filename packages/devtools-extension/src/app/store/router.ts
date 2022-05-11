@@ -9,6 +9,7 @@ import { ObservablePage } from '../pages/observable-page';
 import { StatusSlice } from '@app/store/status/slice';
 import { statusActions } from '@app/store/status/actions';
 import { statusSelectors } from '@app/store/status/selectors';
+import { ToolbarShell } from '@app/pages/toolbar-shell';
 
 const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
   routes: [
@@ -29,16 +30,24 @@ const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
       },
     },
     {
-      path: ['dashboard'],
+      path: [],
       metadata: {
-        component: DashboardPage,
+        component: ToolbarShell,
       },
-    },
-    {
-      path: ['observable', ':observableId'],
-      metadata: {
-        component: ObservablePage,
-      },
+      children: [
+        {
+          path: ['dashboard'],
+          metadata: {
+            component: DashboardPage,
+          },
+        },
+        {
+          path: ['observable', ':observableId'],
+          metadata: {
+            component: ObservablePage,
+          },
+        },
+      ],
     },
     // {
     //   path: ['subscriber', ':subscriberId'],

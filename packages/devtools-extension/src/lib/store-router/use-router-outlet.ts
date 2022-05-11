@@ -12,16 +12,21 @@ export function useRouterOutlet<DATA, METADATA extends RouterMetadata>(
   const routes = useSelector(router.routes);
   const RouterOutletContext = getRouterOutletContext(router);
   const { currentRouteIndex } = useContext(RouterOutletContext);
-  return useMemo(
-    () =>
-      routes
-        .map((route) => ({
-          route,
-          config: router.getRouteConfig(route.routeConfigId)!,
-        }))
-        .filter(({ config }) => config?.metadata?.component !== undefined)[
-        currentRouteIndex
-      ],
-    [routes, currentRouteIndex]
-  );
+  return useMemo(() => {
+    const result = routes
+      .map((route) => ({
+        route,
+        config: router.getRouteConfig(route.routeConfigId)!,
+      }))
+      .filter(({ config }) => config?.metadata?.component !== undefined)[
+      currentRouteIndex
+    ];
+    console.log('useRouterOutlet', {
+      result,
+      routes,
+      currentRouteIndex,
+      router,
+    });
+    return result;
+  }, [routes, currentRouteIndex]);
 }
