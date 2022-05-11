@@ -1,5 +1,4 @@
 import { createReaction, filterActions, Store } from '@lib/store';
-import { statusActions, statusSelectors, StatusSlice } from '@app/store/status';
 import { createRouter, createUrl, Routing } from '@lib/store-router';
 import { JSXElementConstructor, ReactNode } from 'react';
 
@@ -7,6 +6,9 @@ import { StatusPage } from '../pages/status-page';
 import { DashboardPage } from '../pages/dashboard-page';
 import { map } from 'rxjs';
 import { ObservablePage } from '../pages/observable-page';
+import { StatusSlice } from '@app/store/status/slice';
+import { statusActions } from '@app/store/status/actions';
+import { statusSelectors } from '@app/store/status/selectors';
 
 const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
   routes: [

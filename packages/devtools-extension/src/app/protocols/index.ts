@@ -6,6 +6,6 @@ export type InstrumentationStatus =
   | 'not-available';
 
 export interface TargetStatus {
-  installInstrumentation(): void;
+  reloadPageAndInstallInstrumentation(): void;
   getInstrumentationStatus(): InstrumentationStatus;
 }

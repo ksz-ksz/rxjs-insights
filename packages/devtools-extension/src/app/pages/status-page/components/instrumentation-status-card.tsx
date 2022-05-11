@@ -1,5 +1,4 @@
 import { useDispatch, useSelector } from '@app/store';
-import { statusActions, statusSelectors } from '@app/store/status';
 import {
   Button,
   Card,
@@ -8,6 +7,8 @@ import {
   Typography,
 } from '@mui/material';
 import React from 'react';
+import { statusSelectors } from '@app/store/status/selectors';
+import { instrumentationStatusPageActions } from '@app/store/instrumentation-status-page';
 
 export function InstrumentationStatusCard() {
   const dispatch = useDispatch();
@@ -33,7 +34,9 @@ export function InstrumentationStatusCard() {
           <CardActions>
             <Button
               onClick={() =>
-                dispatch(statusActions.InstallInstrumentationRequested())
+                dispatch(
+                  instrumentationStatusPageActions.ReloadPageButtonClicked()
+                )
               }
             >
               Reload page
@@ -59,7 +62,9 @@ export function InstrumentationStatusCard() {
             </Button>
             <Button
               onClick={() =>
-                dispatch(statusActions.AwaitInstrumentationRequested())
+                dispatch(
+                  instrumentationStatusPageActions.WaitForInstrumentationButtonClicked()
+                )
               }
             >
               Wait

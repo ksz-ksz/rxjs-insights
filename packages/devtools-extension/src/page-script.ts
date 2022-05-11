@@ -17,7 +17,7 @@ startServer<TargetStatus>(
       }
     },
 
-    installInstrumentation() {
+    reloadPageAndInstallInstrumentation() {
       sessionStorage.setItem(RXJS_INSIGHTS_ENABLED_KEY, 'true');
       location.reload();
     },
