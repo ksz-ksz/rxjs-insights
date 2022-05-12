@@ -86,6 +86,7 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
             concatMap((action) => {
               const prevUrl = store.get(routerSelectors.url);
               const prevRoutes = store.get(routerSelectors.routes);
+              const dispatchOnLeave: Action[] = [];
 
               for (const route of prevRoutes) {
                 const routeConfig = routeMatcher.getRouteConfig(
@@ -107,10 +108,16 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
                     );
                   }
                 }
+                if (routeConfig?.dispatchOnLeave) {
+                  dispatchOnLeave.push(
+                    routeConfig.dispatchOnLeave(store, prevUrl, route)
+                  );
+                }
               }
 
               const nextUrl = action.payload.url;
               const nextRoutes = routeMatcher.match(action.payload.url.path);
+              const dispatchOnEnter: Action[] = [];
 
               for (const route of nextRoutes) {
                 const routeConfig = routeMatcher.getRouteConfig(
@@ -132,13 +139,20 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
                     );
                   }
                 }
+                if (routeConfig?.dispatchOnEnter) {
+                  dispatchOnEnter.push(
+                    routeConfig.dispatchOnEnter(store, prevUrl, route)
+                  );
+                }
               }
 
               return of(
+                ...dispatchOnLeave,
                 routerActions.NavigationComplete({
                   url: nextUrl,
                   routes: nextRoutes,
-                })
+                }),
+                ...dispatchOnEnter
               );
             })
           ),

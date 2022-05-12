@@ -10,6 +10,7 @@ import { StatusSlice } from '@app/store/status/slice';
 import { statusActions } from '@app/store/status/actions';
 import { statusSelectors } from '@app/store/status/selectors';
 import { AppBarShell } from '@app/pages/app-bar-shell';
+import { routesActions } from '@app/store/routes';
 
 const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
   routes: [
@@ -39,6 +40,9 @@ const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
           path: ['dashboard'],
           metadata: {
             component: DashboardPage,
+          },
+          dispatchOnEnter() {
+            return routesActions.DashboardRouteEntered();
           },
         },
         {

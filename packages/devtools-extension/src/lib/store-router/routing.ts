@@ -6,6 +6,8 @@ export interface RouteConfig<DATA, METADATA> {
   path: string[];
   data?: DATA;
   metadata?: METADATA;
+  dispatchOnEnter?: (store: Store<any>, url: Url, route: Route<DATA>) => Action;
+  dispatchOnLeave?: (store: Store<any>, url: Url, route: Route<DATA>) => Action;
   interceptEnter?: (
     store: Store<any>,
     url: Url,
