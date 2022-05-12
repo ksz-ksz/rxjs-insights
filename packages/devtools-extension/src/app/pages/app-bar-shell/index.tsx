@@ -54,8 +54,8 @@ export function AppBarShell() {
     setValue(newValue);
   };
   return (
-    <Box>
-      <AppBar color="secondary" position="static">
+    <Box display="flex" height="100%" flexDirection="column">
+      <AppBar color="secondary" position="static" sx={{ flex: '0 0 0' }}>
         <Toolbar>
           <Tabs
             value={value}
@@ -105,7 +105,9 @@ export function AppBarShell() {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <RouterOutlet router={router} />
+      <Box flex="1 1 0">
+        <RouterOutlet router={router} />
+      </Box>
     </Box>
   );
 }

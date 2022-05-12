@@ -7,10 +7,13 @@ import {
 import { statusReducer } from '@app/store/status/reducer';
 import { statusReactions } from '@app/store/status/reaction';
 import { inspectedWindowReaction } from '@app/store/inspected-window';
+import { statisticsReaction, statisticsReducer } from '@app/store/statisctics';
 
 export const store = createStore()
   .addReducer(statusReducer)
   .addReaction(statusReactions)
+  .addReducer(statisticsReducer)
+  .addReaction(statisticsReaction)
   .addReducer(routerReducer)
   .addReaction(routerReaction)
   .addReaction(routerTransitionsReaction)
