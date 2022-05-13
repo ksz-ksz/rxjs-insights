@@ -9,7 +9,7 @@ import { ObservablePage } from '../pages/observable-page';
 import { StatusSlice } from '@app/store/status/slice';
 import { statusActions } from '@app/store/status/actions';
 import { statusSelectors } from '@app/store/status/selectors';
-import { AppBarShell } from '@app/pages/app-bar-shell';
+import { AppBarWrapper } from '@app/pages/app-bar-wrapper';
 import { routesActions } from '@app/store/routes';
 
 const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
@@ -33,7 +33,7 @@ const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
     {
       path: [],
       metadata: {
-        component: AppBarShell,
+        component: AppBarWrapper,
       },
       children: [
         {

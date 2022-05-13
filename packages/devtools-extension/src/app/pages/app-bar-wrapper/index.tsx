@@ -49,7 +49,7 @@ const TARGETS = [
   'Subscriber #20',
 ].sort(() => (Math.random() > 0.5 ? -1 : 1));
 
-export function AppBarShell() {
+export function AppBarWrapper() {
   const dispatch = useDispatch();
 
   const [targets, setTargets] = useState(TARGETS);
