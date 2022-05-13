@@ -20,9 +20,27 @@ import {
   Task,
 } from './model';
 import { queueCleanup } from './queue-cleanup';
+import { RecorderStats } from '@rxjs-insights/core/src/lib/recorder';
+
+function incStats(stats: Record<string, number>, name: string) {
+  if (stats[name] === undefined) {
+    stats[name] = 1;
+  } else {
+    stats[name]++;
+  }
+}
 
 export class ModelRecorder implements Recorder {
   private currentTask: Task | undefined;
+  private stats: RecorderStats = {
+    observables: {},
+    subscribers: {},
+    events: {},
+  };
+
+  getStats(): RecorderStats {
+    return this.stats;
+  }
 
   declarationRef(
     name: string,
@@ -35,7 +53,6 @@ export class ModelRecorder implements Recorder {
     locations?.then((locations) => {
       declaration.locations = locations;
     });
-
     return ref(declaration);
   }
 
@@ -47,6 +64,8 @@ export class ModelRecorder implements Recorder {
     const declaration = deref(observableDeclarationRef);
     const sourceObservable = deref(sourceObservableRef);
     const observable = new Observable(target, declaration, sourceObservable);
+
+    incStats(this.stats.observables, declaration.name);
 
     return ref(observable);
   }
@@ -65,6 +84,8 @@ export class ModelRecorder implements Recorder {
     );
 
     observable.subscribers.push(subscriber);
+
+    incStats(this.stats.subscribers, observable.declaration.name);
 
     return ref(subscriber);
   }
@@ -88,6 +109,8 @@ export class ModelRecorder implements Recorder {
     observable.events.push(event);
     sourceEvent?.succeedingEvents?.push(event);
 
+    incStats(this.stats.events, declaration.name);
+
     return ref(event);
   }
 
@@ -109,6 +132,7 @@ export class ModelRecorder implements Recorder {
 
     subscriber.events.push(event);
     sourceEvent?.succeedingEvents?.push(event);
+    incStats(this.stats.events, declaration.name);
 
     return ref(event);
   }

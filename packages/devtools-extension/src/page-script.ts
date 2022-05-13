@@ -3,23 +3,16 @@ import {
   Instrumentation,
   InstrumentationChannel,
 } from '@app/protocols/instrumentation-status';
-import {
-  Statistics,
-  StatisticsChannel,
-  Stats,
-} from '@app/protocols/statistics';
+import { Statistics, StatisticsChannel } from '@app/protocols/statistics';
+import { getGlobalEnv } from '@rxjs-insights/core';
 
 const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
 
 startServer<Statistics>(
   createInspectedWindowEvalServerAdapter(StatisticsChannel),
   {
-    getStats(): Stats {
-      return {
-        observables: Math.floor(Math.random() * 100),
-        subscribers: Math.floor(Math.random() * 100),
-        notifications: Math.floor(Math.random() * 100),
-      };
+    getStats() {
+      return getGlobalEnv().getRecorderStats();
     },
   }
 );

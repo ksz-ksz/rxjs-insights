@@ -1,9 +1,9 @@
 import { Tracer } from './tracer';
-import { Recorder } from './recorder';
+import { Recorder, RecorderStats } from './recorder';
 import { Locator } from './locator';
 import { Constructor, ObservableLike, SubjectLike } from './types';
 
-const ENV = Symbol('@rxjs-insights/env');
+const ENV = Symbol.for('@rxjs-insights/env');
 
 export interface InstrumentationContext {
   Subject: Constructor<SubjectLike>;
@@ -24,6 +24,7 @@ export interface Env {
   >;
   instrumentSingleton: Instrument<ObservableLike>;
   addTag: (observable: ObservableLike, tag: string) => void;
+  getRecorderStats: () => RecorderStats;
 }
 
 export function setGlobalEnv(env: Env) {

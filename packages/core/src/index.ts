@@ -17,6 +17,7 @@ export type {
   ObservableEventRef,
   ObservableRef,
   Recorder,
+  RecorderStats,
   SubscriberEventRef,
   SubscriberRef,
 } from './lib/recorder';

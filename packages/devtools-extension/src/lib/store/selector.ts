@@ -1,5 +1,4 @@
 import { Slice } from './store';
-import { ActionFactory } from './action';
 
 export interface Selector<STATE, RESULT> {
   select(state: STATE): RESULT;

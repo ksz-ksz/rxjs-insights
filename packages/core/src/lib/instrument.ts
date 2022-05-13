@@ -82,6 +82,9 @@ export function instrument({
     instrumentOperator: createInstrumentOperator(context),
     instrumentSingleton: createInstrumentSingleton(context),
     addTag: createAddTag(context),
+    getRecorderStats() {
+      return recorder.getStats();
+    },
   };
 }
 

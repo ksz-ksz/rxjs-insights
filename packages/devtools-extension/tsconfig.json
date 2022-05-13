@@ -5,14 +5,15 @@
     "isolatedModules": false,
     "types": ["chrome"],
     "jsx": "react",
-    "baseUrl": ".",
     "paths": {
-      "@lib/store":["./src/lib/store/index.ts"],
-      "@lib/store-router":["./src/lib/store-router/index.ts"],
-      "@lib/operators":["./src/lib/operators/index.ts"],
-      "@lib/rpc":["./src/lib/rpc/index.ts"],
-      "@app/*":["./src/app/*"]
-    }
+      "@rxjs-insights/core": ["./packages/core/src/index.ts"],
+      "@rxjs-insights/recorder": ["./packages/recorder/src/index.ts"],
+      "@lib/store":["./packages/devtools-extension/src/lib/store/index.ts"],
+      "@lib/store-router":["./packages/devtools-extension/src/lib/store-router/index.ts"],
+      "@lib/operators":["./packages/devtools-extension/src/lib/operators/index.ts"],
+      "@lib/rpc":["./packages/devtools-extension/src/lib/rpc/index.ts"],
+      "@app/*":["./packages/devtools-extension/src/app/*"]
+    },
   },
   "references": [
     {
