@@ -3,20 +3,13 @@ import { first, from, map, race, startWith, switchMap, timer } from 'rxjs';
 import { statusActions } from '@app/store/status/actions';
 import { inspectedWindowActions } from '@app/store/inspected-window';
 import { tapAsync } from '@lib/operators';
-import { createClient, createInspectedWindowEvalClientAdapter } from '@lib/rpc';
-import {
-  Instrumentation,
-  InstrumentationChannel,
-} from '@app/protocols/instrumentation-status';
 import { instrumentationStatusPageActions } from '@app/store/instrumentation-status-page';
+import { instrumentationClient } from '@app/clients/instrumentation';
 
-const targetClient = createClient<Instrumentation>(
-  createInspectedWindowEvalClientAdapter(InstrumentationChannel)
-);
 export const statusReactions = combineReactions()
   .add(
     createReaction(() =>
-      from(targetClient.getStatus()).pipe(
+      from(instrumentationClient.getStatus()).pipe(
         map((instrumentationStatus) =>
           statusActions.InstrumentationStatusResolved({ instrumentationStatus })
         )
@@ -33,7 +26,7 @@ export const statusReactions = combineReactions()
         switchMap(() =>
           race([
             timer(1000, 100).pipe(
-              switchMap(() => from(targetClient.getStatus())),
+              switchMap(() => from(instrumentationClient.getStatus())),
               first(
                 (instrumentationStatus) =>
                   instrumentationStatus !== 'not-available'
@@ -67,7 +60,7 @@ export const statusReactions = combineReactions()
       action$.pipe(
         filterActions(instrumentationStatusPageActions.ReloadPageButtonClicked),
         tapAsync(async () => {
-          await targetClient.install();
+          await instrumentationClient.install();
         })
       )
     )

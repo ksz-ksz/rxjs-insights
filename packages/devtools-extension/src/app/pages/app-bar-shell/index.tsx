@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { RouterOutlet } from '@lib/store-router';
 import { router } from '@app/store/router';
 import { Close, Refresh } from '@mui/icons-material';
+import { useDispatch } from '@app/store';
+import { appBarActions } from '@app/store/app-bar';
 
 const TARGETS = [
   'Observable #1',
@@ -48,6 +50,8 @@ const TARGETS = [
 ].sort(() => (Math.random() > 0.5 ? -1 : 1));
 
 export function AppBarShell() {
+  const dispatch = useDispatch();
+
   const [targets, setTargets] = useState(TARGETS);
   const [value, setValue] = useState<string>();
   const handleChange = (event: any, newValue: any) => {
@@ -100,6 +104,7 @@ export function AppBarShell() {
             edge="start"
             color="inherit"
             aria-label="refresh"
+            onClick={() => dispatch(appBarActions.RefreshDataButtonClicked())}
           >
             <Refresh />
           </IconButton>
