@@ -4,28 +4,18 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Card,
-  CardContent,
   Divider,
-  Grid,
-  Typography,
-  Table,
-  TableContainer,
-  TableBody,
-  TableHead,
-  TableCell,
-  TableRow,
   Paper,
-  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
 } from '@mui/material';
-import { FillCenter } from '@app/components';
 import { useSelector } from '@app/store';
-import {
-  statistics,
-  statisticsSelectors,
-  StatisticsState,
-} from '@app/store/statisctics';
-import { createSelector } from '@lib/store';
+import { statisticsSelectors } from '@app/store/statisctics';
 import { ExpandMore } from '@mui/icons-material';
 
 export interface StatsLineProps {
@@ -80,36 +70,26 @@ export function StatsLine({ label, stats }: StatsLineProps) {
   );
 }
 
-// export const vmSelector = createSelector((state: StatisticsState) => {
-//   return {
-//     observables: sortStats(state.stats?.observables),
-//     observablesCount: countStats(state.stats?.observables),
-//     subscribers: sortStats(state.stats?.subscribers),
-//     subscribersCount: countStats(state.stats?.subscribers),
-//     events: sortStats(state.stats?.events),
-//     eventsCount: countStats(state.stats?.events),
-//   };
-// }, statistics);
-
 export function DashboardPage() {
   const stats = useSelector(statisticsSelectors.stats);
 
   return (
-    <FillCenter>
-      <Stack
-        sx={{
-          width: '100%',
-          maxWidth: '400px',
-          overflow: 'auto',
-          scrollbarGutter: 'stable',
-        }}
-      >
-        <Typography variant="h4">
-          Call the <code>inspect</code> function on <code>Observable</code> or{' '}
-          <code>Subscriber</code> to see them in the devtools.
-        </Typography>
-        <Divider sx={{ my: 4 }} />
-        <Box>
+    <Box
+      height="100%"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      overflow="hidden"
+    >
+      <Box flex="1 1 0" display="flex" justifyContent="right">
+        <Box maxWidth="600px">
+          <Typography variant="h1">RxJS Insights</Typography>
+          <Typography variant="h4">See through the observables</Typography>
+        </Box>
+      </Box>
+      <Divider orientation="vertical" sx={{ mx: 2 }} variant="middle" />
+      <Box flex="1 1 0" maxHeight="100%" overflow="auto">
+        <Box maxWidth="600px" py={2}>
           <StatsLine
             label="Captured observables"
             stats={stats?.observables ?? {}}
@@ -120,7 +100,7 @@ export function DashboardPage() {
           />
           <StatsLine label="Captured events" stats={stats?.events ?? {}} />
         </Box>
-      </Stack>
-    </FillCenter>
+      </Box>
+    </Box>
   );
 }

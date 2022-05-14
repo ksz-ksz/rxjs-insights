@@ -110,7 +110,7 @@ export function AppBarWrapper() {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Box flex="1 1 0">
+      <Box flex="1 1 0" overflow="hidden">
         <RouterOutlet router={router} />
       </Box>
     </Box>
