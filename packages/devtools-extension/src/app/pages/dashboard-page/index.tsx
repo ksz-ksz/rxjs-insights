@@ -39,7 +39,9 @@ export function StatsLine({ label, stats }: StatsLineProps) {
     <Accordion>
       <AccordionSummary expandIcon={<ExpandMore />}>
         <Typography sx={{ width: '33%', flexShrink: 0 }}>{label}</Typography>
-        <Typography sx={{ color: 'text.secondary' }}>{count}</Typography>
+        <Typography sx={{ color: 'text.secondary', marginLeft: 2 }}>
+          {count}
+        </Typography>
       </AccordionSummary>
       <AccordionDetails>
         <TableContainer component={Paper}>
@@ -81,14 +83,14 @@ export function DashboardPage() {
       justifyContent="center"
       overflow="hidden"
     >
-      <Box flex="1 1 0" display="flex" justifyContent="right">
+      <Box flex="1 1 0" display="flex" justifyContent="right" padding={2}>
         <Box maxWidth="600px">
           <Typography variant="h1">RxJS Insights</Typography>
           <Typography variant="h4">See through the observables</Typography>
         </Box>
       </Box>
-      <Divider orientation="vertical" sx={{ mx: 2 }} variant="middle" />
-      <Box flex="1 1 0" maxHeight="100%" overflow="auto">
+      <Divider orientation="vertical" variant="middle" />
+      <Box flex="1 1 0" maxHeight="100%" overflow="auto" padding={2}>
         <Box maxWidth="600px" py={2}>
           <StatsLine
             label="Captured observables"
