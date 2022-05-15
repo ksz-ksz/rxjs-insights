@@ -1,10 +1,11 @@
 import { AppBar, Box, IconButton, Tab, Tabs, Toolbar } from '@mui/material';
 import React, { useState } from 'react';
-import { RouterOutlet } from '@lib/store-router';
-import { router } from '@app/store/router';
+import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
+import { router, routerActions, routerSelectors } from '@app/store/router';
 import { Close, Refresh } from '@mui/icons-material';
-import { useDispatch } from '@app/store';
+import { useDispatch, useSelector } from '@app/store';
 import { appBarActions } from '@app/store/app-bar';
+import { routesActions } from '@app/store/routes';
 
 const TARGETS = [
   'Observable #1',
@@ -12,66 +13,38 @@ const TARGETS = [
   'Observable #3',
   'Observable #4',
   'Observable #5',
-  'Observable #6',
-  'Observable #7',
-  'Observable #8',
-  'Observable #9',
-  'Observable #10',
-  'Observable #11',
-  'Observable #12',
-  'Observable #13',
-  'Observable #14',
-  'Observable #15',
-  'Observable #16',
-  'Observable #17',
-  'Observable #18',
-  'Observable #19',
-  'Observable #20',
-  'Subscriber #1',
-  'Subscriber #2',
-  'Subscriber #3',
-  'Subscriber #4',
-  'Subscriber #5',
-  'Subscriber #6',
-  'Subscriber #7',
-  'Subscriber #8',
-  'Subscriber #9',
-  'Subscriber #10',
-  'Subscriber #11',
-  'Subscriber #12',
-  'Subscriber #13',
-  'Subscriber #14',
-  'Subscriber #15',
-  'Subscriber #16',
-  'Subscriber #17',
-  'Subscriber #18',
-  'Subscriber #19',
-  'Subscriber #20',
-].sort(() => (Math.random() > 0.5 ? -1 : 1));
+];
 
 export function AppBarWrapper() {
   const dispatch = useDispatch();
 
   const [targets, setTargets] = useState(TARGETS);
-  const [value, setValue] = useState<string>();
-  const handleChange = (event: any, newValue: any) => {
-    setValue(newValue);
-  };
+  const url = useSelector(routerSelectors.url);
+  const link = url.path.join('/');
   return (
     <Box display="flex" height="100%" flexDirection="column">
       <AppBar color="secondary" position="static" sx={{ flex: '0 0 0' }}>
         <Toolbar>
           <Tabs
-            value={value}
-            onChange={handleChange}
+            value={link}
             variant="scrollable"
             scrollButtons="auto"
             aria-label="scrollable auto tabs example"
             sx={{ flexGrow: 1 }}
           >
+            <Tab
+              component={RouterLink}
+              router={router}
+              value="dashboard"
+              to={createUrl(['dashboard'])}
+              label="RxJS Insights"
+            />
             {targets.map((target) => (
               <Tab
-                value={target}
+                component={RouterLink}
+                router={router}
+                value={`observable/${target}`}
+                to={createUrl(['observable', target])}
                 label={
                   <Box>
                     {target}
@@ -89,7 +62,11 @@ export function AppBarWrapper() {
                             ...targets.slice(0, indexToRemove),
                             ...targets.slice(indexToRemove + 1),
                           ]);
-                          setValue(targets[indexToRemove + 1]);
+                          dispatch(
+                            routerActions.Navigate({
+                              url: createUrl(['dashboard']),
+                            })
+                          );
                           e.stopPropagation();
                         }}
                       />
