@@ -1,7 +1,7 @@
 import { createReducer, on } from '@lib/store';
 import { targets, TargetsState } from '@app/store/targets/slice';
 import { targetsActions } from '@app/store/targets/actions';
-import { appBarActions } from '@app/store/app-bar';
+import { appBarActions } from '@app/actions/app-bar-actions';
 
 export const targetsReducer = createReducer(
   targets,
@@ -13,7 +13,7 @@ export const targetsReducer = createReducer(
     on(targetsActions.TargetNotificationReceived, (state, action) => {
       state.targets.push(action.payload.target);
     }),
-    on(appBarActions.TargetClosed, (state, action) => {
+    on(appBarActions.CloseTarget, (state, action) => {
       state.targets = state.targets.filter(
         (target) =>
           !(

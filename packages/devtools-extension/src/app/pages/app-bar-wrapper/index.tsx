@@ -4,7 +4,7 @@ import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
 import { router, routerSelectors } from '@app/store/router';
 import { Close, Refresh } from '@mui/icons-material';
 import { useDispatch, useSelector } from '@app/store';
-import { appBarActions } from '@app/store/app-bar';
+import { appBarActions } from '@app/actions/app-bar-actions';
 import { targetsSelectors } from '@app/store/targets';
 
 export function AppBarWrapper() {
@@ -50,7 +50,7 @@ export function AppBarWrapper() {
                       <Close
                         fontSize="inherit"
                         onClick={(e) => {
-                          dispatch(appBarActions.TargetClosed({ target }));
+                          dispatch(appBarActions.CloseTarget({ target }));
                           e.stopPropagation();
                         }}
                       />
@@ -65,7 +65,7 @@ export function AppBarWrapper() {
             edge="start"
             color="inherit"
             aria-label="refresh"
-            onClick={() => dispatch(appBarActions.RefreshDataButtonClicked())}
+            onClick={() => dispatch(appBarActions.RefreshData())}
           >
             <Refresh />
           </IconButton>

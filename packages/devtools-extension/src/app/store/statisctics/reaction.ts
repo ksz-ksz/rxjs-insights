@@ -3,7 +3,7 @@ import { from, map, switchMap } from 'rxjs';
 import { statisticsClient } from '@app/clients/statistics';
 import { statisticsActions } from '@app/store/statisctics/actions';
 import { routesActions } from '@app/store/routes';
-import { appBarActions } from '@app/store/app-bar';
+import { appBarActions } from '@app/actions/app-bar-actions';
 
 export const statisticsReaction = combineReactions()
   .add(
@@ -22,7 +22,7 @@ export const statisticsReaction = combineReactions()
       action$.pipe(
         filterActions([
           routesActions.DashboardRouteEntered,
-          appBarActions.RefreshDataButtonClicked,
+          appBarActions.RefreshData,
         ]),
         switchMap(() =>
           from(statisticsClient.getStats()).pipe(
