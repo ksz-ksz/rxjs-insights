@@ -6,4 +6,4 @@ export interface InstrumentationStatusPageActions {
 }
 
 export const instrumentationStatusPageActions =
-  createActions<InstrumentationStatusPageActions>('instrumentationStatusPage');
+  createActions<InstrumentationStatusPageActions>('InstrumentationStatusPage');

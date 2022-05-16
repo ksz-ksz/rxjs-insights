@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { statusSelectors } from '@app/store/status/selectors';
-import { instrumentationStatusPageActions } from '@app/store/instrumentation-status-page';
+import { instrumentationStatusPageActions } from '@app/actions/instrumentation-status-page-actions';
 
 export function InstrumentationStatusCard() {
   const dispatch = useDispatch();

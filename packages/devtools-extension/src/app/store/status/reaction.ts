@@ -3,7 +3,7 @@ import { first, from, map, race, startWith, switchMap, timer } from 'rxjs';
 import { statusActions } from '@app/store/status/actions';
 import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
 import { tapAsync } from '@lib/operators';
-import { instrumentationStatusPageActions } from '@app/store/instrumentation-status-page';
+import { instrumentationStatusPageActions } from '@app/actions/instrumentation-status-page-actions';
 import { instrumentationClient } from '@app/clients/instrumentation';
 
 export const statusReactions = combineReactions()
