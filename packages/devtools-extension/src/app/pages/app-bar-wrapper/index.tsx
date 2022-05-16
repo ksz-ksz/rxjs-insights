@@ -1,24 +1,17 @@
 import { AppBar, Box, IconButton, Tab, Tabs, Toolbar } from '@mui/material';
-import React, { useState } from 'react';
+import React from 'react';
 import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
-import { router, routerActions, routerSelectors } from '@app/store/router';
+import { router, routerSelectors } from '@app/store/router';
 import { Close, Refresh } from '@mui/icons-material';
 import { useDispatch, useSelector } from '@app/store';
 import { appBarActions } from '@app/store/app-bar';
-import { routesActions } from '@app/store/routes';
-
-const TARGETS = [
-  'Observable #1',
-  'Observable #2',
-  'Observable #3',
-  'Observable #4',
-  'Observable #5',
-];
+import { targetsSelectors } from '@app/store/targets';
 
 export function AppBarWrapper() {
   const dispatch = useDispatch();
 
-  const [targets, setTargets] = useState(TARGETS);
+  const targets = useSelector(targetsSelectors.targets);
+
   const url = useSelector(routerSelectors.url);
   const link = url.path.join('/');
   return (
@@ -43,11 +36,11 @@ export function AppBarWrapper() {
               <Tab
                 component={RouterLink}
                 router={router}
-                value={`observable/${target}`}
-                to={createUrl(['observable', target])}
+                value={`${target.type}/${target.id}`}
+                to={createUrl([target.type, String(target.id)])}
                 label={
                   <Box>
-                    {target}
+                    {target.name} #{target.id}
                     <IconButton
                       size="small"
                       edge="start"
@@ -57,16 +50,7 @@ export function AppBarWrapper() {
                       <Close
                         fontSize="inherit"
                         onClick={(e) => {
-                          const indexToRemove = targets.indexOf(target);
-                          setTargets([
-                            ...targets.slice(0, indexToRemove),
-                            ...targets.slice(indexToRemove + 1),
-                          ]);
-                          dispatch(
-                            routerActions.Navigate({
-                              url: createUrl(['dashboard']),
-                            })
-                          );
+                          dispatch(appBarActions.TargetClosed({ target }));
                           e.stopPropagation();
                         }}
                       />

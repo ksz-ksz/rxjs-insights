@@ -1,6 +1,9 @@
 import { of } from 'rxjs';
 import { inspect } from '@rxjs-insights/console';
 
+const inspectDevtools: typeof inspect = (window as any)
+  .RXJS_ISNIGHTS_DEVTOOLS_INSPECT;
+
 export function playground() {
   const obs = of(1, 2, 3);
   const sub = obs.subscribe(subscriber('A'));
@@ -8,7 +11,19 @@ export function playground() {
   setTimeout(() => {
     inspect(obs);
     inspect(sub);
+    inspectDevtools(obs);
+    inspectDevtools(sub);
   }, 1000);
+
+  setTimeout(() => {
+    const button = document.createElement('button');
+    button.textContent = 'run';
+    button.addEventListener('click', () => {
+      playground();
+    });
+
+    document.body.appendChild(button);
+  }, 0);
 }
 
 function subscriber(name: string) {

@@ -3,14 +3,15 @@ import { createRouter, createUrl, Routing } from '@lib/store-router';
 import { JSXElementConstructor, ReactNode } from 'react';
 
 import { InstrumentationStatusPage } from '../pages/instrumentation-status-page';
-import { DashboardPage } from '../pages/dashboard-page';
+import { DashboardPage } from '@app/pages/dashboard-page';
 import { map } from 'rxjs';
-import { ObservablePage } from '../pages/observable-page';
+import { ObservablePage } from '@app/pages/observable-page';
 import { StatusSlice } from '@app/store/status/slice';
 import { statusActions } from '@app/store/status/actions';
 import { statusSelectors } from '@app/store/status/selectors';
 import { AppBarWrapper } from '@app/pages/app-bar-wrapper';
 import { routesActions } from '@app/store/routes';
+import { SubscriberPage } from '@app/pages/subscriber-page';
 
 const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
   routes: [
@@ -49,6 +50,12 @@ const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
           path: ['observable', ':observableId'],
           metadata: {
             component: ObservablePage,
+          },
+        },
+        {
+          path: ['subscriber', ':subscriberId'],
+          metadata: {
+            component: SubscriberPage,
           },
         },
       ],

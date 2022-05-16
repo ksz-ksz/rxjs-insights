@@ -8,6 +8,7 @@ import { statusReducer } from '@app/store/status/reducer';
 import { statusReactions } from '@app/store/status/reaction';
 import { inspectedWindowReaction } from '@app/store/inspected-window';
 import { statisticsReaction, statisticsReducer } from '@app/store/statisctics';
+import { targetReaction, targetsReducer } from '@app/store/targets';
 
 export const store = createStore()
   .addReducer(statusReducer)
@@ -17,7 +18,9 @@ export const store = createStore()
   .addReducer(routerReducer)
   .addReaction(routerReaction)
   .addReaction(routerTransitionsReaction)
-  .addReaction(inspectedWindowReaction);
+  .addReaction(inspectedWindowReaction)
+  .addReducer(targetsReducer)
+  .addReaction(targetReaction);
 
 export const { useStore, useDispatch, useSelector } =
   createStoreHooks<typeof store>();
