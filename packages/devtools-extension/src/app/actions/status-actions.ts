@@ -1,6 +1,5 @@
 import { InstrumentationStatus } from '@app/protocols/instrumentation-status';
 import { createActions } from '@lib/store';
-import { status } from '@app/store/status/slice';
 
 export interface StatusActions {
   InstrumentationStatusResolved: {
@@ -8,4 +7,4 @@ export interface StatusActions {
   };
 }
 
-export const statusActions = createActions<StatusActions>(status);
+export const statusActions = createActions<StatusActions>('Status');

@@ -1,6 +1,6 @@
 import { createReducer, on } from '@lib/store';
 import { status, StatusState } from '@app/store/status/slice';
-import { statusActions } from '@app/store/status/actions';
+import { statusActions } from '@app/actions/status-actions';
 
 export const statusReducer = createReducer(
   status,
