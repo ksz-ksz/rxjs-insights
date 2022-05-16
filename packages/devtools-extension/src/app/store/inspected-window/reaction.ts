@@ -1,7 +1,7 @@
 import { createReaction } from '@lib/store';
 import { fromChromeEvent } from '@app/utils';
 import { EMPTY, of, switchMap } from 'rxjs';
-import { inspectedWindowActions } from '@app/store/inspected-window/actions';
+import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
 
 export const inspectedWindowReaction = createReaction(() =>
   fromChromeEvent(chrome.webNavigation.onCompleted).pipe(

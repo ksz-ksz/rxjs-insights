@@ -1,7 +1,7 @@
 import { combineReactions, createReaction, filterActions } from '@lib/store';
 import { first, from, map, race, startWith, switchMap, timer } from 'rxjs';
 import { statusActions } from '@app/store/status/actions';
-import { inspectedWindowActions } from '@app/store/inspected-window';
+import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
 import { tapAsync } from '@lib/operators';
 import { instrumentationStatusPageActions } from '@app/store/instrumentation-status-page';
 import { instrumentationClient } from '@app/clients/instrumentation';
