@@ -1,6 +1,6 @@
 import { createReducer, on } from '@lib/store';
 import { statistics, StatisticsState } from '@app/store/statisctics/slice';
-import { statisticsActions } from '@app/store/statisctics/actions';
+import { statisticsActions } from '@app/actions/statistics-actions';
 
 export const statisticsReducer = createReducer(
   statistics,
