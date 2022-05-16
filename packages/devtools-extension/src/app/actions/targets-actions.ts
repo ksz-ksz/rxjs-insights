@@ -1,5 +1,4 @@
 import { createActions } from '@lib/store';
-import { targets } from '@app/store/targets/slice';
 import { Target } from '@app/protocols/targets';
 
 export interface TargetsActions {
@@ -7,4 +6,4 @@ export interface TargetsActions {
   TargetNotificationReceived: { target: Target };
 }
 
-export const targetsActions = createActions<TargetsActions>(targets);
+export const targetsActions = createActions<TargetsActions>('Targets');

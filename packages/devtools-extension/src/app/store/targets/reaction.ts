@@ -6,7 +6,7 @@ import {
   TargetsNotificationsChannel,
 } from '@app/protocols/targets-notifications';
 import { Target } from '@app/protocols/targets';
-import { targetsActions } from '@app/store/targets';
+import { targetsActions } from '@app/actions/targets-actions';
 import { filter, from, map } from 'rxjs';
 import { targetsClient } from '@app/clients/targets';
 

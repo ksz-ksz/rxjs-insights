@@ -1,6 +1,6 @@
 import { createReducer, on } from '@lib/store';
 import { targets, TargetsState } from '@app/store/targets/slice';
-import { targetsActions } from '@app/store/targets/actions';
+import { targetsActions } from '@app/actions/targets-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
 
 export const targetsReducer = createReducer(
