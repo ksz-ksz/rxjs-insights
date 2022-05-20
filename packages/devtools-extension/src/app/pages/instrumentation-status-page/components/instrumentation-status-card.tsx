@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from '@app/store';
 import {
+  Box,
   Button,
   Card,
   CardActions,
@@ -16,44 +17,34 @@ export function InstrumentationStatusCard() {
   switch (status.instrumentationStatus) {
     case undefined:
       return (
-        <Card>
-          <CardContent>
-            <Typography variant="body1">Awaiting instrumentation...</Typography>
-          </CardContent>
-        </Card>
+        <Typography variant="body1">Awaiting instrumentation...</Typography>
       );
     case 'not-installed':
       return (
-        <Card>
-          <CardContent>
-            <Typography variant="body1">
-              Instrumentation is not installed. Reload the page to install the
-              instrumentation.
-            </Typography>
-          </CardContent>
-          <CardActions>
-            <Button
-              onClick={() =>
-                dispatch(
-                  instrumentationStatusPageActions.ReloadPageButtonClicked()
-                )
-              }
-            >
-              Reload page
-            </Button>
-          </CardActions>
-        </Card>
+        <Box display="flex" flexDirection="column" alignItems="center">
+          <Typography variant="body1" gutterBottom>
+            Instrumentation is not installed. Reload the page to install the
+            instrumentation.
+          </Typography>
+          <Button
+            onClick={() =>
+              dispatch(
+                instrumentationStatusPageActions.ReloadPageButtonClicked()
+              )
+            }
+          >
+            Reload page
+          </Button>
+        </Box>
       );
     case 'not-available':
       return (
-        <Card>
-          <CardContent>
-            <Typography variant="body1">
-              Instrumentation seems to be unavailable. Make sure that you set up
-              the instrumentation properly or wait a bit longer.
-            </Typography>
-          </CardContent>
-          <CardActions>
+        <Box display="flex" flexDirection="column" alignItems="center">
+          <Typography variant="body1" gutterBottom>
+            Instrumentation seems to be unavailable. Make sure that you set up
+            the instrumentation properly or wait a bit longer.
+          </Typography>
+          <Box>
             <Button
               target="_blank"
               href="https://github.com/ksz-ksz/rxjs-insights/blob/master/docs/instrumentation/index.md"
@@ -69,8 +60,8 @@ export function InstrumentationStatusCard() {
             >
               Wait
             </Button>
-          </CardActions>
-        </Card>
+          </Box>
+        </Box>
       );
     default:
       return null;
