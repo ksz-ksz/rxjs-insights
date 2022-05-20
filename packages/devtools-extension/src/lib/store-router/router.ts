@@ -4,6 +4,7 @@ import {
   Action,
   combineReactions,
   createAction,
+  createActions,
   createReaction,
   createSelector,
   filterActions,
@@ -38,21 +39,12 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
   const routeMatcher = new RouteMatcher<DATA, METADATA>(routing.routes ?? []);
   console.log({ routeMatcher });
 
-  const routerActions = {
-    Navigate: createAction<{ url: Url }>('Navigate', routerSlice),
-    InterceptLeaveRedirect: createAction<{ url: Url }>(
-      'InterceptLeaveRedirect',
-      routerSlice
-    ),
-    InterceptEnterRedirect: createAction<{ url: Url }>(
-      'InterceptEnterRedirect',
-      routerSlice
-    ),
-    NavigationComplete: createAction<{ url: Url; routes: Route<DATA>[] }>(
-      'NavigationComplete',
-      routerSlice
-    ),
-  };
+  const routerActions = createActions<{
+    Navigate: { url: Url };
+    InterceptLeaveRedirect: { url: Url };
+    InterceptEnterRedirect: { url: Url };
+    NavigationComplete: { url: Url; routes: Route<DATA>[] };
+  }>(routerSlice);
 
   const { reducer: routerReducer, selector: routerSelector } = createSlice(
     routerSlice,

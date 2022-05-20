@@ -15,8 +15,11 @@ import { Super } from './super';
 import { Selector } from './selector';
 import { inspect } from '@rxjs-insights/console';
 
-export const ReducerAdded = createAction<{ slice: string }>('ReducerAdded');
-export const ReactionAdded = createAction<void>('ReactionAdded');
+export const ReducerAdded = createAction<{ slice: string }>(
+  '<store>',
+  'ReducerAdded'
+);
+export const ReactionAdded = createAction<void>('<store>', 'ReactionAdded');
 
 export type Slice<SLICE extends string, STATE> = {
   [name in SLICE]: STATE;

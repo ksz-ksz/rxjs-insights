@@ -13,8 +13,8 @@ export type ActionFactoryPayload<T> = T extends ActionFactory<infer PAYLOAD>
   : never;
 
 export function createAction<PAYLOAD>(
-  action: string,
-  source?: string
+  source: string,
+  action: string
 ): ActionFactory<PAYLOAD> {
   const type = source ? `[${source}] ${action}` : action;
   return Object.assign(
@@ -31,7 +31,7 @@ export type ActionFactories<ACTION_TYPES extends Record<string, any>> = {
 };
 
 export function createActions<ACTION_TYPES extends Record<string, any>>(
-  source?: string
+  source: string
 ): ActionFactories<ACTION_TYPES> {
   return new Proxy(
     {},
@@ -41,7 +41,7 @@ export function createActions<ACTION_TYPES extends Record<string, any>>(
         property: string
       ): ActionFactory {
         if (target[property] === undefined) {
-          target[property] = createAction(property, source);
+          target[property] = createAction(source, property);
         }
         return target[property];
       },
