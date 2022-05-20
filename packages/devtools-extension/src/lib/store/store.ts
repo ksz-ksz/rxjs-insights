@@ -40,7 +40,7 @@ export class Store<
       throw error;
     },
   };
-  private readonly reducers: Reducer<string, any>[] = [];
+  private readonly reducers: Reducer<string, any, any>[] = [];
 
   constructor() {
     super((observer) => this.stateSubject.subscribe(observer));
@@ -51,7 +51,7 @@ export class Store<
           let stateChanged = false;
           for (const reducer of this.reducers) {
             const slice = state[reducer.slice];
-            const nextSlice = reducer.reduce(slice, action);
+            const nextSlice = reducer.reduce(slice, action, this as any);
             nextState[reducer.slice] = nextSlice;
             if (slice !== nextSlice) {
               stateChanged = true;
@@ -80,16 +80,20 @@ export class Store<
     this.actionSubject.next(action);
   }
 
-  addReducer<REDUCER_NAME extends string, REDUCER_STATE>(
-    reducer: Reducer<REDUCER_NAME, REDUCER_STATE>
-  ): Store<STATE & Slice<REDUCER_NAME, REDUCER_STATE>> {
+  addReducer<
+    REDUCER_SLICE extends string,
+    REDUCER_STATE,
+    REQUIRED_STATE extends Super<STATE>
+  >(
+    reducer: Reducer<REDUCER_SLICE, REDUCER_STATE, REQUIRED_STATE>
+  ): Store<STATE & Slice<REDUCER_SLICE, REDUCER_STATE>> {
     this.reducers.push(reducer);
     this.dispatch(ReducerAdded({ slice: reducer.slice }));
     return this;
   }
 
-  addReaction<REACTION_STATE extends Super<STATE>>(
-    reaction: Reaction<REACTION_STATE, any>
+  addReaction<REQUIRED_STATE extends Super<STATE>>(
+    reaction: Reaction<REQUIRED_STATE, any>
   ) {
     reaction
       .react(this.actionSubject.asObservable(), reaction.deps?.(this as any))

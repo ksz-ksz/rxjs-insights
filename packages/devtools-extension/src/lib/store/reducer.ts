@@ -1,9 +1,14 @@
 import { Action, ActionFactory } from './action';
 import produce from 'immer';
+import { Slice, Store } from './store';
 
-export interface Reducer<SLICE extends string, STATE> {
+export interface Reducer<SLICE extends string, STATE, REQUIRED_STATE = {}> {
   slice: SLICE;
-  reduce(state: STATE | undefined, action: Action): STATE;
+  reduce(
+    state: STATE | undefined,
+    action: Action,
+    store: Store<REQUIRED_STATE & Slice<SLICE, STATE>>
+  ): STATE;
 }
 
 export type On<STATE, PAYLOAD> = {
@@ -18,22 +23,46 @@ export function on<STATE, PAYLOAD>(
   return { action, reduce };
 }
 
-export function createReducer<SLICE extends string, STATE>(
-  slice: SLICE,
-  initialState: STATE,
-  ons: On<STATE, any>[]
-): Reducer<SLICE, STATE> {
-  const reducers = Object.fromEntries(
-    ons.map((on) => [on.action.type, on.reduce])
-  );
+export type ReduceFunction<STATE, PAYLOAD = any, REQUIRED_STATE = {}> = (
+  state: STATE,
+  action: Action<PAYLOAD>,
+  store: Store<REQUIRED_STATE>
+) => STATE | void;
 
-  return {
+export class ReducerCombinator<SLICE extends string, STATE, REQUIRED_STATE>
+  implements Reducer<SLICE, STATE, REQUIRED_STATE>
+{
+  private reducers: Record<string, ReduceFunction<STATE>> = {};
+
+  constructor(readonly slice: SLICE, readonly initialState: STATE) {}
+
+  reduce(
+    state: STATE = this.initialState,
+    action: Action,
+    store: Store<REQUIRED_STATE & Slice<SLICE, STATE>>
+  ): STATE {
+    return produce(
+      state,
+      (draft: STATE) =>
+        this.reducers[action.type]?.(draft, action, store as any) ?? draft
+    );
+  }
+
+  add<PAYLOAD, ADD_REQUIRED_STATE = {}>(
+    action: ActionFactory<PAYLOAD>,
+    reduce: ReduceFunction<STATE, PAYLOAD, ADD_REQUIRED_STATE>
+  ): ReducerCombinator<SLICE, STATE, REQUIRED_STATE & ADD_REQUIRED_STATE> {
+    this.reducers[action.type] = reduce as any;
+    return this as any;
+  }
+}
+
+export function createReducer<SLICE extends string, STATE, REQUIRED_STATE = {}>(
+  slice: SLICE,
+  initialState: STATE
+): ReducerCombinator<SLICE, STATE, REQUIRED_STATE> {
+  return new ReducerCombinator<SLICE, STATE, REQUIRED_STATE>(
     slice,
-    reduce(state: STATE = initialState, action: Action): STATE {
-      return produce(
-        state,
-        (draft: STATE) => reducers[action.type]?.(draft, action) ?? draft
-      );
-    },
-  };
+    initialState
+  );
 }
