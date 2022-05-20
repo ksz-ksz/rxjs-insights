@@ -5,7 +5,6 @@ import {
   combineReactions,
   createAction,
   createReaction,
-  createReducer,
   createSelector,
   filterActions,
   on,
@@ -16,6 +15,7 @@ import {
 import { createUrl, Url } from './url';
 import { concatMap, EMPTY, of } from 'rxjs';
 import { RouteMatcher } from './route-matcher';
+import { createSlice } from '../store/slice';
 
 export interface RouterState<DATA> {
   url: Url;
@@ -54,15 +54,7 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
     ),
   };
 
-  const routerSelectors = {
-    url: createSelector((state: RouterState<DATA>) => state.url, routerSlice),
-    routes: createSelector(
-      (state: RouterState<DATA>) => state.routes,
-      routerSlice
-    ),
-  };
-
-  const routerReducer = createReducer(
+  const { reducer: routerReducer, selector: routerSelector } = createSlice(
     routerSlice,
     { url: createUrl(), routes: [] } as RouterState<DATA>,
     [
@@ -72,6 +64,18 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
       }),
     ]
   );
+
+  const routerSelectors = {
+    state: routerSelector,
+    url: createSelector(
+      { state: routerSelector },
+      ({ state }) => state.url
+    ) as Selector<RouterSlice, RouterState<DATA>['url']>,
+    routes: createSelector(
+      { state: routerSelector },
+      ({ state }) => state.routes
+    ) as Selector<RouterSlice, RouterState<DATA>['routes']>,
+  };
 
   const routerReaction = combineReactions()
     .add(

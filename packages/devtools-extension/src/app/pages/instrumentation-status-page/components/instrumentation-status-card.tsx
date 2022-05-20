@@ -7,13 +7,13 @@ import {
   Typography,
 } from '@mui/material';
 import React from 'react';
-import { statusSelectors } from '@app/store/status/selectors';
 import { instrumentationStatusPageActions } from '@app/actions/instrumentation-status-page-actions';
+import { statusSelector } from '@app/store/status';
 
 export function InstrumentationStatusCard() {
   const dispatch = useDispatch();
-  const status = useSelector(statusSelectors.instrumentationStatus);
-  switch (status) {
+  const status = useSelector(statusSelector);
+  switch (status.instrumentationStatus) {
     case undefined:
       return (
         <Card>

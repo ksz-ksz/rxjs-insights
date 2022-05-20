@@ -15,7 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useSelector } from '@app/store';
-import { statisticsSelectors } from '@app/store/statisctics';
+import { statisticsSelector } from '@app/store/statisctics';
 import { ExpandMore } from '@mui/icons-material';
 
 export interface StatsLineProps {
@@ -73,7 +73,7 @@ export function StatsLine({ label, stats }: StatsLineProps) {
 }
 
 export function DashboardPage() {
-  const stats = useSelector(statisticsSelectors.stats);
+  const statistics = useSelector(statisticsSelector);
 
   return (
     <Box
@@ -94,13 +94,16 @@ export function DashboardPage() {
         <Box maxWidth="600px" py={2}>
           <StatsLine
             label="Captured observables"
-            stats={stats?.observables ?? {}}
+            stats={statistics.stats?.observables ?? {}}
           />
           <StatsLine
             label="Captured subscribers"
-            stats={stats?.subscribers ?? {}}
+            stats={statistics.stats?.subscribers ?? {}}
           />
-          <StatsLine label="Captured events" stats={stats?.events ?? {}} />
+          <StatsLine
+            label="Captured events"
+            stats={statistics.stats?.events ?? {}}
+          />
         </Box>
       </Box>
     </Box>

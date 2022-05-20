@@ -6,9 +6,8 @@ import { InstrumentationStatusPage } from '../pages/instrumentation-status-page'
 import { DashboardPage } from '@app/pages/dashboard-page';
 import { map } from 'rxjs';
 import { ObservablePage } from '@app/pages/observable-page';
-import { StatusSlice } from '@app/store/status/slice';
+import { statusSelector, StatusSlice } from '@app/store/status/slice';
 import { statusActions } from '@app/actions/status-actions';
-import { statusSelectors } from '@app/store/status/selectors';
 import { AppBarWrapper } from '@app/pages/app-bar-wrapper';
 import { routesActions } from '@app/store/routes';
 import { SubscriberPage } from '@app/pages/subscriber-page';
@@ -25,10 +24,10 @@ const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
         component: InstrumentationStatusPage,
       },
       interceptEnter(store: Store<StatusSlice>) {
-        return store.get(statusSelectors.instrumentationStatus) !== 'installed';
+        return store.get(statusSelector).instrumentationStatus !== 'installed';
       },
       interceptLeave(store: Store<StatusSlice>) {
-        return store.get(statusSelectors.instrumentationStatus) === 'installed';
+        return store.get(statusSelector).instrumentationStatus === 'installed';
       },
     },
     {

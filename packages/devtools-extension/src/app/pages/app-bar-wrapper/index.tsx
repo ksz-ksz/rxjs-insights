@@ -5,12 +5,12 @@ import { router, routerSelectors } from '@app/store/router';
 import { Close, Refresh } from '@mui/icons-material';
 import { useDispatch, useSelector } from '@app/store';
 import { appBarActions } from '@app/actions/app-bar-actions';
-import { targetsSelectors } from '@app/store/targets';
+import { targetsSelector } from '@app/store/targets';
 
 export function AppBarWrapper() {
   const dispatch = useDispatch();
 
-  const targets = useSelector(targetsSelectors.targets);
+  const targets = useSelector(targetsSelector).targets;
 
   const url = useSelector(routerSelectors.url);
   const link = url.path.join('/');
