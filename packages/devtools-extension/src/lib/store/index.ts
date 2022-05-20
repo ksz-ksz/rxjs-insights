@@ -7,3 +7,4 @@ export * from './reducer';
 export * from './selector';
 export * from './store';
 export * from "./super";
+export * from "./intersection";

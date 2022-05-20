@@ -1,10 +1,5 @@
 import { Slice } from './store';
-
-export type Intersection<UNION> = (
-  UNION extends any ? (k: UNION) => void : never
-) extends (k: infer INTERSECTION) => void
-  ? INTERSECTION
-  : never;
+import { Intersection } from './intersection';
 
 export interface Selector<STATE, RESULT> {
   select(state: STATE): RESULT;
