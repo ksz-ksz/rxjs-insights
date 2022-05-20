@@ -1,6 +1,6 @@
 import { createReaction, filterActions, Store } from '@lib/store';
-import { createRouter, createUrl, Routing } from '@lib/store-router';
-import { JSXElementConstructor, ReactNode } from 'react';
+import { createRouter, createUrl, RouterConfig } from '@lib/store-router';
+import { JSXElementConstructor } from 'react';
 
 import { InstrumentationStatusPage } from '../pages/instrumentation-status-page';
 import { DashboardPage } from '@app/pages/dashboard-page';
@@ -12,7 +12,10 @@ import { AppBarWrapper } from '@app/pages/app-bar-wrapper';
 import { routesActions } from '@app/store/routes';
 import { SubscriberPage } from '@app/pages/subscriber-page';
 
-const routing: Routing<void, { component: JSXElementConstructor<any> }> = {
+const routerConfig: RouterConfig<
+  void,
+  { component: JSXElementConstructor<any> }
+> = {
   routes: [
     {
       path: [],
@@ -88,4 +91,4 @@ export const {
   routerSelectors,
   routerReducer,
   routerReaction,
-} = createRouter('router', routing);
+} = createRouter('router', routerConfig);

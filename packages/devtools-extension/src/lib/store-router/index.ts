@@ -1,5 +1,5 @@
 export * from './router-link';
-export * from './routing';
+export * from './router-config';
 export * from './router';
 export * from './router-outlet-context';
 export * from './use-route';

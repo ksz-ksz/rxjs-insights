@@ -1,5 +1,5 @@
 import { RouteMatcher } from './route-matcher';
-import { RouteConfig } from './routing';
+import { RouteConfig } from './router-config';
 
 describe('RouteMatcher', () => {
   describe('match', () => {

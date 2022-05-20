@@ -1,4 +1,4 @@
-import { RouteConfig } from './routing';
+import { RouteConfig } from './router-config';
 import { Route } from './route';
 
 interface RouteNode<DATA, METADATA> {

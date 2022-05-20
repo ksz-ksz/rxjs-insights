@@ -1,9 +1,8 @@
 import { Route } from './route';
-import { RouteConfig, Routing } from './routing';
+import { RouteConfig, RouterConfig } from './router-config';
 import {
   Action,
   combineReactions,
-  createAction,
   createActions,
   createReaction,
   createSelector,
@@ -32,11 +31,13 @@ export interface Router<DATA, METADATA> {
 
 export function createRouter<SLICE extends string, DATA, METADATA>(
   routerSlice: SLICE,
-  routing: Routing<DATA, METADATA>
+  routerConfig: RouterConfig<DATA, METADATA>
 ) {
   type RouterSlice = Slice<SLICE, RouterState<DATA>>;
 
-  const routeMatcher = new RouteMatcher<DATA, METADATA>(routing.routes ?? []);
+  const routeMatcher = new RouteMatcher<DATA, METADATA>(
+    routerConfig.routes ?? []
+  );
   console.log({ routeMatcher });
 
   const routerActions = createActions<{

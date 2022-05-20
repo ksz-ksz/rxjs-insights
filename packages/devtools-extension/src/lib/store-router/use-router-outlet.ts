@@ -1,6 +1,6 @@
 import { RouterMetadata } from './router-metadata';
 import { Router } from './router';
-import { RouteConfig } from './routing';
+import { RouteConfig } from './router-config';
 import { useContext, useMemo } from 'react';
 import { useSelector } from '@lib/store';
 import { Route } from './route';

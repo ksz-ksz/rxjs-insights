@@ -30,7 +30,7 @@ export interface RouteTransitionConfig<DATA, PAYLOAD> {
   ) => Url | void;
 }
 
-export interface Routing<DATA = void, METADATA = void> {
+export interface RouterConfig<DATA = void, METADATA = void> {
   routes?: RouteConfig<DATA, METADATA>[];
   transitions?: RouteTransitionConfig<DATA, unknown>[];
 }
