@@ -2,6 +2,7 @@ import { Route } from './route';
 import { RouteConfig, RouterConfig } from './router-config';
 import {
   Action,
+  ActionFactories,
   combineReactions,
   createActions,
   createReaction,
@@ -9,7 +10,6 @@ import {
   createSelector,
   createSliceSelector,
   filterActions,
-  on,
   Selector,
   Slice,
   Store,
@@ -30,23 +30,58 @@ export interface Router<DATA, METADATA> {
   getRouteConfig(id: number): RouteConfig<DATA, METADATA> | undefined;
 }
 
+export interface RouterActions<DATA> {
+  Navigate: { url: Url };
+  InterceptLeaveRedirect: { url: Url };
+  InterceptEnterRedirect: { url: Url };
+  NavigationComplete: { url: Url; routes: Route<DATA>[] };
+}
+
+export function createRouterActions<SLICE extends string, DATA = any>(
+  routerSlice: SLICE
+) {
+  return createActions<RouterActions<DATA>>(routerSlice);
+}
+
+export interface RouterSelectors<SLICE extends string, DATA> {
+  state: Selector<Slice<SLICE, RouterState<DATA>>, RouterState<DATA>>;
+  routes: Selector<Slice<SLICE, RouterState<DATA>>, Route<DATA>[]>;
+  url: Selector<Slice<SLICE, RouterState<DATA>>, Url>;
+}
+
+export function createRouterSelectors<SLICE extends string, DATA = any>(
+  routerSlice: SLICE
+): RouterSelectors<SLICE, DATA> {
+  type RouterSlice = Slice<SLICE, RouterState<DATA>>;
+
+  const routerSelector = createSliceSelector<SLICE, RouterState<DATA>>(
+    routerSlice
+  );
+
+  return {
+    state: routerSelector,
+    url: createSelector(
+      { state: routerSelector },
+      ({ state }) => state.url
+    ) as Selector<RouterSlice, RouterState<DATA>['url']>,
+    routes: createSelector(
+      { state: routerSelector },
+      ({ state }) => state.routes
+    ) as Selector<RouterSlice, RouterState<DATA>['routes']>,
+  };
+}
+
 export function createRouter<SLICE extends string, DATA, METADATA>(
   routerSlice: SLICE,
-  routerConfig: RouterConfig<DATA, METADATA>
+  routerConfig: RouterConfig<DATA, METADATA>,
+  routerActions: ActionFactories<RouterActions<DATA>>,
+  routerSelectors: RouterSelectors<SLICE, DATA>
 ) {
   type RouterSlice = Slice<SLICE, RouterState<DATA>>;
 
   const routeMatcher = new RouteMatcher<DATA, METADATA>(
     routerConfig.routes ?? []
   );
-  console.log({ routeMatcher });
-
-  const routerActions = createActions<{
-    Navigate: { url: Url };
-    InterceptLeaveRedirect: { url: Url };
-    InterceptEnterRedirect: { url: Url };
-    NavigationComplete: { url: Url; routes: Route<DATA>[] };
-  }>(routerSlice);
 
   const routerReducer = createReducer(routerSlice, {
     url: createUrl(),
@@ -58,20 +93,6 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
       state.routes = action.payload.routes;
     }
   );
-
-  const routerSelector = createSliceSelector(routerReducer);
-
-  const routerSelectors = {
-    state: routerSelector,
-    url: createSelector(
-      { state: routerSelector },
-      ({ state }) => state.url
-    ) as Selector<RouterSlice, RouterState<DATA>['url']>,
-    routes: createSelector(
-      { state: routerSelector },
-      ({ state }) => state.routes
-    ) as Selector<RouterSlice, RouterState<DATA>['routes']>,
-  };
 
   const routerReaction = combineReactions()
     .add(

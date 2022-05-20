@@ -6,4 +6,4 @@ export interface RoutesActions {
   DashboardRouteEntered: void;
 }
 
-export const routesActions = createActions<RoutesActions>();
+export const routesActions = createActions<RoutesActions>('routes');

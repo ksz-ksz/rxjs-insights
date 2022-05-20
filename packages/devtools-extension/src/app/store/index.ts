@@ -7,7 +7,8 @@ import {
 import { statusReactions, statusReducer } from '@app/store/status';
 import { inspectedWindowReaction } from '@app/store/inspected-window';
 import { statisticsReaction, statisticsReducer } from '@app/store/statisctics';
-import { targetReaction, targetsReducer } from '@app/store/targets';
+import { targetReaction } from '@app/store/targets/reaction';
+import { targetsReducer } from '@app/store/targets/slice';
 
 export const store = createStore()
   .addReducer(statusReducer)

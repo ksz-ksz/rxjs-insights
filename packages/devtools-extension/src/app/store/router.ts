@@ -1,18 +1,47 @@
-import { createReaction, filterActions, Store } from '@lib/store';
-import { createRouter, createUrl, RouterConfig } from '@lib/store-router';
+import { createReaction, filterActions, Slice, Store } from '@lib/store';
+import {
+  createRouter,
+  createUrl,
+  RouteConfig,
+  RouterConfig,
+  RouterState,
+} from '@lib/store-router';
 import { JSXElementConstructor } from 'react';
 
 import { InstrumentationStatusPage } from '../pages/instrumentation-status-page';
 import { DashboardPage } from '@app/pages/dashboard-page';
 import { map } from 'rxjs';
 import { ObservablePage } from '@app/pages/observable-page';
-import { statusSelector, StatusSlice } from '@app/store/status/slice';
+import { StatusSlice } from '@app/store/status/slice';
 import { statusActions } from '@app/actions/status-actions';
 import { AppBarWrapper } from '@app/pages/app-bar-wrapper';
 import { routesActions } from '@app/store/routes';
 import { SubscriberPage } from '@app/pages/subscriber-page';
+import { routerSelectors } from '@app/selectors/router-selectors';
+import { routerActions } from '@app/actions/router-actions';
+import { statusSelector } from '@app/selectors/status-selectors';
 
-const routerConfig: RouterConfig<
+export const observableRoute: RouteConfig<
+  void,
+  { component: JSXElementConstructor<any> }
+> = {
+  path: ['observable', ':observableId'],
+  metadata: {
+    component: ObservablePage,
+  },
+};
+
+export const subscriberRoute: RouteConfig<
+  void,
+  { component: JSXElementConstructor<any> }
+> = {
+  path: ['subscriber', ':subscriberId'],
+  metadata: {
+    component: SubscriberPage,
+  },
+};
+
+export const routerConfig: RouterConfig<
   void,
   { component: JSXElementConstructor<any> }
 > = {
@@ -48,18 +77,8 @@ const routerConfig: RouterConfig<
             return routesActions.DashboardRouteEntered();
           },
         },
-        {
-          path: ['observable', ':observableId'],
-          metadata: {
-            component: ObservablePage,
-          },
-        },
-        {
-          path: ['subscriber', ':subscriberId'],
-          metadata: {
-            component: SubscriberPage,
-          },
-        },
+        observableRoute,
+        subscriberRoute,
       ],
     },
     // {
@@ -85,10 +104,11 @@ export const routerTransitionsReaction = createReaction((action$) =>
   )
 );
 
-export const {
-  router,
+export const { router, routerReducer, routerReaction } = createRouter(
+  'router',
+  routerConfig,
   routerActions,
-  routerSelectors,
-  routerReducer,
-  routerReaction,
-} = createRouter('router', routerConfig);
+  routerSelectors
+);
+
+export type RouterSlice = Slice<'router', RouterState<void>>;

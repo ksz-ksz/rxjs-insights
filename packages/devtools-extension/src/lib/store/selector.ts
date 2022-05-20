@@ -1,6 +1,5 @@
-import { Slice } from './store';
+import { Slice, SliceName, SliceState } from './store';
 import { Intersection } from './intersection';
-import { Reducer } from './reducer';
 
 export interface Selector<STATE, RESULT> {
   select(state: STATE): RESULT;
@@ -48,9 +47,9 @@ export type DepsStates<DEPS extends Deps> = DEPS extends RecordDeps
   ? TupleDepsStates<DEPS>
   : never;
 
-export function createSliceSelector<SLICE extends string, STATE>({
-  slice,
-}: Reducer<SLICE, STATE, any>): Selector<Slice<SLICE, STATE>, STATE> {
+export function createSliceSelector<SLICE extends string, STATE>(
+  slice: SLICE
+): Selector<Slice<SLICE, STATE>, STATE> {
   return {
     select(state: Slice<SLICE, STATE>): STATE {
       return state[slice];

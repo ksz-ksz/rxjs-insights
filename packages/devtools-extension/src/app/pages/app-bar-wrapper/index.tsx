@@ -1,11 +1,12 @@
 import { AppBar, Box, IconButton, Tab, Tabs, Toolbar } from '@mui/material';
 import React from 'react';
 import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
-import { router, routerSelectors } from '@app/store/router';
+import { router } from '@app/store/router';
 import { Close, Refresh } from '@mui/icons-material';
 import { useDispatch, useSelector } from '@app/store';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { targetsSelector } from '@app/store/targets';
+import { routerSelectors } from '@app/selectors/router-selectors';
 
 export function AppBarWrapper() {
   const dispatch = useDispatch();

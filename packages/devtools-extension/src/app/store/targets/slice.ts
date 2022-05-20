@@ -1,17 +1,15 @@
-import { createReducer, createSliceSelector, Slice } from '@lib/store';
+import { createReducer, Slice } from '@lib/store';
 import { Target } from '@app/protocols/targets';
 import { targetsActions } from '@app/actions/targets-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
-
-export const targets = 'targets';
 
 export interface TargetsState {
   targets: Target[];
 }
 
-export type TargetsSlice = Slice<typeof targets, TargetsState>;
+export type TargetsSlice = Slice<'targets', TargetsState>;
 
-export const targetsReducer = createReducer(targets, {
+export const targetsReducer = createReducer('targets', {
   targets: [],
 } as TargetsState)
   .add(targetsActions.TargetsLoaded, (state, action) => {
@@ -29,5 +27,3 @@ export const targetsReducer = createReducer(targets, {
         )
     );
   });
-
-export const targetsSelector = createSliceSelector(targetsReducer);
