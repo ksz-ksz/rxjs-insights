@@ -1,12 +1,5 @@
 import { useDispatch, useSelector } from '@app/store';
-import {
-  Box,
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  Typography,
-} from '@mui/material';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import React from 'react';
 import { instrumentationStatusPageActions } from '@app/actions/instrumentation-status-page-actions';
 import { statusSelector } from '@app/store/status';
@@ -17,12 +10,27 @@ export function InstrumentationStatusCard() {
   switch (status.instrumentationStatus) {
     case undefined:
       return (
-        <Typography variant="body1">Awaiting instrumentation...</Typography>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          padding={2}
+        >
+          <Typography variant="body1" gutterBottom align="center">
+            Awaiting instrumentation...
+          </Typography>
+          <CircularProgress />
+        </Box>
       );
     case 'not-installed':
       return (
-        <Box display="flex" flexDirection="column" alignItems="center">
-          <Typography variant="body1" gutterBottom>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          padding={2}
+        >
+          <Typography variant="body1" gutterBottom align="center">
             Instrumentation is not installed. Reload the page to install the
             instrumentation.
           </Typography>
@@ -39,8 +47,13 @@ export function InstrumentationStatusCard() {
       );
     case 'not-available':
       return (
-        <Box display="flex" flexDirection="column" alignItems="center">
-          <Typography variant="body1" gutterBottom>
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          padding={2}
+        >
+          <Typography variant="body1" gutterBottom align="center">
             Instrumentation seems to be unavailable. Make sure that you set up
             the instrumentation properly or wait a bit longer.
           </Typography>
