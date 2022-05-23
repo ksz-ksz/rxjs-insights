@@ -1,4 +1,4 @@
-export const DataChannel = 'DataChannel';
+export const InsightsChannel = 'InsightsChannel';
 
 export interface ObjectRef {
   type: 'object' | 'array' | 'function' | 'set' | 'map';
@@ -61,6 +61,6 @@ export interface ObservableInfo {
   source?: RxjsRef;
 }
 
-export interface Data {
+export interface Insights {
   getObservableInfo(observableId: number): ObservableInfo | undefined;
 }

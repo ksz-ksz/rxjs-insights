@@ -30,7 +30,11 @@ import {
   TargetsNotifications,
   TargetsNotificationsChannel,
 } from '@app/protocols/targets-notifications';
-import { Data, DataChannel, ObservableInfo } from '@app/protocols/data';
+import {
+  Insights,
+  InsightsChannel,
+  ObservableInfo,
+} from '@app/protocols/insights';
 
 const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
 
@@ -149,7 +153,7 @@ function countStatuses(statuses: Status[], statusType: string) {
   return statuses.filter((x) => x === statusType).length;
 }
 
-startServer<Data>(createInspectedWindowEvalServerAdapter(DataChannel), {
+startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
   getObservableInfo(observableId: number): ObservableInfo | undefined {
     const observable = targets.observables[observableId];
     if (!observable) {

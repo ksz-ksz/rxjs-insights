@@ -2,7 +2,7 @@ import { combineReactions, createReaction, filterActions } from '@lib/store';
 import { filterRoute } from '@lib/store-router';
 import { observableRouteToken, router } from '@app/router';
 import { EMPTY, from, map, switchMap } from 'rxjs';
-import { dataClient } from '@app/clients/data';
+import { insightsClient } from '@app/clients/insights';
 import { insightsActions } from '@app/actions/insights-actions';
 
 export const insightsReaction = combineReactions().add(
@@ -13,7 +13,7 @@ export const insightsReaction = combineReactions().add(
       switchMap((route) => {
         const observableId = route.params?.observableId;
         return observableId !== undefined
-          ? from(dataClient.getObservableInfo(parseInt(observableId, 10)))
+          ? from(insightsClient.getObservableInfo(parseInt(observableId, 10)))
           : EMPTY;
       }),
       map((info) => insightsActions.ObservableInfoLoaded({ info }))

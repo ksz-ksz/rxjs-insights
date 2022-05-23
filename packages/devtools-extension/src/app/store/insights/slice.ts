@@ -1,6 +1,6 @@
 import { createReducer, Slice } from '@lib/store';
 import { insightsActions } from '@app/actions/insights-actions';
-import { ObservableInfo } from '@app/protocols/data';
+import { ObservableInfo } from '@app/protocols/insights';
 
 export interface ObservableState {
   info?: ObservableInfo;

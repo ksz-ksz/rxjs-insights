@@ -1,5 +1,5 @@
 import { createActions } from '@lib/store';
-import { ObservableInfo } from '@app/protocols/data';
+import { ObservableInfo } from '@app/protocols/insights';
 
 export interface InsightsActions {
   ObservableInfoLoaded: {
