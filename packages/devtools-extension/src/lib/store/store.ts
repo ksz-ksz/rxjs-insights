@@ -52,7 +52,7 @@ export class Store<
     next: (value) => this.actionSubject.next(value),
     error: (error) => {
       console.error(error);
-      throw error;
+      this.actionSubject.error(error);
     },
   };
   private readonly reducers: Reducer<string, any, any>[] = [];

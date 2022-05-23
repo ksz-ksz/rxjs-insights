@@ -7,7 +7,6 @@ import {
 import { JSXElementConstructor } from 'react';
 import { Store } from '@lib/store';
 import { statusSelector, StatusSlice } from '@app/store/status';
-import { routesActions } from '@app/store/routes';
 
 export const statusRouteToken = createRouteToken('status');
 export const dashboardRouteToken = createRouteToken('dashboard');
@@ -41,9 +40,6 @@ export const routerConfig: RouterConfig<
         {
           token: dashboardRouteToken,
           path: ['dashboard'],
-          dispatchOnEnter() {
-            return routesActions.DashboardRouteEntered();
-          },
         },
         {
           token: observableRouteToken,

@@ -44,6 +44,12 @@ startServer<Statistics>(
     getStats() {
       return getGlobalEnv().getRecorderStats();
     },
+    // getStats() {
+    //   const env = getGlobalEnv();
+    //   return env
+    //     ? env.getRecorderStats()
+    //     : { observables: {}, subscribers: {}, events: {} };
+    // },
   }
 );
 
@@ -107,6 +113,16 @@ const targets: {
 };
 
 startServer<Targets>(createInspectedWindowEvalServerAdapter(TargetsChannel), {
+  releaseTarget(target: Target) {
+    switch (target.type) {
+      case 'subscriber':
+        delete targets.subscribers[target.id];
+        return;
+      case 'observable':
+        delete targets.observables[target.id];
+        return;
+    }
+  },
   getTargets(): Target[] {
     return [
       ...Object.values(targets.observables).map(

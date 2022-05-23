@@ -2,9 +2,13 @@ import { Action, ActionFactory, ActionFactoryPayload } from './action';
 import {
   distinctUntilChanged,
   filter,
+  ignoreElements,
   map,
+  Observable,
   OperatorFunction,
   pipe,
+  tap,
+  UnaryFunction,
 } from 'rxjs';
 import { Selector } from './selector';
 
@@ -57,4 +61,10 @@ export type Item<T> = T extends (infer U)[] ? U : never;
 
 export function select<STATE, RESULT>(selector: Selector<STATE, RESULT>) {
   return pipe(map(selector.select), distinctUntilChanged());
+}
+
+export function effect<T>(
+  run: (value: T) => void
+): UnaryFunction<Observable<T>, Observable<never>> {
+  return pipe(tap(run), ignoreElements());
 }

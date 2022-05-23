@@ -7,5 +7,6 @@ export interface Target {
 }
 
 export interface Targets {
+  releaseTarget(target: Target): void;
   getTargets(): Target[];
 }

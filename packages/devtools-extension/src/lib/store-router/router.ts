@@ -34,6 +34,8 @@ export interface Router<SLICE extends string, DATA, METADATA> {
 
 export interface RouterActions<DATA> {
   Navigate: { url: Url };
+  RouteLeave: { route: Route<DATA> };
+  RouteEnter: { route: Route<DATA> };
   InterceptLeaveRedirect: { url: Url };
   InterceptEnterRedirect: { url: Url };
   NavigationComplete: { url: Url; routes: Route<DATA>[] };
@@ -138,6 +140,7 @@ export function createRouterSlice<SLICE extends string, DATA, METADATA>(
                     );
                   }
                 }
+                dispatchOnLeave.push(router.actions.RouteLeave({ route }));
                 if (routeConfig?.dispatchOnLeave) {
                   dispatchOnLeave.push(
                     routeConfig.dispatchOnLeave(store, prevUrl, route)
@@ -172,6 +175,7 @@ export function createRouterSlice<SLICE extends string, DATA, METADATA>(
                     routeConfig.dispatchOnEnter(store, prevUrl, route)
                   );
                 }
+                dispatchOnEnter.push(router.actions.RouteEnter({ route }));
               }
 
               return of(

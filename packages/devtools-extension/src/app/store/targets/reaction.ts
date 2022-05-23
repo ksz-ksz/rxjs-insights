@@ -1,6 +1,7 @@
 import {
   combineReactions,
   createReaction,
+  effect,
   filterActions,
   select,
   Store,
@@ -13,7 +14,17 @@ import {
 } from '@app/protocols/targets-notifications';
 import { Target } from '@app/protocols/targets';
 import { targetsActions } from '@app/actions/targets-actions';
-import { EMPTY, filter, from, map, of, switchMap, withLatestFrom } from 'rxjs';
+import {
+  EMPTY,
+  filter,
+  from,
+  ignoreElements,
+  map,
+  of,
+  switchMap,
+  tap,
+  withLatestFrom,
+} from 'rxjs';
 import { targetsClient } from '@app/clients/targets';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { RouterSlice } from '@app/store/router';
@@ -23,7 +34,7 @@ import { router } from '@app/router';
 
 export const targetReaction = combineReactions()
   .add(
-    createReaction((action$) =>
+    createReaction(() =>
       from(targetsClient.getTargets()).pipe(
         filter(Boolean),
         map((targets) => targetsActions.TargetsLoaded({ targets }))
@@ -43,6 +54,16 @@ export const targetReaction = combineReactions()
             },
           }
         )
+      )
+    )
+  )
+  .add(
+    createReaction((action$) =>
+      action$.pipe(
+        filterActions(appBarActions.CloseTarget),
+        effect((action) => {
+          void targetsClient.releaseTarget(action.payload.target);
+        })
       )
     )
   )
