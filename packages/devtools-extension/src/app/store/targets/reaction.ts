@@ -21,6 +21,7 @@ import {
   ignoreElements,
   map,
   of,
+  startWith,
   switchMap,
   tap,
   withLatestFrom,
@@ -31,13 +32,20 @@ import { RouterSlice } from '@app/store/router';
 import { activeTarget } from '@app/selectors/targets-selectors';
 import { createUrl } from '@lib/store-router';
 import { router } from '@app/router';
+import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
 
 export const targetReaction = combineReactions()
   .add(
-    createReaction(() =>
-      from(targetsClient.getTargets()).pipe(
-        filter(Boolean),
-        map((targets) => targetsActions.TargetsLoaded({ targets }))
+    createReaction((actions$) =>
+      actions$.pipe(
+        filterActions(inspectedWindowActions.InspectedWindowReloaded),
+        startWith(undefined),
+        switchMap(() =>
+          from(targetsClient.getTargets()).pipe(
+            filter(Boolean),
+            map((targets) => targetsActions.TargetsLoaded({ targets }))
+          )
+        )
       )
     )
   )
