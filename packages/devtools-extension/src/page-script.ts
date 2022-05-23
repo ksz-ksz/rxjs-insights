@@ -19,12 +19,18 @@ import {
   SubscriberLike,
   SubscriberMeta,
 } from '@rxjs-insights/core';
-import { deref, Observable, Subscriber } from '@rxjs-insights/recorder';
+import {
+  deref,
+  Observable,
+  ObservableEvent,
+  Subscriber,
+} from '@rxjs-insights/recorder';
 import { Target, Targets, TargetsChannel } from '@app/protocols/targets';
 import {
   TargetsNotifications,
   TargetsNotificationsChannel,
 } from '@app/protocols/targets-notifications';
+import { Data, DataChannel, ObservableInfo } from '@app/protocols/data';
 
 const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
 
@@ -88,11 +94,32 @@ export function getObservable(target: HasMeta<ObservableMeta>): Observable {
   return deref(getMeta(target).observableRef);
 }
 
-const targets: Target[] = [];
+const targets: {
+  observables: Record<number, Observable>;
+  subscribers: Record<number, Subscriber>;
+} = {
+  observables: {},
+  subscribers: {},
+};
 
 startServer<Targets>(createInspectedWindowEvalServerAdapter(TargetsChannel), {
   getTargets(): Target[] {
-    return targets;
+    return [
+      ...Object.values(targets.observables).map(
+        ({ id, declaration: { name } }): Target => ({
+          type: 'observable',
+          id,
+          name,
+        })
+      ),
+      ...Object.values(targets.subscribers).map(
+        ({ id, declaration: { name } }): Target => ({
+          type: 'subscriber',
+          id,
+          name,
+        })
+      ),
+    ];
   },
 });
 
@@ -100,39 +127,78 @@ const targetsNotificationsClient = createClient<TargetsNotifications>(
   createDocumentEventClientAdapter(TargetsNotificationsChannel)
 );
 
-function getTarget(
-  target:
-    | ObservableLike
-    | SubscriberLike
-    | (ObservableLike & HasMeta<SubscriberMeta>)
-    | (SubscriberLike & HasMeta<SubscriberMeta>)
-    | (ObservableLike & HasMeta<ObservableMeta>)
-    | (SubscriberLike & HasMeta<ObservableMeta>)
-): Target | undefined {
+type Status = 'error' | 'complete' | 'unsubscribe' | 'next';
+
+function getStatus(subscriber: Subscriber) {
+  return (subscriber.events.find(
+    (x) =>
+      x.declaration.name === 'error' ||
+      x.declaration.name === 'complete' ||
+      x.declaration.name === 'unsubscribe'
+  )?.declaration.name ?? 'next') as Status;
+}
+
+function countEvents(
+  events: ObservableEvent[],
+  eventType: 'next' | 'error' | 'complete'
+) {
+  return events.filter((x) => x.declaration.name === eventType).length;
+}
+
+function countStatuses(statuses: Status[], statusType: string) {
+  return statuses.filter((x) => x === statusType).length;
+}
+
+startServer<Data>(createInspectedWindowEvalServerAdapter(DataChannel), {
+  getObservableInfo(observableId: number): ObservableInfo | undefined {
+    const observable = targets.observables[observableId];
+    if (!observable) {
+      return undefined;
+    } else {
+      const subscriberStatuses = observable.subscribers.map(getStatus);
+      return {
+        id: observable.id,
+        name: observable.declaration.name,
+        target: undefined as any,
+        internal: observable.declaration.internal,
+        tags: observable.tags,
+        notifications: {
+          next: countEvents(observable.events, 'next'),
+          error: countEvents(observable.events, 'error'),
+          complete: countEvents(observable.events, 'complete'),
+        },
+        subscriptions: {
+          active: countStatuses(subscriberStatuses, 'next'),
+          errored: countStatuses(subscriberStatuses, 'error'),
+          completed: countStatuses(subscriberStatuses, 'complete'),
+          unsubscribed: countStatuses(subscriberStatuses, 'unsubscribe'),
+        },
+        ctor: undefined,
+        args: undefined,
+        source: undefined,
+      };
+    }
+  },
+});
+
+function inspect(target: ObservableLike | SubscriberLike) {
   if (isSubscriberTarget(target)) {
     const subscriber = getSubscriber(target);
-    return {
+    targets.subscribers[subscriber.id] = subscriber;
+    targetsNotificationsClient.notifyTarget({
       type: 'subscriber',
       id: subscriber.id,
       name: subscriber.declaration.name,
-    };
+    });
   }
   if (isObservableTarget(target)) {
     const observable = getObservable(target);
-    return {
+    targets.observables[observable.id] = observable;
+    targetsNotificationsClient.notifyTarget({
       type: 'observable',
       id: observable.id,
       name: observable.declaration.name,
-    };
-  }
-  return undefined;
-}
-
-function inspect(inspectTarget: ObservableLike | SubscriberLike) {
-  const target = getTarget(inspectTarget);
-  if (target) {
-    targets.push(target);
-    targetsNotificationsClient.notifyTarget(target);
+    });
   }
 }
 

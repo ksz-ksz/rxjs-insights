@@ -14,7 +14,6 @@ import {
   formatEvent,
   formatObservable,
   formatSubscriber,
-  formatTarget,
 } from './format';
 import { getEventColor } from './colors';
 import {

@@ -1,5 +1,11 @@
 import { Action, ActionFactory, ActionFactoryPayload } from './action';
-import { filter, map, OperatorFunction } from 'rxjs';
+import {
+  distinctUntilChanged,
+  filter,
+  map,
+  OperatorFunction,
+  pipe,
+} from 'rxjs';
 import { Selector } from './selector';
 
 export function filterActions<PAYLOAD>(
@@ -50,5 +56,5 @@ function filterActionsAll<FACTORIES extends ActionFactory<any>[]>(
 export type Item<T> = T extends (infer U)[] ? U : never;
 
 export function select<STATE, RESULT>(selector: Selector<STATE, RESULT>) {
-  return map(selector.select);
+  return pipe(map(selector.select), distinctUntilChanged());
 }

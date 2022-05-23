@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "build": "node build.js",
-    "start": "node serve.js"
+    "start": "node serve.js",
+    "typecheck": "tsc -p tsconfig.lib.json --noEmit"
   },
   "dependencies": {
     "@rxjs-insights/core": "^0.2.0",

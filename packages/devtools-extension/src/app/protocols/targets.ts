@@ -1,7 +1,7 @@
 export const TargetsChannel = 'TargetsChannel';
 
 export interface Target {
-  type: 'observable' | 'subscriber' | 'event';
+  type: 'observable' | 'subscriber';
   id: number;
   name: string;
 }

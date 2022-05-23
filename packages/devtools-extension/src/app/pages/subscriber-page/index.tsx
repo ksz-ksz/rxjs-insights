@@ -1,5 +1,5 @@
 import { useRoute } from '@lib/store-router';
-import { router } from '@app/store/router';
+import { router } from '@app/router';
 import React from 'react';
 
 export function SubscriberPage() {

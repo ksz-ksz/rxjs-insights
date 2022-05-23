@@ -4,6 +4,7 @@ import { Action } from './action';
 import { Selector } from './selector';
 import { first, map } from 'rxjs';
 import { StoreContext } from './context';
+import { select } from './operators';
 
 export function useStore<STATE>(): Store<STATE> {
   return useContext(StoreContext);
@@ -31,11 +32,13 @@ export function useSelector<STATE, RESULT>(
     return initialState!;
   });
   useEffect(() => {
-    const subscription = store.pipe(map(selector.select)).subscribe({
+    const subscription = store.pipe(select(selector)).subscribe({
       next(value) {
+        console.log('useSelector.next', selector, value);
         setResult(value);
       },
       error(err) {
+        console.error('useSelector.error', selector, err);
         throw err;
       },
     });

@@ -1,9 +1,11 @@
 import { Action, ActionFactory, Store } from '@lib/store';
 import { Route } from './route';
 import { Url } from './url';
+import { RouteToken } from './route-token';
 
 export interface RouteConfig<DATA, METADATA> {
   path: string[];
+  token?: RouteToken;
   data?: DATA;
   metadata?: METADATA;
   dispatchOnEnter?: (store: Store<any>, url: Url, route: Route<DATA>) => Action;

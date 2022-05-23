@@ -4,7 +4,7 @@ import { useDispatch } from '@lib/store';
 
 export interface RouterLinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
-  router: Router<any, any>;
+  router: Router<any, any, any>;
   to: Url;
 }
 
@@ -25,7 +25,7 @@ export const RouterLink = React.forwardRef<HTMLAnchorElement, RouterLinkProps>(
 );
 
 function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
-  router: Router<any, any>,
+  router: Router<any, any, any>,
   to: Url,
   {
     target,
@@ -44,7 +44,7 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       ) {
         event.preventDefault();
 
-        dispatch(router.navigate(to));
+        dispatch(router.actions.Navigate({ url: to }));
       }
     },
     [target, to]

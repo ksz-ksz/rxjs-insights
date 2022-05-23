@@ -19,7 +19,7 @@ import { appBarActions } from '@app/actions/app-bar-actions';
 import { RouterSlice } from '@app/store/router';
 import { activeTarget } from '@app/selectors/targets-selectors';
 import { createUrl } from '@lib/store-router';
-import { routerActions } from '@app/actions/router-actions';
+import { router } from '@app/router';
 
 export const targetReaction = combineReactions()
   .add(
@@ -60,7 +60,7 @@ export const targetReaction = combineReactions()
               target.id === activeTarget.id
             ) {
               return of(
-                routerActions.Navigate({ url: createUrl(['dashboard']) })
+                router.actions.Navigate({ url: createUrl(['dashboard']) })
               );
             } else {
               return EMPTY;
@@ -68,7 +68,7 @@ export const targetReaction = combineReactions()
           })
         ),
       (store: Store<RouterSlice>) => ({
-        activeTarget$: store.pipe(select(activeTarget)),
+        activeTarget$: store.pipe(select(activeTarget())),
       })
     )
   );

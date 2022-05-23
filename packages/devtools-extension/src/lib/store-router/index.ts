@@ -8,3 +8,5 @@ export * from './url';
 export * from './use-router-outlet';
 export * from './router-outlet';
 export * from './router-metadata';
+export * from './route-token';
+export * from './operators';

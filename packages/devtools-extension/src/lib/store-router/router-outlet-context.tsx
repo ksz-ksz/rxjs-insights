@@ -8,11 +8,11 @@ export interface RouterOutletContextValue {
 }
 
 const contexts = new WeakMap<
-  Router<any, any>,
+  Router<any, any, any>,
   Context<RouterOutletContextValue>
 >();
 
-export function getRouterOutletContext(router: Router<any, any>) {
+export function getRouterOutletContext(router: Router<any, any, any>) {
   const context = contexts.get(router);
   if (context === undefined) {
     const context = createContext<RouterOutletContextValue>({

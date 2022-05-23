@@ -51,6 +51,7 @@ export class Store<
   private readonly actionObserver: PartialObserver<Action> = {
     next: (value) => this.actionSubject.next(value),
     error: (error) => {
+      console.error(error);
       throw error;
     },
   };

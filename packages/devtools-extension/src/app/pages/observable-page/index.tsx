@@ -1,16 +1,17 @@
-import { createUrl, RouterLink, useRoute } from '@lib/store-router';
-import { router } from '@app/store/router';
+import { createUrl, RouterLink } from '@lib/store-router';
+import { router } from '@app/router';
 import React from 'react';
+import { useSelector } from '@app/store';
+import { observableInfo } from '@app/selectors/insights-selectors';
 
 export function ObservablePage() {
-  const route = useRoute(router);
-  console.log(route);
+  const info = useSelector(observableInfo);
   return (
     <div>
       <span>Observable Page</span>
       <span>params:</span>
       <pre>
-        <code>{JSON.stringify(route?.params, null, 2)}</code>
+        <code>{JSON.stringify(info, null, 2)}</code>
       </pre>
       <RouterLink
         router={router}

@@ -1,4 +1,3 @@
-import { RouterMetadata } from './router-metadata';
 import { Router } from './router';
 import { RouteConfig } from './router-config';
 import { useContext, useMemo } from 'react';
@@ -6,27 +5,20 @@ import { useSelector } from '@lib/store';
 import { Route } from './route';
 import { getRouterOutletContext } from './router-outlet-context';
 
-export function useRouterOutlet<DATA, METADATA extends RouterMetadata>(
-  router: Router<DATA, METADATA>
-): { route: Route<DATA>; config: RouteConfig<DATA, METADATA> } | undefined {
-  const routes = useSelector(router.routes);
+export function useRouterOutlet<DATA>(
+  router: Router<any, DATA, any>
+): { route: Route<DATA>; config: RouteConfig<DATA, any> } | undefined {
+  const routes = useSelector(router.selectors.routes);
   const RouterOutletContext = getRouterOutletContext(router);
   const { currentRouteIndex } = useContext(RouterOutletContext);
-  return useMemo(() => {
-    const result = routes
-      .map((route) => ({
-        route,
-        config: router.getRouteConfig(route.routeConfigId)!,
-      }))
-      .filter(({ config }) => config?.metadata?.component !== undefined)[
-      currentRouteIndex
-    ];
-    console.log('useRouterOutlet', {
-      result,
-      routes,
-      currentRouteIndex,
-      router,
-    });
-    return result;
-  }, [routes, currentRouteIndex]);
+  return useMemo(
+    () =>
+      routes
+        .map((route) => ({
+          route,
+          config: router.getRouteConfig(route.routeConfigId)!,
+        }))
+        .filter(({ config }) => config?.token !== undefined)[currentRouteIndex],
+    [routes, currentRouteIndex]
+  );
 }
