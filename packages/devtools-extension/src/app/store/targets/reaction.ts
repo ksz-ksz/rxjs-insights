@@ -68,7 +68,7 @@ export const targetReaction = combineReactions()
           })
         ),
       (store: Store<RouterSlice>) => ({
-        activeTarget$: store.pipe(select(activeTarget())),
+        activeTarget$: store.pipe(select(activeTarget)),
       })
     )
   );

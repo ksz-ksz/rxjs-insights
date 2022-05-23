@@ -11,25 +11,24 @@ export const targetsSelector = createSliceSelector<'targets', TargetsState>(
   'targets'
 );
 
-export const activeTarget = () =>
-  createSelector(
-    { routes: router.selectors.routes },
-    ({ routes }): Omit<Target, 'name'> | undefined => {
-      for (let route of routes) {
-        const routeToken = router.getRouteConfig(route.routeConfigId)?.token;
-        switch (routeToken) {
-          case observableRouteToken:
-            return {
-              type: 'observable',
-              id: parseInt(route.params!.observableId, 10),
-            };
-          case subscriberRouteToken:
-            return {
-              type: 'subscriber',
-              id: parseInt(route.params!.subscriberId, 10),
-            };
-        }
+export const activeTarget = createSelector(
+  { routes: router.selectors.routes },
+  ({ routes }): Omit<Target, 'name'> | undefined => {
+    for (let route of routes) {
+      const routeToken = router.getRouteConfig(route.routeConfigId)?.token;
+      switch (routeToken) {
+        case observableRouteToken:
+          return {
+            type: 'observable',
+            id: parseInt(route.params!.observableId, 10),
+          };
+        case subscriberRouteToken:
+          return {
+            type: 'subscriber',
+            id: parseInt(route.params!.subscriberId, 10),
+          };
       }
-      return undefined;
     }
-  );
+    return undefined;
+  }
+);
