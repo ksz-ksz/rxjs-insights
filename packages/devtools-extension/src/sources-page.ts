@@ -1,6 +1,12 @@
 import { tracesClient } from '@app/clients/traces';
 import { TraceFrame } from '@app/protocols/traces';
 import { Location, Locations } from '@rxjs-insights/core';
+import { fromSourcesPaneClient } from '@app/clients/sources-panel';
+import { createChromeRuntimeServerAdapter, startServer } from '@lib/rpc';
+import {
+  ToSourcesPane,
+  ToSourcesPaneChannel,
+} from '@app/protocols/sources-panel';
 
 function getShortLocationString(location: Location): string {
   return `${location.file.split('/').pop()}:${location.line}`;
@@ -86,11 +92,10 @@ function createTaskElement(task: { name: string; id: number }) {
   return createLabelElement(`${task.name} #${task.id}`);
 }
 
-chrome.devtools.panels.sources.onSelectionChanged.addListener(async () => {
+async function update() {
   const trace = await tracesClient.getTrace();
-
-  if (trace && trace.length > 0) {
-    document.body.textContent = '';
+  document.body.textContent = '';
+  if (trace !== undefined && trace.length > 0) {
     for (let i = 0; i < trace.length; i++) {
       const traceFrame = trace[i];
       const nextTraceFrame = trace[i + 1];
@@ -105,4 +110,19 @@ chrome.devtools.panels.sources.onSelectionChanged.addListener(async () => {
   } else {
     document.body.append(createLabelElement('Not available'));
   }
-});
+  const { height } = document.body.getBoundingClientRect();
+  void fromSourcesPaneClient.setHeight(height);
+}
+
+startServer<ToSourcesPane>(
+  createChromeRuntimeServerAdapter(ToSourcesPaneChannel),
+  {
+    onShown() {
+      void update();
+      chrome.devtools.panels.sources.onSelectionChanged.addListener(update);
+    },
+    onHidden() {
+      chrome.devtools.panels.sources.onSelectionChanged.removeListener(update);
+    },
+  }
+);
