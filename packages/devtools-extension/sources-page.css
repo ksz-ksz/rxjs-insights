@@ -1,0 +1,81 @@
+:root {
+    --text-primary: rgba(0, 0, 0, 0.87);
+    --text-secondary: rgba(0, 0, 0, 0.6);
+    --background: #fff;
+    --divider: rgba(0, 0, 0, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text-primary: #fff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --background: #121212;
+        --divider: rgba(255, 255, 255, 0.12);
+    }
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    color: var(--text-primary);
+    background-color: var(--background);
+}
+
+.frame {
+    display: grid;
+    grid-template-columns: max-content max-content auto;
+    gap: 4px;
+    padding: 2px 20px;
+    cursor: default;
+}
+
+.target, .event {
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.87);
+    padding: 2px 4px;
+    border-radius: 4px;
+    justify-self: start;
+}
+
+.target.subscriber {
+    background-color: #ce93d8;
+}
+
+.target.observable {
+    background-color: #90caf9;
+}
+
+.event.next {
+    background-color: #66bb6a;
+}
+
+.event.error {
+    background-color: #f44336;
+}
+
+.event.complete {
+    background-color: #29b6f6;
+}
+
+.event.subscribe, .event.unsubscribe {
+    background-color: #ffa726;
+}
+
+.location {
+    color: var(--text-secondary);
+    justify-self: end;
+}
+
+.label {
+    color: var(--text-secondary);
+    grid-column: 1/-1;
+    font-style: italic;
+    text-align: center;
+    padding: 4px 2px;
+}
+
+.frame, .label {
+    border-bottom: 1px var(--divider) solid;
+}

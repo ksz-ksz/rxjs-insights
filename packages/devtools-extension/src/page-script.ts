@@ -24,6 +24,7 @@ import {
   Observable,
   ObservableEvent,
   Subscriber,
+  Event,
 } from '@rxjs-insights/recorder';
 import { Target, Targets, TargetsChannel } from '@app/protocols/targets';
 import {
@@ -35,21 +36,58 @@ import {
   InsightsChannel,
   ObservableInfo,
 } from '@app/protocols/insights';
+import {
+  Trace,
+  TraceFrame,
+  Traces,
+  TracesChannel,
+} from '@app/protocols/traces';
 
 const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
+
+function getTrace(event: Event | undefined): Trace {
+  if (event === undefined) {
+    return [];
+  } else {
+    const frame: TraceFrame = {
+      task: {
+        id: event.task.id,
+        name: event.task.name,
+      },
+      event: {
+        id: event.time,
+        type: event.declaration.name as any,
+        name: event.declaration.name,
+      },
+      target: {
+        id: event.target.id,
+        type: event.target.type,
+        name: event.target.declaration.name,
+        locations: event.target.declaration.locations,
+      },
+    };
+    return [frame, ...getTrace(event.precedingEvent)];
+  }
+}
+
+startServer<Traces>(createInspectedWindowEvalServerAdapter(TracesChannel), {
+  getTrace() {
+    const env = getGlobalEnv();
+    if (env) {
+      const event = deref(env.tracer.getTrace()?.eventRef);
+      return getTrace(event);
+    } else {
+      return undefined;
+    }
+  },
+});
 
 startServer<Statistics>(
   createInspectedWindowEvalServerAdapter(StatisticsChannel),
   {
     getStats() {
-      return getGlobalEnv().getRecorderStats();
+      return getGlobalEnv().recorder.getStats();
     },
-    // getStats() {
-    //   const env = getGlobalEnv();
-    //   return env
-    //     ? env.getRecorderStats()
-    //     : { observables: {}, subscribers: {}, events: {} };
-    // },
   }
 );
 

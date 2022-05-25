@@ -26,6 +26,7 @@ export class Observable {
   private static IDS = 0;
 
   readonly id = Observable.IDS++;
+  readonly type = 'observable';
 
   constructor(
     readonly target: ObservableLike,
@@ -41,6 +42,7 @@ export class Subscriber {
   private static IDS = 0;
 
   readonly id = Subscriber.IDS++;
+  readonly type = 'subscriber';
 
   constructor(
     readonly target: any[],

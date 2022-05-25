@@ -17,6 +17,9 @@ export interface Instrument<BASE> {
 }
 
 export interface Env {
+  tracer: Tracer;
+  locator: Locator;
+  recorder: Recorder;
   instrumentConstructor: Instrument<Constructor<ObservableLike>>;
   instrumentCreator: Instrument<(...args: any[]) => ObservableLike>;
   instrumentOperator: Instrument<
@@ -24,7 +27,6 @@ export interface Env {
   >;
   instrumentSingleton: Instrument<ObservableLike>;
   addTag: (observable: ObservableLike, tag: string) => void;
-  getRecorderStats: () => RecorderStats;
 }
 
 export function setGlobalEnv(env: Env) {

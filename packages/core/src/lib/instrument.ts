@@ -77,14 +77,14 @@ export function instrument({
   }
 
   return {
+    tracer,
+    locator,
+    recorder,
     instrumentConstructor: createInstrumentConstructor(context),
     instrumentCreator: createInstrumentCreator(context),
     instrumentOperator: createInstrumentOperator(context),
     instrumentSingleton: createInstrumentSingleton(context),
     addTag: createAddTag(context),
-    getRecorderStats() {
-      return recorder.getStats();
-    },
   };
 }
 
