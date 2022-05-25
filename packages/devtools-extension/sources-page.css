@@ -1,17 +1,15 @@
-:root {
+body {
     --text-primary: rgba(0, 0, 0, 0.87);
     --text-secondary: rgba(0, 0, 0, 0.6);
     --background: #fff;
     --divider: rgba(0, 0, 0, 0.12);
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --text-primary: #fff;
-        --text-secondary: rgba(255, 255, 255, 0.7);
-        --background: #121212;
-        --divider: rgba(255, 255, 255, 0.12);
-    }
+body.theme-dark {
+    --text-primary: #fff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --background: #121212;
+    --divider: rgba(255, 255, 255, 0.12);
 }
 
 body {

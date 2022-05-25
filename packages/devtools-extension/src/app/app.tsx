@@ -3,17 +3,12 @@ import { StoreProvider } from '@lib/store';
 import { store } from '@app/store';
 import { RouterOutlet } from '@lib/store-router';
 import { appBarRouteToken, router, statusRouteToken } from '@app/router';
-import {
-  createTheme,
-  CssBaseline,
-  ThemeProvider,
-  useMediaQuery,
-} from '@mui/material';
+import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
 import { AppBarWrapper } from '@app/pages/app-bar-wrapper';
 import { InstrumentationStatusPage } from '@app/pages/instrumentation-status-page';
 
 export function App() {
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+  const prefersDarkMode = chrome.devtools.panels.themeName === 'dark';
 
   const theme = React.useMemo(
     () =>

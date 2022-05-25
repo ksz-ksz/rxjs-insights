@@ -126,3 +126,7 @@ startServer<ToSourcesPane>(
     },
   }
 );
+
+if (chrome.devtools.panels.themeName === 'dark') {
+  document.body.classList.add('theme-dark');
+}

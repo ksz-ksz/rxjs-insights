@@ -24,7 +24,7 @@ export function AppBarWrapper() {
   const link = url.path.join('/');
   return (
     <Box display="flex" height="100%" flexDirection="column">
-      <AppBar color="secondary" position="static" sx={{ flex: '0 0 0' }}>
+      <AppBar color="transparent" position="static" sx={{ flex: '0 0 0' }}>
         <Toolbar>
           <Tabs
             value={link}
