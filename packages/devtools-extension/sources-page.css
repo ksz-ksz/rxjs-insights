@@ -10,6 +10,7 @@ body.theme-dark {
     --text-secondary: rgba(255, 255, 255, 0.7);
     --background: #121212;
     --divider: rgba(255, 255, 255, 0.12);
+    color-scheme: dark;
 }
 
 body {
