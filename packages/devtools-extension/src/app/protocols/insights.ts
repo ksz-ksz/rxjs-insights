@@ -1,37 +1,7 @@
+import { Locations } from '@rxjs-insights/core';
+import { Ref } from '@app/protocols/refs';
+
 export const InsightsChannel = 'InsightsChannel';
-
-export interface ObjectRef {
-  type: 'object' | 'array' | 'function' | 'set' | 'map';
-  refId: number;
-  name: string;
-  length: number;
-}
-
-export interface ValueRef {
-  type: 'string' | 'number' | 'boolean' | 'bigint';
-  value: string | number | boolean | bigint;
-}
-
-export interface SymbolRef {
-  type: 'symbol';
-  name: string;
-  refId: number;
-}
-
-export interface NilRef {
-  type: 'null' | 'undefined';
-}
-
-export interface RxjsRef {
-  type: 'observable' | 'subscriber';
-  refId: number;
-  id: number;
-  name: string;
-}
-
-export type Ref = ObjectRef | ValueRef | SymbolRef | NilRef | RxjsRef;
-
-export interface Location {}
 
 export interface NotificationsStats {
   next: number;
@@ -49,16 +19,15 @@ export interface SubscriptionsStats {
 export interface ObservableInfo {
   id: number;
   name: string;
-  target: RxjsRef;
+  target: Ref;
   internal: boolean;
   tags: string[];
   notifications: NotificationsStats;
   subscriptions: SubscriptionsStats;
-  originalLocation?: Location;
-  generatedLocation?: Location;
-  ctor?: ObjectRef;
-  args?: ObjectRef[];
-  source?: RxjsRef;
+  locations?: Locations;
+  ctor: Ref;
+  args: Ref[];
+  source: Ref;
 }
 
 export interface Insights {

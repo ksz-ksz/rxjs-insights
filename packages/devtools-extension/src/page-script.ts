@@ -42,6 +42,8 @@ import {
   Traces,
   TracesChannel,
 } from '@app/protocols/traces';
+import { RefsService } from './refs-service';
+import { ObservableRef, Refs, RefsChannel } from '@app/protocols/refs';
 
 const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
 
@@ -207,6 +209,10 @@ function countStatuses(statuses: Status[], statusType: string) {
   return statuses.filter((x) => x === statusType).length;
 }
 
+const refs = new RefsService();
+
+startServer<Refs>(createInspectedWindowEvalServerAdapter(RefsChannel), refs);
+
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
   getObservableInfo(observableId: number): ObservableInfo | undefined {
     const observable = targets.observables[observableId];
@@ -217,7 +223,7 @@ startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
       return {
         id: observable.id,
         name: observable.declaration.name,
-        target: undefined as any,
+        target: refs.create(observable.target) as ObservableRef,
         internal: observable.declaration.internal,
         tags: observable.tags,
         notifications: {
@@ -231,9 +237,10 @@ startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
           completed: countStatuses(subscriberStatuses, 'complete'),
           unsubscribed: countStatuses(subscriberStatuses, 'unsubscribe'),
         },
-        ctor: undefined,
-        args: undefined,
-        source: undefined,
+        locations: observable.declaration.locations,
+        ctor: refs.create(observable.declaration.func),
+        args: observable.declaration.args?.map((arg) => refs.create(arg)) ?? [],
+        source: refs.create(observable.sourceObservable) as ObservableRef,
       };
     }
   },
