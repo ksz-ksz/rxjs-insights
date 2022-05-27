@@ -13,15 +13,18 @@ import {
 } from '@app/protocols/refs';
 
 interface Getter {
-  target: any;
-  getter: () => any;
+  target: unknown;
+  getter: () => unknown;
 }
 
 export class RefsService implements Refs {
   private nextRefId = 0;
-  private readonly refs: Record<number, any> = {};
+  private readonly refs: Record<
+    number,
+    { target: unknown; children: number[] }
+  > = {};
 
-  create(target: any): Ref {
+  create(target: unknown, parentRefId?: number): Ref {
     switch (typeof target) {
       case 'undefined':
         return {
@@ -35,14 +38,14 @@ export class RefsService implements Refs {
             type: 'array',
             name: target?.constructor?.name ?? 'Array',
             length: target.length,
-            refId: this.put(target),
+            refId: this.put(target, parentRefId),
           };
         } else {
           // todo: check observable and subscriber
           return {
             type: 'object',
             name: target?.constructor?.name ?? 'Object',
-            refId: this.put(target),
+            refId: this.put(target, parentRefId),
           };
         }
       case 'boolean':
@@ -64,13 +67,13 @@ export class RefsService implements Refs {
         return {
           type: 'function',
           name: target.name ? target.name : 'anonymous',
-          refId: this.put(target),
+          refId: this.put(target, parentRefId),
         };
       case 'symbol':
         return {
           type: 'symbol',
           name: target.toString(),
-          refId: this.put(target),
+          refId: this.put(target, parentRefId),
         };
       case 'bigint':
         return {
@@ -80,7 +83,11 @@ export class RefsService implements Refs {
     }
   }
 
-  createGetter(target: any, getter: () => any): GetterRef {
+  private createGetter(
+    target: unknown,
+    getter: () => unknown,
+    parentRefId: number
+  ): GetterRef {
     return {
       type: 'getter',
       refId: this.put({
@@ -96,10 +103,10 @@ export class RefsService implements Refs {
     props: PropertyRef[];
     proto: Ref;
   } {
-    const object = this.refs[ref.refId];
+    const target = this.refs[ref.refId].target;
 
-    const props = this.getProps(object);
-    const proto = this.getProto(object);
+    const props = this.getProps(target, ref.refId);
+    const proto = this.getProto(target, ref.refId);
 
     return {
       props,
@@ -112,11 +119,13 @@ export class RefsService implements Refs {
     props: PropertyRef[];
     proto: Ref;
   } {
-    const target = this.refs[ref.refId] as Set<any>;
+    const target = this.refs[ref.refId].target as Set<unknown>;
 
-    const props = this.getProps(target);
-    const proto = this.getProto(target);
-    const entries = Array.from(target.values()).map((val) => this.create(val));
+    const props = this.getProps(target, ref.refId);
+    const proto = this.getProto(target, ref.refId);
+    const entries = Array.from(target.values()).map((val) =>
+      this.create(val, ref.refId)
+    );
 
     return {
       props,
@@ -130,12 +139,15 @@ export class RefsService implements Refs {
     props: PropertyRef[];
     proto: Ref;
   } {
-    const target = this.refs[ref.refId] as Map<any, any>;
+    const target = this.refs[ref.refId].target as Map<unknown, unknown>;
 
-    const props = this.getProps(target);
-    const proto = this.getProto(target);
+    const props = this.getProps(target, ref.refId);
+    const proto = this.getProto(target, ref.refId);
     const entries = Array.from(target.entries()).map(
-      ([key, val]): [Ref, Ref] => [this.create(key), this.create(val)]
+      ([key, val]): [Ref, Ref] => [
+        this.create(key, ref.refId),
+        this.create(val, ref.refId),
+      ]
     );
 
     return {
@@ -145,13 +157,16 @@ export class RefsService implements Refs {
     };
   }
 
-  expandGetter(ref: GetterRef): {
+  invokeGetter(ref: GetterRef): {
     value: Ref;
   } {
-    return undefined as any;
+    const { target, getter } = this.refs[ref.refId].target as Getter;
+    return {
+      value: this.create(getter.call(target), ref.refId),
+    };
   }
 
-  private getProps(object: any): PropertyRef[] {
+  private getProps(object: unknown, parentRefId: number): PropertyRef[] {
     const enumerableProps: PropertyRef[] = [];
     const nonenumerableProps: PropertyRef[] = [];
     const accessors: PropertyRef[] = [];
@@ -164,13 +179,13 @@ export class RefsService implements Refs {
         if (enumerable) {
           enumerableProps.push({
             key,
-            value: this.create(value),
+            value: this.create(value, parentRefId),
             enumerable: true,
           });
         } else {
           nonenumerableProps.push({
             key,
-            value: this.create(value),
+            value: this.create(value, parentRefId),
             enumerable: false,
           });
         }
@@ -180,26 +195,26 @@ export class RefsService implements Refs {
           if (enumerable) {
             enumerableProps.push({
               key,
-              value: this.createGetter(object, get),
+              value: this.createGetter(object, get, parentRefId),
               enumerable: true,
             });
           } else {
             nonenumerableProps.push({
               key,
-              value: this.createGetter(object, get),
+              value: this.createGetter(object, get, parentRefId),
               enumerable: false,
             });
           }
           accessors.push({
             key: `get ${key}`,
-            value: this.create(get),
+            value: this.create(get, parentRefId),
             enumerable: false,
           });
         }
         if (set !== undefined) {
           accessors.push({
             key: `set ${key}`,
-            value: this.create(set),
+            value: this.create(set, parentRefId),
             enumerable: false,
           });
         }
@@ -216,13 +231,13 @@ export class RefsService implements Refs {
           if (enumerable) {
             enumerableProps.push({
               key,
-              value: this.createGetter(object, get),
+              value: this.createGetter(object, get, parentRefId),
               enumerable: true,
             });
           } else {
             nonenumerableProps.push({
               key,
-              value: this.createGetter(object, get),
+              value: this.createGetter(object, get, parentRefId),
               enumerable: false,
             });
           }
@@ -234,13 +249,19 @@ export class RefsService implements Refs {
     return [...enumerableProps, ...nonenumerableProps, ...accessors];
   }
 
-  private getProto(object: any) {
-    return this.create(Object.getPrototypeOf(object));
+  private getProto(object: unknown, parentRefId: number) {
+    return this.create(Object.getPrototypeOf(object), parentRefId);
   }
 
-  private put(target: any) {
+  private put(target: unknown, parentRefId?: number) {
     const refId = this.nextRefId++;
-    this.refs[refId] = target;
+    this.refs[refId] = {
+      target,
+      children: [],
+    };
+    if (parentRefId !== undefined) {
+      this.refs[parentRefId].children.push(refId);
+    }
     return refId;
   }
 }

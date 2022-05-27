@@ -23,7 +23,7 @@ export interface Refs {
     props: PropertyRef[];
     proto: Ref;
   };
-  expandGetter(ref: GetterRef): {
+  invokeGetter(ref: GetterRef): {
     value: Ref;
   };
 }
