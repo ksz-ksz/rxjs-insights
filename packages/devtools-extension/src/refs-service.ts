@@ -22,12 +22,12 @@ function getName(target: unknown): string {
       if (target === null) {
         return 'null';
       } else if (Array.isArray(target)) {
-        return target.constructor?.name ?? 'Array';
+        return `${target.constructor?.name ?? 'Array'}[]`;
       } else {
-        return target.constructor?.name ?? 'Object';
+        return `${target.constructor?.name ?? 'Object'}{}`;
       }
     case 'function':
-      return `${target.name ? target.name : 'anonymous'}()`;
+      return `f ${target.name ?? ''}()`;
     case 'string':
       return `"${target}"`;
     case 'undefined':
@@ -37,10 +37,6 @@ function getName(target: unknown): string {
     case 'bigint':
       return String(target);
   }
-}
-
-function getMapEntryName(key: unknown, val: unknown) {
-  return `{ ${getName(key)} => ${getName(val)} }`;
 }
 
 export class RefsService implements Refs {
@@ -93,7 +89,7 @@ export class RefsService implements Refs {
       case 'function':
         return {
           type: 'function',
-          name: target.name ? target.name : 'anonymous',
+          name: target.name ?? 'anonymous',
           refId: this.put(target, parentRefId),
         };
       case 'symbol':
@@ -206,7 +202,8 @@ export class RefsService implements Refs {
       val: {
         type: 'map-entry',
         refId: this.put(new MapEntry(key, val), refId),
-        name: getMapEntryName(key, val),
+        keyName: getName(key),
+        valName: getName(val),
       },
       type: 'enumerable',
     }));
@@ -229,7 +226,12 @@ export class RefsService implements Refs {
 
   invokeGetter(refId: number): Ref {
     const { target, getter } = this.refs[refId].target as Getter;
-    return this.create(getter.call(target), refId);
+    try {
+      const result = getter.call(target);
+      return this.create(result, refId);
+    } catch (error) {
+      return this.create(error, refId);
+    }
   }
 
   private getProps(object: unknown, parentRefId: number): PropertyRef[] {

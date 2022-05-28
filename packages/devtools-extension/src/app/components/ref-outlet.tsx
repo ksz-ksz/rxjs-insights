@@ -41,6 +41,7 @@ function ObjectTag(props: { reference: ObjectRef }) {
       }}
     >
       {props.reference.name}
+      {'{}'}
     </Typography>
   );
 }
@@ -53,7 +54,7 @@ function ArrayTag(props: TagRendererProps<ArrayRef>) {
         fontFamily: 'Monospace',
       }}
     >
-      {props.reference.name} ({props.reference.length})
+      {props.reference.name}[] ({props.reference.length})
     </Typography>
   );
 }
@@ -79,7 +80,8 @@ function SetTag(props: TagRendererProps<SetRef>) {
         fontFamily: 'Monospace',
       }}
     >
-      {props.reference.name} ({props.reference.size})
+      {props.reference.name}
+      {'{}'} ({props.reference.size})
     </Typography>
   );
 }
@@ -92,7 +94,8 @@ function MapTag(props: TagRendererProps<MapRef>) {
         fontFamily: 'Monospace',
       }}
     >
-      {props.reference.name} ({props.reference.size})
+      {props.reference.name}
+      {'{}'} ({props.reference.size})
     </Typography>
   );
 }
@@ -105,7 +108,7 @@ function MapEntryTag(props: TagRendererProps<MapEntryRef>) {
         fontFamily: 'Monospace',
       }}
     >
-      {props.reference.name}
+      {'{'} {props.reference.keyName} {'=>'} {props.reference.keyName} {'}'}
     </Typography>
   );
 }
