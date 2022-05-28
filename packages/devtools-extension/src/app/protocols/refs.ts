@@ -1,30 +1,14 @@
 export const RefsChannel = 'RefsChannel';
 
 export interface PropertyRef {
-  key: string;
+  key: string | number;
   val: Ref;
-  enumerable: boolean;
+  type: 'enumerable' | 'nonenumerable' | 'special';
 }
 
 export interface Refs {
-  expand(refId: number):
-    | {
-        props: PropertyRef[];
-        proto: Ref;
-      }
-    | {
-        setEntries: Ref[];
-        props: PropertyRef[];
-        proto: Ref;
-      }
-    | {
-        mapEntries: [Ref, Ref][];
-        props: PropertyRef[];
-        proto: Ref;
-      };
-  invokeGetter(refId: number): {
-    value: Ref;
-  };
+  expand(refId: number): PropertyRef[];
+  invokeGetter(refId: number): Ref;
 }
 
 export interface ObjectRef {
@@ -58,6 +42,17 @@ export interface MapRef {
   refId: number;
   name: string;
   size: number;
+}
+
+export interface MapEntryRef {
+  type: 'map-entry';
+  refId: number;
+  name: string;
+}
+
+export interface EntriesRef {
+  type: 'entries';
+  refId: number;
 }
 
 export interface GetterRef {
@@ -94,19 +89,14 @@ export interface ObservableRef {
   name: string;
 }
 
-export interface SubscriberRef {
-  type: 'subscriber';
-  refId: number;
-  id: number;
-  name: string;
-}
-
 export type Ref =
   | ObjectRef
   | ArrayRef
   | FunctionRef
   | SetRef
   | MapRef
+  | MapEntryRef
+  | EntriesRef
   | GetterRef
   | ValueRef
   | SymbolRef
@@ -114,3 +104,10 @@ export type Ref =
   | NullRef
   | ObservableRef
   | SubscriberRef;
+
+export interface SubscriberRef {
+  type: 'subscriber';
+  refId: number;
+  id: number;
+  name: string;
+}

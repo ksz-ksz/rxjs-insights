@@ -1,11 +1,14 @@
-import { interval, map, of } from 'rxjs';
+import { interval, map, of, take } from 'rxjs';
 import { inspect } from '@rxjs-insights/console';
 
 const inspectDevtools: typeof inspect = (window as any)
   .RXJS_ISNIGHTS_DEVTOOLS_INSPECT;
 
 export function playground() {
-  const obs = interval(1000).pipe(map((x) => x * x));
+  const obs = interval(1000).pipe(
+    take(10),
+    map((x) => x * x)
+  );
   const sub = obs.subscribe(subscriber('A'));
 
   setTimeout(() => {

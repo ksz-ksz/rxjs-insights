@@ -1,8 +1,46 @@
 import { GetterRef, PropertyRef, Ref, Refs } from '@app/protocols/refs';
 
-interface Getter {
-  target: unknown;
-  getter: () => unknown;
+class Getter {
+  constructor(readonly target: unknown, readonly getter: () => unknown) {}
+}
+
+class SetEntries {
+  constructor(readonly set: Set<unknown>) {}
+}
+
+class MapEntries {
+  constructor(readonly map: Map<unknown, unknown>) {}
+}
+
+class MapEntry {
+  constructor(readonly key: unknown, readonly val: unknown) {}
+}
+
+function getName(target: unknown): string {
+  switch (typeof target) {
+    case 'object':
+      if (target === null) {
+        return 'null';
+      } else if (Array.isArray(target)) {
+        return target.constructor?.name ?? 'Array';
+      } else {
+        return target.constructor?.name ?? 'Object';
+      }
+    case 'function':
+      return target.name ? target.name : 'anonymous';
+    case 'string':
+      return `"${target}"`;
+    case 'undefined':
+    case 'boolean':
+    case 'number':
+    case 'symbol':
+    case 'bigint':
+      return String(target);
+  }
+}
+
+function getMapEntryName(key: unknown, val: unknown) {
+  return `{ ${getName(key)} => ${getName(val)}`;
 }
 
 export class RefsService implements Refs {
@@ -33,7 +71,6 @@ export class RefsService implements Refs {
             refId: this.put(target, parentRefId),
           };
         } else {
-          // todo: check observable and subscriber
           return {
             type: 'object',
             name: target?.constructor?.name ?? 'Object',
@@ -79,30 +116,22 @@ export class RefsService implements Refs {
     }
   }
 
-  expand = (
-    refId: number
-  ):
-    | {
-        props: PropertyRef[];
-        proto: Ref;
-      }
-    | {
-        setEntries: Ref[];
-        props: PropertyRef[];
-        proto: Ref;
-      }
-    | {
-        mapEntries: [Ref, Ref][];
-        props: PropertyRef[];
-        proto: Ref;
-      } => {
-    console.log('expand', refId);
+  expand = (refId: number): PropertyRef[] => {
     const target = this.refs[refId].target;
     if (target instanceof Set) {
       return this.expandSet(target, refId);
     }
+    if (target instanceof SetEntries) {
+      return this.expandSetEntries(target, refId);
+    }
     if (target instanceof Map) {
       return this.expandMap(target, refId);
+    }
+    if (target instanceof MapEntries) {
+      return this.expandMapEntries(target, refId);
+    }
+    if (target instanceof MapEntry) {
+      return this.expandMapEntry(target, refId);
     }
     return this.expandObject(target, refId);
   };
@@ -114,84 +143,99 @@ export class RefsService implements Refs {
   ): GetterRef {
     return {
       type: 'getter',
-      refId: this.put(
-        {
-          target,
-          getter,
-        } as Getter,
-        parentRefId
-      ),
+      refId: this.put(new Getter(target, getter), parentRefId),
     };
   }
 
-  private expandObject(
-    target: unknown,
-    refId: number
-  ): {
-    props: PropertyRef[];
-    proto: Ref;
-  } {
-    const props = this.getProps(target, refId);
-    const proto = this.getProto(target, refId);
-
+  private getSetEntries(set: Set<unknown>, parentRefId: number): PropertyRef {
     return {
-      props,
-      proto,
+      key: 'Entries',
+      val: {
+        type: 'entries',
+        refId: this.put(new SetEntries(set), parentRefId),
+      },
+      type: 'special',
     };
   }
 
-  private expandSet(
-    target: Set<unknown>,
-    refId: number
-  ): {
-    setEntries: Ref[];
-    props: PropertyRef[];
-    proto: Ref;
-  } {
+  private getMapEntries(
+    map: Map<unknown, unknown>,
+    parentRefId: number
+  ): PropertyRef {
+    return {
+      key: 'Entries',
+      val: {
+        type: 'entries',
+        refId: this.put(new MapEntries(map), parentRefId),
+      },
+      type: 'special',
+    };
+  }
+
+  private expandObject(target: unknown, refId: number): PropertyRef[] {
     const props = this.getProps(target, refId);
     const proto = this.getProto(target, refId);
-    const setEntries = Array.from(target.values()).map((val) =>
-      this.create(val, refId)
-    );
 
-    return {
-      props,
-      proto,
-      setEntries,
-    };
+    return [...props, proto];
+  }
+
+  private expandSet(target: Set<unknown>, refId: number): PropertyRef[] {
+    const entries = this.getSetEntries(target, refId);
+    const props = this.getProps(target, refId);
+    const proto = this.getProto(target, refId);
+
+    return [entries, ...props, proto];
+  }
+
+  private expandSetEntries(target: SetEntries, refId: number): PropertyRef[] {
+    return Array.from(target.set.values()).map((val, index) => ({
+      key: index,
+      val: this.create(val, refId),
+      type: 'enumerable',
+    }));
   }
 
   private expandMap(
     target: Map<unknown, unknown>,
     refId: number
-  ): {
-    mapEntries: [Ref, Ref][];
-    props: PropertyRef[];
-    proto: Ref;
-  } {
+  ): PropertyRef[] {
+    const entries = this.getMapEntries(target, refId);
     const props = this.getProps(target, refId);
     const proto = this.getProto(target, refId);
-    const mapEntries = Array.from(target.entries()).map(
-      ([key, val]): [Ref, Ref] => [
-        this.create(key, refId),
-        this.create(val, refId),
-      ]
-    );
 
-    return {
-      props,
-      proto,
-      mapEntries,
-    };
+    return [entries, ...props, proto];
   }
 
-  invokeGetter(refId: number): {
-    value: Ref;
-  } {
+  private expandMapEntries(target: MapEntries, refId: number): PropertyRef[] {
+    return Array.from(target.map.entries()).map(([key, val], index) => ({
+      key: index,
+      val: {
+        type: 'map-entry',
+        refId: this.put(new MapEntry(key, val), refId),
+        name: getMapEntryName(key, val),
+      },
+      type: 'enumerable',
+    }));
+  }
+
+  private expandMapEntry(target: MapEntry, refId: number): PropertyRef[] {
+    return [
+      {
+        key: 'key',
+        val: this.create(target.key, refId),
+        type: 'enumerable',
+      },
+      {
+        key: 'val',
+        val: this.create(target.val, refId),
+        type: 'enumerable',
+      },
+    ];
+  }
+
+  invokeGetter(refId: number): Ref {
     const { target, getter } = this.refs[refId].target as Getter;
-    return {
-      value: this.create(getter.call(target), refId),
-    };
+    return this.create(getter.call(target), refId);
   }
 
   private getProps(object: unknown, parentRefId: number): PropertyRef[] {
@@ -208,13 +252,13 @@ export class RefsService implements Refs {
           enumerableProps.push({
             key,
             val: this.create(value, parentRefId),
-            enumerable: true,
+            type: 'enumerable',
           });
         } else {
           nonenumerableProps.push({
             key,
             val: this.create(value, parentRefId),
-            enumerable: false,
+            type: 'nonenumerable',
           });
         }
       } else {
@@ -224,26 +268,26 @@ export class RefsService implements Refs {
             enumerableProps.push({
               key,
               val: this.createGetter(object, get, parentRefId),
-              enumerable: true,
+              type: 'enumerable',
             });
           } else {
             nonenumerableProps.push({
               key,
               val: this.createGetter(object, get, parentRefId),
-              enumerable: false,
+              type: 'nonenumerable',
             });
           }
           accessors.push({
             key: `get ${key}`,
             val: this.create(get, parentRefId),
-            enumerable: false,
+            type: 'nonenumerable',
           });
         }
         if (set !== undefined) {
           accessors.push({
             key: `set ${key}`,
             val: this.create(set, parentRefId),
-            enumerable: false,
+            type: 'nonenumerable',
           });
         }
       }
@@ -260,13 +304,13 @@ export class RefsService implements Refs {
             enumerableProps.push({
               key,
               val: this.createGetter(object, get, parentRefId),
-              enumerable: true,
+              type: 'enumerable',
             });
           } else {
             nonenumerableProps.push({
               key,
               val: this.createGetter(object, get, parentRefId),
-              enumerable: false,
+              type: 'nonenumerable',
             });
           }
         }
@@ -277,8 +321,12 @@ export class RefsService implements Refs {
     return [...enumerableProps, ...nonenumerableProps, ...accessors];
   }
 
-  private getProto(object: unknown, parentRefId: number) {
-    return this.create(Object.getPrototypeOf(object), parentRefId);
+  private getProto(object: unknown, parentRefId: number): PropertyRef {
+    return {
+      key: 'Prototype',
+      val: this.create(Object.getPrototypeOf(object), parentRefId),
+      type: 'special',
+    };
   }
 
   private put(target: unknown, parentRefId?: number) {
