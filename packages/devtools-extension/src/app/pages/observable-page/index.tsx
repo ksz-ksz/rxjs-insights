@@ -9,7 +9,7 @@ export function ObservablePage() {
     console.log(info);
     return (
       <div>
-        <RefOutlet label="target" primary={true} refId={info.target.refId} />
+        <RefOutlet label="target" type="enumerable" reference={info.target} />
       </div>
     );
   } else {

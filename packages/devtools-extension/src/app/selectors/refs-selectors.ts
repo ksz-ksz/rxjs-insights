@@ -3,9 +3,12 @@ import { RefsState } from '@app/store/refs';
 
 const refsState = createSliceSelector<'refs', RefsState>('refs');
 
-export function refState(refId: number) {
+export function getRefState(refId: number) {
   return createSelector({ state: refsState }, ({ state }) => {
-    console.log({ state, refId });
-    return state.refs[refId];
+    return (
+      state.refs[refId] ?? {
+        expanded: false,
+      }
+    );
   });
 }

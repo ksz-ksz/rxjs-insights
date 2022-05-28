@@ -1,88 +1,24 @@
 import {
   ArrayRef,
   FunctionRef,
-  GetterRef,
   MapRef,
   NullRef,
   ObjectRef,
-  ObservableRef,
   Ref,
   SetRef,
-  SubscriberRef,
   SymbolRef,
   UndefinedRef,
   ValueRef,
 } from '@app/protocols/refs';
-import React, { ReactNode, useCallback, useMemo, useState } from 'react';
-import { JSXElementConstructor } from 'react';
+import React, { JSXElementConstructor, useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { pink } from '@mui/material/colors';
-import { refState } from '@app/selectors/refs-selectors';
+import { getRefState } from '@app/selectors/refs-selectors';
 import { useDispatch, useSelector } from '@app/store';
-import { PropertyRefState, RefState } from '@app/store/refs';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
-}
-
-interface RefRendererProps<REF extends Ref> {
-  label: string;
-  primary: boolean;
-  refState: RefState<REF>;
-  tagRenderer: JSXElementConstructor<TagRendererProps<REF>>;
-}
-
-interface BaseRefRendererProps {
-  label: string;
-  primary: boolean;
-  tag: ReactNode;
-  expandable: boolean;
-  expanded?: boolean;
-  onExpandedChange?: (expanded: boolean) => void;
-  children?: PropertyRefState[];
-}
-
-function BaseRefRenderer(props: BaseRefRendererProps) {
-  return (
-    <Box display="block">
-      <Box onClick={() => props.onExpandedChange?.(!props.expanded)}>
-        {props.expandable ? (
-          <Typography
-            sx={{
-              display: 'inline',
-              fontFamily: 'Monospace',
-            }}
-          >
-            {props.expanded ? '▾' : '▸'}
-          </Typography>
-        ) : null}
-        <Typography
-          sx={{
-            display: 'inline',
-            marginLeft: props.expandable ? '1ch' : '2ch',
-            marginRight: '1ch',
-            color: props.primary ? pink.A100 : pink.A400,
-            fontFamily: 'Monospace',
-          }}
-        >
-          {props.label}:
-        </Typography>
-        {props.tag}
-      </Box>
-      {props.expanded && props.children ? (
-        <Box marginLeft="2ch">
-          {props.children.map((child) => (
-            <RefOutlet
-              label={child.key}
-              primary={child.enumerable}
-              refId={child.val}
-            />
-          ))}
-        </Box>
-      ) : null}
-    </Box>
-  );
 }
 
 function ObjectTag(props: { reference: ObjectRef }) {
@@ -202,104 +138,6 @@ function NullTag(props: TagRendererProps<NullRef>) {
   );
 }
 
-function ObjectRefRenderer(props: RefRendererProps<ObjectRef>) {
-  const { refState } = props;
-  const dispatch = useDispatch();
-  const onExpandedChange = useCallback(
-    (expanded: boolean) => {
-      if (expanded) {
-        dispatch(refOutletActions.Expand({ refId: refState.ref.refId }));
-      } else {
-        dispatch(refOutletActions.Collapse({ refId: refState.ref.refId }));
-      }
-    },
-    [refState.ref.refId]
-  );
-  const TagRenderer = props.tagRenderer;
-  return (
-    <BaseRefRenderer
-      label={props.label}
-      primary={props.primary}
-      tag={<TagRenderer reference={refState.ref} />}
-      expandable={true}
-      expanded={refState.expanded}
-      onExpandedChange={onExpandedChange}
-      children={refState.children?.props}
-    />
-  );
-}
-
-function ValueRefRenderer(props: RefRendererProps<ValueRef>) {
-  const { refState } = props;
-  const TagRenderer = props.tagRenderer;
-  return (
-    <BaseRefRenderer
-      label={props.label}
-      primary={props.primary}
-      tag={<TagRenderer reference={refState.ref} />}
-      expandable={false}
-    />
-  );
-}
-
-function ArrayRefRenderer(props: RefRendererProps<ArrayRef>) {
-  return 'ArrayRefRenderer';
-}
-
-function FunctionRefRenderer(props: RefRendererProps<FunctionRef>) {
-  return 'FunctionRefRenderer';
-}
-
-function SetRefRenderer(props: RefRendererProps<SetRef>) {
-  return 'SetRefRenderer';
-}
-
-function MapRefRenderer(props: RefRendererProps<MapRef>) {
-  return 'MapRefRenderer';
-}
-
-function GetterRefRenderer(props: RefRendererProps<GetterRef>) {
-  return 'GetterRefRenderer';
-}
-
-function SymbolRefRenderer(props: RefRendererProps<SymbolRef>) {
-  return 'SymbolRefRenderer';
-}
-
-function UndefinedRefRenderer(props: RefRendererProps<UndefinedRef>) {
-  return 'UndefinedRefRenderer';
-}
-
-function NullRefRenderer(props: RefRendererProps<NullRef>) {
-  return 'NullRefRenderer';
-}
-
-function ObservableRefRenderer(props: RefRendererProps<ObservableRef>) {
-  return 'ObservableRefRenderer';
-}
-
-function SubscriberRefRenderer(props: RefRendererProps<SubscriberRef>) {
-  return 'SubscriberRefRenderer';
-}
-
-const refRenderers: Record<
-  string,
-  JSXElementConstructor<RefRendererProps<any>>
-> = {
-  object: ObjectRefRenderer,
-  array: ObjectRefRenderer,
-  function: ObjectRefRenderer,
-  set: ObjectRefRenderer,
-  map: ObjectRefRenderer,
-  getter: GetterRefRenderer,
-  value: ValueRefRenderer,
-  symbol: ValueRefRenderer,
-  undefined: ValueRefRenderer,
-  null: ValueRefRenderer,
-  observable: ObjectRefRenderer,
-  subscriber: ObjectRefRenderer,
-};
-
 const tagRenderers: Record<
   string,
   JSXElementConstructor<TagRendererProps<any>>
@@ -310,7 +148,10 @@ const tagRenderers: Record<
   set: SetTag,
   map: MapTag,
   // getter: GetterTag,
-  value: ValueTag,
+  string: ValueTag,
+  number: ValueTag,
+  boolean: ValueTag,
+  bigint: ValueTag,
   symbol: SymbolTag,
   undefined: UndefinedTag,
   null: NullTag,
@@ -318,25 +159,150 @@ const tagRenderers: Record<
   // subscriber: SubscriberRefRenderer,
 };
 
+function getTagRenderer(type: string) {
+  const tagRenderer = tagRenderers[type];
+  if (tagRenderer) {
+    return tagRenderer;
+  } else {
+    throw new Error(`TagRenderer not found for type '${type}'.`);
+  }
+}
+
 export interface RefOutletProps {
-  label: string;
-  primary: boolean;
-  refId: number;
+  type: 'enumerable' | 'nonenumerable' | 'special';
+  label: string | number;
+  reference: Ref;
+}
+
+export interface ObjectRefOutletProps {
+  type: 'enumerable' | 'nonenumerable' | 'special';
+  label: string | number;
+  reference: Extract<Ref, { refId: number }>;
+}
+
+export interface ValueRefOutletProps {
+  type: 'enumerable' | 'nonenumerable' | 'special';
+  label: string | number;
+  reference: Ref;
+}
+
+function ObjectRefOutlet(props: ObjectRefOutletProps) {
+  const refStateSelector = useMemo(
+    () => getRefState(props.reference.refId),
+    [props.reference.refId]
+  );
+  const refState = useSelector(refStateSelector);
+  const dispatch = useDispatch();
+  const onToggle = useCallback(() => {
+    if (refState.expanded) {
+      dispatch(refOutletActions.Collapse({ refId: props.reference.refId }));
+    } else {
+      dispatch(refOutletActions.Expand({ refId: props.reference.refId }));
+    }
+  }, [refState, props.reference.refId]);
+  const TagRenderer = getTagRenderer(props.reference.type);
+
+  return (
+    <Box display="block">
+      <Box onClick={onToggle}>
+        <Typography
+          sx={{
+            display: 'inline',
+            fontFamily: 'Monospace',
+          }}
+        >
+          {refState.expanded ? '▾' : '▸'}
+        </Typography>
+        <Typography
+          sx={{
+            display: 'inline',
+            marginLeft: '1ch',
+            marginRight: '1ch',
+            color:
+              props.type === 'enumerable'
+                ? pink.A100
+                : props.type === 'nonenumerable'
+                ? pink.A400
+                : 'inherit',
+            fontFamily: 'Monospace',
+          }}
+        >
+          {props.label}:
+        </Typography>
+        <TagRenderer reference={props.reference} />
+      </Box>
+      {refState.expanded && refState.props ? (
+        <Box marginLeft="2ch">
+          {refState.props.map((prop) => (
+            <RefOutlet label={prop.key} type={prop.type} reference={prop.val} />
+          ))}
+        </Box>
+      ) : null}
+    </Box>
+  );
+}
+
+function ValueRefOutlet(props: ValueRefOutletProps) {
+  const TagRenderer = getTagRenderer(props.reference.type);
+
+  return (
+    <Box display="block">
+      <Box>
+        <Typography
+          sx={{
+            display: 'inline',
+            marginLeft: '2ch',
+            marginRight: '1ch',
+            color:
+              props.type === 'enumerable'
+                ? pink.A100
+                : props.type === 'nonenumerable'
+                ? pink.A400
+                : 'inherit',
+            fontFamily: 'Monospace',
+          }}
+        >
+          {props.label}:
+        </Typography>
+        <TagRenderer reference={props.reference} />
+      </Box>
+    </Box>
+  );
 }
 
 export function RefOutlet(props: RefOutletProps) {
-  const refStateSelector = useMemo(() => refState(props.refId), [props.refId]);
-  const state = useSelector(refStateSelector);
-  const RefRenderer = refRenderers[state.ref.type];
-  const TagRenderer = tagRenderers[state.ref.type];
-  console.log('RefRenderer', { RefRenderer, TagRenderer, props, state });
-
-  return (
-    <RefRenderer
-      label={props.label}
-      primary={props.primary}
-      refState={state}
-      tagRenderer={TagRenderer}
-    />
-  );
+  switch (props.reference.type) {
+    case 'undefined':
+    case 'string':
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+    case 'null':
+    case 'symbol':
+      return (
+        <ValueRefOutlet
+          type={props.type}
+          label={props.label}
+          reference={props.reference}
+        />
+      );
+    case 'object':
+    case 'array':
+    case 'function':
+    case 'set':
+    case 'map':
+    case 'map-entry':
+    case 'entries':
+    case 'observable':
+    case 'subscriber':
+      return (
+        <ObjectRefOutlet
+          type={props.type}
+          label={props.label}
+          reference={props.reference}
+        />
+      );
+    case 'getter':
+      return <span>{props.label} (GETTER)</span>;
+  }
 }
