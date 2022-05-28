@@ -39,6 +39,13 @@ function getName(target: unknown): string {
   }
 }
 
+function getPropertyDescriptors(target: any): [string, PropertyDescriptor][] {
+  return Reflect.ownKeys(target).map((key) => [
+    String(key),
+    Reflect.getOwnPropertyDescriptor(target, key)!,
+  ]);
+}
+
 export class RefsService implements Refs {
   private nextRefId = 0;
   private readonly refs: Record<
@@ -101,7 +108,7 @@ export class RefsService implements Refs {
       case 'bigint':
         return {
           type: 'bigint',
-          value: target,
+          value: target.toString(),
         };
     }
   }
@@ -179,7 +186,7 @@ export class RefsService implements Refs {
 
   private expandSetEntries(target: SetEntries, refId: number): PropertyRef[] {
     return Array.from(target.set.values()).map((val, index) => ({
-      key: index,
+      key: String(index),
       val: this.create(val, refId),
       type: 'enumerable',
     }));
@@ -198,7 +205,7 @@ export class RefsService implements Refs {
 
   private expandMapEntries(target: MapEntries, refId: number): PropertyRef[] {
     return Array.from(target.map.entries()).map(([key, val], index) => ({
-      key: index,
+      key: String(index),
       val: {
         type: 'map-entry',
         refId: this.put(new MapEntry(key, val), refId),
@@ -239,9 +246,7 @@ export class RefsService implements Refs {
     const nonenumerableProps: PropertyRef[] = [];
     const accessors: PropertyRef[] = [];
 
-    for (const [key, propDescriptor] of Object.entries(
-      Object.getOwnPropertyDescriptors(object)
-    )) {
+    for (const [key, propDescriptor] of getPropertyDescriptors(object)) {
       if (propDescriptor.hasOwnProperty('value')) {
         const { value, enumerable } = propDescriptor;
         if (enumerable) {
@@ -291,9 +296,7 @@ export class RefsService implements Refs {
 
     let proto = Object.getPrototypeOf(object);
     while (proto !== null) {
-      for (const [key, propDescriptor] of Object.entries(
-        Object.getOwnPropertyDescriptors(proto)
-      )) {
+      for (const [key, propDescriptor] of getPropertyDescriptors(proto)) {
         if (key !== '__proto__') {
           const { get, enumerable } = propDescriptor;
           if (get !== undefined) {

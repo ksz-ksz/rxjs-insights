@@ -1,7 +1,7 @@
 export const RefsChannel = 'RefsChannel';
 
 export interface PropertyRef {
-  key: string | number;
+  key: string;
   val: Ref;
   type: 'enumerable' | 'nonenumerable' | 'special';
 }
@@ -63,7 +63,7 @@ export interface GetterRef {
 
 export interface ValueRef {
   type: 'string' | 'number' | 'boolean' | 'bigint';
-  value: string | number | boolean | bigint;
+  value: string | number | boolean /*bigint transferred as string*/;
 }
 
 export interface SymbolRef {

@@ -108,7 +108,7 @@ function MapEntryTag(props: TagRendererProps<MapEntryRef>) {
         fontFamily: 'Monospace',
       }}
     >
-      {'{'} {props.reference.keyName} {'=>'} {props.reference.keyName} {'}'}
+      {'{'} {props.reference.keyName} {'=>'} {props.reference.valName} {'}'}
     </Typography>
   );
 }
@@ -180,7 +180,6 @@ const tagRenderers: Record<
   map: MapTag,
   'map-entry': MapEntryTag,
   entries: EntriesTag,
-  // getter: GetterTag,
   string: ValueTag,
   number: ValueTag,
   boolean: ValueTag,
@@ -201,28 +200,10 @@ function getTagRenderer(type: string) {
   }
 }
 
-export interface RefOutletProps {
-  type: 'enumerable' | 'nonenumerable' | 'special';
-  label: string | number;
-  reference: Ref;
-}
-
-export interface ObjectRefOutletProps {
+interface ObjectRefOutletProps {
   type: 'enumerable' | 'nonenumerable' | 'special';
   label: string | number;
   reference: Extract<Ref, { refId: number }>;
-}
-
-export interface ValueRefOutletProps {
-  type: 'enumerable' | 'nonenumerable' | 'special';
-  label: string | number;
-  reference: Ref;
-}
-
-export interface GetterRefOutletProps {
-  type: 'enumerable' | 'nonenumerable' | 'special';
-  label: string | number;
-  reference: GetterRef;
 }
 
 function ObjectRefOutlet(props: ObjectRefOutletProps) {
@@ -276,6 +257,12 @@ function ObjectRefOutlet(props: ObjectRefOutletProps) {
   );
 }
 
+interface ValueRefOutletProps {
+  type: 'enumerable' | 'nonenumerable' | 'special';
+  label: string | number;
+  reference: Ref;
+}
+
 function ValueRefOutlet(props: ValueRefOutletProps) {
   const TagRenderer = getTagRenderer(props.reference.type);
 
@@ -297,6 +284,12 @@ function ValueRefOutlet(props: ValueRefOutletProps) {
       </Box>
     </Box>
   );
+}
+
+interface GetterRefOutletProps {
+  type: 'enumerable' | 'nonenumerable' | 'special';
+  label: string | number;
+  reference: GetterRef;
 }
 
 function GetterRefOutlet(props: GetterRefOutletProps) {
@@ -348,6 +341,12 @@ function GetterRefOutlet(props: GetterRefOutletProps) {
       </Box>
     );
   }
+}
+
+export interface RefOutletProps {
+  type: 'enumerable' | 'nonenumerable' | 'special';
+  label: string | number;
+  reference: Ref;
 }
 
 export function RefOutlet(props: RefOutletProps) {
