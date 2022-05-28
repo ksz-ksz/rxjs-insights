@@ -1,11 +1,12 @@
 import { createReducer, Slice } from '@lib/store';
-import { PropertyRef } from '@app/protocols/refs';
+import { PropertyRef, Ref } from '@app/protocols/refs';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { refsActions } from '@app/actions/refs-actions';
 
 export interface RefState {
-  expanded: boolean;
+  expanded?: boolean;
   props?: PropertyRef[];
+  ref?: Ref; // resolved getter ref
 }
 
 export interface RefsState {
@@ -33,14 +34,23 @@ export const refsReducer = createReducer('refs', {
       state.refs[action.payload.refId] = { expanded: false };
     }
   })
-  .add(refsActions.RefPropsLoaded, (state, action) => {
+  .add(refsActions.PropsLoaded, (state, action) => {
     const ref = state.refs[action.payload.refId];
     if (ref) {
       ref.props = action.payload.props;
     } else {
       state.refs[action.payload.refId] = {
-        expanded: false,
         props: action.payload.props,
+      };
+    }
+  })
+  .add(refsActions.RefLoaded, (state, action) => {
+    const ref = state.refs[action.payload.refId];
+    if (ref) {
+      ref.ref = action.payload.ref;
+    } else {
+      state.refs[action.payload.refId] = {
+        ref: action.payload.ref,
       };
     }
   });

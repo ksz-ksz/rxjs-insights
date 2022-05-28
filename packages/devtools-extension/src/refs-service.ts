@@ -55,13 +55,11 @@ export class RefsService implements Refs {
       case 'undefined':
         return {
           type: 'undefined',
-          refId: this.nextRefId++,
         };
       case 'object':
         if (target === null) {
           return {
             type: 'null',
-            refId: this.nextRefId++,
           };
         } else if (Array.isArray(target)) {
           return {
@@ -80,19 +78,16 @@ export class RefsService implements Refs {
       case 'boolean':
         return {
           type: 'boolean',
-          refId: this.nextRefId++,
           value: target,
         };
       case 'number':
         return {
           type: 'number',
-          refId: this.nextRefId++,
           value: target,
         };
       case 'string':
         return {
           type: 'string',
-          refId: this.nextRefId++,
           value: target,
         };
       case 'function':
@@ -110,7 +105,6 @@ export class RefsService implements Refs {
       case 'bigint':
         return {
           type: 'bigint',
-          refId: this.nextRefId++,
           value: target,
         };
     }
@@ -149,7 +143,7 @@ export class RefsService implements Refs {
 
   private getSetEntries(set: Set<unknown>, parentRefId: number): PropertyRef {
     return {
-      key: 'Entries',
+      key: '[[Entries]]',
       val: {
         type: 'entries',
         refId: this.put(new SetEntries(set), parentRefId),
@@ -163,7 +157,7 @@ export class RefsService implements Refs {
     parentRefId: number
   ): PropertyRef {
     return {
-      key: 'Entries',
+      key: '[[Entries]]',
       val: {
         type: 'entries',
         refId: this.put(new MapEntries(map), parentRefId),
@@ -298,20 +292,22 @@ export class RefsService implements Refs {
       for (const [key, propDescriptor] of Object.entries(
         Object.getOwnPropertyDescriptors(proto)
       )) {
-        const { get, enumerable } = propDescriptor;
-        if (get !== undefined) {
-          if (enumerable) {
-            enumerableProps.push({
-              key,
-              val: this.createGetter(object, get, parentRefId),
-              type: 'enumerable',
-            });
-          } else {
-            nonenumerableProps.push({
-              key,
-              val: this.createGetter(object, get, parentRefId),
-              type: 'nonenumerable',
-            });
+        if (key !== '__proto__') {
+          const { get, enumerable } = propDescriptor;
+          if (get !== undefined) {
+            if (enumerable) {
+              enumerableProps.push({
+                key,
+                val: this.createGetter(object, get, parentRefId),
+                type: 'enumerable',
+              });
+            } else {
+              nonenumerableProps.push({
+                key,
+                val: this.createGetter(object, get, parentRefId),
+                type: 'nonenumerable',
+              });
+            }
           }
         }
       }
@@ -323,7 +319,7 @@ export class RefsService implements Refs {
 
   private getProto(object: unknown, parentRefId: number): PropertyRef {
     return {
-      key: 'Prototype',
+      key: '[[Prototype]]',
       val: this.create(Object.getPrototypeOf(object), parentRefId),
       type: 'special',
     };

@@ -1,10 +1,15 @@
 import { createActions } from '@lib/store';
-import { PropertyRef } from '@app/protocols/refs';
+import { PropertyRef, Ref } from '@app/protocols/refs';
 
 export interface RefsActions {
-  RefPropsLoaded: {
+  PropsLoaded: {
     refId: number;
     props: PropertyRef[];
+  };
+
+  RefLoaded: {
+    refId: number;
+    ref: Ref;
   };
 }
 

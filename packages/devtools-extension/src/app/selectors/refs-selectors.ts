@@ -5,10 +5,6 @@ const refsState = createSliceSelector<'refs', RefsState>('refs');
 
 export function getRefState(refId: number) {
   return createSelector({ state: refsState }, ({ state }) => {
-    return (
-      state.refs[refId] ?? {
-        expanded: false,
-      }
-    );
+    return state.refs[refId] ?? {};
   });
 }

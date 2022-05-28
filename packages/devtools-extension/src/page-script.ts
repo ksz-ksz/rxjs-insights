@@ -211,6 +211,8 @@ function countStatuses(statuses: Status[], statusType: string) {
 
 const refs = new RefsService();
 
+(window as any).REFS = refs;
+
 startServer<Refs>(createInspectedWindowEvalServerAdapter(RefsChannel), refs);
 
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {

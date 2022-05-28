@@ -1,6 +1,7 @@
 import {
   ArrayRef,
   FunctionRef,
+  GetterRef,
   MapRef,
   NullRef,
   ObjectRef,
@@ -12,10 +13,18 @@ import {
 } from '@app/protocols/refs';
 import React, { JSXElementConstructor, useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
-import { pink } from '@mui/material/colors';
+import { grey, pink } from '@mui/material/colors';
 import { getRefState } from '@app/selectors/refs-selectors';
 import { useDispatch, useSelector } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
+
+function getLabelColor(type: 'enumerable' | 'nonenumerable' | 'special') {
+  return type === 'enumerable'
+    ? pink['200']
+    : type === 'nonenumerable'
+    ? pink['100']
+    : grey['500'];
+}
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
@@ -186,6 +195,12 @@ export interface ValueRefOutletProps {
   reference: Ref;
 }
 
+export interface GetterRefOutletProps {
+  type: 'enumerable' | 'nonenumerable' | 'special';
+  label: string | number;
+  reference: GetterRef;
+}
+
 function ObjectRefOutlet(props: ObjectRefOutletProps) {
   const refStateSelector = useMemo(
     () => getRefState(props.reference.refId),
@@ -218,12 +233,7 @@ function ObjectRefOutlet(props: ObjectRefOutletProps) {
             display: 'inline',
             marginLeft: '1ch',
             marginRight: '1ch',
-            color:
-              props.type === 'enumerable'
-                ? pink.A100
-                : props.type === 'nonenumerable'
-                ? pink.A400
-                : 'inherit',
+            color: getLabelColor(props.type),
             fontFamily: 'Monospace',
           }}
         >
@@ -253,12 +263,7 @@ function ValueRefOutlet(props: ValueRefOutletProps) {
             display: 'inline',
             marginLeft: '2ch',
             marginRight: '1ch',
-            color:
-              props.type === 'enumerable'
-                ? pink.A100
-                : props.type === 'nonenumerable'
-                ? pink.A400
-                : 'inherit',
+            color: getLabelColor(props.type),
             fontFamily: 'Monospace',
           }}
         >
@@ -268,6 +273,57 @@ function ValueRefOutlet(props: ValueRefOutletProps) {
       </Box>
     </Box>
   );
+}
+
+function GetterRefOutlet(props: GetterRefOutletProps) {
+  const refStateSelector = useMemo(
+    () => getRefState(props.reference.refId),
+    [props.reference.refId]
+  );
+  const refState = useSelector(refStateSelector);
+  const dispatch = useDispatch();
+  const onInvoke = useCallback(() => {
+    dispatch(refOutletActions.InvokeGetter({ refId: props.reference.refId }));
+  }, [props.reference.refId]);
+
+  if (refState.ref) {
+    return (
+      <RefOutlet
+        type={props.type}
+        label={props.label}
+        reference={refState.ref}
+      />
+    );
+  } else {
+    return (
+      <Box display="block">
+        <Box>
+          <Typography
+            sx={{
+              display: 'inline',
+              marginLeft: '2ch',
+              marginRight: '1ch',
+              color: getLabelColor(props.type),
+              fontFamily: 'Monospace',
+            }}
+          >
+            {props.label}:
+          </Typography>
+          <a onClick={onInvoke}>
+            <Typography
+              sx={{
+                display: 'inline',
+                fontFamily: 'Monospace',
+                title: 'Invoke getter',
+              }}
+            >
+              (...)
+            </Typography>
+          </a>
+        </Box>
+      </Box>
+    );
+  }
 }
 
 export function RefOutlet(props: RefOutletProps) {
@@ -303,6 +359,12 @@ export function RefOutlet(props: RefOutletProps) {
         />
       );
     case 'getter':
-      return <span>{props.label} (GETTER)</span>;
+      return (
+        <GetterRefOutlet
+          type={props.type}
+          label={props.label}
+          reference={props.reference}
+        />
+      );
   }
 }
