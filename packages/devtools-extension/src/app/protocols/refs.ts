@@ -62,7 +62,6 @@ export interface GetterRef {
 
 export interface ValueRef {
   type: 'string' | 'number' | 'boolean' | 'bigint';
-  refId: number;
   value: string | number | boolean | bigint;
 }
 
@@ -74,12 +73,10 @@ export interface SymbolRef {
 
 export interface UndefinedRef {
   type: 'undefined';
-  refId: number;
 }
 
 export interface NullRef {
   type: 'null';
-  refId: number;
 }
 
 export interface ObservableRef {
