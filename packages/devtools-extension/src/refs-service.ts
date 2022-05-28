@@ -1,16 +1,4 @@
-import {
-  ArrayRef,
-  FunctionRef,
-  GetterRef,
-  MapRef,
-  ObjectRef,
-  ObservableRef,
-  PropertyRef,
-  Ref,
-  Refs,
-  SetRef,
-  SubscriberRef,
-} from '@app/protocols/refs';
+import { GetterRef, PropertyRef, Ref, Refs } from '@app/protocols/refs';
 
 interface Getter {
   target: unknown;
@@ -29,10 +17,14 @@ export class RefsService implements Refs {
       case 'undefined':
         return {
           type: 'undefined',
+          refId: this.nextRefId++,
         };
       case 'object':
         if (target === null) {
-          return { type: 'null' };
+          return {
+            type: 'null',
+            refId: this.nextRefId++,
+          };
         } else if (Array.isArray(target)) {
           return {
             type: 'array',
@@ -51,16 +43,19 @@ export class RefsService implements Refs {
       case 'boolean':
         return {
           type: 'boolean',
+          refId: this.nextRefId++,
           value: target,
         };
       case 'number':
         return {
           type: 'number',
+          refId: this.nextRefId++,
           value: target,
         };
       case 'string':
         return {
           type: 'string',
+          refId: this.nextRefId++,
           value: target,
         };
       case 'function':
@@ -78,10 +73,39 @@ export class RefsService implements Refs {
       case 'bigint':
         return {
           type: 'bigint',
+          refId: this.nextRefId++,
           value: target,
         };
     }
   }
+
+  expand = (
+    refId: number
+  ):
+    | {
+        props: PropertyRef[];
+        proto: Ref;
+      }
+    | {
+        setEntries: Ref[];
+        props: PropertyRef[];
+        proto: Ref;
+      }
+    | {
+        mapEntries: [Ref, Ref][];
+        props: PropertyRef[];
+        proto: Ref;
+      } => {
+    console.log('expand', refId);
+    const target = this.refs[refId].target;
+    if (target instanceof Set) {
+      return this.expandSet(target, refId);
+    }
+    if (target instanceof Map) {
+      return this.expandMap(target, refId);
+    }
+    return this.expandObject(target, refId);
+  };
 
   private createGetter(
     target: unknown,
@@ -90,23 +114,25 @@ export class RefsService implements Refs {
   ): GetterRef {
     return {
       type: 'getter',
-      refId: this.put({
-        target,
-        getter,
-      } as Getter),
+      refId: this.put(
+        {
+          target,
+          getter,
+        } as Getter,
+        parentRefId
+      ),
     };
   }
 
-  expand(
-    ref: ObjectRef | ArrayRef | FunctionRef | ObservableRef | SubscriberRef
+  private expandObject(
+    target: unknown,
+    refId: number
   ): {
     props: PropertyRef[];
     proto: Ref;
   } {
-    const target = this.refs[ref.refId].target;
-
-    const props = this.getProps(target, ref.refId);
-    const proto = this.getProto(target, ref.refId);
+    const props = this.getProps(target, refId);
+    const proto = this.getProto(target, refId);
 
     return {
       props,
@@ -114,55 +140,57 @@ export class RefsService implements Refs {
     };
   }
 
-  expandSet(ref: SetRef): {
-    entries: Ref[];
+  private expandSet(
+    target: Set<unknown>,
+    refId: number
+  ): {
+    setEntries: Ref[];
     props: PropertyRef[];
     proto: Ref;
   } {
-    const target = this.refs[ref.refId].target as Set<unknown>;
-
-    const props = this.getProps(target, ref.refId);
-    const proto = this.getProto(target, ref.refId);
-    const entries = Array.from(target.values()).map((val) =>
-      this.create(val, ref.refId)
+    const props = this.getProps(target, refId);
+    const proto = this.getProto(target, refId);
+    const setEntries = Array.from(target.values()).map((val) =>
+      this.create(val, refId)
     );
 
     return {
       props,
       proto,
-      entries,
+      setEntries,
     };
   }
 
-  expandMap(ref: MapRef): {
-    entries: [Ref, Ref][];
+  private expandMap(
+    target: Map<unknown, unknown>,
+    refId: number
+  ): {
+    mapEntries: [Ref, Ref][];
     props: PropertyRef[];
     proto: Ref;
   } {
-    const target = this.refs[ref.refId].target as Map<unknown, unknown>;
-
-    const props = this.getProps(target, ref.refId);
-    const proto = this.getProto(target, ref.refId);
-    const entries = Array.from(target.entries()).map(
+    const props = this.getProps(target, refId);
+    const proto = this.getProto(target, refId);
+    const mapEntries = Array.from(target.entries()).map(
       ([key, val]): [Ref, Ref] => [
-        this.create(key, ref.refId),
-        this.create(val, ref.refId),
+        this.create(key, refId),
+        this.create(val, refId),
       ]
     );
 
     return {
       props,
       proto,
-      entries,
+      mapEntries,
     };
   }
 
-  invokeGetter(ref: GetterRef): {
+  invokeGetter(refId: number): {
     value: Ref;
   } {
-    const { target, getter } = this.refs[ref.refId].target as Getter;
+    const { target, getter } = this.refs[refId].target as Getter;
     return {
-      value: this.create(getter.call(target), ref.refId),
+      value: this.create(getter.call(target), refId),
     };
   }
 
@@ -179,13 +207,13 @@ export class RefsService implements Refs {
         if (enumerable) {
           enumerableProps.push({
             key,
-            value: this.create(value, parentRefId),
+            val: this.create(value, parentRefId),
             enumerable: true,
           });
         } else {
           nonenumerableProps.push({
             key,
-            value: this.create(value, parentRefId),
+            val: this.create(value, parentRefId),
             enumerable: false,
           });
         }
@@ -195,26 +223,26 @@ export class RefsService implements Refs {
           if (enumerable) {
             enumerableProps.push({
               key,
-              value: this.createGetter(object, get, parentRefId),
+              val: this.createGetter(object, get, parentRefId),
               enumerable: true,
             });
           } else {
             nonenumerableProps.push({
               key,
-              value: this.createGetter(object, get, parentRefId),
+              val: this.createGetter(object, get, parentRefId),
               enumerable: false,
             });
           }
           accessors.push({
             key: `get ${key}`,
-            value: this.create(get, parentRefId),
+            val: this.create(get, parentRefId),
             enumerable: false,
           });
         }
         if (set !== undefined) {
           accessors.push({
             key: `set ${key}`,
-            value: this.create(set, parentRefId),
+            val: this.create(set, parentRefId),
             enumerable: false,
           });
         }
@@ -231,19 +259,19 @@ export class RefsService implements Refs {
           if (enumerable) {
             enumerableProps.push({
               key,
-              value: this.createGetter(object, get, parentRefId),
+              val: this.createGetter(object, get, parentRefId),
               enumerable: true,
             });
           } else {
             nonenumerableProps.push({
               key,
-              value: this.createGetter(object, get, parentRefId),
+              val: this.createGetter(object, get, parentRefId),
               enumerable: false,
             });
           }
         }
       }
-      proto = Object.getPrototypeOf(object);
+      proto = Object.getPrototypeOf(proto);
     }
 
     return [...enumerableProps, ...nonenumerableProps, ...accessors];

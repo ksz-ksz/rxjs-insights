@@ -10,6 +10,8 @@ import { statisticsReaction, statisticsReducer } from '@app/store/statisctics';
 import { targetReaction } from '@app/store/targets/reaction';
 import { targetsReducer } from '@app/store/targets/slice';
 import { insightsReaction, insightsReducer } from '@app/store/insights';
+import { refsReducer } from '@app/store/refs';
+import { refsReaction } from '@app/store/refs/reaction';
 
 export const store = createStore()
   .addReducer(statusReducer)
@@ -23,7 +25,8 @@ export const store = createStore()
   .addReducer(targetsReducer)
   .addReaction(targetReaction)
   .addReducer(insightsReducer)
-  .addReaction(insightsReaction);
-
+  .addReaction(insightsReaction)
+  .addReducer(refsReducer)
+  .addReaction(refsReaction);
 export const { useStore, useDispatch, useSelector } =
   createStoreHooks<typeof store>();

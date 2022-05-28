@@ -2,28 +2,27 @@ export const RefsChannel = 'RefsChannel';
 
 export interface PropertyRef {
   key: string;
-  value: Ref;
+  val: Ref;
   enumerable: boolean;
 }
 
 export interface Refs {
-  expand(
-    ref: ObjectRef | ArrayRef | FunctionRef | ObservableRef | SubscriberRef
-  ): {
-    props: PropertyRef[];
-    proto: Ref;
-  };
-  expandSet(ref: SetRef): {
-    entries: Ref[];
-    props: PropertyRef[];
-    proto: Ref;
-  };
-  expandMap(ref: MapRef): {
-    entries: [Ref, Ref][];
-    props: PropertyRef[];
-    proto: Ref;
-  };
-  invokeGetter(ref: GetterRef): {
+  expand(refId: number):
+    | {
+        props: PropertyRef[];
+        proto: Ref;
+      }
+    | {
+        setEntries: Ref[];
+        props: PropertyRef[];
+        proto: Ref;
+      }
+    | {
+        mapEntries: [Ref, Ref][];
+        props: PropertyRef[];
+        proto: Ref;
+      };
+  invokeGetter(refId: number): {
     value: Ref;
   };
 }
@@ -68,21 +67,24 @@ export interface GetterRef {
 
 export interface ValueRef {
   type: 'string' | 'number' | 'boolean' | 'bigint';
+  refId: number;
   value: string | number | boolean | bigint;
 }
 
 export interface SymbolRef {
   type: 'symbol';
-  name: string;
   refId: number;
+  name: string;
 }
 
 export interface UndefinedRef {
   type: 'undefined';
+  refId: number;
 }
 
 export interface NullRef {
   type: 'null';
+  refId: number;
 }
 
 export interface ObservableRef {
