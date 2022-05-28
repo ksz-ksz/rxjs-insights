@@ -1,7 +1,9 @@
 import {
   ArrayRef,
+  EntriesRef,
   FunctionRef,
   GetterRef,
+  MapEntryRef,
   MapRef,
   NullRef,
   ObjectRef,
@@ -95,6 +97,23 @@ function MapTag(props: TagRendererProps<MapRef>) {
   );
 }
 
+function MapEntryTag(props: TagRendererProps<MapEntryRef>) {
+  return (
+    <Typography
+      sx={{
+        display: 'inline',
+        fontFamily: 'Monospace',
+      }}
+    >
+      {props.reference.name}
+    </Typography>
+  );
+}
+
+function EntriesTag(props: TagRendererProps<EntriesRef>) {
+  return null;
+}
+
 function ValueTag(props: TagRendererProps<ValueRef>) {
   return (
     <Typography
@@ -156,6 +175,8 @@ const tagRenderers: Record<
   function: FunctionTag,
   set: SetTag,
   map: MapTag,
+  'map-entry': MapEntryTag,
+  entries: EntriesTag,
   // getter: GetterTag,
   string: ValueTag,
   number: ValueTag,

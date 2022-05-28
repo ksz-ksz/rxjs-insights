@@ -27,7 +27,7 @@ function getName(target: unknown): string {
         return target.constructor?.name ?? 'Object';
       }
     case 'function':
-      return target.name ? target.name : 'anonymous';
+      return `${target.name ? target.name : 'anonymous'}()`;
     case 'string':
       return `"${target}"`;
     case 'undefined':
@@ -40,7 +40,7 @@ function getName(target: unknown): string {
 }
 
 function getMapEntryName(key: unknown, val: unknown) {
-  return `{ ${getName(key)} => ${getName(val)}`;
+  return `{ ${getName(key)} => ${getName(val)} }`;
 }
 
 export class RefsService implements Refs {
