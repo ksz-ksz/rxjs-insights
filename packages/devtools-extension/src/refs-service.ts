@@ -71,6 +71,20 @@ export class RefsService implements Refs {
             length: target.length,
             refId: this.put(target, parentRefId),
           };
+        } else if (target instanceof Set) {
+          return {
+            type: 'set',
+            name: target?.constructor?.name ?? 'Set',
+            size: target.size,
+            refId: this.put(target, parentRefId),
+          };
+        } else if (target instanceof Map) {
+          return {
+            type: 'map',
+            name: target?.constructor?.name ?? 'Map',
+            size: target.size,
+            refId: this.put(target, parentRefId),
+          };
         } else {
           return {
             type: 'object',
