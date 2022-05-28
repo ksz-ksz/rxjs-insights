@@ -229,7 +229,7 @@ const TEST = {
   boolean: true,
   number: 42,
   string: 'hello',
-  emptyString: 'hello',
+  emptyString: '',
   bigint: 9007199254740991n,
   object: {
     foo: 'bar',

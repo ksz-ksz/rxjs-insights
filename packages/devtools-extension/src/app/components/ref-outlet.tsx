@@ -1,172 +1,186 @@
 import {
   ArrayRef,
-  EntriesRef,
   FunctionRef,
   GetterRef,
   MapEntryRef,
   MapRef,
-  NullRef,
   ObjectRef,
   Ref,
   SetRef,
   SymbolRef,
-  UndefinedRef,
   ValueRef,
 } from '@app/protocols/refs';
 import React, { JSXElementConstructor, useCallback, useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
-import { grey, pink } from '@mui/material/colors';
+import { Box, styled } from '@mui/material';
 import { getRefState } from '@app/selectors/refs-selectors';
 import { useDispatch, useSelector } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
-
-function getLabelColor(type: 'enumerable' | 'nonenumerable' | 'special') {
-  return type === 'enumerable'
-    ? pink['200']
-    : type === 'nonenumerable'
-    ? pink['100']
-    : grey['500'];
-}
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
 }
 
-function ObjectTag(props: { reference: ObjectRef }) {
-  return (
-    <Typography
-      sx={{
-        display: 'inline',
-        fontFamily: 'Monospace',
-      }}
-    >
-      {props.reference.name}
-      {'{}'}
-    </Typography>
-  );
+const ObjectSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.main,
+  '&:after': {
+    display: 'inline',
+    content: '"{}"',
+  },
+}));
+
+function ObjectTag(props: TagRendererProps<ObjectRef>) {
+  return <ObjectSpan>{props.reference.name}</ObjectSpan>;
 }
+
+const ArraySpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.main,
+  '&:after': {
+    display: 'inline',
+    content: '"[] (" attr(data-length) ")"',
+  },
+}));
 
 function ArrayTag(props: TagRendererProps<ArrayRef>) {
   return (
-    <Typography
-      sx={{
-        display: 'inline',
-        fontFamily: 'Monospace',
-      }}
-    >
-      {props.reference.name}[] ({props.reference.length})
-    </Typography>
+    <ArraySpan data-length={props.reference.length}>
+      {props.reference.name}
+    </ArraySpan>
   );
 }
+
+const FunctionSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  fontStyle: 'oblique',
+  color: theme.palette.inspector.val.main,
+  '&:before': {
+    display: 'inline',
+    content: '"f "',
+    color: theme.palette.inspector.val.function,
+  },
+  '&:after': {
+    display: 'inline',
+    content: '"()"',
+  },
+}));
 
 function FunctionTag(props: TagRendererProps<FunctionRef>) {
+  return <FunctionSpan>{props.reference.name}</FunctionSpan>;
+}
+
+const CollectionSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.main,
+  '&:after': {
+    display: 'inline',
+    content: '"{} (" attr(data-size) ")"',
+  },
+}));
+
+function CollectionTag(props: TagRendererProps<SetRef | MapRef>) {
   return (
-    <Typography
-      sx={{
-        display: 'inline',
-        fontFamily: 'Monospace',
-      }}
-    >
-      f {props.reference.name}()
-    </Typography>
+    <CollectionSpan data-size={props.reference.size}>
+      {props.reference.name}
+    </CollectionSpan>
   );
 }
 
-function SetTag(props: TagRendererProps<SetRef>) {
-  return (
-    <Typography
-      sx={{
-        display: 'inline',
-        fontFamily: 'Monospace',
-      }}
-    >
-      {props.reference.name}
-      {'{}'} ({props.reference.size})
-    </Typography>
-  );
-}
-
-function MapTag(props: TagRendererProps<MapRef>) {
-  return (
-    <Typography
-      sx={{
-        display: 'inline',
-        fontFamily: 'Monospace',
-      }}
-    >
-      {props.reference.name}
-      {'{}'} ({props.reference.size})
-    </Typography>
-  );
-}
+const MapEntrySpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.main,
+  '&:after': {
+    display: 'inline',
+    content: '"{ " attr(data-key) " => " attr(data-val) " }"',
+  },
+}));
 
 function MapEntryTag(props: TagRendererProps<MapEntryRef>) {
   return (
-    <Typography
-      sx={{
-        display: 'inline',
-        fontFamily: 'Monospace',
-      }}
-    >
-      {'{'} {props.reference.keyName} {'=>'} {props.reference.valName} {'}'}
-    </Typography>
+    <MapEntrySpan
+      data-key={props.reference.keyName}
+      data-val={props.reference.valName}
+    />
   );
 }
 
-function EntriesTag(props: TagRendererProps<EntriesRef>) {
+function EmptyTag() {
   return null;
 }
 
-function ValueTag(props: TagRendererProps<ValueRef>) {
-  return (
-    <Typography
-      sx={{
-        display: 'inline',
-        fontFamily: 'Monospace',
-      }}
-    >
-      {props.reference.value}
-    </Typography>
-  );
+const StringSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.string,
+  '&:before': {
+    display: 'inline',
+    content: '"\'"',
+  },
+  '&:after': {
+    display: 'inline',
+    content: '"\'"',
+  },
+}));
+
+function StringTag(props: TagRendererProps<ValueRef>) {
+  return <StringSpan>{props.reference.value}</StringSpan>;
 }
+
+const NumberSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.number,
+}));
+
+function NumberTag(props: TagRendererProps<ValueRef>) {
+  return <NumberSpan>{String(props.reference.value)}</NumberSpan>;
+}
+
+const BigintSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.number,
+  '&:after': {
+    display: 'inline',
+    content: '"n"',
+  },
+}));
+
+const BooleanSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.boolean,
+}));
+
+function BooleanTag(props: TagRendererProps<ValueRef>) {
+  return <BooleanSpan>{String(props.reference.value)}</BooleanSpan>;
+}
+
+function BigintTag(props: TagRendererProps<ValueRef>) {
+  return <BigintSpan>{props.reference.value}</BigintSpan>;
+}
+
+const SymbolSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.symbol,
+}));
 
 function SymbolTag(props: TagRendererProps<SymbolRef>) {
-  return (
-    <Typography
-      sx={{
-        display: 'inline',
-        fontFamily: 'Monospace',
-      }}
-    >
-      {props.reference.name}
-    </Typography>
-  );
+  return <SymbolSpan>{props.reference.name}</SymbolSpan>;
 }
 
-function UndefinedTag(props: TagRendererProps<UndefinedRef>) {
-  return (
-    <Typography
-      sx={{
-        display: 'inline',
-        fontFamily: 'Monospace',
-      }}
-    >
-      undefined
-    </Typography>
-  );
+const UndefinedSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.undefined,
+}));
+
+function UndefinedTag() {
+  return <UndefinedSpan>undefined</UndefinedSpan>;
 }
 
-function NullTag(props: TagRendererProps<NullRef>) {
-  return (
-    <Typography
-      sx={{
-        display: 'inline',
-        fontFamily: 'Monospace',
-      }}
-    >
-      null
-    </Typography>
-  );
+const NullSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.palette.inspector.val.null,
+}));
+
+function NullTag() {
+  return <NullSpan>null</NullSpan>;
 }
 
 const tagRenderers: Record<
@@ -176,14 +190,14 @@ const tagRenderers: Record<
   object: ObjectTag,
   array: ArrayTag,
   function: FunctionTag,
-  set: SetTag,
-  map: MapTag,
+  set: CollectionTag,
+  map: CollectionTag,
   'map-entry': MapEntryTag,
-  entries: EntriesTag,
-  string: ValueTag,
-  number: ValueTag,
-  boolean: ValueTag,
-  bigint: ValueTag,
+  entries: EmptyTag,
+  string: StringTag,
+  number: NumberTag,
+  boolean: BooleanTag,
+  bigint: BigintTag,
   symbol: SymbolTag,
   undefined: UndefinedTag,
   null: NullTag,
@@ -199,6 +213,25 @@ function getTagRenderer(type: string) {
     throw new Error(`TagRenderer not found for type '${type}'.`);
   }
 }
+
+const MonospaceSpan = styled('span')(({ theme }) => ({
+  display: 'inline',
+  fontFamily: 'Monospace',
+}));
+
+const LabelSpan = styled('span')(({ theme }) => ({
+  display: 'inline',
+  fontFamily: 'Monospace',
+  '&[data-type=enumerable]': {
+    color: theme.palette.inspector.key.enumerable,
+  },
+  '&[data-type=nonenumerable]': {
+    color: theme.palette.inspector.key.nonenumerable,
+  },
+  '&[data-type=special]': {
+    color: theme.palette.inspector.key.special,
+  },
+}));
 
 interface ObjectRefOutletProps {
   type: 'enumerable' | 'nonenumerable' | 'special';
@@ -225,25 +258,13 @@ function ObjectRefOutlet(props: ObjectRefOutletProps) {
   return (
     <Box display="block">
       <Box onClick={onToggle}>
-        <Typography
-          sx={{
-            display: 'inline',
-            fontFamily: 'Monospace',
-          }}
+        <MonospaceSpan>{refState.expanded ? '▾' : '▸'}</MonospaceSpan>
+        <LabelSpan
+          data-type={props.type}
+          sx={{ marginLeft: '1ch', marginRight: '1ch' }}
         >
-          {refState.expanded ? '▾' : '▸'}
-        </Typography>
-        <Typography
-          sx={{
-            display: 'inline',
-            marginLeft: '1ch',
-            marginRight: '1ch',
-            color: getLabelColor(props.type),
-            fontFamily: 'Monospace',
-          }}
-        >
-          {props.label}:
-        </Typography>
+          {props.label}
+        </LabelSpan>
         <TagRenderer reference={props.reference} />
       </Box>
       {refState.expanded && refState.props ? (
@@ -269,17 +290,12 @@ function ValueRefOutlet(props: ValueRefOutletProps) {
   return (
     <Box display="block">
       <Box>
-        <Typography
-          sx={{
-            display: 'inline',
-            marginLeft: '2ch',
-            marginRight: '1ch',
-            color: getLabelColor(props.type),
-            fontFamily: 'Monospace',
-          }}
+        <LabelSpan
+          data-type={props.type}
+          sx={{ marginLeft: '2ch', marginRight: '1ch' }}
         >
-          {props.label}:
-        </Typography>
+          {props.label}
+        </LabelSpan>
         <TagRenderer reference={props.reference} />
       </Box>
     </Box>
@@ -315,27 +331,14 @@ function GetterRefOutlet(props: GetterRefOutletProps) {
     return (
       <Box display="block">
         <Box>
-          <Typography
-            sx={{
-              display: 'inline',
-              marginLeft: '2ch',
-              marginRight: '1ch',
-              color: getLabelColor(props.type),
-              fontFamily: 'Monospace',
-            }}
+          <LabelSpan
+            data-type={props.type}
+            sx={{ marginLeft: '2ch', marginRight: '1ch' }}
           >
-            {props.label}:
-          </Typography>
+            {props.label}
+          </LabelSpan>
           <a onClick={onInvoke}>
-            <Typography
-              sx={{
-                display: 'inline',
-                fontFamily: 'Monospace',
-                title: 'Invoke getter',
-              }}
-            >
-              (...)
-            </Typography>
+            <MonospaceSpan sx={{ title: 'Invoke getter' }}>(...)</MonospaceSpan>
           </a>
         </Box>
       </Box>
