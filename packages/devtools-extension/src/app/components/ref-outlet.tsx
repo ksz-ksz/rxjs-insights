@@ -5,8 +5,10 @@ import {
   MapEntryRef,
   MapRef,
   ObjectRef,
+  ObservableRef,
   Ref,
   SetRef,
+  SubscriberRef,
   SymbolRef,
   ValueRef,
 } from '@app/protocols/refs';
@@ -20,9 +22,73 @@ interface TagRendererProps<REF extends Ref> {
   reference: REF;
 }
 
+const ObservableSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  fontStyle: 'oblique',
+  color: theme.insights.observable.secondary,
+  '&:before': {
+    display: 'inline',
+    content: '"⟳ "',
+    fontWeight: 900,
+    color: theme.insights.observable.primary,
+  },
+  '&:after': {
+    display: 'inline',
+    content: '" " attr(data-tags) "#" attr(data-id)',
+    color: theme.inspector.secondary,
+  },
+}));
+
+function ObservableTag(props: TagRendererProps<ObservableRef>) {
+  return (
+    <ObservableSpan
+      data-id={props.reference.id}
+      data-tags={
+        props.reference.tags.length !== 0
+          ? `[${props.reference.tags.join(', ')}]`
+          : ''
+      }
+    >
+      {props.reference.name}
+    </ObservableSpan>
+  );
+}
+
+const SubscriberSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  fontStyle: 'oblique',
+  color: theme.insights.observable.secondary,
+  '&:before': {
+    display: 'inline',
+    content: '"⟳ "',
+    fontWeight: 900,
+    color: theme.insights.subscriber.primary,
+  },
+  '&:after': {
+    display: 'inline',
+    content: '" " attr(data-tags) "#" attr(data-id)',
+    color: theme.inspector.secondary,
+  },
+}));
+
+function SubscriberTag(props: TagRendererProps<SubscriberRef>) {
+  return (
+    <SubscriberSpan
+      data-id={props.reference.id}
+      data-tags={
+        props.reference.tags.length !== 0
+          ? `[${props.reference.tags.join(', ')}]`
+          : ''
+      }
+    >
+      {props.reference.name}
+    </SubscriberSpan>
+  );
+}
+
 const ObjectSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.main,
+  color: theme.inspector.primary,
   '&:after': {
     display: 'inline',
     content: '"{}"',
@@ -35,7 +101,7 @@ function ObjectTag(props: TagRendererProps<ObjectRef>) {
 
 const ArraySpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.main,
+  color: theme.inspector.primary,
   '&:after': {
     display: 'inline',
     content: '"[] (" attr(data-length) ")"',
@@ -53,11 +119,11 @@ function ArrayTag(props: TagRendererProps<ArrayRef>) {
 const FunctionSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
   fontStyle: 'oblique',
-  color: theme.palette.inspector.val.main,
+  color: theme.inspector.primary,
   '&:before': {
     display: 'inline',
     content: '"f "',
-    color: theme.palette.inspector.val.function,
+    color: theme.inspector.function,
   },
   '&:after': {
     display: 'inline',
@@ -71,7 +137,7 @@ function FunctionTag(props: TagRendererProps<FunctionRef>) {
 
 const CollectionSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.main,
+  color: theme.inspector.primary,
   '&:after': {
     display: 'inline',
     content: '"{} (" attr(data-size) ")"',
@@ -88,7 +154,7 @@ function CollectionTag(props: TagRendererProps<SetRef | MapRef>) {
 
 const MapEntrySpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.main,
+  color: theme.inspector.primary,
   '&:after': {
     display: 'inline',
     content: '"{ " attr(data-key) " => " attr(data-val) " }"',
@@ -110,7 +176,7 @@ function EmptyTag() {
 
 const StringSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.string,
+  color: theme.inspector.string,
   '&:before': {
     display: 'inline',
     content: '"\'"',
@@ -127,7 +193,7 @@ function StringTag(props: TagRendererProps<ValueRef>) {
 
 const NumberSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.number,
+  color: theme.inspector.number,
 }));
 
 function NumberTag(props: TagRendererProps<ValueRef>) {
@@ -136,7 +202,7 @@ function NumberTag(props: TagRendererProps<ValueRef>) {
 
 const BigintSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.number,
+  color: theme.inspector.number,
   '&:after': {
     display: 'inline',
     content: '"n"',
@@ -145,7 +211,7 @@ const BigintSpan = styled('span')(({ theme }) => ({
 
 const BooleanSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.boolean,
+  color: theme.inspector.boolean,
 }));
 
 function BooleanTag(props: TagRendererProps<ValueRef>) {
@@ -158,7 +224,7 @@ function BigintTag(props: TagRendererProps<ValueRef>) {
 
 const SymbolSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.symbol,
+  color: theme.inspector.symbol,
 }));
 
 function SymbolTag(props: TagRendererProps<SymbolRef>) {
@@ -167,7 +233,7 @@ function SymbolTag(props: TagRendererProps<SymbolRef>) {
 
 const UndefinedSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.undefined,
+  color: theme.inspector.undefined,
 }));
 
 function UndefinedTag() {
@@ -176,7 +242,7 @@ function UndefinedTag() {
 
 const NullSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.palette.inspector.val.null,
+  color: theme.inspector.null,
 }));
 
 function NullTag() {
@@ -201,8 +267,8 @@ const tagRenderers: Record<
   symbol: SymbolTag,
   undefined: UndefinedTag,
   null: NullTag,
-  observable: ObjectTag,
-  subscriber: ObjectTag,
+  observable: ObservableTag,
+  subscriber: SubscriberTag,
 };
 
 function getTagRenderer(type: string) {
@@ -223,13 +289,13 @@ const LabelSpan = styled('span')(({ theme }) => ({
   display: 'inline',
   fontFamily: 'Monospace',
   '&[data-type=enumerable]': {
-    color: theme.palette.inspector.key.enumerable,
+    color: theme.inspector.enumerable,
   },
   '&[data-type=nonenumerable]': {
-    color: theme.palette.inspector.key.nonenumerable,
+    color: theme.inspector.nonenumerable,
   },
   '&[data-type=special]': {
-    color: theme.palette.inspector.key.special,
+    color: theme.inspector.special,
   },
 }));
 

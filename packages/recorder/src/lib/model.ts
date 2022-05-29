@@ -54,6 +54,10 @@ export class Subscriber {
   get declaration() {
     return this.observable.declaration;
   }
+
+  get tags(): string[] {
+    return this.observable.tags;
+  }
 }
 
 export abstract class Event {

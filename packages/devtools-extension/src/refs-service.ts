@@ -1,4 +1,10 @@
 import { GetterRef, PropertyRef, Ref, Refs } from '@app/protocols/refs';
+import {
+  getObservable,
+  getSubscriber,
+  isObservableTarget,
+  isSubscriberTarget,
+} from '@app/common/target';
 
 class Getter {
   constructor(readonly target: unknown, readonly getter: () => unknown) {}
@@ -83,6 +89,24 @@ export class RefsService implements Refs {
             type: 'map',
             name: target?.constructor?.name ?? 'Map',
             size: target.size,
+            refId: this.put(target, parentRefId),
+          };
+        } else if (isObservableTarget(target)) {
+          const observable = getObservable(target);
+          return {
+            type: 'observable',
+            id: observable.id,
+            name: observable.declaration.name,
+            tags: observable.tags,
+            refId: this.put(target, parentRefId),
+          };
+        } else if (isSubscriberTarget(target)) {
+          const subscriber = getSubscriber(target);
+          return {
+            type: 'subscriber',
+            id: subscriber.id,
+            name: subscriber.declaration.name,
+            tags: subscriber.tags,
             refId: this.put(target, parentRefId),
           };
         } else {

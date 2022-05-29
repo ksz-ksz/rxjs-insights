@@ -31,38 +31,40 @@ export function ObservablePage() {
     return (
       <Scrollable>
         <Container>
-          <Typography variant="h1" sx={{ fontStyle: 'oblique' }}>
-            {info.name}(
-            {info.args.map((arg, index) => (
-              <>
-                {index !== 0 && ', '}
-                <RefOutlet reference={arg} />
-              </>
-            ))}
-            )
-          </Typography>
-          <TableContainer component={Paper}>
-            <Table sx={{ minWidth: 650 }}>
-              <TableBody>
-                <Row name="ID">{info.id}</Row>
-                <Row name="Name">{info.name}</Row>
-                <Row name="Target">
-                  <RefOutlet reference={info.target} />
-                </Row>
-                <Row name="Internal">{String(info.internal)}</Row>
-                <Row name="Tags">{String(info.tags.join(', '))}</Row>
-                <Row name="Calls">
-                  <Table>
-                    <TableBody>
-                      <Row name="Next">{info.notifications.next}</Row>
-                      <Row name="Error">{info.notifications.error}</Row>
-                      <Row name="Complete">{info.notifications.complete}</Row>
-                    </TableBody>
-                  </Table>
-                </Row>
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <RefOutlet reference={info.target} />
+
+          {/*<Typography variant="h1" sx={{ fontStyle: 'oblique' }}>*/}
+          {/*  {info.name}(*/}
+          {/*  {info.args.map((arg, index) => (*/}
+          {/*    <>*/}
+          {/*      {index !== 0 && ', '}*/}
+          {/*      <RefOutlet reference={arg} />*/}
+          {/*    </>*/}
+          {/*  ))}*/}
+          {/*  )*/}
+          {/*</Typography>*/}
+          {/*<TableContainer component={Paper}>*/}
+          {/*  <Table sx={{ minWidth: 650 }}>*/}
+          {/*    <TableBody>*/}
+          {/*      <Row name="ID">{info.id}</Row>*/}
+          {/*      <Row name="Name">{info.name}</Row>*/}
+          {/*      <Row name="Target">*/}
+          {/*        <RefOutlet reference={info.target} />*/}
+          {/*      </Row>*/}
+          {/*      <Row name="Internal">{String(info.internal)}</Row>*/}
+          {/*      <Row name="Tags">{String(info.tags.join(', '))}</Row>*/}
+          {/*      <Row name="Calls">*/}
+          {/*        <Table>*/}
+          {/*          <TableBody>*/}
+          {/*            <Row name="Next">{info.notifications.next}</Row>*/}
+          {/*            <Row name="Error">{info.notifications.error}</Row>*/}
+          {/*            <Row name="Complete">{info.notifications.complete}</Row>*/}
+          {/*          </TableBody>*/}
+          {/*        </Table>*/}
+          {/*      </Row>*/}
+          {/*    </TableBody>*/}
+          {/*  </Table>*/}
+          {/*</TableContainer>*/}
         </Container>
       </Scrollable>
     );

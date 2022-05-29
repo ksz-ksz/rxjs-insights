@@ -85,6 +85,15 @@ export interface ObservableRef {
   refId: number;
   id: number;
   name: string;
+  tags: string[];
+}
+
+export interface SubscriberRef {
+  type: 'subscriber';
+  refId: number;
+  id: number;
+  name: string;
+  tags: string[];
 }
 
 export type Ref =
@@ -102,10 +111,3 @@ export type Ref =
   | NullRef
   | ObservableRef
   | SubscriberRef;
-
-export interface SubscriberRef {
-  type: 'subscriber';
-  refId: number;
-  id: number;
-  name: string;
-}
