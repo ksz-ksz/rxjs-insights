@@ -11,7 +11,7 @@ import {
   ValueRef,
 } from '@app/protocols/refs';
 import React, { JSXElementConstructor, useCallback, useMemo } from 'react';
-import { Box, styled } from '@mui/material';
+import { styled } from '@mui/material';
 import { getRefState } from '@app/selectors/refs-selectors';
 import { useDispatch, useSelector } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
@@ -239,6 +239,23 @@ interface ObjectRefOutletProps {
   reference: Extract<Ref, { refId: number }>;
 }
 
+const RefOutletDiv = styled('div')({
+  display: 'inline-flex',
+  flexDirection: 'column',
+  alignItems: 'start',
+});
+
+const RefOutletLabelDiv = styled('div')({
+  display: 'inline-block',
+  cursor: 'default',
+});
+
+const RefOutletPropsDiv = styled('div')({
+  display: 'inline-flex',
+  flexDirection: 'column',
+  marginLeft: '2ch',
+});
+
 function ObjectRefOutlet(props: ObjectRefOutletProps) {
   const refStateSelector = useMemo(
     () => getRefState(props.reference.refId),
@@ -256,8 +273,8 @@ function ObjectRefOutlet(props: ObjectRefOutletProps) {
   const TagRenderer = getTagRenderer(props.reference.type);
 
   return (
-    <Box display="block">
-      <Box onClick={onToggle}>
+    <RefOutletDiv>
+      <RefOutletLabelDiv onClick={onToggle}>
         <MonospaceSpan>{refState.expanded ? '▾' : '▸'}</MonospaceSpan>
         <LabelSpan
           data-type={props.type}
@@ -266,15 +283,15 @@ function ObjectRefOutlet(props: ObjectRefOutletProps) {
           {props.label}
         </LabelSpan>
         <TagRenderer reference={props.reference} />
-      </Box>
+      </RefOutletLabelDiv>
       {refState.expanded && refState.props ? (
-        <Box marginLeft="2ch">
+        <RefOutletPropsDiv>
           {refState.props.map((prop) => (
             <RefOutlet label={prop.key} type={prop.type} reference={prop.val} />
           ))}
-        </Box>
+        </RefOutletPropsDiv>
       ) : null}
-    </Box>
+    </RefOutletDiv>
   );
 }
 
@@ -288,17 +305,15 @@ function ValueRefOutlet(props: ValueRefOutletProps) {
   const TagRenderer = getTagRenderer(props.reference.type);
 
   return (
-    <Box display="block">
-      <Box>
-        <LabelSpan
-          data-type={props.type}
-          sx={{ marginLeft: '2ch', marginRight: '1ch' }}
-        >
-          {props.label}
-        </LabelSpan>
-        <TagRenderer reference={props.reference} />
-      </Box>
-    </Box>
+    <RefOutletLabelDiv>
+      <LabelSpan
+        data-type={props.type}
+        sx={{ marginLeft: '2ch', marginRight: '1ch' }}
+      >
+        {props.label}
+      </LabelSpan>
+      <TagRenderer reference={props.reference} />
+    </RefOutletLabelDiv>
   );
 }
 
@@ -329,19 +344,17 @@ function GetterRefOutlet(props: GetterRefOutletProps) {
     );
   } else {
     return (
-      <Box display="block">
-        <Box>
-          <LabelSpan
-            data-type={props.type}
-            sx={{ marginLeft: '2ch', marginRight: '1ch' }}
-          >
-            {props.label}
-          </LabelSpan>
-          <a onClick={onInvoke}>
-            <MonospaceSpan sx={{ title: 'Invoke getter' }}>(...)</MonospaceSpan>
-          </a>
-        </Box>
-      </Box>
+      <RefOutletLabelDiv>
+        <LabelSpan
+          data-type={props.type}
+          sx={{ marginLeft: '2ch', marginRight: '1ch' }}
+        >
+          {props.label}
+        </LabelSpan>
+        <a onClick={onInvoke}>
+          <MonospaceSpan sx={{ title: 'Invoke getter' }}>(...)</MonospaceSpan>
+        </a>
+      </RefOutletLabelDiv>
     );
   }
 }
