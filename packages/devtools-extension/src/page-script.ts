@@ -11,20 +11,15 @@ import {
 import { Statistics, StatisticsChannel } from '@app/protocols/statistics';
 import {
   getGlobalEnv,
-  getMeta,
-  hasMeta,
-  HasMeta,
   ObservableLike,
-  ObservableMeta,
   SubscriberLike,
-  SubscriberMeta,
 } from '@rxjs-insights/core';
 import {
   deref,
+  Event,
   Observable,
   ObservableEvent,
   Subscriber,
-  Event,
 } from '@rxjs-insights/recorder';
 import { Target, Targets, TargetsChannel } from '@app/protocols/targets';
 import {
@@ -44,6 +39,12 @@ import {
 } from '@app/protocols/traces';
 import { RefsService } from './refs-service';
 import { ObservableRef, Refs, RefsChannel } from '@app/protocols/refs';
+import {
+  getObservable,
+  getSubscriber,
+  isObservableTarget,
+  isSubscriberTarget,
+} from '@app/common/target';
 
 const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
 
@@ -113,36 +114,6 @@ startServer<Instrumentation>(
     },
   }
 );
-
-export function isSubscriberTarget(
-  target: any
-): target is HasMeta<SubscriberMeta> {
-  if (hasMeta(target)) {
-    const meta = getMeta<SubscriberMeta>(target);
-    return 'subscriberRef' in meta;
-  } else {
-    return false;
-  }
-}
-
-export function isObservableTarget(
-  target: any
-): target is HasMeta<ObservableMeta> {
-  if (hasMeta(target)) {
-    const meta = getMeta<ObservableMeta>(target);
-    return 'observableRef' in meta;
-  } else {
-    return false;
-  }
-}
-
-export function getSubscriber(target: HasMeta<SubscriberMeta>): Subscriber {
-  return deref(getMeta(target).subscriberRef);
-}
-
-export function getObservable(target: HasMeta<ObservableMeta>): Observable {
-  return deref(getMeta(target).observableRef);
-}
 
 const targets: {
   observables: Record<number, Observable>;

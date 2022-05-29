@@ -201,8 +201,8 @@ const tagRenderers: Record<
   symbol: SymbolTag,
   undefined: UndefinedTag,
   null: NullTag,
-  // observable: ObjectTag,
-  // subscriber: SubscriberRefRenderer,
+  observable: ObjectTag,
+  subscriber: ObjectTag,
 };
 
 function getTagRenderer(type: string) {
