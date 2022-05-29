@@ -97,6 +97,14 @@ export interface SubscriberRef {
   tags: string[];
 }
 
+export interface EventRef {
+  type: 'event';
+  refId: number;
+  time: number;
+  name: string;
+  eventType: 'subscribe' | 'unsubscribe' | 'next' | 'error' | 'complete';
+}
+
 export type Ref =
   | ObjectRef
   | ArrayRef
@@ -111,4 +119,5 @@ export type Ref =
   | UndefinedRef
   | NullRef
   | ObservableRef
-  | SubscriberRef;
+  | SubscriberRef
+  | EventRef;

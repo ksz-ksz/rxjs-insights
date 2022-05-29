@@ -1,6 +1,7 @@
 import {
   ArrayRef,
   EntriesRef,
+  EventRef,
   FunctionRef,
   GetterRef,
   MapEntryRef,
@@ -84,6 +85,67 @@ function SubscriberTag(props: TagRendererProps<SubscriberRef>) {
     >
       {props.reference.name}
     </SubscriberSpan>
+  );
+}
+
+const EventSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  fontStyle: 'oblique',
+  color: theme.insights.subscriber.secondary,
+  '&[data-type=subscribe]': {
+    color: theme.insights.event.subscription.secondary,
+    '&:before': {
+      content: '"⤽ "',
+      color: theme.insights.event.subscription.primary,
+    },
+  },
+  '&[data-type=unsubscribe]': {
+    color: theme.insights.event.subscription.secondary,
+    '&:before': {
+      content: '"⤼ "',
+      color: theme.insights.event.subscription.primary,
+    },
+  },
+  '&[data-type=next]': {
+    color: theme.insights.event.next.secondary,
+    '&:before': {
+      content: '"↷ "',
+      color: theme.insights.event.next.primary,
+    },
+  },
+  '&[data-type=error]': {
+    color: theme.insights.event.error.secondary,
+    '&:before': {
+      content: '"↷ "',
+      color: theme.insights.event.error.primary,
+    },
+  },
+  '&[data-type=complete]': {
+    color: theme.insights.event.complete.secondary,
+    '&:before': {
+      content: '"↷ "',
+      color: theme.insights.event.complete.primary,
+    },
+  },
+  '&:before': {
+    display: 'inline',
+    fontWeight: 900,
+  },
+  '&:after': {
+    display: 'inline',
+    content: '" @" attr(data-time)',
+    color: theme.inspector.secondary,
+  },
+}));
+
+function EventTag(props: TagRendererProps<EventRef>) {
+  return (
+    <EventSpan
+      data-time={props.reference.time}
+      data-type={props.reference.eventType}
+    >
+      {props.reference.name}
+    </EventSpan>
   );
 }
 
@@ -279,6 +341,7 @@ const tagRenderers: Record<
   null: NullTag,
   observable: ObservableTag,
   subscriber: SubscriberTag,
+  event: EventTag,
 };
 
 function getTagRenderer(type: string) {
@@ -471,6 +534,7 @@ export function RefOutlet({
     case 'entries':
     case 'observable':
     case 'subscriber':
+    case 'event':
       return (
         <ObjectRefOutlet type={type} label={label} reference={reference} />
       );

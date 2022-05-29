@@ -5,7 +5,7 @@ import {
   isObservableTarget,
   isSubscriberTarget,
 } from '@app/common/target';
-import { Observable, Subscriber } from '@rxjs-insights/recorder';
+import { Observable, Subscriber, Event } from '@rxjs-insights/recorder';
 
 class Getter {
   constructor(readonly target: unknown, readonly getter: () => unknown) {}
@@ -17,6 +17,10 @@ class Entries {
 
 class MapEntry {
   constructor(readonly key: unknown, readonly val: unknown) {}
+}
+
+class Timestamp {
+  constructor(readonly timestamp: number) {}
 }
 
 function getName(target: unknown): string {
@@ -55,6 +59,18 @@ function isObservable(x: any): x is Observable {
 
 function isSubscriber(x: any): x is Subscriber {
   return 'target' in x && 'type' in x && x.type === 'subscriber';
+}
+
+function isEvent(x: any): x is Event {
+  return (
+    'target' in x &&
+    'type' in x &&
+    (x.type === 'subscribe' ||
+      x.type === 'unsubscribe' ||
+      x.type === 'next' ||
+      x.type === 'error' ||
+      x.type === 'complete')
+  );
 }
 
 function special(key: string, val: Ref): PropertyRef {
@@ -151,6 +167,14 @@ export class RefsService implements Refs {
             tags: target.tags,
             refId: this.put(target, parentRefId),
           };
+        } else if (isEvent(target)) {
+          return {
+            type: 'event',
+            time: target.time,
+            name: target.declaration.name,
+            eventType: target.type,
+            refId: this.put(target, parentRefId),
+          };
         } else {
           return {
             type: 'object',
@@ -212,6 +236,9 @@ export class RefsService implements Refs {
     }
     if (isSubscriber(target)) {
       return this.expandSubscriber(target, refId);
+    }
+    if (isEvent(target)) {
+      return this.expandEvent(target, refId);
     }
     return this.expandObject(target, refId);
   };
@@ -301,6 +328,49 @@ export class RefsService implements Refs {
             ),
           ]
         : []),
+    ];
+  }
+
+  private expandEvent(event: Event, refId: number): PropertyRef[] {
+    const {
+      time,
+      declaration,
+      type,
+      target,
+      precedingEvent,
+      succeedingEvents,
+      timestamp,
+      task,
+    } = event;
+    return [
+      special('Time', this.create(time, refId)),
+      special('Name', this.create(declaration.name, refId)),
+      special('Type', this.create(type, refId)),
+      ...(type === 'next'
+        ? [special('Value', this.create(declaration.args?.[0], refId))]
+        : []),
+      ...(type === 'error'
+        ? [special('Error', this.create(declaration.args?.[0], refId))]
+        : []),
+      ...((type === 'subscribe' && declaration.args?.length) ?? 0 !== 0
+        ? [
+            special(
+              'Subscriber',
+              declaration.args?.length === 1
+                ? this.create(declaration.args?.[0], refId)
+                : this.create(declaration.args)
+            ),
+          ]
+        : []),
+      special('Declaration', this.create(declaration, refId)),
+      special('Task', this.create(task, refId)),
+      special('Timestamp', this.create(new Timestamp(timestamp), refId)),
+      special('Target', this.create(target, refId)),
+      special('PrecedingEvent', this.create(precedingEvent, refId)),
+      special(
+        'SucceedingEvents',
+        this.create(new Entries(succeedingEvents), refId)
+      ),
     ];
   }
 

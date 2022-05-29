@@ -74,6 +74,10 @@ export abstract class Event {
   ) {}
 
   abstract readonly target: Subscriber | Observable;
+
+  get type(): 'subscribe' | 'unsubscribe' | 'next' | 'error' | 'complete' {
+    return this.declaration.name as any;
+  }
 }
 
 export class SubscriberEvent extends Event {
