@@ -30,7 +30,7 @@ const ObservableSpan = styled('span')(({ theme }) => ({
   color: theme.insights.observable.secondary,
   '&:before': {
     display: 'inline',
-    content: '"⟳ "',
+    content: '"⊚ "',
     fontWeight: 900,
     color: theme.insights.observable.primary,
   },
@@ -62,7 +62,7 @@ const SubscriberSpan = styled('span')(({ theme }) => ({
   color: theme.insights.subscriber.secondary,
   '&:before': {
     display: 'inline',
-    content: '"⟳ "',
+    content: '"⊙ "',
     fontWeight: 900,
     color: theme.insights.subscriber.primary,
   },
