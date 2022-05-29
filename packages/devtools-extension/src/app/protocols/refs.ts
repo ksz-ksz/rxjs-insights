@@ -54,6 +54,7 @@ export interface MapEntryRef {
 export interface EntriesRef {
   type: 'entries';
   refId: number;
+  size: number;
 }
 
 export interface GetterRef {

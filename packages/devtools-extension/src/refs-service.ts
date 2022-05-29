@@ -5,6 +5,7 @@ import {
   isObservableTarget,
   isSubscriberTarget,
 } from '@app/common/target';
+import { Observable, Subscriber } from '@rxjs-insights/recorder';
 
 class Getter {
   constructor(readonly target: unknown, readonly getter: () => unknown) {}
@@ -50,6 +51,14 @@ function getPropertyDescriptors(target: any): [string, PropertyDescriptor][] {
     String(key),
     Reflect.getOwnPropertyDescriptor(target, key)!,
   ]);
+}
+
+function isObservable(x: any): x is Observable {
+  return 'target' in x && 'type' in x && x.type === 'observable';
+}
+
+function isSubscriber(x: any): x is Subscriber {
+  return 'target' in x && 'type' in x && x.type === 'subscriber';
 }
 
 export class RefsService implements Refs {
@@ -98,6 +107,14 @@ export class RefsService implements Refs {
             id: observable.id,
             name: observable.declaration.name,
             tags: observable.tags,
+            refId: this.put(observable, parentRefId),
+          };
+        } else if (isObservable(target)) {
+          return {
+            type: 'observable',
+            id: target.id,
+            name: target.declaration.name,
+            tags: target.tags,
             refId: this.put(target, parentRefId),
           };
         } else if (isSubscriberTarget(target)) {
@@ -107,6 +124,14 @@ export class RefsService implements Refs {
             id: subscriber.id,
             name: subscriber.declaration.name,
             tags: subscriber.tags,
+            refId: this.put(subscriber, parentRefId),
+          };
+        } else if (isSubscriber(target)) {
+          return {
+            type: 'subscriber',
+            id: target.id,
+            name: target.declaration.name,
+            tags: target.tags,
             refId: this.put(target, parentRefId),
           };
         } else {
@@ -168,6 +193,9 @@ export class RefsService implements Refs {
     if (target instanceof MapEntry) {
       return this.expandMapEntry(target, refId);
     }
+    if (isObservable(target)) {
+      return this.expandObservable(target, refId);
+    }
     return this.expandObject(target, refId);
   };
 
@@ -182,11 +210,41 @@ export class RefsService implements Refs {
     };
   }
 
+  private expandObservable(
+    observable: Observable,
+    refId: number
+  ): PropertyRef[] {
+    const { target, ...rest } = observable;
+
+    const props = this.getProps(rest, refId);
+
+    return [
+      {
+        type: 'special',
+        key: '[[Target]]',
+        val: {
+          type: 'object',
+          name: target.constructor.name ?? 'Observable',
+          refId: this.put(target, refId),
+        },
+      },
+      ...props,
+    ];
+  }
+
+  private expandObject(target: unknown, refId: number): PropertyRef[] {
+    const props = this.getProps(target, refId);
+    const proto = this.getProto(target, refId);
+
+    return [...props, proto];
+  }
+
   private getSetEntries(set: Set<unknown>, parentRefId: number): PropertyRef {
     return {
       key: '[[Entries]]',
       val: {
         type: 'entries',
+        size: set.size,
         refId: this.put(new SetEntries(set), parentRefId),
       },
       type: 'special',
@@ -201,17 +259,11 @@ export class RefsService implements Refs {
       key: '[[Entries]]',
       val: {
         type: 'entries',
+        size: map.size,
         refId: this.put(new MapEntries(map), parentRefId),
       },
       type: 'special',
     };
-  }
-
-  private expandObject(target: unknown, refId: number): PropertyRef[] {
-    const props = this.getProps(target, refId);
-    const proto = this.getProto(target, refId);
-
-    return [...props, proto];
   }
 
   private expandSet(target: Set<unknown>, refId: number): PropertyRef[] {

@@ -1,5 +1,6 @@
 import {
   ArrayRef,
+  EntriesRef,
   FunctionRef,
   GetterRef,
   MapEntryRef,
@@ -57,7 +58,7 @@ function ObservableTag(props: TagRendererProps<ObservableRef>) {
 const SubscriberSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
   fontStyle: 'oblique',
-  color: theme.insights.observable.secondary,
+  color: theme.insights.subscriber.secondary,
   '&:before': {
     display: 'inline',
     content: '"⟳ "',
@@ -170,8 +171,17 @@ function MapEntryTag(props: TagRendererProps<MapEntryRef>) {
   );
 }
 
-function EmptyTag() {
-  return null;
+const EntriesSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.inspector.primary,
+  '&:after': {
+    display: 'inline',
+    content: '"(" attr(data-size) ")"',
+  },
+}));
+
+function EntriesTag(props: TagRendererProps<EntriesRef>) {
+  return <EntriesSpan data-size={props.reference.size} />;
 }
 
 const StringSpan = styled('span')(({ theme }) => ({
@@ -259,7 +269,7 @@ const tagRenderers: Record<
   set: CollectionTag,
   map: CollectionTag,
   'map-entry': MapEntryTag,
-  entries: EmptyTag,
+  entries: EntriesTag,
   string: StringTag,
   number: NumberTag,
   boolean: BooleanTag,
@@ -296,6 +306,23 @@ const LabelSpan = styled('span')(({ theme }) => ({
   },
   '&[data-type=special]': {
     color: theme.inspector.special,
+  },
+  '&:before': {
+    display: 'inline',
+    content: '"  "',
+    color: theme.inspector.secondary,
+    whiteSpace: 'pre',
+  },
+  '&[data-state=expanded]:before': {
+    content: '"▾ "',
+  },
+  '&[data-state=collapsed]:before': {
+    content: '"▸ "',
+  },
+  '&:not(:empty):after': {
+    display: 'inline',
+    content: '": "',
+    color: theme.inspector.secondary,
   },
 }));
 
@@ -342,10 +369,9 @@ function ObjectRefOutlet(props: ObjectRefOutletProps) {
   return (
     <RefOutletDiv>
       <RefOutletLabelDiv onClick={onToggle}>
-        <MonospaceSpan>{refState.expanded ? '▾' : '▸'}</MonospaceSpan>
         <LabelSpan
+          data-state={refState.expanded ? 'expanded' : 'collapsed'}
           data-type={props.type}
-          sx={{ marginLeft: '1ch', marginRight: props.label ? '1ch' : 0 }}
         >
           {props.label}
         </LabelSpan>
@@ -373,12 +399,7 @@ function ValueRefOutlet(props: ValueRefOutletProps) {
 
   return (
     <RefOutletLabelDiv>
-      <LabelSpan
-        data-type={props.type}
-        sx={{ marginLeft: '2ch', marginRight: props.label ? '1ch' : 0 }}
-      >
-        {props.label}
-      </LabelSpan>
+      <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
       <TagRenderer reference={props.reference} />
     </RefOutletLabelDiv>
   );
@@ -412,12 +433,7 @@ function GetterRefOutlet(props: GetterRefOutletProps) {
   } else {
     return (
       <RefOutletLabelDiv>
-        <LabelSpan
-          data-type={props.type}
-          sx={{ marginLeft: '2ch', marginRight: props.label ? '1ch' : 0 }}
-        >
-          {props.label}
-        </LabelSpan>
+        <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
         <a onClick={onInvoke}>
           <MonospaceSpan sx={{ title: 'Invoke getter' }}>(...)</MonospaceSpan>
         </a>
