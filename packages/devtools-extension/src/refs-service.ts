@@ -57,6 +57,14 @@ function isSubscriber(x: any): x is Subscriber {
   return 'target' in x && 'type' in x && x.type === 'subscriber';
 }
 
+function special(key: string, val: Ref): PropertyRef {
+  return {
+    type: 'special',
+    key: key,
+    val: val,
+  };
+}
+
 export class RefsService implements Refs {
   private nextRefId = 0;
   private readonly refs: Record<
@@ -101,6 +109,12 @@ export class RefsService implements Refs {
             type: 'map-entry',
             keyName: getName(target.key),
             valName: getName(target.val),
+            refId: this.put(target, parentRefId),
+          };
+        } else if (target instanceof Entries) {
+          return {
+            type: 'entries',
+            size: target.entries.length,
             refId: this.put(target, parentRefId),
           };
         } else if (isObservableTarget(target)) {
@@ -196,6 +210,9 @@ export class RefsService implements Refs {
     if (isObservable(target)) {
       return this.expandObservable(target, refId);
     }
+    if (isSubscriber(target)) {
+      return this.expandSubscriber(target, refId);
+    }
     return this.expandObject(target, refId);
   };
 
@@ -214,21 +231,81 @@ export class RefsService implements Refs {
     observable: Observable,
     refId: number
   ): PropertyRef[] {
-    const { target, ...rest } = observable;
-
-    const props = this.getProps(rest, refId);
+    const {
+      target,
+      declaration,
+      sourceObservable,
+      subscribers,
+      events,
+      tags,
+      id,
+    } = observable;
 
     return [
-      {
-        type: 'special',
-        key: '[[Target]]',
-        val: {
-          type: 'object',
-          name: target.constructor.name ?? 'Observable',
-          refId: this.put(target, refId),
-        },
-      },
-      ...props,
+      special('[[Id]]', this.create(id, refId)),
+      special('[[Name]]', this.create(declaration.name, refId)),
+      special('[[Tags]]', this.create(new Entries(tags), refId)),
+      special('[[Declaration]]', this.create(declaration, refId)),
+      ...(sourceObservable
+        ? [
+            special(
+              '[[SourceObservable]]',
+              this.create(sourceObservable, refId)
+            ),
+          ]
+        : []),
+      special('[[Subscribers]]', this.create(new Entries(subscribers), refId)),
+      special('[[Events]]', this.create(new Entries(events), refId)),
+      special('[[Target]]', {
+        type: 'object',
+        name: getName(target),
+        refId: this.put(target, refId),
+      }),
+    ];
+  }
+
+  private expandSubscriber(
+    subscriber: Subscriber,
+    refId: number
+  ): PropertyRef[] {
+    const {
+      id,
+      observable,
+      destinationObservable,
+      declaration,
+      tags,
+      target,
+      events,
+    } = subscriber;
+    return [
+      special('[[Id]]', this.create(id, refId)),
+      special('[[Name]]', this.create(declaration.name, refId)),
+      special('[[Tags]]', this.create(new Entries(tags), refId)),
+      special('[[Declaration]]', this.create(declaration, refId)),
+      special('[[Observable]]', this.create(observable, refId)),
+      ...(destinationObservable
+        ? [
+            special(
+              '[[DestinationObservable]]',
+              this.create(destinationObservable, refId)
+            ),
+          ]
+        : []),
+      special('[[Events]]', this.create(new Entries(events), refId)),
+      ...(target.length !== 0
+        ? [
+            special(
+              '[[Target]]',
+              target.length === 1
+                ? {
+                    type: typeof target[0] as any,
+                    name: getName(target[0]),
+                    refId: this.put(target[0], refId),
+                  }
+                : this.create(target, refId)
+            ),
+          ]
+        : []),
     ];
   }
 
