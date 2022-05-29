@@ -242,21 +242,16 @@ export class RefsService implements Refs {
     } = observable;
 
     return [
-      special('[[Id]]', this.create(id, refId)),
-      special('[[Name]]', this.create(declaration.name, refId)),
-      special('[[Tags]]', this.create(new Entries(tags), refId)),
-      special('[[Declaration]]', this.create(declaration, refId)),
+      special('Id', this.create(id, refId)),
+      special('Name', this.create(declaration.name, refId)),
+      special('Tags', this.create(new Entries(tags), refId)),
+      special('Declaration', this.create(declaration, refId)),
       ...(sourceObservable
-        ? [
-            special(
-              '[[SourceObservable]]',
-              this.create(sourceObservable, refId)
-            ),
-          ]
+        ? [special('SourceObservable', this.create(sourceObservable, refId))]
         : []),
-      special('[[Subscribers]]', this.create(new Entries(subscribers), refId)),
-      special('[[Events]]', this.create(new Entries(events), refId)),
-      special('[[Target]]', {
+      special('Subscribers', this.create(new Entries(subscribers), refId)),
+      special('Events', this.create(new Entries(events), refId)),
+      special('Target', {
         type: 'object',
         name: getName(target),
         refId: this.put(target, refId),
@@ -278,24 +273,24 @@ export class RefsService implements Refs {
       events,
     } = subscriber;
     return [
-      special('[[Id]]', this.create(id, refId)),
-      special('[[Name]]', this.create(declaration.name, refId)),
-      special('[[Tags]]', this.create(new Entries(tags), refId)),
-      special('[[Declaration]]', this.create(declaration, refId)),
-      special('[[Observable]]', this.create(observable, refId)),
+      special('Id', this.create(id, refId)),
+      special('Name', this.create(declaration.name, refId)),
+      special('Tags', this.create(new Entries(tags), refId)),
+      special('Declaration', this.create(declaration, refId)),
+      special('Observable', this.create(observable, refId)),
       ...(destinationObservable
         ? [
             special(
-              '[[DestinationObservable]]',
+              'DestinationObservable',
               this.create(destinationObservable, refId)
             ),
           ]
         : []),
-      special('[[Events]]', this.create(new Entries(events), refId)),
+      special('Events', this.create(new Entries(events), refId)),
       ...(target.length !== 0
         ? [
             special(
-              '[[Target]]',
+              'Target',
               target.length === 1
                 ? {
                     type: typeof target[0] as any,
