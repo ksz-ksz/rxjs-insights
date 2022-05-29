@@ -215,46 +215,6 @@ const refs = new RefsService();
 
 startServer<Refs>(createInspectedWindowEvalServerAdapter(RefsChannel), refs);
 
-class Test {
-  private static TWO = 2;
-  private hmm = 'hmm';
-
-  constructor(private readonly val: number) {}
-
-  get double() {
-    return this.val * Test.TWO;
-  }
-}
-const TEST = {
-  boolean: true,
-  number: 42,
-  string: 'hello',
-  emptyString: '',
-  bigint: 9007199254740991n,
-  object: {
-    foo: 'bar',
-  },
-  instance: new Test(7),
-  array: ['hi', 'there', 7],
-  fn: function () {
-    return 'leszek';
-  },
-  arrowFn: () => 'śmieszek',
-  undefined: undefined,
-  null: null,
-  symbol: Symbol(),
-  symbol2: Symbol('asd'),
-  symbol3: Symbol.for('zxc'),
-  [Symbol('asd')]: { symbol: 'key' },
-  map: new Map<any, any>([
-    ['asd', 1],
-    [false, () => {}],
-  ]),
-  set: new Set<any>(['asd', 1, false, () => {}]),
-};
-
-console.log(TEST);
-
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
   getObservableInfo(observableId: number): ObservableInfo | undefined {
     const observable = targets.observables[observableId];
@@ -265,9 +225,7 @@ startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
       return {
         id: observable.id,
         name: observable.declaration.name,
-        // todo: uncomment
-        // target: refs.create(observable.target) as ObservableRef,
-        target: refs.create(TEST),
+        target: refs.create(observable.target) as ObservableRef,
         internal: observable.declaration.internal,
         tags: observable.tags,
         notifications: {

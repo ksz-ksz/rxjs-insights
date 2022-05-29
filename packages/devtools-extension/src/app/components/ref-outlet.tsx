@@ -235,7 +235,7 @@ const LabelSpan = styled('span')(({ theme }) => ({
 
 interface ObjectRefOutletProps {
   type: 'enumerable' | 'nonenumerable' | 'special';
-  label: string | number;
+  label?: string | number;
   reference: Extract<Ref, { refId: number }>;
 }
 
@@ -247,6 +247,7 @@ const RefOutletDiv = styled('div')({
 
 const RefOutletLabelDiv = styled('div')({
   display: 'inline-block',
+  textAlign: 'left',
   cursor: 'default',
 });
 
@@ -278,7 +279,7 @@ function ObjectRefOutlet(props: ObjectRefOutletProps) {
         <MonospaceSpan>{refState.expanded ? '▾' : '▸'}</MonospaceSpan>
         <LabelSpan
           data-type={props.type}
-          sx={{ marginLeft: '1ch', marginRight: '1ch' }}
+          sx={{ marginLeft: '1ch', marginRight: props.label ? '1ch' : 0 }}
         >
           {props.label}
         </LabelSpan>
@@ -297,7 +298,7 @@ function ObjectRefOutlet(props: ObjectRefOutletProps) {
 
 interface ValueRefOutletProps {
   type: 'enumerable' | 'nonenumerable' | 'special';
-  label: string | number;
+  label?: string | number;
   reference: Ref;
 }
 
@@ -308,7 +309,7 @@ function ValueRefOutlet(props: ValueRefOutletProps) {
     <RefOutletLabelDiv>
       <LabelSpan
         data-type={props.type}
-        sx={{ marginLeft: '2ch', marginRight: '1ch' }}
+        sx={{ marginLeft: '2ch', marginRight: props.label ? '1ch' : 0 }}
       >
         {props.label}
       </LabelSpan>
@@ -319,7 +320,7 @@ function ValueRefOutlet(props: ValueRefOutletProps) {
 
 interface GetterRefOutletProps {
   type: 'enumerable' | 'nonenumerable' | 'special';
-  label: string | number;
+  label?: string | number;
   reference: GetterRef;
 }
 
@@ -347,7 +348,7 @@ function GetterRefOutlet(props: GetterRefOutletProps) {
       <RefOutletLabelDiv>
         <LabelSpan
           data-type={props.type}
-          sx={{ marginLeft: '2ch', marginRight: '1ch' }}
+          sx={{ marginLeft: '2ch', marginRight: props.label ? '1ch' : 0 }}
         >
           {props.label}
         </LabelSpan>
@@ -360,13 +361,17 @@ function GetterRefOutlet(props: GetterRefOutletProps) {
 }
 
 export interface RefOutletProps {
-  type: 'enumerable' | 'nonenumerable' | 'special';
-  label: string | number;
+  type?: 'enumerable' | 'nonenumerable' | 'special';
+  label?: string | number;
   reference: Ref;
 }
 
-export function RefOutlet(props: RefOutletProps) {
-  switch (props.reference.type) {
+export function RefOutlet({
+  type = 'enumerable',
+  label,
+  reference,
+}: RefOutletProps) {
+  switch (reference.type) {
     case 'undefined':
     case 'string':
     case 'number':
@@ -374,13 +379,7 @@ export function RefOutlet(props: RefOutletProps) {
     case 'bigint':
     case 'null':
     case 'symbol':
-      return (
-        <ValueRefOutlet
-          type={props.type}
-          label={props.label}
-          reference={props.reference}
-        />
-      );
+      return <ValueRefOutlet type={type} label={label} reference={reference} />;
     case 'object':
     case 'array':
     case 'function':
@@ -391,19 +390,11 @@ export function RefOutlet(props: RefOutletProps) {
     case 'observable':
     case 'subscriber':
       return (
-        <ObjectRefOutlet
-          type={props.type}
-          label={props.label}
-          reference={props.reference}
-        />
+        <ObjectRefOutlet type={type} label={label} reference={reference} />
       );
     case 'getter':
       return (
-        <GetterRefOutlet
-          type={props.type}
-          label={props.label}
-          reference={props.reference}
-        />
+        <GetterRefOutlet type={type} label={label} reference={reference} />
       );
   }
 }
