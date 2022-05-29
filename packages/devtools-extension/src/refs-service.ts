@@ -11,12 +11,8 @@ class Getter {
   constructor(readonly target: unknown, readonly getter: () => unknown) {}
 }
 
-class SetEntries {
-  constructor(readonly set: Set<unknown>) {}
-}
-
-class MapEntries {
-  constructor(readonly map: Map<unknown, unknown>) {}
+class Entries {
+  constructor(readonly entries: unknown[]) {}
 }
 
 class MapEntry {
@@ -100,6 +96,13 @@ export class RefsService implements Refs {
             size: target.size,
             refId: this.put(target, parentRefId),
           };
+        } else if (target instanceof MapEntry) {
+          return {
+            type: 'map-entry',
+            keyName: getName(target.key),
+            valName: getName(target.val),
+            refId: this.put(target, parentRefId),
+          };
         } else if (isObservableTarget(target)) {
           const observable = getObservable(target);
           return {
@@ -181,14 +184,11 @@ export class RefsService implements Refs {
     if (target instanceof Set) {
       return this.expandSet(target, refId);
     }
-    if (target instanceof SetEntries) {
-      return this.expandSetEntries(target, refId);
-    }
     if (target instanceof Map) {
       return this.expandMap(target, refId);
     }
-    if (target instanceof MapEntries) {
-      return this.expandMapEntries(target, refId);
+    if (target instanceof Entries) {
+      return this.expandEntries(target, refId);
     }
     if (target instanceof MapEntry) {
       return this.expandMapEntry(target, refId);
@@ -245,7 +245,7 @@ export class RefsService implements Refs {
       val: {
         type: 'entries',
         size: set.size,
-        refId: this.put(new SetEntries(set), parentRefId),
+        refId: this.put(new Entries(Array.from(set.values())), parentRefId),
       },
       type: 'special',
     };
@@ -260,7 +260,14 @@ export class RefsService implements Refs {
       val: {
         type: 'entries',
         size: map.size,
-        refId: this.put(new MapEntries(map), parentRefId),
+        refId: this.put(
+          new Entries(
+            Array.from(map.entries()).map(
+              ([key, val]) => new MapEntry(key, val)
+            )
+          ),
+          parentRefId
+        ),
       },
       type: 'special',
     };
@@ -274,14 +281,6 @@ export class RefsService implements Refs {
     return [entries, ...props, proto];
   }
 
-  private expandSetEntries(target: SetEntries, refId: number): PropertyRef[] {
-    return Array.from(target.set.values()).map((val, index) => ({
-      key: String(index),
-      val: this.create(val, refId),
-      type: 'enumerable',
-    }));
-  }
-
   private expandMap(
     target: Map<unknown, unknown>,
     refId: number
@@ -293,15 +292,10 @@ export class RefsService implements Refs {
     return [entries, ...props, proto];
   }
 
-  private expandMapEntries(target: MapEntries, refId: number): PropertyRef[] {
-    return Array.from(target.map.entries()).map(([key, val], index) => ({
+  private expandEntries(target: Entries, refId: number): PropertyRef[] {
+    return target.entries.map((val, index) => ({
       key: String(index),
-      val: {
-        type: 'map-entry',
-        refId: this.put(new MapEntry(key, val), refId),
-        keyName: getName(key),
-        valName: getName(val),
-      },
+      val: this.create(val, refId),
       type: 'enumerable',
     }));
   }
