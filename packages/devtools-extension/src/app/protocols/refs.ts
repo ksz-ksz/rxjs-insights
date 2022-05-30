@@ -7,53 +7,53 @@ export interface PropertyRef {
 }
 
 export interface Refs {
-  expand(refId: number): PropertyRef[];
-  invokeGetter(refId: number): Ref;
+  expand(refId?: number): PropertyRef[];
+  invokeGetter(refId?: number): Ref;
 }
 
 export interface ObjectRef {
   type: 'object';
-  refId: number;
+  refId?: number;
   name: string;
 }
 
 export interface ArrayRef {
   type: 'array';
-  refId: number;
+  refId?: number;
   name: string;
   length: number;
 }
 
 export interface FunctionRef {
   type: 'function';
-  refId: number;
+  refId?: number;
   name: string;
 }
 
 export interface SetRef {
   type: 'set';
-  refId: number;
+  refId?: number;
   name: string;
   size: number;
 }
 
 export interface MapRef {
   type: 'map';
-  refId: number;
+  refId?: number;
   name: string;
   size: number;
 }
 
 export interface MapEntryRef {
   type: 'map-entry';
-  refId: number;
+  refId?: number;
   keyName: string;
   valName: string;
 }
 
 export interface EntriesRef {
   type: 'entries';
-  refId: number;
+  refId?: number;
   size: number;
 }
 
@@ -69,7 +69,6 @@ export interface ValueRef {
 
 export interface SymbolRef {
   type: 'symbol';
-  refId: number;
   name: string;
 }
 
@@ -83,7 +82,7 @@ export interface NullRef {
 
 export interface ObservableRef {
   type: 'observable';
-  refId: number;
+  refId?: number;
   id: number;
   name: string;
   tags: string[];
@@ -91,7 +90,7 @@ export interface ObservableRef {
 
 export interface SubscriberRef {
   type: 'subscriber';
-  refId: number;
+  refId?: number;
   id: number;
   name: string;
   tags: string[];
@@ -99,7 +98,7 @@ export interface SubscriberRef {
 
 export interface EventRef {
   type: 'event';
-  refId: number;
+  refId?: number;
   time: number;
   name: string;
   data?: Ref;

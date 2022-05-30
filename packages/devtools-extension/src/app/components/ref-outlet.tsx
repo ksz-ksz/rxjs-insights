@@ -480,7 +480,7 @@ const LabelSpan = styled('span')(({ theme }) => ({
 interface ObjectRefOutletProps {
   type: 'enumerable' | 'nonenumerable' | 'special';
   label?: string | number;
-  reference: Extract<Ref, { refId: number }>;
+  reference: Extract<Ref, { refId?: number }> & { refId: number };
 }
 
 const RefOutletDiv = styled('div')({
@@ -606,9 +606,13 @@ export function RefOutlet({
 }: RefOutletProps) {
   if (reference.type === 'getter') {
     return <GetterRefOutlet type={type} label={label} reference={reference} />;
-  } else if ('refId' in reference) {
-    // @ts-ignore
-    return <ObjectRefOutlet type={type} label={label} reference={reference} />;
+  } else if ('refId' in reference && reference.refId !== undefined) {
+    const referenceWithId = reference as typeof reference & {
+      refId: number;
+    };
+    return (
+      <ObjectRefOutlet type={type} label={label} reference={referenceWithId} />
+    );
   } else {
     return <ValueRefOutlet type={type} label={label} reference={reference} />;
   }
