@@ -64,9 +64,9 @@ function isEvent(x: any): x is Event {
   );
 }
 
-function special(key: string, val: Ref): PropertyRef {
+function property(key: string, val: Ref): PropertyRef {
   return {
-    type: 'special',
+    type: 'enumerable',
     key: key,
     val: val,
   };
@@ -298,18 +298,18 @@ export class RefsService implements Refs {
     } = observable;
 
     return [
-      special('Id', this.create(id, refId)),
-      special('Name', this.create(declaration.name, refId)),
-      special('Tags', this.create(new Entries(tags), refId)),
+      property('Id', this.create(id, refId)),
+      property('Name', this.create(declaration.name, refId)),
+      property('Tags', this.create(new Entries(tags), refId)),
       ...(declaration.internal
-        ? [special('Internal', this.create(declaration.internal, refId))]
+        ? [property('Internal', this.create(declaration.internal, refId))]
         : []),
       ...(declaration.func
-        ? [special('Function', this.create(declaration.func, refId))]
+        ? [property('Function', this.create(declaration.func, refId))]
         : []),
       ...(declaration.args
         ? [
-            special(
+            property(
               'Arguments',
               this.create(new Entries(declaration.args), refId)
             ),
@@ -318,7 +318,7 @@ export class RefsService implements Refs {
       ...(declaration.locations?.generatedLocation !== undefined ||
       declaration.locations.originalLocation !== undefined
         ? [
-            special(
+            property(
               'Location',
               this.create(
                 new Locations(
@@ -331,11 +331,11 @@ export class RefsService implements Refs {
           ]
         : []),
       ...(sourceObservable
-        ? [special('SourceObservable', this.create(sourceObservable, refId))]
+        ? [property('SourceObservable', this.create(sourceObservable, refId))]
         : []),
-      special('Subscribers', this.create(new Entries(subscribers), refId)),
-      special('Events', this.create(new Entries(events), refId)),
-      special('Target', this.createDefault(target, refId)),
+      property('Subscribers', this.create(new Entries(subscribers), refId)),
+      property('Events', this.create(new Entries(events), refId)),
+      property('Target', this.createDefault(target, refId)),
     ];
   }
 
@@ -353,18 +353,18 @@ export class RefsService implements Refs {
       events,
     } = subscriber;
     return [
-      special('Id', this.create(id, refId)),
-      special('Name', this.create(declaration.name, refId)),
-      special('Tags', this.create(new Entries(tags), refId)),
+      property('Id', this.create(id, refId)),
+      property('Name', this.create(declaration.name, refId)),
+      property('Tags', this.create(new Entries(tags), refId)),
       ...(declaration.internal
-        ? [special('Internal', this.create(declaration.internal, refId))]
+        ? [property('Internal', this.create(declaration.internal, refId))]
         : []),
       ...(declaration.func
-        ? [special('Function', this.create(declaration.func, refId))]
+        ? [property('Function', this.create(declaration.func, refId))]
         : []),
       ...(declaration.args
         ? [
-            special(
+            property(
               'Arguments',
               this.create(new Entries(declaration.args), refId)
             ),
@@ -373,7 +373,7 @@ export class RefsService implements Refs {
       ...(declaration.locations?.generatedLocation !== undefined ||
       declaration.locations.originalLocation !== undefined
         ? [
-            special(
+            property(
               'Location',
               this.create(
                 new Locations(
@@ -385,19 +385,19 @@ export class RefsService implements Refs {
             ),
           ]
         : []),
-      special('Observable', this.create(observable, refId)),
+      property('Observable', this.create(observable, refId)),
       ...(destinationObservable
         ? [
-            special(
+            property(
               'DestinationObservable',
               this.create(destinationObservable, refId)
             ),
           ]
         : []),
-      special('Events', this.create(new Entries(events), refId)),
+      property('Events', this.create(new Entries(events), refId)),
       ...(target.length !== 0
         ? [
-            special(
+            property(
               'Target',
               target.length === 1
                 ? this.createDefault(target[0], refId)
@@ -420,27 +420,27 @@ export class RefsService implements Refs {
       task,
     } = event;
     return [
-      special('Time', this.create(time, refId)),
-      special('Name', this.create(declaration.name, refId)),
-      special('Type', this.create(type, refId)),
-      special('Task', {
+      property('Time', this.create(time, refId)),
+      property('Name', this.create(declaration.name, refId)),
+      property('Type', this.create(type, refId)),
+      property('Task', {
         type: 'text',
         text: task.name,
         suffix: `#${task.id}`,
       }),
-      special('Timestamp', {
+      property('Timestamp', {
         type: 'text',
         text: getTimestamp(timestamp),
       }),
       ...(type === 'next'
-        ? [special('Value', this.create(declaration.args?.[0], refId))]
+        ? [property('Value', this.create(declaration.args?.[0], refId))]
         : []),
       ...(type === 'error'
-        ? [special('Error', this.create(declaration.args?.[0], refId))]
+        ? [property('Error', this.create(declaration.args?.[0], refId))]
         : []),
       ...((type === 'subscribe' && declaration.args?.length) ?? 0 !== 0
         ? [
-            special(
+            property(
               'Subscriber',
               declaration.args?.length === 1
                 ? this.create(declaration.args?.[0], refId)
@@ -451,7 +451,7 @@ export class RefsService implements Refs {
       ...(declaration.locations?.generatedLocation !== undefined ||
       declaration.locations.originalLocation !== undefined
         ? [
-            special(
+            property(
               'Location',
               this.create(
                 new Locations(
@@ -463,9 +463,9 @@ export class RefsService implements Refs {
             ),
           ]
         : []),
-      special('Target', this.create(target, refId)),
-      special('PrecedingEvent', this.create(precedingEvent, refId)),
-      special(
+      property('Target', this.create(target, refId)),
+      property('PrecedingEvent', this.create(precedingEvent, refId)),
+      property(
         'SucceedingEvents',
         this.create(new Entries(succeedingEvents), refId)
       ),
@@ -475,10 +475,10 @@ export class RefsService implements Refs {
     const { original, generated } = target;
     return [
       ...(original
-        ? [special('SourceLocation', this.create(original, refId))]
+        ? [property('SourceLocation', this.create(original, refId))]
         : []),
       ...(generated
-        ? [special('BundleLocation', this.create(generated, refId))]
+        ? [property('BundleLocation', this.create(generated, refId))]
         : []),
     ];
   }
