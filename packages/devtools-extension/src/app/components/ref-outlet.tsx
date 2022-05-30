@@ -4,6 +4,7 @@ import {
   EventRef,
   FunctionRef,
   GetterRef,
+  LocationRef,
   MapEntryRef,
   MapRef,
   ObjectRef,
@@ -14,7 +15,12 @@ import {
   SymbolRef,
   ValueRef,
 } from '@app/protocols/refs';
-import React, { JSXElementConstructor, useCallback, useMemo } from 'react';
+import React, {
+  JSXElementConstructor,
+  MouseEvent,
+  useCallback,
+  useMemo,
+} from 'react';
 import { styled } from '@mui/material';
 import { getRefState } from '@app/selectors/refs-selectors';
 import { useDispatch, useSelector } from '@app/store';
@@ -146,6 +152,32 @@ function EventTag(props: TagRendererProps<EventRef>) {
     >
       {props.reference.name}
     </EventSpan>
+  );
+}
+
+const LocationSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  textDecoration: 'underline',
+  cursor: 'pointer',
+  color: theme.inspector.secondary,
+}));
+
+function LocationTag(props: TagRendererProps<LocationRef>) {
+  const { file, line, column } = props.reference;
+  const shortName = `${file.split('/').at(-1)}:${line}`;
+  const longName = `${file}:${line}:${column}`;
+  const onOpen = useCallback(
+    (event: MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      chrome.devtools.panels.openResource(file, line - 1, () => {});
+    },
+    [props.reference]
+  );
+  return (
+    <LocationSpan title={longName} onClick={onOpen}>
+      {shortName}
+    </LocationSpan>
   );
 }
 
@@ -342,6 +374,7 @@ const tagRenderers: Record<
   observable: ObservableTag,
   subscriber: SubscriberTag,
   event: EventTag,
+  location: LocationTag,
 };
 
 function getTagRenderer(type: string) {
@@ -516,31 +549,12 @@ export function RefOutlet({
   label,
   reference,
 }: RefOutletProps) {
-  switch (reference.type) {
-    case 'undefined':
-    case 'string':
-    case 'number':
-    case 'boolean':
-    case 'bigint':
-    case 'null':
-    case 'symbol':
-      return <ValueRefOutlet type={type} label={label} reference={reference} />;
-    case 'object':
-    case 'array':
-    case 'function':
-    case 'set':
-    case 'map':
-    case 'map-entry':
-    case 'entries':
-    case 'observable':
-    case 'subscriber':
-    case 'event':
-      return (
-        <ObjectRefOutlet type={type} label={label} reference={reference} />
-      );
-    case 'getter':
-      return (
-        <GetterRefOutlet type={type} label={label} reference={reference} />
-      );
+  if (reference.type === 'getter') {
+    return <GetterRefOutlet type={type} label={label} reference={reference} />;
+  } else if ('refId' in reference) {
+    // @ts-ignore
+    return <ObjectRefOutlet type={type} label={label} reference={reference} />;
+  } else {
+    return <ValueRefOutlet type={type} label={label} reference={reference} />;
   }
 }

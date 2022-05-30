@@ -105,6 +105,19 @@ export interface EventRef {
   eventType: 'subscribe' | 'unsubscribe' | 'next' | 'error' | 'complete';
 }
 
+export interface LocationRef {
+  type: 'location';
+  refId?: number;
+  file: string;
+  column: number;
+  line: number;
+}
+
+export interface TextRef {
+  type: 'text';
+  text: string;
+}
+
 export type Ref =
   | ObjectRef
   | ArrayRef
@@ -120,4 +133,6 @@ export type Ref =
   | NullRef
   | ObservableRef
   | SubscriberRef
-  | EventRef;
+  | EventRef
+  | LocationRef
+  | TextRef;

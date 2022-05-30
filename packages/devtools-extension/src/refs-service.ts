@@ -23,6 +23,24 @@ class Timestamp {
   constructor(readonly timestamp: number) {}
 }
 
+class Location {
+  constructor(
+    readonly file: string,
+    readonly line: number,
+    readonly column: number
+  ) {}
+
+  static from(location: Location | undefined) {
+    return location !== undefined
+      ? new Location(location.file, location.line, location.column)
+      : undefined;
+  }
+}
+
+class Locations {
+  constructor(readonly generated?: Location, readonly original?: Location) {}
+}
+
 function getName(target: unknown): string {
   switch (typeof target) {
     case 'object':
@@ -89,6 +107,71 @@ export class RefsService implements Refs {
   > = {};
 
   create(target: unknown, parentRefId?: number): Ref {
+    if (typeof target === 'object' && target !== null) {
+      if (isObservableTarget(target)) {
+        const observable = getObservable(target);
+        return {
+          type: 'observable',
+          id: observable.id,
+          name: observable.declaration.name,
+          tags: observable.tags,
+          refId: this.put(observable, parentRefId),
+        };
+      } else if (isObservable(target)) {
+        return {
+          type: 'observable',
+          id: target.id,
+          name: target.declaration.name,
+          tags: target.tags,
+          refId: this.put(target, parentRefId),
+        };
+      } else if (isSubscriberTarget(target)) {
+        const subscriber = getSubscriber(target);
+        return {
+          type: 'subscriber',
+          id: subscriber.id,
+          name: subscriber.declaration.name,
+          tags: subscriber.tags,
+          refId: this.put(subscriber, parentRefId),
+        };
+      } else if (isSubscriber(target)) {
+        return {
+          type: 'subscriber',
+          id: target.id,
+          name: target.declaration.name,
+          tags: target.tags,
+          refId: this.put(target, parentRefId),
+        };
+      } else if (isEvent(target)) {
+        return {
+          type: 'event',
+          time: target.time,
+          name: target.declaration.name,
+          eventType: target.type,
+          refId: this.put(target, parentRefId),
+        };
+      } else if (target instanceof Locations) {
+        const location = target.original ?? target.generated;
+        return {
+          type: 'location',
+          file: location?.file ?? 'unknown',
+          line: location?.line ?? 0,
+          column: location?.column ?? 0,
+          refId: this.put(target, parentRefId),
+        };
+      } else if (target instanceof Location) {
+        return {
+          type: 'location',
+          file: target?.file ?? 'unknown',
+          line: target?.line ?? 0,
+          column: target?.column ?? 0,
+        };
+      }
+    }
+    return this.createDefault(target, parentRefId);
+  }
+
+  private createDefault(target: unknown, parentRefId: number | undefined): Ref {
     switch (typeof target) {
       case 'undefined':
         return {
@@ -131,48 +214,6 @@ export class RefsService implements Refs {
           return {
             type: 'entries',
             size: target.entries.length,
-            refId: this.put(target, parentRefId),
-          };
-        } else if (isObservableTarget(target)) {
-          const observable = getObservable(target);
-          return {
-            type: 'observable',
-            id: observable.id,
-            name: observable.declaration.name,
-            tags: observable.tags,
-            refId: this.put(observable, parentRefId),
-          };
-        } else if (isObservable(target)) {
-          return {
-            type: 'observable',
-            id: target.id,
-            name: target.declaration.name,
-            tags: target.tags,
-            refId: this.put(target, parentRefId),
-          };
-        } else if (isSubscriberTarget(target)) {
-          const subscriber = getSubscriber(target);
-          return {
-            type: 'subscriber',
-            id: subscriber.id,
-            name: subscriber.declaration.name,
-            tags: subscriber.tags,
-            refId: this.put(subscriber, parentRefId),
-          };
-        } else if (isSubscriber(target)) {
-          return {
-            type: 'subscriber',
-            id: target.id,
-            name: target.declaration.name,
-            tags: target.tags,
-            refId: this.put(target, parentRefId),
-          };
-        } else if (isEvent(target)) {
-          return {
-            type: 'event',
-            time: target.time,
-            name: target.declaration.name,
-            eventType: target.type,
             refId: this.put(target, parentRefId),
           };
         } else {
@@ -240,6 +281,9 @@ export class RefsService implements Refs {
     if (isEvent(target)) {
       return this.expandEvent(target, refId);
     }
+    if (target instanceof Locations) {
+      return this.expandLocations(target, refId);
+    }
     return this.expandObject(target, refId);
   };
 
@@ -272,17 +316,41 @@ export class RefsService implements Refs {
       special('Id', this.create(id, refId)),
       special('Name', this.create(declaration.name, refId)),
       special('Tags', this.create(new Entries(tags), refId)),
-      special('Declaration', this.create(declaration, refId)),
+      ...(declaration.internal
+        ? [special('Internal', this.create(declaration.internal, refId))]
+        : []),
+      ...(declaration.func
+        ? [special('Function', this.create(declaration.func, refId))]
+        : []),
+      ...(declaration.args
+        ? [
+            special(
+              'Arguments',
+              this.create(new Entries(declaration.args), refId)
+            ),
+          ]
+        : []),
+      ...(declaration.locations?.generatedLocation !== undefined ||
+      declaration.locations.originalLocation !== undefined
+        ? [
+            special(
+              'Location',
+              this.create(
+                new Locations(
+                  Location.from(declaration.locations.generatedLocation),
+                  Location.from(declaration.locations.originalLocation)
+                ),
+                refId
+              )
+            ),
+          ]
+        : []),
       ...(sourceObservable
         ? [special('SourceObservable', this.create(sourceObservable, refId))]
         : []),
       special('Subscribers', this.create(new Entries(subscribers), refId)),
       special('Events', this.create(new Entries(events), refId)),
-      special('Target', {
-        type: 'object',
-        name: getName(target),
-        refId: this.put(target, refId),
-      }),
+      special('Target', this.createDefault(target, refId)),
     ];
   }
 
@@ -303,7 +371,35 @@ export class RefsService implements Refs {
       special('Id', this.create(id, refId)),
       special('Name', this.create(declaration.name, refId)),
       special('Tags', this.create(new Entries(tags), refId)),
-      special('Declaration', this.create(declaration, refId)),
+      ...(declaration.internal
+        ? [special('Internal', this.create(declaration.internal, refId))]
+        : []),
+      ...(declaration.func
+        ? [special('Function', this.create(declaration.func, refId))]
+        : []),
+      ...(declaration.args
+        ? [
+            special(
+              'Arguments',
+              this.create(new Entries(declaration.args), refId)
+            ),
+          ]
+        : []),
+      ...(declaration.locations?.generatedLocation !== undefined ||
+      declaration.locations.originalLocation !== undefined
+        ? [
+            special(
+              'Location',
+              this.create(
+                new Locations(
+                  Location.from(declaration.locations.generatedLocation),
+                  Location.from(declaration.locations.originalLocation)
+                ),
+                refId
+              )
+            ),
+          ]
+        : []),
       special('Observable', this.create(observable, refId)),
       ...(destinationObservable
         ? [
@@ -319,12 +415,8 @@ export class RefsService implements Refs {
             special(
               'Target',
               target.length === 1
-                ? {
-                    type: typeof target[0] as any,
-                    name: getName(target[0]),
-                    refId: this.put(target[0], refId),
-                  }
-                : this.create(target, refId)
+                ? this.createDefault(target[0], refId)
+                : this.create(new Entries(target), refId)
             ),
           ]
         : []),
@@ -362,7 +454,21 @@ export class RefsService implements Refs {
             ),
           ]
         : []),
-      special('Declaration', this.create(declaration, refId)),
+      ...(declaration.locations?.generatedLocation !== undefined ||
+      declaration.locations.originalLocation !== undefined
+        ? [
+            special(
+              'Location',
+              this.create(
+                new Locations(
+                  Location.from(declaration.locations.generatedLocation),
+                  Location.from(declaration.locations.originalLocation)
+                ),
+                refId
+              )
+            ),
+          ]
+        : []),
       special('Task', this.create(task, refId)),
       special('Timestamp', this.create(new Timestamp(timestamp), refId)),
       special('Target', this.create(target, refId)),
@@ -371,6 +477,17 @@ export class RefsService implements Refs {
         'SucceedingEvents',
         this.create(new Entries(succeedingEvents), refId)
       ),
+    ];
+  }
+  private expandLocations(target: Locations, refId: number): PropertyRef[] {
+    const { original, generated } = target;
+    return [
+      ...(original
+        ? [special('SourceLocation', this.create(original, refId))]
+        : []),
+      ...(generated
+        ? [special('BundleLocation', this.create(generated, refId))]
+        : []),
     ];
   }
 
