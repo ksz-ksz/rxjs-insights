@@ -37,29 +37,6 @@ class Locations {
   constructor(readonly generated?: Location, readonly original?: Location) {}
 }
 
-function getName(target: unknown): string {
-  switch (typeof target) {
-    case 'object':
-      if (target === null) {
-        return 'null';
-      } else if (Array.isArray(target)) {
-        return `${target.constructor?.name ?? 'Array'}[]`;
-      } else {
-        return `${target.constructor?.name ?? 'Object'}{}`;
-      }
-    case 'function':
-      return `f ${target.name ?? ''}()`;
-    case 'string':
-      return `"${target}"`;
-    case 'undefined':
-    case 'boolean':
-    case 'number':
-    case 'symbol':
-    case 'bigint':
-      return String(target);
-  }
-}
-
 function getPropertyDescriptors(target: any): [string, PropertyDescriptor][] {
   return Reflect.ownKeys(target).map((key) => [
     String(key),
@@ -215,8 +192,8 @@ export class RefsService implements Refs {
         } else if (target instanceof MapEntry) {
           return {
             type: 'map-entry',
-            keyName: getName(target.key),
-            valName: getName(target.val),
+            key: this.create(target.key, parentRefId, false),
+            val: this.create(target.val, parentRefId, false),
             refId: this.refId(target, parentRefId, store),
           };
         } else if (target instanceof Entries) {
@@ -697,7 +674,7 @@ export class RefsService implements Refs {
   private refId(
     target: unknown,
     parentRefId: number | undefined,
-    store?: boolean
+    store: boolean = true
   ): number | undefined {
     if (store) {
       const refId = this.nextRefId++;

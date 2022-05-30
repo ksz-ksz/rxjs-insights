@@ -277,19 +277,26 @@ function CollectionTag(props: TagRendererProps<SetRef | MapRef>) {
 
 const MapEntrySpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  color: theme.inspector.primary,
-  '&:after': {
-    display: 'inline',
-    content: '"{ " attr(data-key) " => " attr(data-val) " }"',
+  fontStyle: 'oblique',
+  color: theme.inspector.secondary,
+  '&>*': {
+    opacity: 0.75,
   },
 }));
 
 function MapEntryTag(props: TagRendererProps<MapEntryRef>) {
+  const { key, val } = props.reference;
+  const KeyTagRenderer = tagRenderers[key.type];
+  const ValTagRenderer = tagRenderers[val.type];
+
   return (
-    <MapEntrySpan
-      data-key={props.reference.keyName}
-      data-val={props.reference.valName}
-    />
+    <MapEntrySpan>
+      {'{ '}
+      <KeyTagRenderer reference={key} />
+      {' => '}
+      <ValTagRenderer reference={val} />
+      {' }'}
+    </MapEntrySpan>
   );
 }
 

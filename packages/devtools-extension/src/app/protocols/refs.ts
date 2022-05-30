@@ -47,8 +47,8 @@ export interface MapRef {
 export interface MapEntryRef {
   type: 'map-entry';
   refId?: number;
-  keyName: string;
-  valName: string;
+  key: Ref;
+  val: Ref;
 }
 
 export interface EntriesRef {
