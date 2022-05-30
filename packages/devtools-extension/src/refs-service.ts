@@ -19,10 +19,6 @@ class MapEntry {
   constructor(readonly key: unknown, readonly val: unknown) {}
 }
 
-class Timestamp {
-  constructor(readonly timestamp: number) {}
-}
-
 class Location {
   constructor(
     readonly file: string,
@@ -97,6 +93,11 @@ function special(key: string, val: Ref): PropertyRef {
     key: key,
     val: val,
   };
+}
+
+function getTimestamp(timestamp: number) {
+  const t = new Date(timestamp);
+  return `${t.getHours()}:${t.getMinutes()}:${t.getSeconds()}.${t.getMilliseconds()}`;
 }
 
 export class RefsService implements Refs {
@@ -438,6 +439,15 @@ export class RefsService implements Refs {
       special('Time', this.create(time, refId)),
       special('Name', this.create(declaration.name, refId)),
       special('Type', this.create(type, refId)),
+      special('Task', {
+        type: 'text',
+        text: task.name,
+        suffix: `#${task.id}`,
+      }),
+      special('Timestamp', {
+        type: 'text',
+        text: getTimestamp(timestamp),
+      }),
       ...(type === 'next'
         ? [special('Value', this.create(declaration.args?.[0], refId))]
         : []),
@@ -469,8 +479,6 @@ export class RefsService implements Refs {
             ),
           ]
         : []),
-      special('Task', this.create(task, refId)),
-      special('Timestamp', this.create(new Timestamp(timestamp), refId)),
       special('Target', this.create(target, refId)),
       special('PrecedingEvent', this.create(precedingEvent, refId)),
       special(

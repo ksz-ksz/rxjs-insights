@@ -13,6 +13,7 @@ import {
   SetRef,
   SubscriberRef,
   SymbolRef,
+  TextRef,
   ValueRef,
 } from '@app/protocols/refs';
 import React, {
@@ -335,6 +336,32 @@ function SymbolTag(props: TagRendererProps<SymbolRef>) {
   return <SymbolSpan>{props.reference.name}</SymbolSpan>;
 }
 
+const TextSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  color: theme.inspector.primary,
+  '&[data-prefix]:before': {
+    display: 'inline',
+    content: 'attr(data-prefix) " "',
+    color: theme.inspector.secondary,
+  },
+  '&[data-suffix]:after': {
+    display: 'inline',
+    content: '" " attr(data-suffix)',
+    color: theme.inspector.secondary,
+  },
+}));
+
+function TextTag(props: TagRendererProps<TextRef>) {
+  return (
+    <TextSpan
+      data-prefix={props.reference.prefix}
+      data-suffix={props.reference.suffix}
+    >
+      {props.reference.text}
+    </TextSpan>
+  );
+}
+
 const UndefinedSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
   color: theme.inspector.undefined,
@@ -375,6 +402,7 @@ const tagRenderers: Record<
   subscriber: SubscriberTag,
   event: EventTag,
   location: LocationTag,
+  text: TextTag,
 };
 
 function getTagRenderer(type: string) {

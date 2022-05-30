@@ -116,6 +116,8 @@ export interface LocationRef {
 export interface TextRef {
   type: 'text';
   text: string;
+  prefix?: string;
+  suffix?: string;
 }
 
 export type Ref =
