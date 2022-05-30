@@ -143,15 +143,42 @@ const EventSpan = styled('span')(({ theme }) => ({
     content: '" @" attr(data-time)',
     color: theme.inspector.secondary,
   },
+  '&[data-data]:after': {
+    content: '" @" attr(data-time) " { " attr(data-data) " }"',
+  },
+}));
+
+const EventDataSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  '&>*': {
+    opacity: 0.75,
+  },
+  '&:before': {
+    display: 'inline',
+    content: '" { "',
+    color: theme.inspector.secondary,
+  },
+  '&:after': {
+    display: 'inline',
+    content: '" }"',
+    color: theme.inspector.secondary,
+  },
 }));
 
 function EventTag(props: TagRendererProps<EventRef>) {
+  const data = props.reference.data;
+  const DataTagRenderer = data ? tagRenderers[data.type] : undefined;
   return (
     <EventSpan
-      data-time={props.reference.time}
       data-type={props.reference.eventType}
+      data-time={props.reference.time}
     >
       {props.reference.name}
+      {data && DataTagRenderer ? (
+        <EventDataSpan>
+          <DataTagRenderer reference={data} />
+        </EventDataSpan>
+      ) : null}
     </EventSpan>
   );
 }

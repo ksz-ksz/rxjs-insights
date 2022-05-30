@@ -107,7 +107,7 @@ export class RefsService implements Refs {
     { target: unknown; children: number[] }
   > = {};
 
-  create(target: unknown, parentRefId?: number): Ref {
+  create(target: unknown, parentRefId?: number, store = true): Ref {
     if (typeof target === 'object' && target !== null) {
       if (isObservableTarget(target)) {
         const observable = getObservable(target);
@@ -116,7 +116,7 @@ export class RefsService implements Refs {
           id: observable.id,
           name: observable.declaration.name,
           tags: observable.tags,
-          refId: this.put(observable, parentRefId),
+          refId: this.put(observable, parentRefId, store),
         };
       } else if (isObservable(target)) {
         return {
@@ -124,7 +124,7 @@ export class RefsService implements Refs {
           id: target.id,
           name: target.declaration.name,
           tags: target.tags,
-          refId: this.put(target, parentRefId),
+          refId: this.put(target, parentRefId, store),
         };
       } else if (isSubscriberTarget(target)) {
         const subscriber = getSubscriber(target);
@@ -133,7 +133,7 @@ export class RefsService implements Refs {
           id: subscriber.id,
           name: subscriber.declaration.name,
           tags: subscriber.tags,
-          refId: this.put(subscriber, parentRefId),
+          refId: this.put(subscriber, parentRefId, store),
         };
       } else if (isSubscriber(target)) {
         return {
@@ -141,15 +141,19 @@ export class RefsService implements Refs {
           id: target.id,
           name: target.declaration.name,
           tags: target.tags,
-          refId: this.put(target, parentRefId),
+          refId: this.put(target, parentRefId, store),
         };
       } else if (isEvent(target)) {
         return {
           type: 'event',
           time: target.time,
           name: target.declaration.name,
+          data:
+            target.type === 'next' || target.type === 'error'
+              ? this.create(target.declaration.args?.[0], parentRefId, false)
+              : undefined,
           eventType: target.type,
-          refId: this.put(target, parentRefId),
+          refId: this.put(target, parentRefId, store),
         };
       } else if (target instanceof Locations) {
         const location = target.original ?? target.generated;
@@ -158,7 +162,7 @@ export class RefsService implements Refs {
           file: location?.file ?? 'unknown',
           line: location?.line ?? 0,
           column: location?.column ?? 0,
-          refId: this.put(target, parentRefId),
+          refId: this.put(target, parentRefId, store),
         };
       } else if (target instanceof Location) {
         return {
@@ -169,10 +173,14 @@ export class RefsService implements Refs {
         };
       }
     }
-    return this.createDefault(target, parentRefId);
+    return this.createDefault(target, parentRefId, store);
   }
 
-  private createDefault(target: unknown, parentRefId: number | undefined): Ref {
+  private createDefault(
+    target: unknown,
+    parentRefId: number | undefined,
+    store = true
+  ): Ref {
     switch (typeof target) {
       case 'undefined':
         return {
@@ -188,40 +196,40 @@ export class RefsService implements Refs {
             type: 'array',
             name: target?.constructor?.name ?? 'Array',
             length: target.length,
-            refId: this.put(target, parentRefId),
+            refId: this.put(target, parentRefId, store),
           };
         } else if (target instanceof Set) {
           return {
             type: 'set',
             name: target?.constructor?.name ?? 'Set',
             size: target.size,
-            refId: this.put(target, parentRefId),
+            refId: this.put(target, parentRefId, store),
           };
         } else if (target instanceof Map) {
           return {
             type: 'map',
             name: target?.constructor?.name ?? 'Map',
             size: target.size,
-            refId: this.put(target, parentRefId),
+            refId: this.put(target, parentRefId, store),
           };
         } else if (target instanceof MapEntry) {
           return {
             type: 'map-entry',
             keyName: getName(target.key),
             valName: getName(target.val),
-            refId: this.put(target, parentRefId),
+            refId: this.put(target, parentRefId, store),
           };
         } else if (target instanceof Entries) {
           return {
             type: 'entries',
             size: target.entries.length,
-            refId: this.put(target, parentRefId),
+            refId: this.put(target, parentRefId, store),
           };
         } else {
           return {
             type: 'object',
             name: target?.constructor?.name ?? 'Object',
-            refId: this.put(target, parentRefId),
+            refId: this.put(target, parentRefId, store),
           };
         }
       case 'boolean':
@@ -243,13 +251,13 @@ export class RefsService implements Refs {
         return {
           type: 'function',
           name: target.name ?? 'anonymous',
-          refId: this.put(target, parentRefId),
+          refId: this.put(target, parentRefId, store),
         };
       case 'symbol':
         return {
           type: 'symbol',
           name: target.toString(),
-          refId: this.put(target, parentRefId),
+          refId: this.put(target, parentRefId, store),
         };
       case 'bigint':
         return {
@@ -681,15 +689,19 @@ export class RefsService implements Refs {
     };
   }
 
-  private put(target: unknown, parentRefId?: number) {
+  private put(target: unknown, parentRefId: number | undefined, store = true) {
+    // todo: do not return id if store === false + make refid optional
     const refId = this.nextRefId++;
-    this.refs[refId] = {
-      target,
-      children: [],
-    };
-    if (parentRefId !== undefined) {
-      this.refs[parentRefId].children.push(refId);
+    if (store) {
+      this.refs[refId] = {
+        target,
+        children: [],
+      };
+      if (parentRefId !== undefined) {
+        this.refs[parentRefId].children.push(refId);
+      }
     }
+
     return refId;
   }
 }

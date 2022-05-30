@@ -102,6 +102,7 @@ export interface EventRef {
   refId: number;
   time: number;
   name: string;
+  data?: Ref;
   eventType: 'subscribe' | 'unsubscribe' | 'next' | 'error' | 'complete';
 }
 
