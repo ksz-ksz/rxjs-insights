@@ -16,7 +16,7 @@ import {
   LinkData,
   NodeData,
   NodeRendererProps,
-} from '@app/components/graph/graph';
+} from '@app/components/graph';
 
 const rootHierarchyNodeA = hierarchy({
   name: 'A',
