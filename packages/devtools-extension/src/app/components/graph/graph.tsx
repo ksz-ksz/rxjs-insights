@@ -1,4 +1,9 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, {
+  JSXElementConstructor,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import { usePrevious } from '@app/utils';
 import gsap from 'gsap';
 import { Transition, TransitionGroup } from 'react-transition-group';
@@ -10,13 +15,30 @@ function getNodeKey(node: NodeData<any>) {
   return node.id;
 }
 
+interface GraphNodeProps<T> {
+  in?: boolean;
+  node: NodeData<T>;
+  nodeRenderer?: JSXElementConstructor<NodeRendererProps<T>>;
+}
+
+export type NodeRendererProps<T> = { node: NodeData<T> };
+
+function defaultNodeRenderer({ node }: NodeRendererProps<unknown>) {
+  return (
+    <>
+      <circle r={10} fill="red" />
+      <text y="6" textAnchor="middle" fill="white">
+        {node.id}
+      </text>
+    </>
+  );
+}
+
 function GraphNode<T>({
   in: inProp,
   node,
-}: {
-  in?: boolean;
-  node: NodeData<T>;
-}) {
+  nodeRenderer = defaultNodeRenderer,
+}: GraphNodeProps<T>) {
   const gRef = useRef<SVGGElement | null>(null);
   const doneRef = useRef<(() => void) | null>(null);
   const updateTweenRef = useRef<gsap.core.Tween | null>(null);
@@ -46,6 +68,9 @@ function GraphNode<T>({
     },
     [node]
   );
+
+  const NodeRenderer = nodeRenderer;
+
   return (
     <Transition<any>
       appear={true}
@@ -78,8 +103,7 @@ function GraphNode<T>({
       }}
     >
       <g data-key={getNodeKey(node)} ref={gRef}>
-        <circle r={10} fill="red" />
-        <text fill="white">{node.id}</text>
+        <NodeRenderer node={node} />
       </g>
     </Transition>
   );
@@ -260,9 +284,10 @@ export interface GraphProps<T> {
   nodes: NodeData<T>[];
   links: LinkData<T>[];
   focus?: number[];
+  nodeRenderer?: JSXElementConstructor<{ node: NodeData<T> }>;
 }
 
-export function Graph<T>({ nodes, links, focus }: GraphProps<T>) {
+export function Graph<T>({ nodes, links, focus, nodeRenderer }: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
   const initRef = useRef(false);
@@ -326,7 +351,11 @@ export function Graph<T>({ nodes, links, focus }: GraphProps<T>) {
 
       <TransitionGroup component="g">
         {nodes.map((node) => (
-          <GraphNode key={getNodeKey(node)} node={node} />
+          <GraphNode
+            key={getNodeKey(node)}
+            node={node}
+            nodeRenderer={nodeRenderer}
+          />
         ))}
       </TransitionGroup>
     </svg>

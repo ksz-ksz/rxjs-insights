@@ -11,7 +11,12 @@ import {
   HierarchyPointNode,
   tree,
 } from 'd3-hierarchy';
-import { Graph, LinkData, NodeData } from '@app/components/graph/graph';
+import {
+  Graph,
+  LinkData,
+  NodeData,
+  NodeRendererProps,
+} from '@app/components/graph/graph';
 
 const rootHierarchyNodeA = hierarchy({
   name: 'A',
@@ -107,6 +112,17 @@ function getNodesAndLinks<T extends { name: string } = { name: string }>(
   return { nodes, links };
 }
 
+function NodeRenderer({ node }: NodeRendererProps<any>) {
+  return (
+    <>
+      <circle r={10} fill="green" />
+      <text y="6" textAnchor="middle" fill="white">
+        {node.id}
+      </text>
+    </>
+  );
+}
+
 export function ObservablePage() {
   const info = useSelector(observableInfo);
   const [rootIndex, setRootIndex] = useState(0);
@@ -122,7 +138,7 @@ export function ObservablePage() {
             Switch root
           </button>
           <RefOutlet reference={info.target} />
-          <Graph nodes={nodes} links={links} />
+          <Graph nodes={nodes} links={links} nodeRenderer={NodeRenderer} />
         </Container>
       </Scrollable>
     );
