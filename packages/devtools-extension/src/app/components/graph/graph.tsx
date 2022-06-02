@@ -1,12 +1,10 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { usePrevious } from '@app/utils';
-import { gsap } from 'gsap';
+import gsap from 'gsap';
 import { Transition, TransitionGroup } from 'react-transition-group';
 import { linkHorizontal } from 'd3-shape';
-import Tween = gsap.core.Tween;
 
-// const duration = 0.24;
-const duration = 2;
+const duration = 0.24;
 
 function getNodeKey(node: NodeData<any>) {
   return node.id;
@@ -21,8 +19,8 @@ function GraphNode<T>({
 }) {
   const gRef = useRef<SVGGElement | null>(null);
   const doneRef = useRef<(() => void) | null>(null);
-  const updateTweenRef = useRef<Tween | null>(null);
-  const tweenRef = useRef<Tween | null>(null);
+  const updateTweenRef = useRef<gsap.core.Tween | null>(null);
+  const tweenRef = useRef<gsap.core.Tween | null>(null);
   const prevNode = usePrevious(node);
 
   useEffect(function onInit() {
@@ -51,6 +49,8 @@ function GraphNode<T>({
   return (
     <Transition<any>
       appear={true}
+      // mountOnEnter={true}
+      // unmountOnExit={true}
       in={inProp}
       addEndListener={(node: any, done: () => void) => {
         doneRef.current = done;
@@ -58,8 +58,6 @@ function GraphNode<T>({
       onEnter={() => {
         console.log('node.onEnter', getNodeKey(node));
         const g = gRef.current!;
-        // gsap.killTweensOf(g);
-        // tweenRef.current?.kill();
         tweenRef.current = gsap.to(g, {
           opacity: 1,
           delay: 2 * duration,
@@ -75,7 +73,6 @@ function GraphNode<T>({
       onExit={() => {
         console.log('node.onExit', getNodeKey(node));
         const g = gRef.current;
-        // gsap.killTweensOf(g);
         tweenRef.current?.kill();
         tweenRef.current = gsap.to(g, { opacity: 0, delay: 0, duration });
       }}
@@ -107,8 +104,8 @@ function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
   });
   const pathRef = useRef<SVGPathElement | null>(null);
   const doneRef = useRef<(() => void) | null>(null);
-  const tweenRef = useRef<Tween | null>(null);
-  const updateTweenRef = useRef<Tween | null>(null);
+  const tweenRef = useRef<gsap.core.Tween | null>(null);
+  const updateTweenRef = useRef<gsap.core.Tween | null>(null);
   const prevLink = usePrevious(link);
 
   useEffect(function onInit() {
@@ -128,7 +125,6 @@ function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
       if (prevLink && inProp) {
         console.log('link.onUpdate', getLinkKey(link));
         const path = pathRef.current!;
-        // gsap.killTweensOf(pathCoordsRef.current);
         updateTweenRef.current?.kill();
         updateTweenRef.current = gsap.to(pathCoordsRef.current, {
           sourceX: link.source.x,
@@ -154,6 +150,8 @@ function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
   return (
     <Transition<any>
       appear={true}
+      // mountOnEnter={true}
+      // unmountOnExit={true}
       in={inProp}
       addEndListener={(node: any, done: () => void) => {
         doneRef.current = done;
@@ -163,13 +161,10 @@ function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
         console.log('link.onEnter', getLinkKey(link), {
           opacity: path.style.opacity,
         });
-        // gsap.killTweensOf(path);
-        // tweenRef.current?.kill();
         tweenRef.current = gsap.to(path, {
           opacity: 1,
           duration,
-          delay: duration + duration,
-          // ease: 'none',
+          delay: 2 * duration,
           onComplete() {
             doneRef.current?.();
           },
@@ -207,25 +202,27 @@ function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
   );
 }
 
-function getBounds(nodes: NodeData<unknown>[]) {
+function getBounds(nodes: NodeData<unknown>[], focus: number[]) {
   let minX = Infinity;
   let maxX = -Infinity;
   let minY = Infinity;
   let maxY = -Infinity;
   for (const node of nodes) {
-    const nodeX = node.x;
-    const nodeY = node.y;
-    if (nodeX < minX) {
-      minX = nodeX;
-    }
-    if (nodeX > maxX) {
-      maxX = nodeX;
-    }
-    if (nodeY < minY) {
-      minY = nodeY;
-    }
-    if (nodeY > maxY) {
-      maxY = nodeY;
+    if (focus.length === 0 || focus.includes(node.id)) {
+      const nodeX = node.x;
+      const nodeY = node.y;
+      if (nodeX < minX) {
+        minX = nodeX;
+      }
+      if (nodeX > maxX) {
+        maxX = nodeX;
+      }
+      if (nodeY < minY) {
+        minY = nodeY;
+      }
+      if (nodeY > maxY) {
+        maxY = nodeY;
+      }
     }
   }
   return { minX, maxX, minY, maxY };
@@ -262,29 +259,37 @@ export interface LinkData<T> {
 export interface GraphProps<T> {
   nodes: NodeData<T>[];
   links: LinkData<T>[];
-  focus?: NodeData<T>[];
+  focus?: number[];
 }
 
 export function Graph<T>({ nodes, links, focus }: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const viewBox = useMemo(
-    () => getViewBox(getBounds(focus ?? nodes), 20),
-    [focus, nodes]
-  );
+  const tweenRef = useRef<gsap.core.Tween | null>(null);
+  const initRef = useRef(false);
+  const viewBoxCoordsRef = useRef({
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 0,
+  });
 
-  const prevViewBox = usePrevious(viewBox);
-  useEffect(() => {
-    if (svgRef.current && prevViewBox) {
-      const svg = svgRef.current;
-      gsap.fromTo(
-        {},
-        {
-          x: prevViewBox.x,
-          y: prevViewBox.y,
-          w: prevViewBox.w,
-          h: prevViewBox.h,
-        },
-        {
+  useEffect(function onInit() {
+    initRef.current = true;
+    const viewBox = getViewBox(getBounds(nodes, focus ?? []), 20);
+    const svg = svgRef.current!;
+    svg.setAttribute(
+      'viewBox',
+      `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`
+    );
+  }, []);
+
+  useEffect(
+    function onUpdate() {
+      if (initRef.current) {
+        const viewBox = getViewBox(getBounds(nodes, focus ?? []), 20);
+        const svg = svgRef.current!;
+        tweenRef.current?.kill();
+        tweenRef.current = gsap.to(viewBoxCoordsRef.current, {
           x: viewBox.x,
           y: viewBox.y,
           w: viewBox.w,
@@ -298,16 +303,16 @@ export function Graph<T>({ nodes, links, focus }: GraphProps<T>) {
               `${target.x} ${target.y} ${target.w} ${target.h}`
             );
           },
-        }
-      );
-    }
-  }, [viewBox]);
+        });
+      }
+    },
+    [nodes, focus]
+  );
 
   return (
     <svg
       ref={svgRef}
       xmlns="http://www.w3.org/2000/svg"
-      viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`}
       style={{
         width: '100%',
         maxHeight: '600',
