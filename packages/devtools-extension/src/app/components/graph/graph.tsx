@@ -3,8 +3,10 @@ import { usePrevious } from '@app/utils';
 import { gsap } from 'gsap';
 import { Transition, TransitionGroup } from 'react-transition-group';
 import { linkHorizontal } from 'd3-shape';
+import Tween = gsap.core.Tween;
 
-const duration = 0.24;
+// const duration = 0.24;
+const duration = 2;
 
 function getNodeKey(node: NodeData<any>) {
   return node.id;
@@ -19,60 +21,66 @@ function GraphNode<T>({
 }) {
   const gRef = useRef<SVGGElement | null>(null);
   const doneRef = useRef<(() => void) | null>(null);
+  const updateTweenRef = useRef<Tween | null>(null);
+  const tweenRef = useRef<Tween | null>(null);
   const prevNode = usePrevious(node);
+
+  useEffect(function onInit() {
+    console.log('node.onInit', getNodeKey(node));
+    const g = gRef.current!;
+    g.setAttribute('opacity', '0');
+    g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+  }, []);
+
   useEffect(
     function onUpdate() {
-      const g = gRef.current;
-      if (g && prevNode) {
-        gsap.fromTo(
-          g,
-          {
-            x: prevNode.x,
-            y: prevNode.y,
-          },
-          {
-            x: node.x,
-            y: node.y,
-            duration: duration,
-            delay: duration,
-          }
-        );
+      if (inProp && prevNode) {
+        console.log('node.onUpdate', getNodeKey(node));
+        const g = gRef.current!;
+        updateTweenRef.current?.kill();
+        updateTweenRef.current = gsap.to(g, {
+          x: node.x,
+          y: node.y,
+          duration: duration,
+          delay: duration,
+        });
       }
     },
     [node]
   );
   return (
     <Transition<any>
-      mountOnEnter={true}
-      unmountOnExit={true}
+      appear={true}
       in={inProp}
       addEndListener={(node: any, done: () => void) => {
         doneRef.current = done;
       }}
       onEnter={() => {
-        const g = gRef.current;
-        gsap.fromTo(
-          g,
-          { opacity: 0 },
-          {
-            opacity: 1,
-            delay: 2 * duration,
-            duration,
-            onComplete() {
-              doneRef.current?.();
-            },
-            onInterrupt() {
-              doneRef.current?.();
-            },
-          }
-        );
+        console.log('node.onEnter', getNodeKey(node));
+        const g = gRef.current!;
+        // gsap.killTweensOf(g);
+        // tweenRef.current?.kill();
+        tweenRef.current = gsap.to(g, {
+          opacity: 1,
+          delay: 2 * duration,
+          duration,
+          onComplete() {
+            doneRef.current?.();
+          },
+          onInterrupt() {
+            doneRef.current?.();
+          },
+        });
       }}
       onExit={() => {
+        console.log('node.onExit', getNodeKey(node));
         const g = gRef.current;
-        gsap.fromTo(g, { opacity: 1 }, { opacity: 0, delay: 0, duration });
+        // gsap.killTweensOf(g);
+        tweenRef.current?.kill();
+        tweenRef.current = gsap.to(g, { opacity: 0, delay: 0, duration });
       }}
     >
-      <g ref={gRef} transform={`translate(${node.x}, ${node.y})`}>
+      <g data-key={getNodeKey(node)} ref={gRef}>
         <circle r={10} fill="red" />
         <text fill="white">{node.id}</text>
       </g>
@@ -91,48 +99,53 @@ interface GraphLinkProps<T> {
 
 const graphLinkHorizontal = linkHorizontal();
 function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
+  const pathCoordsRef = useRef({
+    sourceX: link.source.x,
+    sourceY: link.source.y,
+    targetX: link.target.x,
+    targetY: link.target.y,
+  });
   const pathRef = useRef<SVGPathElement | null>(null);
   const doneRef = useRef<(() => void) | null>(null);
+  const tweenRef = useRef<Tween | null>(null);
+  const updateTweenRef = useRef<Tween | null>(null);
   const prevLink = usePrevious(link);
 
-  const d = useMemo(
-    () =>
-      graphLinkHorizontal({
-        source: [link.source.x, link.source.y],
-        target: [link.target.x, link.target.y],
-      })!,
-    [link]
-  );
+  useEffect(function onInit() {
+    console.log('link.onInit', getLinkKey(link));
+    const path = pathRef.current!;
+    const pathCoords = pathCoordsRef.current;
+    const d = graphLinkHorizontal({
+      source: [pathCoords.sourceX, pathCoords.sourceY],
+      target: [pathCoords.targetX, pathCoords.targetY],
+    })!;
+    path.setAttribute('d', d);
+    path.setAttribute('opacity', '0');
+  }, []);
 
   useEffect(
     function onUpdate() {
-      const path = pathRef.current;
-      if (path && prevLink) {
-        gsap.fromTo(
-          {},
-          {
-            linkSourceX: prevLink.source.x,
-            linkSourceY: prevLink.source.y,
-            linkTargetX: prevLink.target.x,
-            linkTargetY: prevLink.target.y,
+      if (prevLink && inProp) {
+        console.log('link.onUpdate', getLinkKey(link));
+        const path = pathRef.current!;
+        // gsap.killTweensOf(pathCoordsRef.current);
+        updateTweenRef.current?.kill();
+        updateTweenRef.current = gsap.to(pathCoordsRef.current, {
+          sourceX: link.source.x,
+          sourceY: link.source.y,
+          targetX: link.target.x,
+          targetY: link.target.y,
+          onUpdate() {
+            const [target] = this.targets();
+            const d = graphLinkHorizontal({
+              source: [target.sourceX, target.sourceY],
+              target: [target.targetX, target.targetY],
+            })!;
+            path.setAttribute('d', d);
           },
-          {
-            linkSourceX: link.source.x,
-            linkSourceY: link.source.y,
-            linkTargetX: link.target.x,
-            linkTargetY: link.target.y,
-            onUpdate() {
-              const [target] = this.targets();
-              const d = graphLinkHorizontal({
-                source: [target.linkSourceX, target.linkSourceY],
-                target: [target.linkTargetX, target.linkTargetY],
-              })!;
-              path.setAttribute('d', d);
-            },
-            duration: duration,
-            delay: duration,
-          }
-        );
+          duration: duration,
+          delay: duration,
+        });
       }
     },
     [link]
@@ -140,52 +153,56 @@ function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
 
   return (
     <Transition<any>
-      mountOnEnter={true}
-      unmountOnExit={true}
+      appear={true}
       in={inProp}
       addEndListener={(node: any, done: () => void) => {
         doneRef.current = done;
       }}
       onEnter={() => {
-        const path = pathRef.current;
-        gsap.fromTo(
-          path,
-          { opacity: 0 },
-          {
-            opacity: 1,
-            duration,
-            delay: duration + duration,
-            ease: 'none',
-            onComplete() {
-              doneRef.current?.();
-            },
-            onInterrupt() {
-              doneRef.current?.();
-            },
-          }
-        );
+        const path = pathRef.current!;
+        console.log('link.onEnter', getLinkKey(link), {
+          opacity: path.style.opacity,
+        });
+        // gsap.killTweensOf(path);
+        // tweenRef.current?.kill();
+        tweenRef.current = gsap.to(path, {
+          opacity: 1,
+          duration,
+          delay: duration + duration,
+          // ease: 'none',
+          onComplete() {
+            doneRef.current?.();
+          },
+          onInterrupt() {
+            doneRef.current?.();
+          },
+        });
       }}
       onExit={() => {
+        console.log('link.onExit', getLinkKey(link));
         const path = pathRef.current;
-        gsap.fromTo(
-          path,
-          { opacity: 1 },
-          {
-            opacity: 0,
-            duration,
-            delay: 0,
-            ease: 'none',
-            onComplete() {
-              doneRef.current?.();
-            },
-            onInterrupt() {
-              doneRef.current?.();
-            },
-          }
-        );
+        // gsap.killTweensOf(path);
+        tweenRef.current?.kill();
+        tweenRef.current = gsap.to(path, {
+          opacity: 0,
+          duration,
+          delay: 0,
+          ease: 'none',
+          onComplete() {
+            doneRef.current?.();
+          },
+          onInterrupt() {
+            doneRef.current?.();
+          },
+        });
       }}
     >
-      <path ref={pathRef} d={d} stroke="green" fill="transparent" />
+      <path
+        data-key={getLinkKey(link)}
+        ref={pathRef}
+        stroke="green"
+        fill="transparent"
+      />
     </Transition>
   );
 }
@@ -250,10 +267,6 @@ export interface GraphProps<T> {
 
 export function Graph<T>({ nodes, links, focus }: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement>(null);
-  // const { nodes, links } = useMemo(
-  //   () => getNodesAndLinks(treeLayout(props.rootHierarchyNode)),
-  //   [props.rootHierarchyNode]
-  // );
   const viewBox = useMemo(
     () => getViewBox(getBounds(focus ?? nodes), 20),
     [focus, nodes]

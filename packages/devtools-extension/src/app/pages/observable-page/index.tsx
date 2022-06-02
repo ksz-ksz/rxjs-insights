@@ -60,8 +60,8 @@ const rootHierarchyNodeB1 = hierarchy({
 });
 
 const roots = [
-  rootHierarchyNodeA,
-  rootHierarchyNodeB,
+  // rootHierarchyNodeA,
+  // rootHierarchyNodeB,
   rootHierarchyNodeA1,
   rootHierarchyNodeB1,
 ];
