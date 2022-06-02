@@ -13,10 +13,10 @@ export const insightsReaction = combineReactions().add(
       switchMap((route) => {
         const observableId = route.params?.observableId;
         return observableId !== undefined
-          ? from(insightsClient.getObservableInfo(parseInt(observableId, 10)))
+          ? from(insightsClient.getObservableRef(parseInt(observableId, 10)))
           : EMPTY;
       }),
-      map((info) => insightsActions.ObservableInfoLoaded({ info }))
+      map((ref) => insightsActions.ObservableRefLoaded({ ref }))
     )
   )
 );

@@ -1,9 +1,9 @@
 import { createActions } from '@lib/store';
-import { ObservableInfo } from '@app/protocols/insights';
+import { ObservableRef, Ref } from '@app/protocols/refs';
 
 export interface InsightsActions {
-  ObservableInfoLoaded: {
-    info: ObservableInfo | undefined;
+  ObservableRefLoaded: {
+    ref: ObservableRef | undefined;
   };
 }
 

@@ -1,9 +1,9 @@
 import { createReducer, Slice } from '@lib/store';
 import { insightsActions } from '@app/actions/insights-actions';
-import { ObservableInfo } from '@app/protocols/insights';
+import { Ref } from '@app/protocols/refs';
 
 export interface ObservableState {
-  info?: ObservableInfo;
+  ref?: Ref;
 }
 
 export interface InsightsState {
@@ -15,12 +15,12 @@ export type InsightsSlice = Slice<'insights', InsightsState>;
 export const insightsReducer = createReducer('insights', {
   observables: {},
 } as InsightsState).add(
-  insightsActions.ObservableInfoLoaded,
+  insightsActions.ObservableRefLoaded,
   (state, action) => {
-    const { info } = action.payload;
-    if (info !== undefined) {
-      state.observables[info.id] = state.observables[info.id] ?? {};
-      state.observables[info.id].info = info;
+    const { ref } = action.payload;
+    if (ref !== undefined) {
+      state.observables[ref.id] = state.observables[ref.id] ?? {};
+      state.observables[ref.id].ref = ref;
     }
   }
 );

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useSelector } from '@app/store';
-import { observableInfo } from '@app/selectors/insights-selectors';
+import { observableRef } from '@app/selectors/insights-selectors';
 import { RefOutlet } from '@app/components/ref-outlet';
 import { Scrollable } from '@app/components/scrollable';
 import { Container } from '@mui/material';
@@ -124,20 +124,20 @@ function NodeRenderer({ node }: NodeRendererProps<any>) {
 }
 
 export function ObservablePage() {
-  const info = useSelector(observableInfo);
+  const ref = useSelector(observableRef);
   const [rootIndex, setRootIndex] = useState(0);
   const { nodes, links } = useMemo(
     () => getNodesAndLinks(roots[rootIndex]),
     [rootIndex]
   );
-  if (info) {
+  if (ref) {
     return (
       <Scrollable>
         <Container>
           <button onClick={() => setRootIndex((rootIndex + 1) % roots.length)}>
             Switch root
           </button>
-          <RefOutlet reference={info.target} />
+          <RefOutlet reference={ref} />
           <Graph nodes={nodes} links={links} nodeRenderer={NodeRenderer} />
         </Container>
       </Scrollable>

@@ -6,13 +6,13 @@ const insightsState = createSliceSelector<'insights', InsightsState>(
   'insights'
 );
 
-export const observableInfo = createSelector(
+export const observableRef = createSelector(
   {
     route: router.selectors.route(observableRouteToken),
     insights: insightsState,
   },
   ({ route, insights }) =>
     route?.params?.observableId
-      ? insights.observables[parseInt(route.params.observableId, 10)]?.info
+      ? insights.observables[parseInt(route.params.observableId, 10)]?.ref
       : undefined
 );

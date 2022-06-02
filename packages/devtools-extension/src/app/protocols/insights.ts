@@ -1,5 +1,5 @@
 import { Locations } from '@rxjs-insights/core';
-import { Ref } from '@app/protocols/refs';
+import { ObservableRef, Ref } from '@app/protocols/refs';
 
 export const InsightsChannel = 'InsightsChannel';
 
@@ -31,5 +31,5 @@ export interface ObservableInfo {
 }
 
 export interface Insights {
-  getObservableInfo(observableId: number): ObservableInfo | undefined;
+  getObservableRef(observableId: number): ObservableRef | undefined;
 }

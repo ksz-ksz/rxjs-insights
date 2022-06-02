@@ -187,34 +187,12 @@ const refs = new RefsService();
 startServer<Refs>(createInspectedWindowEvalServerAdapter(RefsChannel), refs);
 
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
-  getObservableInfo(observableId: number): ObservableInfo | undefined {
+  getObservableRef(observableId: number): ObservableRef | undefined {
     const observable = targets.observables[observableId];
     if (!observable) {
       return undefined;
     } else {
-      const subscriberStatuses = observable.subscribers.map(getStatus);
-      return {
-        id: observable.id,
-        name: observable.declaration.name,
-        target: refs.create(observable.target) as ObservableRef,
-        internal: observable.declaration.internal,
-        tags: observable.tags,
-        notifications: {
-          next: countEvents(observable.events, 'next'),
-          error: countEvents(observable.events, 'error'),
-          complete: countEvents(observable.events, 'complete'),
-        },
-        subscriptions: {
-          active: countStatuses(subscriberStatuses, 'next'),
-          errored: countStatuses(subscriberStatuses, 'error'),
-          completed: countStatuses(subscriberStatuses, 'complete'),
-          unsubscribed: countStatuses(subscriberStatuses, 'unsubscribe'),
-        },
-        locations: observable.declaration.locations,
-        ctor: refs.create(observable.declaration.func),
-        args: observable.declaration.args?.map((arg) => refs.create(arg)) ?? [],
-        source: refs.create(observable.sourceObservable) as ObservableRef,
-      };
+      return refs.create(observable.target) as ObservableRef;
     }
   },
 });
