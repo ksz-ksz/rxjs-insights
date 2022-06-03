@@ -26,11 +26,7 @@ import {
   TargetsNotifications,
   TargetsNotificationsChannel,
 } from '@app/protocols/targets-notifications';
-import {
-  Insights,
-  InsightsChannel,
-  ObservableInfo,
-} from '@app/protocols/insights';
+import { Insights, InsightsChannel } from '@app/protocols/insights';
 import {
   Trace,
   TraceFrame,
@@ -44,7 +40,7 @@ import {
   getSubscriber,
   isObservableTarget,
   isSubscriberTarget,
-} from '@app/common/target';
+} from '@rxjs-insights/recorder-utils';
 
 const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
 

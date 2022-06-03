@@ -1,11 +1,11 @@
 import { GetterRef, PropertyRef, Ref, Refs } from '@app/protocols/refs';
+import { Observable, Subscriber, Event } from '@rxjs-insights/recorder';
 import {
   getObservable,
   getSubscriber,
   isObservableTarget,
   isSubscriberTarget,
-} from '@app/common/target';
-import { Observable, Subscriber, Event } from '@rxjs-insights/recorder';
+} from '@rxjs-insights/recorder-utils';
 
 class Getter {
   constructor(readonly target: unknown, readonly getter: () => unknown) {}
