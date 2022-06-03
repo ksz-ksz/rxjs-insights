@@ -154,28 +154,6 @@ const targetsNotificationsClient = createClient<TargetsNotifications>(
   createDocumentEventClientAdapter(TargetsNotificationsChannel)
 );
 
-type Status = 'error' | 'complete' | 'unsubscribe' | 'next';
-
-function getStatus(subscriber: Subscriber) {
-  return (subscriber.events.find(
-    (x) =>
-      x.declaration.name === 'error' ||
-      x.declaration.name === 'complete' ||
-      x.declaration.name === 'unsubscribe'
-  )?.declaration.name ?? 'next') as Status;
-}
-
-function countEvents(
-  events: ObservableEvent[],
-  eventType: 'next' | 'error' | 'complete'
-) {
-  return events.filter((x) => x.declaration.name === eventType).length;
-}
-
-function countStatuses(statuses: Status[], statusType: string) {
-  return statuses.filter((x) => x === statusType).length;
-}
-
 const refs = new RefsService();
 
 (window as any).REFS = refs;
