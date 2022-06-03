@@ -6,7 +6,10 @@ import {
   formatObservable,
   formatSubscriber,
 } from './format';
-import { isObservableTarget, isSubscriberTarget } from './target';
+import {
+  isObservableTarget,
+  isSubscriberTarget,
+} from '@rxjs-insights/recorder-utils';
 
 export function subscriberSubscribers(subscriber: Subscriber) {
   console.groupCollapsed(

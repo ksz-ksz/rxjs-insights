@@ -4,13 +4,14 @@ import {
   getObservable,
   getSubscriber,
   getSucceedingEvents,
+  isObservableTarget,
+  isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
 import {
   eventConnectedEvents,
   observableConnectedEvents,
   subscriberConnectedEvents,
 } from './connected-events';
-import { isObservableTarget, isSubscriberTarget } from './target';
 
 export function eventSucceedingEvents(
   event: Event,

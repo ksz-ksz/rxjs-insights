@@ -8,7 +8,6 @@ import {
   formatTask,
   formatTaskWithTriggeredEvent,
 } from './format';
-import { isObservableTarget, isSubscriberTarget } from './target';
 import {
   getObservable,
   getPrecedingEvent,
@@ -16,6 +15,8 @@ import {
   getSourceEvents,
   getSubscriber,
   getSucceedingEvents,
+  isObservableTarget,
+  isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
 
 const eventsComparator = (a: Event, b: Event) => a.time - b.time;

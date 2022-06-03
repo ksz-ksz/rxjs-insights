@@ -1,5 +1,4 @@
 import { ObservableLike, SubscriptionLike } from '@rxjs-insights/core';
-import { isObservableTarget, isSubscriberTarget } from './target';
 import {
   getDestinationEvents,
   getObservable,
@@ -7,6 +6,8 @@ import {
   getSourceEvents,
   getSubscriber,
   getSucceedingEvents,
+  isObservableTarget,
+  isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
 import {
   Event,

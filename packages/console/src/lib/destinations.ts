@@ -4,9 +4,10 @@ import {
   getDestinationEvents,
   getObservable,
   getSubscriber,
+  isObservableTarget,
+  isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
 import { observableConnections, subscriberConnections } from './connections';
-import { isObservableTarget, isSubscriberTarget } from './target';
 
 export function subscriberDestinations(subscriber: Subscriber) {
   subscriberConnections('Destination', getDestinationEvents, subscriber);
