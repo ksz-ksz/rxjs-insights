@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from '@app/store';
 import { observableRef } from '@app/selectors/insights-selectors';
 import { RefOutlet } from '@app/components/ref-outlet';
@@ -17,6 +17,7 @@ import {
   NodeData,
   NodeRendererProps,
 } from '@app/components/graph';
+import { insightsClient } from '@app/clients/insights';
 
 const rootHierarchyNodeA = hierarchy({
   name: 'A',
@@ -123,6 +124,22 @@ function NodeRenderer({ node }: NodeRendererProps<any>) {
   );
 }
 
+function Debug({ id }: { id: number }) {
+  const [state, setState] = useState('');
+  useEffect(() => {
+    (async () => {
+      const rels = await insightsClient.getObservableRelations(id);
+      setState(JSON.stringify(rels, null, 2));
+    })();
+  }, [id]);
+
+  return (
+    <pre>
+      <code>{state}</code>
+    </pre>
+  );
+}
+
 export function ObservablePage() {
   const ref = useSelector(observableRef);
   const [rootIndex, setRootIndex] = useState(0);
@@ -138,7 +155,8 @@ export function ObservablePage() {
             Switch root
           </button>
           <RefOutlet reference={ref} />
-          <Graph nodes={nodes} links={links} nodeRenderer={NodeRenderer} />
+          <Debug id={ref.id} />
+          {/*<Graph nodes={nodes} links={links} nodeRenderer={NodeRenderer} />*/}
         </Container>
       </Scrollable>
     );

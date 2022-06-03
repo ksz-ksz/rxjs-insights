@@ -1,10 +1,7 @@
 import { Event } from '@rxjs-insights/recorder';
 
 function isSubscriptionEvent(event: Event) {
-  return (
-    event.declaration.name === 'subscribe' ||
-    event.declaration.name === 'unsubscribe'
-  );
+  return event.type === 'subscribe' || event.type === 'unsubscribe';
 }
 
 function isInternal(event: Event) {

@@ -51,12 +51,6 @@ export const routerConfig: RouterConfig<
         },
       ],
     },
-    // {
-    //   path: ['subscriber', ':subscriberId'],
-    //   metadata: {
-    //     element: SubscriberPage,
-    //   },
-    // },
   ],
 };
 

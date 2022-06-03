@@ -14,19 +14,20 @@ import {
   ObservableLike,
   SubscriberLike,
 } from '@rxjs-insights/core';
-import {
-  deref,
-  Event,
-  Observable,
-  ObservableEvent,
-  Subscriber,
-} from '@rxjs-insights/recorder';
+import { deref, Event, Observable, Subscriber } from '@rxjs-insights/recorder';
 import { Target, Targets, TargetsChannel } from '@app/protocols/targets';
 import {
   TargetsNotifications,
   TargetsNotificationsChannel,
 } from '@app/protocols/targets-notifications';
-import { Insights, InsightsChannel } from '@app/protocols/insights';
+import {
+  Insights,
+  InsightsChannel,
+  RelatedEvent,
+  RelatedObservable,
+  RelatedSubscriber,
+  Relations,
+} from '@app/protocols/insights';
 import {
   Trace,
   TraceFrame,
@@ -34,9 +35,16 @@ import {
   TracesChannel,
 } from '@app/protocols/traces';
 import { RefsService } from './refs-service';
-import { ObservableRef, Refs, RefsChannel } from '@app/protocols/refs';
 import {
+  ObservableRef,
+  Refs,
+  RefsChannel,
+  SubscriberRef,
+} from '@app/protocols/refs';
+import {
+  getDestinationEvents,
   getObservable,
+  getSourceEvents,
   getSubscriber,
   isObservableTarget,
   isSubscriberTarget,
@@ -160,13 +168,141 @@ const refs = new RefsService();
 
 startServer<Refs>(createInspectedWindowEvalServerAdapter(RefsChannel), refs);
 
+function getRelatedEvent(event: Event, excluded: boolean): RelatedEvent {
+  return {
+    time: event.time,
+    name: event.declaration.name,
+    type: event.type,
+    target: {
+      id: event.target.id,
+      type: event.target.type,
+    },
+    excluded,
+    precedingEvent: event.precedingEvent?.time,
+    succeedingEvents: event.succeedingEvents.map(({ time }) => time),
+  };
+}
+
+function getRelatedObservable(observable: Observable): RelatedObservable {
+  return {
+    id: observable.id,
+    name: observable.declaration.name,
+    tags: observable.tags,
+  };
+}
+
+function getRelatedSubscriber(subscriber: Subscriber): RelatedSubscriber {
+  return {
+    id: subscriber.id,
+    observable: subscriber.observable.id,
+  };
+}
+
+function addEvent(relations: Relations, event: Event, excluded = false) {
+  relations.events[event.time] = getRelatedEvent(event, excluded);
+  if (
+    event.target.type === 'observable' &&
+    relations.observables[event.target.id] === undefined
+  ) {
+    relations.observables[event.target.id] = getRelatedObservable(event.target);
+  }
+  if (
+    event.target.type === 'subscriber' &&
+    relations.subscribers[event.target.id] === undefined
+  ) {
+    relations.subscribers[event.target.id] = getRelatedSubscriber(event.target);
+    if (relations.observables[event.target.observable.id] === undefined) {
+      relations.observables[event.target.observable.id] = getRelatedObservable(
+        event.target.observable
+      );
+    }
+  }
+}
+
+function collectEvents(
+  event: Event,
+  relations: Relations,
+  expandIncludedEvents: (event: Event) => Event[],
+  expandExcludedEvents: (event: Event) => Event[],
+  root = false
+) {
+  if (relations.events[event.time] === undefined) {
+    addEvent(relations, event);
+    if (!root) {
+      for (const excludedEvent of expandExcludedEvents(event)) {
+        if (relations.events[excludedEvent.time] === undefined) {
+          addEvent(relations, excludedEvent, true);
+        }
+      }
+    }
+    for (const includedEvent of expandIncludedEvents(event)) {
+      collectEvents(
+        includedEvent,
+        relations,
+        expandIncludedEvents,
+        expandExcludedEvents
+      );
+    }
+  }
+}
+
+function getRelations(events: Event[]) {
+  const relations: Relations = {
+    observables: {},
+    subscribers: {},
+    events: {},
+  };
+  for (const event of events) {
+    collectEvents(
+      event,
+      relations,
+      getSourceEvents,
+      getDestinationEvents,
+      true
+    );
+    collectEvents(
+      event,
+      relations,
+      getDestinationEvents,
+      getSourceEvents,
+      true
+    );
+  }
+
+  return relations;
+}
+
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
   getObservableRef(observableId: number): ObservableRef | undefined {
     const observable = targets.observables[observableId];
     if (!observable) {
       return undefined;
     } else {
-      return refs.create(observable.target) as ObservableRef;
+      return refs.create(observable) as ObservableRef;
+    }
+  },
+  getObservableRelations(observableId: number): Relations | undefined {
+    const observable = targets.observables[observableId];
+    if (!observable) {
+      return undefined;
+    } else {
+      return getRelations(observable.events);
+    }
+  },
+  getSubscriberRef(subscriberId: number): SubscriberRef | undefined {
+    const subscriber = targets.subscribers[subscriberId];
+    if (!subscriber) {
+      return undefined;
+    } else {
+      return refs.create(subscriber) as SubscriberRef;
+    }
+  },
+  getSubscriberRelations(subscriberId: number): Relations | undefined {
+    const subscriber = targets.subscribers[subscriberId];
+    if (!subscriber) {
+      return undefined;
+    } else {
+      return getRelations(subscriber.events);
     }
   },
 });
