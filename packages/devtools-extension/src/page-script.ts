@@ -23,10 +23,12 @@ import {
 import {
   Insights,
   InsightsChannel,
+  ObservableState,
   RelatedEvent,
   RelatedObservable,
   RelatedSubscriber,
   Relations,
+  SubscriberState,
 } from '@app/protocols/insights';
 import {
   Trace,
@@ -192,9 +194,20 @@ function getRelatedObservable(observable: Observable): RelatedObservable {
 }
 
 function getRelatedSubscriber(subscriber: Subscriber): RelatedSubscriber {
+  const firstEvent = subscriber.events[0];
+  const lastEvent = subscriber.events.at(-1)!;
+  const startTime = firstEvent.time;
+  const endTime =
+    lastEvent.type === 'error' ||
+    lastEvent.type === 'complete' ||
+    lastEvent.type === 'unsubscribe'
+      ? lastEvent.time
+      : Infinity;
   return {
     id: subscriber.id,
     observable: subscriber.observable.id,
+    startTime,
+    endTime,
   };
 }
 
@@ -273,36 +286,26 @@ function getRelations(events: Event[]) {
 }
 
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
-  getObservableRef(observableId: number): ObservableRef | undefined {
+  getObservableState(observableId: number): ObservableState | undefined {
     const observable = targets.observables[observableId];
     if (!observable) {
       return undefined;
     } else {
-      return refs.create(observable) as ObservableRef;
+      return {
+        ref: refs.create(observable) as ObservableRef,
+        relations: getRelations(observable.events),
+      };
     }
   },
-  getObservableRelations(observableId: number): Relations | undefined {
-    const observable = targets.observables[observableId];
-    if (!observable) {
-      return undefined;
-    } else {
-      return getRelations(observable.events);
-    }
-  },
-  getSubscriberRef(subscriberId: number): SubscriberRef | undefined {
+  getSubscriberState(subscriberId: number): SubscriberState | undefined {
     const subscriber = targets.subscribers[subscriberId];
     if (!subscriber) {
       return undefined;
     } else {
-      return refs.create(subscriber) as SubscriberRef;
-    }
-  },
-  getSubscriberRelations(subscriberId: number): Relations | undefined {
-    const subscriber = targets.subscribers[subscriberId];
-    if (!subscriber) {
-      return undefined;
-    } else {
-      return getRelations(subscriber.events);
+      return {
+        ref: refs.create(subscriber) as SubscriberRef,
+        relations: getRelations(subscriber.events),
+      };
     }
   },
 });

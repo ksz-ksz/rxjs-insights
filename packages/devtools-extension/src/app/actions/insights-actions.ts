@@ -1,12 +1,12 @@
 import { createActions } from '@lib/store';
-import { ObservableRef, Ref, SubscriberRef } from '@app/protocols/refs';
+import { ObservableState, SubscriberState } from '@app/store/insights';
 
 export interface InsightsActions {
-  ObservableRefLoaded: {
-    ref: ObservableRef | undefined;
+  ObservableStateLoaded: {
+    state: ObservableState | undefined;
   };
-  SubscriberRefLoaded: {
-    ref: SubscriberRef | undefined;
+  SubscriberStateLoaded: {
+    state: SubscriberState | undefined;
   };
 }
 

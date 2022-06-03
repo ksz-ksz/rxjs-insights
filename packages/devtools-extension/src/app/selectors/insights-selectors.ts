@@ -10,24 +10,24 @@ const insightsState = createSliceSelector<'insights', InsightsState>(
   'insights'
 );
 
-export const observableRef = createSelector(
+export const observableState = createSelector(
   {
     route: router.selectors.route(observableRouteToken),
     insights: insightsState,
   },
   ({ route, insights }) =>
     route?.params?.observableId
-      ? insights.observables[parseInt(route.params.observableId, 10)]?.ref
+      ? insights.observables[parseInt(route.params.observableId, 10)]
       : undefined
 );
 
-export const subscriberRef = createSelector(
+export const subscriberState = createSelector(
   {
     route: router.selectors.route(subscriberRouteToken),
     insights: insightsState,
   },
   ({ route, insights }) =>
     route?.params?.subscriberId
-      ? insights.subscribers[parseInt(route.params.subscriberId, 10)]?.ref
+      ? insights.subscribers[parseInt(route.params.subscriberId, 10)]
       : undefined
 );

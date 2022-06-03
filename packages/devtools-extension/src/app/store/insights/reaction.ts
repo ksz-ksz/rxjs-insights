@@ -18,10 +18,12 @@ export const insightsReaction = combineReactions()
         switchMap((route) => {
           const observableId = route.params?.observableId;
           return observableId !== undefined
-            ? from(insightsClient.getObservableRef(parseInt(observableId, 10)))
+            ? from(
+                insightsClient.getObservableState(parseInt(observableId, 10))
+              )
             : EMPTY;
         }),
-        map((ref) => insightsActions.ObservableRefLoaded({ ref }))
+        map((state) => insightsActions.ObservableStateLoaded({ state }))
       )
     )
   )
@@ -33,10 +35,12 @@ export const insightsReaction = combineReactions()
         switchMap((route) => {
           const subscriberId = route.params?.subscriberId;
           return subscriberId !== undefined
-            ? from(insightsClient.getSubscriberRef(parseInt(subscriberId, 10)))
+            ? from(
+                insightsClient.getSubscriberState(parseInt(subscriberId, 10))
+              )
             : EMPTY;
         }),
-        map((ref) => insightsActions.SubscriberRefLoaded({ ref }))
+        map((state) => insightsActions.SubscriberStateLoaded({ state }))
       )
     )
   );

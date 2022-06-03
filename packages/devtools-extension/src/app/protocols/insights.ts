@@ -10,6 +10,8 @@ export interface RelatedObservable {
 
 export interface RelatedSubscriber {
   id: number;
+  startTime: number;
+  endTime: number;
   observable: number;
 }
 
@@ -32,9 +34,17 @@ export interface Relations {
   events: Record<number, RelatedEvent>;
 }
 
+export interface SubscriberState {
+  ref: SubscriberRef;
+  relations: Relations;
+}
+
+export interface ObservableState {
+  ref: ObservableRef;
+  relations: Relations;
+}
+
 export interface Insights {
-  getObservableRef(observableId: number): ObservableRef | undefined;
-  getObservableRelations(observableId: number): Relations | undefined;
-  getSubscriberRef(observableId: number): SubscriberRef | undefined;
-  getSubscriberRelations(observableId: number): Relations | undefined;
+  getObservableState(observableId: number): ObservableState | undefined;
+  getSubscriberState(observableId: number): SubscriberState | undefined;
 }
