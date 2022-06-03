@@ -4,7 +4,6 @@
     "paths": {
       "@rxjs-insights/core": ["./packages/core/src/index.ts"],
       "@rxjs-insights/recorder": ["./packages/recorder/src/index.ts"],
-      "@rxjs-insights/recorder-utils": ["./packages/recorder-utils/src/index.ts"]
     }
   },
   "references": [

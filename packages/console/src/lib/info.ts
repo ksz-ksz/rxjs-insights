@@ -1,7 +1,13 @@
 import { ObservableLike, SubscriptionLike } from '@rxjs-insights/core';
 import { isObservableTarget, isSubscriberTarget } from './target';
-import { getSubscriber } from './get-subscriber';
-import { getObservable } from './get-observable';
+import {
+  getDestinationEvents,
+  getObservable,
+  getPrecedingEvents,
+  getSourceEvents,
+  getSubscriber,
+  getSucceedingEvents,
+} from '@rxjs-insights/recorder-utils';
 import {
   Event,
   Observable,
@@ -26,12 +32,6 @@ import {
   taskTag,
   textTag,
 } from './tag';
-import {
-  getDestinationEvents,
-  getPrecedingEvents,
-  getSourceEvents,
-  getSucceedingEvents,
-} from './event-utils';
 
 interface Printable {
   tag: TagLike;

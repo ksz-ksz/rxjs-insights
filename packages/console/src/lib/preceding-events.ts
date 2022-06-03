@@ -1,14 +1,16 @@
 import { ObservableLike, SubscriptionLike } from '@rxjs-insights/core';
 import { Event, Observable, Subscriber } from '@rxjs-insights/recorder';
-import { getObservable } from './get-observable';
+import {
+  getObservable,
+  getPrecedingEvents,
+  getSubscriber,
+} from '@rxjs-insights/recorder-utils';
 import {
   eventConnectedEvents,
   observableConnectedEvents,
   subscriberConnectedEvents,
 } from './connected-events';
 import { isObservableTarget, isSubscriberTarget } from './target';
-import { getSubscriber } from './get-subscriber';
-import { getPrecedingEvents } from './event-utils';
 
 export function eventPrecedingEvents(
   event: Event,

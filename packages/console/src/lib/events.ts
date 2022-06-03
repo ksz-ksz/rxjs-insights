@@ -1,6 +1,6 @@
 import { ObservableLike, SubscriptionLike } from '@rxjs-insights/core';
 import { Event, Observable, Subscriber } from '@rxjs-insights/recorder';
-import { getObservable } from './get-observable';
+import { getObservable, getSubscriber } from '@rxjs-insights/recorder-utils';
 import {
   formatEvent,
   formatNothingToShow,
@@ -8,7 +8,6 @@ import {
   formatSubscriber,
 } from './format';
 import { isObservableTarget, isSubscriberTarget } from './target';
-import { getSubscriber } from './get-subscriber';
 
 function printEvents(events: Event[], label: any[]) {
   console.groupCollapsed(...label);

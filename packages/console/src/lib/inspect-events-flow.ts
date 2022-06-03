@@ -9,14 +9,14 @@ import {
   formatTaskWithTriggeredEvent,
 } from './format';
 import { isObservableTarget, isSubscriberTarget } from './target';
-import { getSubscriber } from './get-subscriber';
-import { getObservable } from './get-observable';
 import {
+  getObservable,
   getPrecedingEvent,
   getPrecedingEvents,
   getSourceEvents,
+  getSubscriber,
   getSucceedingEvents,
-} from './event-utils';
+} from '@rxjs-insights/recorder-utils';
 
 const eventsComparator = (a: Event, b: Event) => a.time - b.time;
 

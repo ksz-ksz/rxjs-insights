@@ -1,7 +1,7 @@
 {
-  "name": "@rxjs-insights/console",
+  "name": "@rxjs-insights/recorder-utils",
   "version": "0.2.0",
-  "description": "See the data gathered by rxjs-insights right in the console.",
+  "description": "Helper functions for the rxjs-insights' recorder.",
   "keywords": [
     "rxjs",
     "debug",
@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "@rxjs-insights/core": "^0.2.0",
-    "@rxjs-insights/recorder": "^0.2.0",
-    "@rxjs-insights/recorder-utils": "^0.2.0"
+    "@rxjs-insights/recorder": "^0.2.0"
   }
 }

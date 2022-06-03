@@ -1,10 +1,12 @@
 import { ObservableLike, SubscriptionLike } from '@rxjs-insights/core';
 import { Observable, Subscriber } from '@rxjs-insights/recorder';
-import { getObservable } from './get-observable';
+import {
+  getDestinationEvents,
+  getObservable,
+  getSubscriber,
+} from '@rxjs-insights/recorder-utils';
 import { observableConnections, subscriberConnections } from './connections';
 import { isObservableTarget, isSubscriberTarget } from './target';
-import { getSubscriber } from './get-subscriber';
-import { getDestinationEvents } from './event-utils';
 
 export function subscriberDestinations(subscriber: Subscriber) {
   subscriberConnections('Destination', getDestinationEvents, subscriber);

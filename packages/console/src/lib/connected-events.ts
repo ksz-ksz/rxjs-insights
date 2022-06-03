@@ -6,7 +6,7 @@ import {
   formatSubscriber,
   formatTask,
 } from './format';
-import { getPrecedingEvent } from './event-utils';
+import { getPrecedingEvent } from '@rxjs-insights/recorder-utils';
 
 function eventConnections(
   direction: 'Preceding' | 'Succeeding',
