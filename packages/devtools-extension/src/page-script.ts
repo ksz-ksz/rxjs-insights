@@ -234,8 +234,9 @@ function addRelatedEvent(relations: Relations, event: Event) {
   const events = relations.events;
   if (events[event.time] === undefined) {
     events[event.time] = {
+      type: 'event',
       time: event.time,
-      type: event.type,
+      eventType: event.type,
       name: event.declaration.name,
       target: {
         type: event.target.type,
