@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useSelector } from '@app/store';
 import { RefOutlet } from '@app/components/ref-outlet';
 import { Scrollable } from '@app/components/scrollable';
-import { Container } from '@mui/material';
+import { Box, Container } from '@mui/material';
 import { Graph, NodeRendererProps } from '@app/components/graph';
 import {
   RelatedHierarchyNode,
@@ -58,12 +58,19 @@ export function SubscriberPage() {
   const ref = state?.ref;
   if (ref) {
     return (
-      <Scrollable>
-        <Container>
-          <RefOutlet reference={ref} />
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'row',
+        }}
+      >
+        <Box sx={{ width: '240px', flexGrow: 0, flexShrink: 0 }}>Events</Box>
+        <Box sx={{ flexGrow: 1, flexShrink: 1 }}>
           <Graph nodes={nodes} links={links} nodeRenderer={NodeRenderer} />
-        </Container>
-      </Scrollable>
+        </Box>
+      </Box>
     );
   } else {
     return null;

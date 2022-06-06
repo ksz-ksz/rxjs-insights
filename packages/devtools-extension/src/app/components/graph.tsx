@@ -324,7 +324,7 @@ export function Graph<T>({ nodes, links, focus, nodeRenderer }: GraphProps<T>) {
       xmlns="http://www.w3.org/2000/svg"
       style={{
         width: '100%',
-        maxHeight: '600',
+        height: '100%',
       }}
     >
       <TransitionGroup component="g">
