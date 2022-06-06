@@ -14,7 +14,13 @@ import {
   ObservableLike,
   SubscriberLike,
 } from '@rxjs-insights/core';
-import { deref, Event, Observable, Subscriber } from '@rxjs-insights/recorder';
+import {
+  deref,
+  Event,
+  Observable,
+  Subscriber,
+  Task,
+} from '@rxjs-insights/recorder';
 import { Target, Targets, TargetsChannel } from '@app/protocols/targets';
 import {
   TargetsNotifications,
@@ -24,9 +30,8 @@ import {
   Insights,
   InsightsChannel,
   ObservableState,
-  RelatedEvent,
-  RelatedObservable,
-  RelatedSubscriber,
+  RelatedHierarchyNode,
+  RelatedHierarchyTree,
   Relations,
   SubscriberState,
 } from '@app/protocols/insights';
@@ -37,12 +42,7 @@ import {
   TracesChannel,
 } from '@app/protocols/traces';
 import { RefsService } from './refs-service';
-import {
-  ObservableRef,
-  Refs,
-  RefsChannel,
-  SubscriberRef,
-} from '@app/protocols/refs';
+import { Refs, RefsChannel } from '@app/protocols/refs';
 import {
   getDestinationEvents,
   getObservable,
@@ -170,119 +170,133 @@ const refs = new RefsService();
 
 startServer<Refs>(createInspectedWindowEvalServerAdapter(RefsChannel), refs);
 
-function getRelatedEvent(event: Event, excluded: boolean): RelatedEvent {
-  return {
-    time: event.time,
-    name: event.declaration.name,
-    type: event.type,
-    target: {
-      id: event.target.id,
-      type: event.target.type,
-    },
-    excluded,
-    precedingEvent: event.precedingEvent?.time,
-    succeedingEvents: event.succeedingEvents.map(({ time }) => time),
-  };
-}
-
-function getRelatedObservable(observable: Observable): RelatedObservable {
-  return {
-    id: observable.id,
-    name: observable.declaration.name,
-    tags: observable.tags,
-  };
-}
-
-function getRelatedSubscriber(subscriber: Subscriber): RelatedSubscriber {
-  const firstEvent = subscriber.events[0];
-  const lastEvent = subscriber.events.at(-1)!;
-  const startTime = firstEvent.time;
-  const endTime =
-    lastEvent.type === 'error' ||
-    lastEvent.type === 'complete' ||
-    lastEvent.type === 'unsubscribe'
-      ? lastEvent.time
-      : Infinity;
-  return {
-    id: subscriber.id,
-    observable: subscriber.observable.id,
-    startTime,
-    endTime,
-  };
-}
-
-function addEvent(relations: Relations, event: Event, excluded = false) {
-  relations.events[event.time] = getRelatedEvent(event, excluded);
-  if (
-    event.target.type === 'observable' &&
-    relations.observables[event.target.id] === undefined
-  ) {
-    relations.observables[event.target.id] = getRelatedObservable(event.target);
+function getTargets(relations: Relations, type: 'subscriber' | 'observable') {
+  switch (type) {
+    case 'subscriber':
+      return relations.subscribers;
+    case 'observable':
+      return relations.observables;
   }
-  if (
-    event.target.type === 'subscriber' &&
-    relations.subscribers[event.target.id] === undefined
-  ) {
-    relations.subscribers[event.target.id] = getRelatedSubscriber(event.target);
-    if (relations.observables[event.target.observable.id] === undefined) {
-      relations.observables[event.target.observable.id] = getRelatedObservable(
-        event.target.observable
-      );
+}
+
+function getStartTime(events: Event[]) {
+  if (events.length === 0) {
+    return Infinity;
+  } else {
+    return events[0].time;
+  }
+}
+
+function getEndTime(events: Event[]) {
+  if (events.length === 0) {
+    return -Infinity;
+  } else {
+    const lastEvent = events.at(-1)!;
+    switch (lastEvent.type) {
+      case 'error':
+      case 'complete':
+      case 'unsubscribe':
+        return lastEvent.time;
+      default:
+        return Infinity;
     }
   }
 }
 
-function collectEvents(
-  event: Event,
+function addRelatedTarget(
   relations: Relations,
-  expandIncludedEvents: (event: Event) => Event[],
-  expandExcludedEvents: (event: Event) => Event[],
-  root = false
+  target: Subscriber | Observable
 ) {
-  if (relations.events[event.time] === undefined) {
-    addEvent(relations, event);
-    if (!root) {
-      for (const excludedEvent of expandExcludedEvents(event)) {
-        if (relations.events[excludedEvent.time] === undefined) {
-          addEvent(relations, excludedEvent, true);
-        }
-      }
-    }
-    for (const includedEvent of expandIncludedEvents(event)) {
-      collectEvents(
-        includedEvent,
-        relations,
-        expandIncludedEvents,
-        expandExcludedEvents
-      );
-    }
+  const targets = getTargets(relations, target.type);
+  if (targets[target.id] === undefined) {
+    targets[target.id] = {
+      id: target.id,
+      name: target.declaration.name,
+      type: target.type,
+      tags: target.tags,
+      startTime: getStartTime(target.events),
+      endTime: getEndTime(target.events),
+    };
   }
 }
 
-function getRelations(events: Event[]) {
+function addRelatedTask(relations: Relations, task: Task) {
+  const tasks = relations.tasks;
+  if (tasks[task.id] === undefined) {
+    tasks[task.id] = {
+      id: task.id,
+      name: task.name,
+    };
+  }
+}
+
+function addRelatedEvent(relations: Relations, event: Event) {
+  const events = relations.events;
+  if (events[event.time] === undefined) {
+    events[event.time] = {
+      time: event.time,
+      type: event.type,
+      name: event.declaration.name,
+      target: {
+        type: event.target.type,
+        id: event.target.id,
+      },
+      task: event.task.id,
+      precedingEvent: event.precedingEvent?.time,
+      succeedingEvents: event.succeedingEvents.map(({ time }) => time),
+    };
+    if (event.precedingEvent) {
+      addRelatedEvent(relations, event.precedingEvent);
+    }
+    for (const succeedingEvent of event.succeedingEvents) {
+      addRelatedEvent(relations, succeedingEvent);
+    }
+    addRelatedTask(relations, event.task);
+  }
+}
+
+function collectRelatedTargets(
+  relations: Relations,
+  target: Subscriber | Observable,
+  getRelatedEvents: (event: Event) => Event[]
+): RelatedHierarchyNode {
+  addRelatedTarget(relations, target);
+  for (const event of target.events) {
+    addRelatedEvent(relations, event);
+  }
+  const relatedEvents = target.events.flatMap(getRelatedEvents);
+  const relatedTargets = new Set(relatedEvents.map(({ target }) => target));
+  relatedTargets.delete(target);
+  return {
+    target: {
+      type: target.type,
+      id: target.id,
+    },
+    children: Array.from(relatedTargets).map((relatedTarget) =>
+      collectRelatedTargets(relations, relatedTarget, getRelatedEvents)
+    ),
+  };
+}
+function getTargetState(target: Subscriber): SubscriberState;
+function getTargetState(target: Observable): ObservableState;
+function getTargetState(target: Subscriber | Observable) {
+  const ref = refs.create(target);
   const relations: Relations = {
     observables: {},
     subscribers: {},
     events: {},
+    tasks: {},
   };
-  for (const event of events) {
-    collectEvents(
-      event,
+  const hierarchy: RelatedHierarchyTree = {
+    sources: collectRelatedTargets(relations, target, getSourceEvents),
+    destinations: collectRelatedTargets(
       relations,
-      getSourceEvents,
-      getDestinationEvents,
-      true
-    );
-    collectEvents(
-      event,
-      relations,
-      getDestinationEvents,
-      getSourceEvents,
-      true
-    );
-  }
+      target,
+      getDestinationEvents
+    ),
+  };
 
-  return relations;
+  return { ref, relations, hierarchy };
 }
 
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
@@ -291,10 +305,7 @@ startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
     if (!observable) {
       return undefined;
     } else {
-      return {
-        ref: refs.create(observable) as ObservableRef,
-        relations: getRelations(observable.events),
-      };
+      return getTargetState(observable);
     }
   },
   getSubscriberState(subscriberId: number): SubscriberState | undefined {
@@ -302,10 +313,7 @@ startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
     if (!subscriber) {
       return undefined;
     } else {
-      return {
-        ref: refs.create(subscriber) as SubscriberRef,
-        relations: getRelations(subscriber.events),
-      };
+      return getTargetState(subscriber);
     }
   },
 });

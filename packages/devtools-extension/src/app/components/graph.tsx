@@ -1,13 +1,9 @@
-import React, {
-  JSXElementConstructor,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { JSXElementConstructor, useEffect, useRef } from 'react';
 import { usePrevious } from '@app/utils';
 import gsap from 'gsap';
 import { Transition, TransitionGroup } from 'react-transition-group';
 import { linkHorizontal } from 'd3-shape';
+import { LinkData, NodeData } from '@app/components/tree';
 
 const duration = 0.24;
 
@@ -226,7 +222,7 @@ function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
   );
 }
 
-function getBounds(nodes: NodeData<unknown>[], focus: number[]) {
+function getBounds(nodes: NodeData<unknown>[], focus: (number | string)[]) {
   let minX = Infinity;
   let maxX = -Infinity;
   let minY = Infinity;
@@ -268,22 +264,10 @@ function getViewBox(
   return { x, y, w, h };
 }
 
-export interface NodeData<T> {
-  id: number;
-  x: number;
-  y: number;
-  data: T;
-}
-
-export interface LinkData<T> {
-  source: NodeData<T>;
-  target: NodeData<T>;
-}
-
 export interface GraphProps<T> {
   nodes: NodeData<T>[];
   links: LinkData<T>[];
-  focus?: number[];
+  focus?: (number | string)[];
   nodeRenderer?: JSXElementConstructor<{ node: NodeData<T> }>;
 }
 

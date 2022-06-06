@@ -1,11 +1,34 @@
-import { interval, map, of, switchMap, take } from 'rxjs';
+import {
+  asapScheduler,
+  asyncScheduler,
+  interval,
+  map,
+  merge,
+  Observable,
+  observeOn,
+  of,
+  scheduled,
+  share,
+  switchMap,
+  take,
+} from 'rxjs';
 import { inspect } from '@rxjs-insights/console';
 
-const inspectDevtools: typeof inspect = (window as any)
-  .RXJS_ISNIGHTS_DEVTOOLS_INSPECT;
+const inspectDevtools: typeof inspect =
+  (window as any).RXJS_ISNIGHTS_DEVTOOLS_INSPECT ?? inspect;
 
 export function playground() {
-  const obs = of(of('a', 'b', 'c'), of(1, 2, 3)).pipe(switchMap((x) => x));
+  const obs1 = scheduled([of('a', 'b', 'c'), of(1, 2, 3)], asyncScheduler).pipe(
+    switchMap((x) => x),
+    (source) =>
+      new Observable((observer) => {
+        const subscription = source.subscribe(observer);
+        inspectDevtools(subscription);
+        return subscription;
+      }),
+    share()
+  );
+  const obs = merge(obs1, obs1);
   const sub = obs.subscribe(subscriber('A'));
 
   setTimeout(() => {

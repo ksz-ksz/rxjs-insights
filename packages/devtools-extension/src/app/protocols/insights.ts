@@ -2,49 +2,65 @@ import { ObservableRef, SubscriberRef } from '@app/protocols/refs';
 
 export const InsightsChannel = 'InsightsChannel';
 
-export interface RelatedObservable {
+export interface RelatedTarget {
   id: number;
+  type: 'subscriber' | 'observable';
   name: string;
   tags: string[];
-}
-
-export interface RelatedSubscriber {
-  id: number;
   startTime: number;
   endTime: number;
-  observable: number;
+}
+
+export interface TargetId {
+  type: 'subscriber' | 'observable';
+  id: number;
+}
+
+export interface RelatedTask {
+  id: number;
+  name: string;
 }
 
 export interface RelatedEvent {
   time: number;
   type: 'next' | 'error' | 'complete' | 'subscribe' | 'unsubscribe';
   name: string;
-  target: {
-    type: 'subscriber' | 'observable';
-    id: number;
-  };
-  excluded: boolean;
+  target: TargetId;
+  task: number;
   precedingEvent: number | undefined;
   succeedingEvents: number[];
 }
 
+export interface RelatedHierarchyNode {
+  target: TargetId;
+  children: RelatedHierarchyNode[];
+}
+
+export interface RelatedHierarchyTree {
+  sources: RelatedHierarchyNode;
+  destinations: RelatedHierarchyNode;
+}
+
 export interface Relations {
-  observables: Record<number, RelatedObservable>;
-  subscribers: Record<number, RelatedSubscriber>;
+  observables: Record<number, RelatedTarget>;
+  subscribers: Record<number, RelatedTarget>;
   events: Record<number, RelatedEvent>;
+  tasks: Record<number, RelatedTask>;
 }
 
 export interface SubscriberState {
   ref: SubscriberRef;
   relations: Relations;
+  hierarchy: RelatedHierarchyTree;
 }
 
 export interface ObservableState {
   ref: ObservableRef;
   relations: Relations;
+  hierarchy: RelatedHierarchyTree;
 }
 
 export interface Insights {
   getObservableState(observableId: number): ObservableState | undefined;
-  getSubscriberState(observableId: number): SubscriberState | undefined;
+  getSubscriberState(subscriberId: number): SubscriberState | undefined;
 }

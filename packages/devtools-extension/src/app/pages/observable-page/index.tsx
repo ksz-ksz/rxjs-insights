@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSelector } from '@app/store';
 import { observableState } from '@app/selectors/insights-selectors';
 import { RefOutlet } from '@app/components/ref-outlet';
@@ -11,8 +11,8 @@ import {
   HierarchyPointNode,
   tree,
 } from 'd3-hierarchy';
-import { LinkData, NodeData, NodeRendererProps } from '@app/components/graph';
-import { insightsClient } from '@app/clients/insights';
+import { NodeRendererProps } from '@app/components/graph';
+import { LinkData, NodeData } from '@app/components/tree';
 
 const rootHierarchyNodeA = hierarchy({
   name: 'A',
