@@ -5,8 +5,9 @@ import {
   RouterConfig,
 } from '@lib/store-router';
 import { JSXElementConstructor } from 'react';
-import { Store } from '@lib/store';
+import { select, Store } from '@lib/store';
 import { statusSelector, StatusSlice } from '@app/store/status';
+import { subscriberStateSelector } from '@app/selectors/insights-selectors';
 
 export const statusRouteToken = createRouteToken('status');
 export const dashboardRouteToken = createRouteToken('dashboard');
@@ -48,6 +49,15 @@ export const routerConfig: RouterConfig<
         {
           token: subscriberRouteToken,
           path: ['subscriber', ':subscriberId'],
+          await(store, url, route) {
+            return store.pipe(
+              select(
+                subscriberStateSelector(
+                  parseInt(route.params!.subscriberId, 10)
+                )
+              )
+            );
+          },
         },
       ],
     },

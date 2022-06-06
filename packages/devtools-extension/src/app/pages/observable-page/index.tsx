@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { useSelector } from '@app/store';
-import { observableState } from '@app/selectors/insights-selectors';
 import { RefOutlet } from '@app/components/ref-outlet';
 import { Scrollable } from '@app/components/scrollable';
 import { Container } from '@mui/material';
@@ -13,6 +12,7 @@ import {
 } from 'd3-hierarchy';
 import { NodeRendererProps } from '@app/components/graph';
 import { LinkData, NodeData } from '@app/components/tree';
+import { activeObservableStateSelector } from '@app/selectors/active-target-state-selector';
 
 const rootHierarchyNodeA = hierarchy({
   name: 'A',
@@ -120,7 +120,7 @@ function NodeRenderer({ node }: NodeRendererProps<any>) {
 }
 
 export function ObservablePage() {
-  const state = useSelector(observableState);
+  const state = useSelector(activeObservableStateSelector);
   const ref = state?.ref;
   const [rootIndex, setRootIndex] = useState(0);
   const { nodes, links } = useMemo(

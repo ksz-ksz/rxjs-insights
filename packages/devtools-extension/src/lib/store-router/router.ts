@@ -15,7 +15,17 @@ import {
   Store,
 } from '@lib/store';
 import { createUrl, Url } from './url';
-import { concatMap, EMPTY, of } from 'rxjs';
+import {
+  concat,
+  concatAll,
+  concatMap,
+  EMPTY,
+  filter,
+  first,
+  ignoreElements,
+  Observable,
+  of,
+} from 'rxjs';
 import { RouteMatcher } from './route-matcher';
 import { RouteToken } from './route-token';
 
@@ -151,13 +161,14 @@ export function createRouterSlice<SLICE extends string, DATA, METADATA>(
               const nextUrl = action.payload.url;
               const nextRoutes = router.match(action.payload.url.path);
               const dispatchOnEnter: Action[] = [];
+              const awaits: Observable<never>[] = [];
 
               for (const route of nextRoutes) {
                 const routeConfig = router.getRouteConfig(route.routeConfigId);
                 if (routeConfig?.interceptEnter) {
                   const result = routeConfig.interceptEnter(
                     store,
-                    prevUrl,
+                    nextUrl,
                     route
                   );
                   if (typeof result === 'boolean') {
@@ -172,19 +183,29 @@ export function createRouterSlice<SLICE extends string, DATA, METADATA>(
                 }
                 if (routeConfig?.dispatchOnEnter) {
                   dispatchOnEnter.push(
-                    routeConfig.dispatchOnEnter(store, prevUrl, route)
+                    routeConfig.dispatchOnEnter(store, nextUrl, route)
+                  );
+                }
+                if (routeConfig?.await) {
+                  awaits.push(
+                    routeConfig
+                      .await(store, nextUrl, route)
+                      .pipe(first(Boolean), ignoreElements())
                   );
                 }
                 dispatchOnEnter.push(router.actions.RouteEnter({ route }));
               }
 
-              return of(
-                ...dispatchOnLeave,
-                router.actions.NavigationComplete({
-                  url: nextUrl,
-                  routes: nextRoutes,
-                }),
-                ...dispatchOnEnter
+              return concat(
+                of(...dispatchOnLeave),
+                of(...dispatchOnEnter),
+                ...awaits,
+                of(
+                  router.actions.NavigationComplete({
+                    url: nextUrl,
+                    routes: nextRoutes,
+                  })
+                )
               );
             })
           ),

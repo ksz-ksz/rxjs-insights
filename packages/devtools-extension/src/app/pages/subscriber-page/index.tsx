@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useSelector } from '@app/store';
-import { subscriberState } from '@app/selectors/insights-selectors';
 import { RefOutlet } from '@app/components/ref-outlet';
 import { Scrollable } from '@app/components/scrollable';
 import { Container } from '@mui/material';
@@ -11,6 +10,7 @@ import {
   TargetId,
 } from '@app/protocols/insights';
 import { getDoubleTree } from '@app/components/tree';
+import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
 
 function getTarget(relations: Relations, target: TargetId) {
   switch (target.type) {
@@ -38,7 +38,7 @@ function getNodeRenderer(relations: Relations) {
 }
 
 export function SubscriberPage() {
-  const state = useSelector(subscriberState);
+  const state = useSelector(activeSubscriberStateSelector);
   const NodeRenderer = useMemo(
     () => (state ? getNodeRenderer(state.relations) : undefined),
     [state]

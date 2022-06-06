@@ -3,8 +3,9 @@ import { filter, map, OperatorFunction, pipe } from 'rxjs';
 import { Action } from '@lib/store';
 import { Route } from './route';
 import { RouteToken } from './route-token';
+import { declareOperator } from '@rxjs-insights/core/declarations';
 
-export function filterRoute<DATA>(
+export const filterRoute = declareOperator(function filterRoute<DATA>(
   router: Router<any, DATA, any>,
   routeToken: RouteToken
 ): OperatorFunction<Action<{ route: Route<DATA> }>, Route<DATA>> {
@@ -16,9 +17,9 @@ export function filterRoute<DATA>(
     ),
     map((action) => action.payload.route)
   );
-}
+});
 
-export function filterRoutes<DATA>(
+export const filterRoutes = declareOperator(function filterRoutes<DATA>(
   router: Router<any, DATA, any>,
   routeToken: RouteToken
 ): OperatorFunction<Action<{ routes: Route<DATA>[] }>, Route<DATA>> {
@@ -31,4 +32,4 @@ export function filterRoutes<DATA>(
     ),
     filter(Boolean)
   );
-}
+});

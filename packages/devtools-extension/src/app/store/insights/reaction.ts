@@ -1,5 +1,5 @@
 import { combineReactions, createReaction, filterActions } from '@lib/store';
-import { filterRoutes } from '@lib/store-router';
+import { filterRoute } from '@lib/store-router';
 import {
   observableRouteToken,
   router,
@@ -8,13 +8,14 @@ import {
 import { EMPTY, from, map, switchMap } from 'rxjs';
 import { insightsClient } from '@app/clients/insights';
 import { insightsActions } from '@app/actions/insights-actions';
+import { inspect } from '@rxjs-insights/console';
 
 export const insightsReaction = combineReactions()
   .add(
     createReaction((action$) =>
       action$.pipe(
-        filterActions(router.actions.NavigationComplete),
-        filterRoutes(router, observableRouteToken),
+        filterActions(router.actions.RouteEnter),
+        filterRoute(router, observableRouteToken),
         switchMap((route) => {
           const observableId = route.params?.observableId;
           return observableId !== undefined
@@ -30,8 +31,8 @@ export const insightsReaction = combineReactions()
   .add(
     createReaction((action$) =>
       action$.pipe(
-        filterActions(router.actions.NavigationComplete),
-        filterRoutes(router, subscriberRouteToken),
+        filterActions(router.actions.RouteEnter),
+        filterRoute(router, subscriberRouteToken),
         switchMap((route) => {
           const subscriberId = route.params?.subscriberId;
           return subscriberId !== undefined

@@ -2,12 +2,14 @@ import { Action, ActionFactory, Store } from '@lib/store';
 import { Route } from './route';
 import { Url } from './url';
 import { RouteToken } from './route-token';
+import { Observable } from 'rxjs';
 
 export interface RouteConfig<DATA, METADATA> {
   path: string[];
   token?: RouteToken;
   data?: DATA;
   metadata?: METADATA;
+  await?: (store: Store<any>, url: Url, route: Route<DATA>) => Observable<any>;
   dispatchOnEnter?: (store: Store<any>, url: Url, route: Route<DATA>) => Action;
   dispatchOnLeave?: (store: Store<any>, url: Url, route: Route<DATA>) => Action;
   interceptEnter?: (
