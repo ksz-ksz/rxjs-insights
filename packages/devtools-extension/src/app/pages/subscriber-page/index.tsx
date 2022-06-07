@@ -211,7 +211,7 @@ export function EventsLog(props: EventsLogProps) {
 
 export function SubscriberPage() {
   const [time, setTime] = useState(0);
-  const state = useSelector(activeSubscriberStateSelector);
+  const state = useSelector(activeSubscriberStateSelector)!;
   const NodeRenderer = useMemo(
     () => (state ? getNodeRenderer(state.relations) : undefined),
     [state]
@@ -222,7 +222,10 @@ export function SubscriberPage() {
         ? getDoubleTree(
             state.hierarchy.sources,
             state.hierarchy.destinations,
-            (data) => data.target.id,
+            (data, path) =>
+              [...path, data]
+                .map((x: RelatedHierarchyNode) => x.target.id)
+                .join('/'),
             (data) =>
               data.children.filter((child) => {
                 const childTarget = getTarget(state.relations, child.target);
@@ -234,6 +237,7 @@ export function SubscriberPage() {
         : { nodes: [], links: [] },
     [state, time]
   );
+  console.log({ nodes, links });
   const entries = useMemo(
     () => (state ? getEventLog(state.relations) : []),
     [state]
@@ -260,12 +264,8 @@ export function SubscriberPage() {
             <EventsLog entries={entries} onEventSelected={onEventSelected} />
           </SidePanelSection>
           <SidePanelSection title="CONTEXT" basis={1}>
-            {state && (
-              <RefOutlet
-                label="event"
-                reference={state.relations.events[time]}
-              />
-            )}
+            <RefOutlet label="root" reference={state.ref} />
+            <RefOutlet label="event" reference={state.relations.events[time]} />
           </SidePanelSection>
         </SidePanel>
         <Box sx={{ flexGrow: 1, flexShrink: 1 }}>
