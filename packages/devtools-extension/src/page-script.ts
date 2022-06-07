@@ -242,6 +242,10 @@ function addRelatedEvent(relations: Relations, event: Event) {
         type: event.target.type,
         id: event.target.id,
       },
+      data:
+        event.type === 'next' || event.type === 'error'
+          ? refs.create(event.declaration.args?.[0], 0, false)
+          : undefined,
       task: event.task.id,
       precedingEvent: event.precedingEvent?.time,
       succeedingEvents: event.succeedingEvents.map(({ time }) => time),

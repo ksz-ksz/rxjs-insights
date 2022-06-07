@@ -2,14 +2,25 @@ import { EventRef, ObservableRef, SubscriberRef } from '@app/protocols/refs';
 
 export const InsightsChannel = 'InsightsChannel';
 
-export interface RelatedTarget {
+export interface RelatedSubscriber extends SubscriberRef {
   id: number;
-  type: 'subscriber' | 'observable';
+  type: 'subscriber';
   name: string;
   tags: string[];
   startTime: number;
   endTime: number;
 }
+
+export interface RelatedObservable extends ObservableRef {
+  id: number;
+  type: 'observable';
+  name: string;
+  tags: string[];
+  startTime: number;
+  endTime: number;
+}
+
+export type RelatedTarget = RelatedSubscriber | RelatedObservable;
 
 export interface TargetId {
   type: 'subscriber' | 'observable';
@@ -23,6 +34,7 @@ export interface RelatedTask {
 
 export interface RelatedEvent extends EventRef {
   time: number;
+  type: 'event';
   eventType: 'next' | 'error' | 'complete' | 'subscribe' | 'unsubscribe';
   name: string;
   target: TargetId;

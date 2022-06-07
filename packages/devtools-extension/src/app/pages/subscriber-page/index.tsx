@@ -81,7 +81,7 @@ export function SubscriberPage() {
           flexDirection: 'row',
         }}
       >
-        <Box sx={{ width: '240px', flexGrow: 0, flexShrink: 0 }}>
+        <Box sx={{ width: '360px', flexGrow: 0, flexShrink: 0 }}>
           <Divider>EVENTS</Divider>
           <Scrollable>
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
