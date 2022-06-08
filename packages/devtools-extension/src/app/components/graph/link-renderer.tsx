@@ -1,20 +1,18 @@
 import { LinkData } from '@app/components/tree';
 import React, { useRef } from 'react';
-import {
-  HorizontalLinkControl,
-  LinkControl,
-} from '@app/components/graph/link-control';
+import { DefaultLinkControl, LinkControl } from './link-control';
 
 export type LinkRendererProps<T> = { link: LinkData<T> };
-export const DefaultLinkRenderer = React.forwardRef<LinkControl>(
-  function LinkRenderer(props, forwardedRef) {
-    const pathRef = useRef<SVGPathElement | null>(null);
-    React.useImperativeHandle(
-      forwardedRef,
-      () => new HorizontalLinkControl(pathRef),
-      []
-    );
+export const DefaultLinkRenderer = React.forwardRef<
+  LinkControl,
+  LinkRendererProps<any>
+>(function DefaultLinkRenderer(props, forwardedRef) {
+  const elementRef = useRef<SVGPathElement | null>(null);
+  React.useImperativeHandle(
+    forwardedRef,
+    () => new DefaultLinkControl(elementRef),
+    []
+  );
 
-    return <path ref={pathRef} stroke="green" fill="transparent" />;
-  }
-);
+  return <path ref={elementRef} stroke="green" fill="transparent" />;
+});

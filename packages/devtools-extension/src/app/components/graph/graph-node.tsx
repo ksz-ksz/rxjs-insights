@@ -1,18 +1,17 @@
-import React, { JSXElementConstructor, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { usePrevious } from '@app/utils';
 import { duration } from '@app/components/graph/constants';
 import { Transition } from 'react-transition-group';
 import { NodeData } from '@app/components/tree';
-import {
-  DefaultNodeRenderer,
-  NodeRendererProps,
-} from '@app/components/graph/node-renderer';
+import { DefaultNodeRenderer, NodeRendererProps } from './node-renderer';
+import { Renderer } from './renderer';
+import { NodeControl } from './node-control';
 
 export interface GraphNodeProps<T> {
   in?: boolean;
   node: NodeData<T>;
-  nodeRenderer?: JSXElementConstructor<NodeRendererProps<T>>;
+  nodeRenderer?: Renderer<NodeRendererProps<T>, NodeControl>;
 }
 
 export function GraphNode<T>({
@@ -20,29 +19,36 @@ export function GraphNode<T>({
   node,
   nodeRenderer = DefaultNodeRenderer,
 }: GraphNodeProps<T>) {
-  const gRef = useRef<SVGGElement | null>(null);
+  const initRef = useRef(true);
+  const nodeRef = useRef<NodeControl | null>(null);
   const doneRef = useRef<(() => void) | null>(null);
-  const updateTweenRef = useRef<gsap.core.Tween | null>(null);
-  const tweenRef = useRef<gsap.core.Tween | null>(null);
-  const prevNode = usePrevious(node);
-
-  useEffect(function onInit() {
-    const g = gRef.current!;
-    g.setAttribute('opacity', '0');
-    g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
-  }, []);
+  const positionTweenRef = useRef<gsap.core.Tween | null>(null);
+  const opacityTweenRef = useRef<gsap.core.Tween | null>(null);
 
   useEffect(
     function onUpdate() {
-      if (inProp && prevNode) {
-        const g = gRef.current!;
-        updateTweenRef.current?.kill();
-        updateTweenRef.current = gsap.to(g, {
-          x: node.x,
-          y: node.y,
-          duration: duration,
-          delay: duration,
-        });
+      if (initRef.current) {
+        initRef.current = false;
+        nodeRef.current!.opacity = 0;
+        nodeRef.current!.position = { x: node.x, y: node.y };
+      } else if (inProp) {
+        positionTweenRef.current?.kill();
+        positionTweenRef.current = gsap.to(
+          { ...nodeRef.current!.position },
+          {
+            x: node.x,
+            y: node.y,
+            onUpdate() {
+              const [target] = this.targets();
+              nodeRef.current!.position = {
+                x: target.x,
+                y: target.y,
+              };
+            },
+            duration: duration,
+            delay: duration,
+          }
+        );
       }
     },
     [node]
@@ -58,8 +64,7 @@ export function GraphNode<T>({
         doneRef.current = done;
       }}
       onEnter={() => {
-        const g = gRef.current!;
-        tweenRef.current = gsap.to(g, {
+        opacityTweenRef.current = gsap.to(nodeRef.current!, {
           opacity: 1,
           delay: 2 * duration,
           duration,
@@ -72,14 +77,15 @@ export function GraphNode<T>({
         });
       }}
       onExit={() => {
-        const g = gRef.current;
-        tweenRef.current?.kill();
-        tweenRef.current = gsap.to(g, { opacity: 0, delay: 0, duration });
+        opacityTweenRef.current?.kill();
+        opacityTweenRef.current = gsap.to(nodeRef.current!, {
+          opacity: 0,
+          delay: 0,
+          duration,
+        });
       }}
     >
-      <g ref={gRef}>
-        <NodeRenderer node={node} />
-      </g>
+      <NodeRenderer node={node} ref={nodeRef} />
     </Transition>
   );
 }

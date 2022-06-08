@@ -11,7 +11,7 @@ export interface LinkControl {
   };
 }
 
-export class HorizontalLinkControl implements LinkControl {
+export class DefaultLinkControl implements LinkControl {
   private static LINK = linkHorizontal();
 
   private _opacity = 0;
@@ -22,7 +22,7 @@ export class HorizontalLinkControl implements LinkControl {
     targetY: 0,
   };
 
-  constructor(private readonly pathRef: RefObject<SVGPathElement | null>) {}
+  constructor(private readonly elementRef: RefObject<SVGPathElement | null>) {}
 
   get opacity(): number {
     return this._opacity;
@@ -30,8 +30,7 @@ export class HorizontalLinkControl implements LinkControl {
 
   set opacity(opacity: number) {
     this._opacity = opacity;
-    const path = this.pathRef.current!;
-    path.setAttribute('opacity', String(opacity));
+    this.elementRef.current!.setAttribute('opacity', String(opacity));
   }
 
   get position(): {
@@ -50,11 +49,10 @@ export class HorizontalLinkControl implements LinkControl {
     targetY: number;
   }) {
     this._position = position;
-    const path = this.pathRef.current!;
-    const d = HorizontalLinkControl.LINK({
+    const d = DefaultLinkControl.LINK({
       source: [position.sourceX, position.sourceY],
       target: [position.targetX, position.targetY],
     })!;
-    path.setAttribute('d', d);
+    this.elementRef.current!.setAttribute('d', d);
   }
 }

@@ -39,25 +39,27 @@ export function GraphLink<T>({
           targetY: link.target.y,
         };
       } else if (inProp) {
-        const startPosition = { ...linkRef.current!.position };
         positionTweenRef.current?.kill();
-        positionTweenRef.current = gsap.to(startPosition, {
-          sourceX: link.source.x,
-          sourceY: link.source.y,
-          targetX: link.target.x,
-          targetY: link.target.y,
-          onUpdate() {
-            const [target] = this.targets();
-            linkRef.current!.position = {
-              sourceX: target.sourceX,
-              sourceY: target.sourceY,
-              targetX: target.targetX,
-              targetY: target.targetY,
-            };
-          },
-          duration: duration,
-          delay: duration,
-        });
+        positionTweenRef.current = gsap.to(
+          { ...linkRef.current!.position },
+          {
+            sourceX: link.source.x,
+            sourceY: link.source.y,
+            targetX: link.target.x,
+            targetY: link.target.y,
+            onUpdate() {
+              const [target] = this.targets();
+              linkRef.current!.position = {
+                sourceX: target.sourceX,
+                sourceY: target.sourceY,
+                targetX: target.targetX,
+                targetY: target.targetY,
+              };
+            },
+            duration: duration,
+            delay: duration,
+          }
+        );
       }
     },
     [link]

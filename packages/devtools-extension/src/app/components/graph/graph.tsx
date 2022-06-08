@@ -9,6 +9,7 @@ import { Renderer } from '@app/components/graph/renderer';
 import { LinkControl } from '@app/components/graph/link-control';
 import { LinkRendererProps } from '@app/components/graph/link-renderer';
 import { GraphLink } from '@app/components/graph/graph-link';
+import { NodeControl } from './node-control';
 
 function getNodeKey(node: NodeData<any>) {
   return node.id;
@@ -64,7 +65,7 @@ export interface GraphProps<T> {
   nodes: NodeData<T>[];
   links: LinkData<T>[];
   focus?: (number | string)[];
-  nodeRenderer?: JSXElementConstructor<NodeRendererProps<T>>;
+  nodeRenderer?: Renderer<NodeRendererProps<T>, NodeControl>;
   linkRenderer?: Renderer<LinkRendererProps<T>, LinkControl>;
 }
 

@@ -294,7 +294,7 @@ export function SubscriberPage() {
         </SidePanelSection>
       </SidePanel>
       <Box sx={{ flexGrow: 1, flexShrink: 1 }}>
-        <Graph nodes={nodes} links={links} nodeRenderer={NodeRenderer} />
+        <Graph nodes={nodes} links={links} />
       </Box>
     </Box>
   );
