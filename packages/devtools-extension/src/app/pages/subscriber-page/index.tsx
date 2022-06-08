@@ -268,7 +268,10 @@ function getEventLog(relations: Relations) {
         task: relations.tasks[event.task],
       });
     }
-    const indent = event.precedingEvent ? indents[event.precedingEvent] + 1 : 0;
+    const indent =
+      event.precedingEvent !== undefined
+        ? indents[event.precedingEvent] + 1
+        : 0;
     indents[event.time] = indent;
     entries.push({
       type: 'event',
@@ -276,6 +279,8 @@ function getEventLog(relations: Relations) {
       indent,
     });
   }
+
+  console.log(indents);
 
   return entries;
 }
@@ -453,9 +458,10 @@ export function SubscriberPage() {
               data.children.filter((child) => {
                 const childTarget = state.relations.targets[child.target];
                 return (
-                  time !== undefined &&
-                  childTarget.startTime <= time &&
-                  time <= childTarget.endTime
+                  childTarget.type === 'observable' ||
+                  (time !== undefined &&
+                    (childTarget.startTime ?? Infinity) <= time &&
+                    time <= (childTarget.endTime ?? Infinity))
                 );
               })
           )

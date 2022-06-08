@@ -174,7 +174,7 @@ startServer<Refs>(createInspectedWindowEvalServerAdapter(RefsChannel), refs);
 
 function getStartTime(events: Event[]) {
   if (events.length === 0) {
-    return Infinity;
+    return undefined;
   } else {
     return events[0].time;
   }
@@ -182,7 +182,7 @@ function getStartTime(events: Event[]) {
 
 function getEndTime(events: Event[]) {
   if (events.length === 0) {
-    return -Infinity;
+    return undefined;
   } else {
     const lastEvent = events.at(-1)!;
     switch (lastEvent.type) {
@@ -191,7 +191,7 @@ function getEndTime(events: Event[]) {
       case 'unsubscribe':
         return lastEvent.time;
       default:
-        return Infinity;
+        return undefined;
     }
   }
 }
@@ -207,8 +207,10 @@ function addRelatedTarget(
       name: target.declaration.name,
       type: target.type,
       tags: target.tags,
-      startTime: getStartTime(target.events),
-      endTime: getEndTime(target.events),
+      startTime:
+        target.type === 'subscriber' ? getStartTime(target.events) : undefined,
+      endTime:
+        target.type === 'subscriber' ? getEndTime(target.events) : undefined,
       locations: target.declaration.locations,
     };
   }
