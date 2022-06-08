@@ -34,7 +34,6 @@ export function useSelector<STATE, RESULT>(
   useEffect(() => {
     const subscription = store.pipe(select(selector)).subscribe({
       next(value) {
-        console.log('useSelector.next', selector, value);
         setResult(value);
       },
       error(err) {

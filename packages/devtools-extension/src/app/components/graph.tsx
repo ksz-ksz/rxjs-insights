@@ -1,4 +1,13 @@
-import React, { JSXElementConstructor, useEffect, useRef } from 'react';
+import React, {
+  ForwardRefExoticComponent,
+  JSXElementConstructor,
+  PropsWithoutRef,
+  Ref,
+  RefAttributes,
+  RefObject,
+  useEffect,
+  useRef,
+} from 'react';
 import { usePrevious } from '@app/utils';
 import gsap from 'gsap';
 import { Transition, TransitionGroup } from 'react-transition-group';
@@ -42,7 +51,6 @@ function GraphNode<T>({
   const prevNode = usePrevious(node);
 
   useEffect(function onInit() {
-    console.log('node.onInit', getNodeKey(node));
     const g = gRef.current!;
     g.setAttribute('opacity', '0');
     g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
@@ -51,7 +59,6 @@ function GraphNode<T>({
   useEffect(
     function onUpdate() {
       if (inProp && prevNode) {
-        console.log('node.onUpdate', getNodeKey(node));
         const g = gRef.current!;
         updateTweenRef.current?.kill();
         updateTweenRef.current = gsap.to(g, {
@@ -70,14 +77,11 @@ function GraphNode<T>({
   return (
     <Transition<any>
       appear={true}
-      // mountOnEnter={true}
-      // unmountOnExit={true}
       in={inProp}
       addEndListener={(node: any, done: () => void) => {
         doneRef.current = done;
       }}
       onEnter={() => {
-        console.log('node.onEnter', getNodeKey(node));
         const g = gRef.current!;
         tweenRef.current = gsap.to(g, {
           opacity: 1,
@@ -92,7 +96,6 @@ function GraphNode<T>({
         });
       }}
       onExit={() => {
-        console.log('node.onExit', getNodeKey(node));
         const g = gRef.current;
         tweenRef.current?.kill();
         tweenRef.current = gsap.to(g, { opacity: 0, delay: 0, duration });
@@ -109,55 +112,128 @@ function getLinkKey(link: LinkData<unknown>) {
   return `${link.source.id}:${link.target.id}`;
 }
 
+export type Renderer<PROPS, CONTROL> = ForwardRefExoticComponent<
+  PropsWithoutRef<PROPS> & RefAttributes<CONTROL>
+>;
+
 interface GraphLinkProps<T> {
   in?: boolean;
   link: LinkData<T>;
+  linkRenderer?: Renderer<LinkRendererProps<T>, LinkControl>;
 }
 
-const graphLinkHorizontal = linkHorizontal();
-function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
-  const pathCoordsRef = useRef({
-    sourceX: link.source.x,
-    sourceY: link.source.y,
-    targetX: link.target.x,
-    targetY: link.target.y,
-  });
-  const pathRef = useRef<SVGPathElement | null>(null);
-  const doneRef = useRef<(() => void) | null>(null);
-  const tweenRef = useRef<gsap.core.Tween | null>(null);
-  const updateTweenRef = useRef<gsap.core.Tween | null>(null);
-  const prevLink = usePrevious(link);
+export type LinkRendererProps<T> = { link: LinkData<T> };
 
-  useEffect(function onInit() {
-    console.log('link.onInit', getLinkKey(link));
-    const path = pathRef.current!;
-    const pathCoords = pathCoordsRef.current;
-    const d = graphLinkHorizontal({
-      source: [pathCoords.sourceX, pathCoords.sourceY],
-      target: [pathCoords.targetX, pathCoords.targetY],
+interface LinkControl {
+  opacity: number;
+  position: {
+    sourceX: number;
+    sourceY: number;
+    targetX: number;
+    targetY: number;
+  };
+}
+
+export class HorizontalLinkControl implements LinkControl {
+  private static LINK = linkHorizontal();
+
+  private _opacity = 0;
+  private _position = {
+    sourceX: 0,
+    sourceY: 0,
+    targetX: 0,
+    targetY: 0,
+  };
+
+  constructor(private readonly pathRef: RefObject<SVGPathElement | null>) {}
+
+  get opacity(): number {
+    return this._opacity;
+  }
+
+  set opacity(opacity: number) {
+    this._opacity = opacity;
+    const path = this.pathRef.current!;
+    path.setAttribute('opacity', String(opacity));
+  }
+
+  get position(): {
+    sourceX: number;
+    sourceY: number;
+    targetX: number;
+    targetY: number;
+  } {
+    return this._position;
+  }
+
+  set position(position: {
+    sourceX: number;
+    sourceY: number;
+    targetX: number;
+    targetY: number;
+  }) {
+    this._position = position;
+    const path = this.pathRef.current!;
+    const d = HorizontalLinkControl.LINK({
+      source: [position.sourceX, position.sourceY],
+      target: [position.targetX, position.targetY],
     })!;
     path.setAttribute('d', d);
-    path.setAttribute('opacity', '0');
-  }, []);
+  }
+}
+
+const DefaultLinkRenderer = React.forwardRef<LinkControl>(function LinkRenderer(
+  props,
+  forwardedRef
+) {
+  const pathRef = useRef<SVGPathElement | null>(null);
+  React.useImperativeHandle(
+    forwardedRef,
+    () => new HorizontalLinkControl(pathRef),
+    []
+  );
+
+  return <path ref={pathRef} stroke="green" fill="transparent" />;
+});
+
+function GraphLink<T>({
+  in: inProp,
+  link,
+  linkRenderer: LinkRenderer = DefaultLinkRenderer,
+}: GraphLinkProps<T>) {
+  const initRef = useRef(true);
+  const linkRef = useRef<LinkControl | null>(null);
+  const doneRef = useRef<(() => void) | null>(null);
+  const opacityTweenRef = useRef<gsap.core.Tween | null>(null);
+  const positionTweenRef = useRef<gsap.core.Tween | null>(null);
 
   useEffect(
     function onUpdate() {
-      if (prevLink && inProp) {
-        console.log('link.onUpdate', getLinkKey(link));
-        const path = pathRef.current!;
-        updateTweenRef.current?.kill();
-        updateTweenRef.current = gsap.to(pathCoordsRef.current, {
+      if (initRef.current) {
+        initRef.current = false;
+        linkRef.current!.opacity = 0;
+        linkRef.current!.position = {
+          sourceX: link.source.x,
+          sourceY: link.source.y,
+          targetX: link.target.x,
+          targetY: link.target.y,
+        };
+      } else if (inProp) {
+        const startPosition = { ...linkRef.current!.position };
+        positionTweenRef.current?.kill();
+        positionTweenRef.current = gsap.to(startPosition, {
           sourceX: link.source.x,
           sourceY: link.source.y,
           targetX: link.target.x,
           targetY: link.target.y,
           onUpdate() {
             const [target] = this.targets();
-            const d = graphLinkHorizontal({
-              source: [target.sourceX, target.sourceY],
-              target: [target.targetX, target.targetY],
-            })!;
-            path.setAttribute('d', d);
+            linkRef.current!.position = {
+              sourceX: target.sourceX,
+              sourceY: target.sourceY,
+              targetX: target.targetX,
+              targetY: target.targetY,
+            };
           },
           duration: duration,
           delay: duration,
@@ -170,18 +246,12 @@ function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
   return (
     <Transition<any>
       appear={true}
-      // mountOnEnter={true}
-      // unmountOnExit={true}
       in={inProp}
       addEndListener={(node: any, done: () => void) => {
         doneRef.current = done;
       }}
       onEnter={() => {
-        const path = pathRef.current!;
-        console.log('link.onEnter', getLinkKey(link), {
-          opacity: path.style.opacity,
-        });
-        tweenRef.current = gsap.to(path, {
+        opacityTweenRef.current = gsap.to(linkRef.current!, {
           opacity: 1,
           duration,
           delay: 2 * duration,
@@ -194,11 +264,8 @@ function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
         });
       }}
       onExit={() => {
-        console.log('link.onExit', getLinkKey(link));
-        const path = pathRef.current;
-        // gsap.killTweensOf(path);
-        tweenRef.current?.kill();
-        tweenRef.current = gsap.to(path, {
+        opacityTweenRef.current?.kill();
+        opacityTweenRef.current = gsap.to(linkRef.current!, {
           opacity: 0,
           duration,
           delay: 0,
@@ -212,12 +279,7 @@ function GraphLink<T>({ in: inProp, link }: GraphLinkProps<T>) {
         });
       }}
     >
-      <path
-        data-key={getLinkKey(link)}
-        ref={pathRef}
-        stroke="green"
-        fill="transparent"
-      />
+      <LinkRenderer link={link} ref={linkRef} />
     </Transition>
   );
 }
@@ -268,10 +330,17 @@ export interface GraphProps<T> {
   nodes: NodeData<T>[];
   links: LinkData<T>[];
   focus?: (number | string)[];
-  nodeRenderer?: JSXElementConstructor<{ node: NodeData<T> }>;
+  nodeRenderer?: JSXElementConstructor<NodeRendererProps<T>>;
+  linkRenderer?: Renderer<LinkRendererProps<T>, LinkControl>;
 }
 
-export function Graph<T>({ nodes, links, focus, nodeRenderer }: GraphProps<T>) {
+export function Graph<T>({
+  nodes,
+  links,
+  focus,
+  nodeRenderer,
+  linkRenderer,
+}: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
   const initRef = useRef(false);
@@ -329,7 +398,11 @@ export function Graph<T>({ nodes, links, focus, nodeRenderer }: GraphProps<T>) {
     >
       <TransitionGroup component="g">
         {links.map((link) => (
-          <GraphLink key={getLinkKey(link)} link={link} />
+          <GraphLink
+            key={getLinkKey(link)}
+            link={link}
+            linkRenderer={linkRenderer}
+          />
         ))}
       </TransitionGroup>
 
