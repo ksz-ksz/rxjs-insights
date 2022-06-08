@@ -9,6 +9,7 @@ import {
   of,
   scheduled,
   share,
+  Subject,
   switchMap,
   take,
 } from 'rxjs';
@@ -28,8 +29,11 @@ export function playground() {
       }),
     share()
   );
-  const obs = merge(obs1, obs1);
+  const subject = new Subject();
+  const obs = merge(obs1, obs1, subject, subject);
   const sub = obs.subscribe(subscriber('A'));
+
+  subject.next('asd');
 
   setTimeout(() => {
     inspect(obs);

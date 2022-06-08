@@ -10,7 +10,7 @@ import { Transition } from 'react-transition-group';
 import { LinkData } from '@app/components/tree';
 import { Renderer } from '@app/components/graph/renderer';
 
-interface GraphLinkProps<T> {
+export interface GraphLinkProps<T> {
   in?: boolean;
   link: LinkData<T>;
   linkRenderer?: Renderer<LinkRendererProps<T>, LinkControl>;
