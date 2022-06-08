@@ -22,7 +22,10 @@ export class DefaultLinkControl implements LinkControl {
     targetY: 0,
   };
 
-  constructor(private readonly elementRef: RefObject<SVGPathElement | null>) {}
+  constructor(
+    private readonly elementRef: RefObject<SVGPathElement | null>,
+    private readonly padding = 0
+  ) {}
 
   get opacity(): number {
     return this._opacity;
@@ -50,8 +53,8 @@ export class DefaultLinkControl implements LinkControl {
   }) {
     this._position = position;
     const d = DefaultLinkControl.LINK({
-      source: [position.sourceX, position.sourceY],
-      target: [position.targetX, position.targetY],
+      source: [position.sourceX + this.padding, position.sourceY],
+      target: [position.targetX - this.padding, position.targetY],
     })!;
     this.elementRef.current!.setAttribute('d', d);
   }

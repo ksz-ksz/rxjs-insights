@@ -1,13 +1,13 @@
 import React, {
   ReactNode,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
-  useState,
 } from 'react';
 import { useDispatch, useSelector } from '@app/store';
 import { RefOutlet } from '@app/components/ref-outlet';
-import { Box, Divider, Stack, styled } from '@mui/material';
+import { Box, Stack, styled, Theme, useTheme } from '@mui/material';
 import {
   DefaultLinkControl,
   Graph,
@@ -18,6 +18,7 @@ import {
 import {
   RelatedEvent,
   RelatedHierarchyNode,
+  RelatedTarget,
   RelatedTask,
   Relations,
   TargetId,
@@ -31,6 +32,8 @@ import {
   NodeControl,
 } from '@app/components/graph/node-control';
 
+import gsap from 'gsap';
+
 function getTarget(relations: Relations, target: TargetId) {
   switch (target.type) {
     case 'subscriber':
@@ -40,26 +43,117 @@ function getTarget(relations: Relations, target: TargetId) {
   }
 }
 
-function getNodeRenderer(relations: Relations) {
+function getTargetColors(theme: Theme, target: RelatedTarget) {
+  switch (target.type) {
+    case 'subscriber':
+      return theme.insights.subscriber;
+    case 'observable':
+      return theme.insights.observable;
+  }
+}
+
+function getEventColors(theme: Theme, event: RelatedEvent) {
+  switch (event.eventType) {
+    case 'next':
+      return theme.insights.event.next;
+    case 'error':
+      return theme.insights.event.error;
+    case 'complete':
+      return theme.insights.event.complete;
+    case 'subscribe':
+    case 'unsubscribe':
+      return theme.insights.event.subscription;
+  }
+}
+
+function getDirection(
+  type: 'next' | 'error' | 'complete' | 'subscribe' | 'unsubscribe'
+) {
+  switch (type) {
+    case 'next':
+    case 'error':
+    case 'complete':
+      return 1;
+    case 'subscribe':
+    case 'unsubscribe':
+      return -1;
+  }
+}
+
+const circleRadius = 6;
+const circleCircumference = 2 * Math.PI * circleRadius;
+
+function getNodeRenderer(relations: Relations, rootTargetId: number) {
   return React.forwardRef<NodeControl, NodeRendererProps<RelatedHierarchyNode>>(
     function DefaultNodeRenderer({ node }, forwardedRef) {
-      const time = useSelector(timeSelector);
-      const event = relations.events[time];
-      const target = getTarget(relations, node.data.target);
-      const selected = event && event.target.id === target.id;
-
       const elementRef = useRef<SVGGElement | null>(null);
       React.useImperativeHandle(
         forwardedRef,
         () => new DefaultNodeControl(elementRef),
         []
       );
+      const theme = useTheme();
+      const time = useSelector(timeSelector);
+      const event = relations.events[time];
+      const target = getTarget(relations, node.data.target);
+      const isRoot = target.id === rootTargetId;
+      const isSelected = event && event.target.id === target.id;
+
+      const targetColors = getTargetColors(theme, target);
+      const eventColors = getEventColors(theme, event);
+
+      const circleRef = useRef<SVGCircleElement | null>(null);
+      const tweenRef = useRef<gsap.core.Tween | null>(null);
+
+      useEffect(() => {
+        tweenRef.current?.kill();
+        if (isSelected) {
+          const direction = getDirection(event.eventType);
+          tweenRef.current = gsap.fromTo(
+            circleRef.current!,
+            {
+              strokeDasharray: circleCircumference / 12,
+              strokeDashoffset: circleCircumference * direction,
+            },
+            {
+              strokeDashoffset: 0,
+              duration: 1,
+              repeat: -1,
+              ease: 'none',
+            }
+          );
+        } else {
+          gsap.set(elementRef.current!, {
+            strokeDasharray: 'none',
+            strokeDashoffset: 0,
+          });
+        }
+      }, [isSelected && event.eventType]);
 
       return (
         <g ref={elementRef}>
-          <circle r="6" fill={selected ? 'red' : 'green'} />
-          <text fontSize="6" y="12" textAnchor="middle" fill="white">
-            {target.name}#{target.id}
+          <circle r="4" fill={targetColors.secondary} />
+          {isRoot && (
+            <circle r={5} fill="transparent" stroke={targetColors.primary} />
+          )}
+          {isSelected && (
+            <circle
+              ref={circleRef}
+              r={circleRadius}
+              fill="transparent"
+              stroke={eventColors.secondary}
+            />
+          )}
+          <text
+            fontFamily="Monospace"
+            fontStyle="oblique"
+            fontSize="6"
+            textAnchor="middle"
+            fill={targetColors.secondary}
+            y="12"
+          >
+            {target.name}{' '}
+            <tspan fill={theme.palette.text.secondary}>#{target.id}</tspan>
           </text>
         </g>
       );
@@ -70,22 +164,49 @@ function getNodeRenderer(relations: Relations) {
 function getLinkRenderer(relations: Relations) {
   return React.forwardRef<LinkControl, LinkRendererProps<RelatedHierarchyNode>>(
     function DefaultLinkRenderer({ link }, forwardedRef) {
+      const theme = useTheme();
       const time = useSelector(timeSelector);
       const event = relations.events[time];
       const target = getTarget(relations, link.source.data.target);
-      const selected = event && event.target.id === target.id;
+      const isSelected = event && event.target.id === target.id;
 
       const elementRef = useRef<SVGPathElement | null>(null);
       React.useImperativeHandle(
         forwardedRef,
-        () => new DefaultLinkControl(elementRef),
+        () => new DefaultLinkControl(elementRef, 6),
         []
       );
+
+      const targetColors = getTargetColors(theme, target);
+      const eventColors = getEventColors(theme, event);
+
+      const tweenRef = useRef<gsap.core.Tween | null>(null);
+      useEffect(() => {
+        tweenRef.current?.kill();
+        if (isSelected) {
+          const direction = getDirection(event.eventType);
+          tweenRef.current = gsap.fromTo(
+            elementRef.current!,
+            { strokeDasharray: 4, strokeDashoffset: 32 * direction },
+            {
+              strokeDashoffset: 0,
+              duration: 1,
+              repeat: -1,
+              ease: 'none',
+            }
+          );
+        } else {
+          gsap.set(elementRef.current!, {
+            strokeDasharray: 'none',
+            strokeDashoffset: 0,
+          });
+        }
+      }, [isSelected && event.eventType]);
 
       return (
         <path
           ref={elementRef}
-          stroke={selected ? 'red' : 'green'}
+          stroke={isSelected ? eventColors.secondary : targetColors.secondary}
           fill="transparent"
         />
       );
@@ -295,7 +416,10 @@ export function EventsLog() {
 export function SubscriberPage() {
   const time = useSelector(timeSelector);
   const state = useSelector(activeSubscriberStateSelector)!;
-  const NodeRenderer = useMemo(() => getNodeRenderer(state.relations), [state]);
+  const NodeRenderer = useMemo(
+    () => getNodeRenderer(state.relations, state.ref.id),
+    [state]
+  );
   const LinkRenderer = useMemo(() => getLinkRenderer(state.relations), [state]);
   const { nodes, links } = useMemo(
     () =>
