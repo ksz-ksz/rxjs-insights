@@ -69,6 +69,8 @@ export interface GraphProps<T> {
   linkRenderer?: Renderer<LinkRendererProps<T>, LinkControl>;
 }
 
+const viewBoxPadding = 40;
+
 export function Graph<T>({
   nodes,
   links,
@@ -88,7 +90,7 @@ export function Graph<T>({
 
   useEffect(function onInit() {
     initRef.current = true;
-    const viewBox = getViewBox(getBounds(nodes, focus ?? []), 20);
+    const viewBox = getViewBox(getBounds(nodes, focus ?? []), viewBoxPadding);
     const svg = svgRef.current!;
     svg.setAttribute(
       'viewBox',
@@ -99,7 +101,10 @@ export function Graph<T>({
   useEffect(
     function onUpdate() {
       if (initRef.current) {
-        const viewBox = getViewBox(getBounds(nodes, focus ?? []), 20);
+        const viewBox = getViewBox(
+          getBounds(nodes, focus ?? []),
+          viewBoxPadding
+        );
         const svg = svgRef.current!;
         tweenRef.current?.kill();
         tweenRef.current = gsap.to(viewBoxCoordsRef.current, {

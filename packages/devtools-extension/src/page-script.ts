@@ -218,6 +218,7 @@ function addRelatedTarget(
       tags: target.tags,
       startTime: getStartTime(target.events),
       endTime: getEndTime(target.events),
+      locations: target.declaration.locations,
     };
   }
 }

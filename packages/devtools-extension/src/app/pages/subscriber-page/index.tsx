@@ -33,6 +33,7 @@ import {
 } from '@app/components/graph/node-control';
 
 import gsap from 'gsap';
+import { Locations } from '@rxjs-insights/core';
 
 function getTarget(relations: Relations, target: TargetId) {
   switch (target.type) {
@@ -83,6 +84,18 @@ function getDirection(
 const circleRadius = 6;
 const circleCircumference = 2 * Math.PI * circleRadius;
 
+function getLocationStrings(locations: Locations) {
+  const location = locations.generatedLocation ?? locations.generatedLocation;
+  if (location) {
+    const { file, line, column } = location;
+    const short = `${file.split('/').at(-1)}:${line}`;
+    const long = `${file}:${line}:${column}`;
+    return { short, long };
+  } else {
+    return undefined;
+  }
+}
+
 function getNodeRenderer(relations: Relations, rootTargetId: number) {
   return React.forwardRef<NodeControl, NodeRendererProps<RelatedHierarchyNode>>(
     function DefaultNodeRenderer({ node }, forwardedRef) {
@@ -130,6 +143,8 @@ function getNodeRenderer(relations: Relations, rootTargetId: number) {
         }
       }, [isSelected && event.eventType]);
 
+      const location = getLocationStrings(target.locations);
+
       return (
         <g ref={elementRef}>
           <circle r="4" fill={targetColors.secondary} />
@@ -155,6 +170,19 @@ function getNodeRenderer(relations: Relations, rootTargetId: number) {
             {target.name}{' '}
             <tspan fill={theme.palette.text.secondary}>#{target.id}</tspan>
           </text>
+          {location && (
+            <text
+              fontFamily="Monospace"
+              fontStyle="oblique"
+              fontSize="4"
+              textAnchor="middle"
+              fill={theme.palette.text.secondary}
+              y="18"
+            >
+              {location.short}
+              <title>{location.long}</title>
+            </text>
+          )}
         </g>
       );
     }
@@ -467,6 +495,7 @@ export function SubscriberPage() {
       </SidePanel>
       <Box sx={{ flexGrow: 1, flexShrink: 1 }}>
         <Graph
+          key={state.ref.id}
           nodes={nodes}
           links={links}
           nodeRenderer={NodeRenderer}

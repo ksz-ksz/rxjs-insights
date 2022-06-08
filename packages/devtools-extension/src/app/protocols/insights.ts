@@ -1,4 +1,5 @@
 import { EventRef, ObservableRef, SubscriberRef } from '@app/protocols/refs';
+import { Locations } from '@rxjs-insights/core';
 
 export const InsightsChannel = 'InsightsChannel';
 
@@ -9,6 +10,7 @@ export interface RelatedSubscriber extends SubscriberRef {
   tags: string[];
   startTime: number;
   endTime: number;
+  locations: Locations;
 }
 
 export interface RelatedObservable extends ObservableRef {
@@ -18,6 +20,7 @@ export interface RelatedObservable extends ObservableRef {
   tags: string[];
   startTime: number;
   endTime: number;
+  locations: Locations;
 }
 
 export type RelatedTarget = RelatedSubscriber | RelatedObservable;
