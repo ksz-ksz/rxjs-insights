@@ -20,3 +20,8 @@ export const subscriberStateSelector = (subscriberId: number) =>
     },
     ({ insights }) => insights.subscribers[subscriberId]
   );
+
+export const timeSelector = createSelector(
+  { insights: insightsSelector },
+  ({ insights }) => insights.time
+);

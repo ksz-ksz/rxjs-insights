@@ -1,7 +1,7 @@
 import React, { ReactNode, useCallback, useMemo, useState } from 'react';
-import { useSelector } from '@app/store';
+import { useDispatch, useSelector } from '@app/store';
 import { RefOutlet } from '@app/components/ref-outlet';
-import { Box, Divider, styled } from '@mui/material';
+import { Box, Divider, Stack, styled } from '@mui/material';
 import { Graph, NodeRendererProps } from '@app/components/graph';
 import {
   RelatedEvent,
@@ -12,6 +12,8 @@ import {
 } from '@app/protocols/insights';
 import { getDoubleTree } from '@app/components/tree';
 import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
+import { timeSelector } from '@app/selectors/insights-selectors';
+import { eventsLogActions } from '@app/actions/events-log-actions';
 
 function getTarget(relations: Relations, target: TargetId) {
   switch (target.type) {
@@ -26,10 +28,13 @@ function getNodeRenderer(relations: Relations) {
   return function NodeRenderer({
     node,
   }: NodeRendererProps<RelatedHierarchyNode>) {
+    const time = useSelector(timeSelector);
+    const event = relations.events[time];
     const target = getTarget(relations, node.data.target);
+    const selected = event && event.target.id === target.id;
     return (
       <>
-        <circle r="6" fill="green" />
+        <circle r="6" fill={selected ? 'red' : 'green'} />
         <text fontSize="6" y="12" textAnchor="middle" fill="white">
           {target.name}#{target.id}
         </text>
@@ -64,7 +69,7 @@ function getEventLog(relations: Relations) {
   );
 
   const entries: Entry[] = [];
-  let indent = 0;
+  const indents: Record<number, number> = {};
   for (let i = 0; i < events.length; i++) {
     const event = events[i];
     const prevEvent = events[i - 1];
@@ -74,10 +79,8 @@ function getEventLog(relations: Relations) {
         task: relations.tasks[event.task],
       });
     }
-    indent =
-      prevEvent !== undefined && prevEvent.time === event.precedingEvent
-        ? indent + 1
-        : 0;
+    const indent = event.precedingEvent ? indents[event.precedingEvent] + 1 : 0;
+    indents[event.time] = indent;
     entries.push({
       type: 'event',
       event: event,
@@ -178,27 +181,57 @@ const EventsLogDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
   whiteSpace: 'nowrap',
-  marginRight: '1rem',
   marginTop: '0.5rem',
   marginBottom: '0.5rem',
 });
 
-export interface EventsLogProps {
-  entries: Entry[];
-  onEventSelected(event: RelatedEvent): void;
+interface IndentProps {
+  indent: number;
 }
 
-export function EventsLog(props: EventsLogProps) {
+function Indent({ indent }: IndentProps) {
+  const children = useMemo(() => {
+    const children: ReactNode[] = [];
+    for (let i = 0; i < indent; i++) {
+      children.push(<IndentSpan />);
+    }
+    return children;
+  }, [indent]);
+  return <>{children}</>;
+}
+
+const EventSpan = styled('span')(({ theme }) => ({
+  paddingRight: '1rem',
+  '&[data-selected=true]': {
+    backgroundColor: theme.palette.action.selected,
+  },
+}));
+
+export function EventsLog() {
+  const dispatch = useDispatch();
+  const time = useSelector(timeSelector);
+  const state = useSelector(activeSubscriberStateSelector)!;
+  const entries = useMemo(
+    () => (state ? getEventLog(state.relations) : []),
+    [state]
+  );
+  const onEventSelected = useCallback(
+    (event: RelatedEvent) =>
+      dispatch(eventsLogActions.EventSelected({ event })),
+    []
+  );
   return (
     <EventsLogDiv>
-      {props.entries.map((entry) =>
+      {entries.map((entry) =>
         entry.type === 'event' ? (
-          <a onClick={() => props.onEventSelected(entry.event)}>
-            {new Array(entry.indent).fill(0).map((x, i) => (
-              <IndentSpan />
-            ))}
-            <RefOutlet reference={entry.event} />
-          </a>
+          <EventSpan
+            data-type={entry.event.eventType}
+            data-selected={entry.event.time === time}
+            onClick={() => onEventSelected(entry.event)}
+          >
+            <Indent indent={entry.indent} />
+            <RefOutlet summary reference={entry.event} />
+          </EventSpan>
         ) : (
           <TaskSpan>
             {entry.task.name} #{entry.task.id}
@@ -210,7 +243,7 @@ export function EventsLog(props: EventsLogProps) {
 }
 
 export function SubscriberPage() {
-  const [time, setTime] = useState(0);
+  const time = useSelector(timeSelector);
   const state = useSelector(activeSubscriberStateSelector)!;
   const NodeRenderer = useMemo(
     () => (state ? getNodeRenderer(state.relations) : undefined),
@@ -230,50 +263,39 @@ export function SubscriberPage() {
               data.children.filter((child) => {
                 const childTarget = getTarget(state.relations, child.target);
                 return (
-                  childTarget.startTime <= time && time <= childTarget.endTime
+                  time !== undefined &&
+                  childTarget.startTime <= time &&
+                  time <= childTarget.endTime
                 );
               })
           )
         : { nodes: [], links: [] },
     [state, time]
   );
-  console.log({ nodes, links });
-  const entries = useMemo(
-    () => (state ? getEventLog(state.relations) : []),
-    [state]
-  );
-  const onEventSelected = useCallback(
-    (event: RelatedEvent) => {
-      setTime(event.time);
-    },
-    [setTime]
-  );
-  const ref = state?.ref;
-  if (ref) {
-    return (
-      <Box
-        sx={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        <SidePanel>
-          <SidePanelSection title="EVENTS" basis={2}>
-            <EventsLog entries={entries} onEventSelected={onEventSelected} />
-          </SidePanelSection>
-          <SidePanelSection title="CONTEXT" basis={1}>
+  const event = state.relations.events[time];
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+      }}
+    >
+      <SidePanel>
+        <SidePanelSection title="EVENTS" basis={2}>
+          <EventsLog />
+        </SidePanelSection>
+        <SidePanelSection title="CONTEXT" basis={1}>
+          <Stack>
             <RefOutlet label="root" reference={state.ref} />
-            <RefOutlet label="event" reference={state.relations.events[time]} />
-          </SidePanelSection>
-        </SidePanel>
-        <Box sx={{ flexGrow: 1, flexShrink: 1 }}>
-          <Graph nodes={nodes} links={links} nodeRenderer={NodeRenderer} />
-        </Box>
+            {event && <RefOutlet label="event" reference={event} />}
+          </Stack>
+        </SidePanelSection>
+      </SidePanel>
+      <Box sx={{ flexGrow: 1, flexShrink: 1 }}>
+        <Graph nodes={nodes} links={links} nodeRenderer={NodeRenderer} />
       </Box>
-    );
-  } else {
-    return null;
-  }
+    </Box>
+  );
 }

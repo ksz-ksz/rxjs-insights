@@ -603,6 +603,7 @@ function GetterRefOutlet(props: GetterRefOutletProps) {
 export interface RefOutletProps {
   type?: 'enumerable' | 'nonenumerable' | 'special';
   label?: string | number;
+  summary?: boolean;
   reference: Ref;
 }
 
@@ -610,10 +611,15 @@ export function RefOutlet({
   type = 'enumerable',
   label,
   reference,
+  summary = false,
 }: RefOutletProps) {
   if (reference.type === 'getter') {
     return <GetterRefOutlet type={type} label={label} reference={reference} />;
-  } else if ('refId' in reference && reference.refId !== undefined) {
+  } else if (
+    !summary &&
+    'refId' in reference &&
+    reference.refId !== undefined
+  ) {
     const referenceWithId = reference as typeof reference & {
       refId: number;
     };

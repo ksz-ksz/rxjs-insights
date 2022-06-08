@@ -2,7 +2,9 @@ import { GetterRef, PropertyRef, Ref, Refs } from '@app/protocols/refs';
 import { Observable, Subscriber, Event } from '@rxjs-insights/recorder';
 import {
   getObservable,
+  getPrecedingEvent,
   getSubscriber,
+  getSucceedingEvents,
   isObservableTarget,
   isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
@@ -409,16 +411,9 @@ export class RefsService implements Refs {
   }
 
   private expandEvent(event: Event, refId: number): PropertyRef[] {
-    const {
-      time,
-      declaration,
-      type,
-      target,
-      precedingEvent,
-      succeedingEvents,
-      timestamp,
-      task,
-    } = event;
+    const { time, declaration, type, target, timestamp, task } = event;
+    const precedingEvent = getPrecedingEvent(event);
+    const succeedingEvents = getSucceedingEvents(event);
     return [
       property('Time', this.create(time, refId)),
       property('Name', this.create(declaration.name, refId)),

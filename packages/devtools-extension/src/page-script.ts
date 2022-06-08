@@ -42,12 +42,14 @@ import {
   TracesChannel,
 } from '@app/protocols/traces';
 import { RefsService } from './refs-service';
-import { Refs, RefsChannel } from '@app/protocols/refs';
+import { EventRef, Refs, RefsChannel } from '@app/protocols/refs';
 import {
   getDestinationEvents,
   getObservable,
+  getPrecedingEvent,
   getSourceEvents,
   getSubscriber,
+  getSucceedingEvents,
   isObservableTarget,
   isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
@@ -233,27 +235,22 @@ function addRelatedTask(relations: Relations, task: Task) {
 function addRelatedEvent(relations: Relations, event: Event) {
   const events = relations.events;
   if (events[event.time] === undefined) {
+    const precedingEvent = getPrecedingEvent(event);
+    const succeedingEvents = getSucceedingEvents(event);
     events[event.time] = {
-      type: 'event',
-      time: event.time,
-      eventType: event.type,
-      name: event.declaration.name,
+      ...(refs.create(event) as EventRef),
       target: {
         type: event.target.type,
         id: event.target.id,
       },
-      data:
-        event.type === 'next' || event.type === 'error'
-          ? refs.create(event.declaration.args?.[0], 0, false)
-          : undefined,
       task: event.task.id,
-      precedingEvent: event.precedingEvent?.time,
-      succeedingEvents: event.succeedingEvents.map(({ time }) => time),
+      precedingEvent: precedingEvent?.time,
+      succeedingEvents: succeedingEvents.map(({ time }) => time),
     };
-    if (event.precedingEvent) {
-      addRelatedEvent(relations, event.precedingEvent);
+    if (precedingEvent) {
+      addRelatedEvent(relations, precedingEvent);
     }
-    for (const succeedingEvent of event.succeedingEvents) {
+    for (const succeedingEvent of succeedingEvents) {
       addRelatedEvent(relations, succeedingEvent);
     }
     addRelatedTask(relations, event.task);
