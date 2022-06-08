@@ -22,6 +22,12 @@ class MessageEvent extends CustomEvent<MessageEventDetail> {
   }
 }
 
+function getOriginalDelegate<T>(target: T): T {
+  return '__zone_symbol__OriginalDelegate' in target
+    ? (target as any).__zone_symbol__OriginalDelegate
+    : target;
+}
+
 export function createDocumentEventClientAdapter(
   channel: string
 ): ClientAdapter {
@@ -29,6 +35,11 @@ export function createDocumentEventClientAdapter(
 
   return {
     send(message: RequestMessage) {
+      // mitigates https://github.com/angular/angular/issues/44446
+      const addEventListener = getOriginalDelegate(document.addEventListener);
+      const removeEventListener = getOriginalDelegate(
+        document.removeEventListener
+      );
       return new Promise((resolve) => {
         const id = nextId++;
         const listener = (event: MessageEvent) => {
@@ -38,10 +49,14 @@ export function createDocumentEventClientAdapter(
             event.detail.type === 'response'
           ) {
             resolve(event.detail.message);
-            document.removeEventListener(MessageEvent.TYPE, listener as any);
+            removeEventListener.call(
+              document,
+              MessageEvent.TYPE,
+              listener as any
+            );
           }
         };
-        document.addEventListener(MessageEvent.TYPE, listener as any);
+        addEventListener.call(document, MessageEvent.TYPE, listener as any);
         document.dispatchEvent(
           new MessageEvent({ channel, id, type: 'request', message })
         );
@@ -55,6 +70,11 @@ export function createDocumentEventServerAdapter(
 ): ServerAdapterAsync {
   return {
     startAsync(requestHandler) {
+      // mitigates https://github.com/angular/angular/issues/44446
+      const addEventListener = getOriginalDelegate(document.addEventListener);
+      const removeEventListener = getOriginalDelegate(
+        document.removeEventListener
+      );
       const listener = (event: MessageEvent) => {
         if (
           event.detail.channel === channel &&
@@ -78,10 +98,14 @@ export function createDocumentEventServerAdapter(
           }
         }
       };
-      document.addEventListener(MessageEvent.TYPE, listener as any);
+      addEventListener.call(document, MessageEvent.TYPE, listener as any);
       return {
         stop() {
-          document.removeEventListener(MessageEvent.TYPE, listener as any);
+          removeEventListener.call(
+            document,
+            MessageEvent.TYPE,
+            listener as any
+          );
         },
       };
     },

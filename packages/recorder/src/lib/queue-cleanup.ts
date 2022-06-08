@@ -1,11 +1,10 @@
-/// <reference types="zone.js" />
-
-function isZoneJs() {
-  return Boolean(
-    typeof Zone !== 'undefined' && Zone && Zone.root && Zone.current
-  );
+function getOriginalDelegate<T>(target: T): T {
+  return '__zone_symbol__OriginalDelegate' in target
+    ? (target as any).__zone_symbol__OriginalDelegate
+    : target;
 }
 
-export const queueCleanup = isZoneJs()
-  ? Zone.root.wrap(queueMicrotask, 'queueCleanup')
-  : queueMicrotask;
+export function queueCleanup(run: () => void) {
+  // mitigates https://github.com/angular/angular/issues/44446
+  getOriginalDelegate(queueMicrotask)(run);
+}

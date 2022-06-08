@@ -18,7 +18,7 @@ const inspectDevtools: typeof inspect =
   (window as any).RXJS_ISNIGHTS_DEVTOOLS_INSPECT ?? inspect;
 
 export function playground() {
-  const obs1 = scheduled([of('a', 'b', 'c'), of(1, 2, 3)], asyncScheduler).pipe(
+  const obs1 = scheduled([of('a', 'b', 'c'), of(1, 2, 3)], asapScheduler).pipe(
     switchMap((x) => x),
     (source) =>
       new Observable((observer) => {
