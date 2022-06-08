@@ -1,8 +1,20 @@
-import React, { ReactNode, useCallback, useMemo, useState } from 'react';
+import React, {
+  ReactNode,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useDispatch, useSelector } from '@app/store';
 import { RefOutlet } from '@app/components/ref-outlet';
 import { Box, Divider, Stack, styled } from '@mui/material';
-import { Graph, NodeRendererProps } from '@app/components/graph';
+import {
+  DefaultLinkControl,
+  Graph,
+  LinkControl,
+  LinkRendererProps,
+  NodeRendererProps,
+} from '@app/components/graph';
 import {
   RelatedEvent,
   RelatedHierarchyNode,
@@ -14,6 +26,10 @@ import { getDoubleTree } from '@app/components/tree';
 import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
 import { timeSelector } from '@app/selectors/insights-selectors';
 import { eventsLogActions } from '@app/actions/events-log-actions';
+import {
+  DefaultNodeControl,
+  NodeControl,
+} from '@app/components/graph/node-control';
 
 function getTarget(relations: Relations, target: TargetId) {
   switch (target.type) {
@@ -25,22 +41,56 @@ function getTarget(relations: Relations, target: TargetId) {
 }
 
 function getNodeRenderer(relations: Relations) {
-  return function NodeRenderer({
-    node,
-  }: NodeRendererProps<RelatedHierarchyNode>) {
-    const time = useSelector(timeSelector);
-    const event = relations.events[time];
-    const target = getTarget(relations, node.data.target);
-    const selected = event && event.target.id === target.id;
-    return (
-      <>
-        <circle r="6" fill={selected ? 'red' : 'green'} />
-        <text fontSize="6" y="12" textAnchor="middle" fill="white">
-          {target.name}#{target.id}
-        </text>
-      </>
-    );
-  };
+  return React.forwardRef<NodeControl, NodeRendererProps<RelatedHierarchyNode>>(
+    function DefaultNodeRenderer({ node }, forwardedRef) {
+      const time = useSelector(timeSelector);
+      const event = relations.events[time];
+      const target = getTarget(relations, node.data.target);
+      const selected = event && event.target.id === target.id;
+
+      const elementRef = useRef<SVGGElement | null>(null);
+      React.useImperativeHandle(
+        forwardedRef,
+        () => new DefaultNodeControl(elementRef),
+        []
+      );
+
+      return (
+        <g ref={elementRef}>
+          <circle r="6" fill={selected ? 'red' : 'green'} />
+          <text fontSize="6" y="12" textAnchor="middle" fill="white">
+            {target.name}#{target.id}
+          </text>
+        </g>
+      );
+    }
+  );
+}
+
+function getLinkRenderer(relations: Relations) {
+  return React.forwardRef<LinkControl, LinkRendererProps<RelatedHierarchyNode>>(
+    function DefaultLinkRenderer({ link }, forwardedRef) {
+      const time = useSelector(timeSelector);
+      const event = relations.events[time];
+      const target = getTarget(relations, link.source.data.target);
+      const selected = event && event.target.id === target.id;
+
+      const elementRef = useRef<SVGPathElement | null>(null);
+      React.useImperativeHandle(
+        forwardedRef,
+        () => new DefaultLinkControl(elementRef),
+        []
+      );
+
+      return (
+        <path
+          ref={elementRef}
+          stroke={selected ? 'red' : 'green'}
+          fill="transparent"
+        />
+      );
+    }
+  );
 }
 
 interface EventEntry {
@@ -245,10 +295,8 @@ export function EventsLog() {
 export function SubscriberPage() {
   const time = useSelector(timeSelector);
   const state = useSelector(activeSubscriberStateSelector)!;
-  const NodeRenderer = useMemo(
-    () => (state ? getNodeRenderer(state.relations) : undefined),
-    [state]
-  );
+  const NodeRenderer = useMemo(() => getNodeRenderer(state.relations), [state]);
+  const LinkRenderer = useMemo(() => getLinkRenderer(state.relations), [state]);
   const { nodes, links } = useMemo(
     () =>
       state
@@ -294,7 +342,12 @@ export function SubscriberPage() {
         </SidePanelSection>
       </SidePanel>
       <Box sx={{ flexGrow: 1, flexShrink: 1 }}>
-        <Graph nodes={nodes} links={links} />
+        <Graph
+          nodes={nodes}
+          links={links}
+          nodeRenderer={NodeRenderer}
+          linkRenderer={LinkRenderer}
+        />
       </Box>
     </Box>
   );

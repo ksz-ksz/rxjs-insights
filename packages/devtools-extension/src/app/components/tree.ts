@@ -85,16 +85,24 @@ export function getTree<T>(
   return { nodes, links };
 }
 
+function getNodesA<T>([, ...nodes]: NodeData<T>[]): NodeData<T>[] {
+  return nodes;
+}
+
+function getLinksA<T>(linksA: LinkData<T>[]): LinkData<T>[] {
+  return linksA.map(({ target, source }) => ({
+    source: target,
+    target: source,
+  }));
+}
+
 export function getDoubleTree<T>(
   rootA: T,
   rootB: T,
   getId: (data: T, path: T[]) => NodeId,
   getChildren: (data: T) => T[]
 ): TreeData<T> {
-  const {
-    nodes: [, ...nodesA],
-    links: linksA,
-  } = getTree(
+  const { nodes: nodesA, links: linksA } = getTree(
     rootA,
     getId,
     getChildren,
@@ -109,7 +117,7 @@ export function getDoubleTree<T>(
     (x, y) => x
   );
   return {
-    nodes: [...nodesA, ...nodesB],
-    links: [...linksA, ...linksB],
+    nodes: [...getNodesA(nodesA), ...nodesB],
+    links: [...getLinksA(linksA), ...linksB],
   };
 }
