@@ -21,7 +21,6 @@ import {
   RelatedTarget,
   RelatedTask,
   Relations,
-  TargetId,
 } from '@app/protocols/insights';
 import { getDoubleTree } from '@app/components/tree';
 import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
@@ -34,15 +33,6 @@ import {
 
 import gsap from 'gsap';
 import { Locations } from '@rxjs-insights/core';
-
-function getTarget(relations: Relations, target: TargetId) {
-  switch (target.type) {
-    case 'subscriber':
-      return relations.subscribers[target.id];
-    case 'observable':
-      return relations.observables[target.id];
-  }
-}
 
 function getTargetColors(theme: Theme, target: RelatedTarget) {
   switch (target.type) {
@@ -108,9 +98,9 @@ function getNodeRenderer(relations: Relations, rootTargetId: number) {
       const theme = useTheme();
       const time = useSelector(timeSelector);
       const event = relations.events[time];
-      const target = getTarget(relations, node.data.target);
+      const target = relations.targets[node.data.target];
       const isRoot = target.id === rootTargetId;
-      const isSelected = event && event.target.id === target.id;
+      const isSelected = event && event.target === target.id;
 
       const targetColors = getTargetColors(theme, target);
       const eventColors = getEventColors(theme, event);
@@ -195,8 +185,8 @@ function getLinkRenderer(relations: Relations) {
       const theme = useTheme();
       const time = useSelector(timeSelector);
       const event = relations.events[time];
-      const target = getTarget(relations, link.source.data.target);
-      const isSelected = event && event.target.id === target.id;
+      const target = relations.targets[link.source.data.target];
+      const isSelected = event && event.target === target.id;
 
       const elementRef = useRef<SVGPathElement | null>(null);
       React.useImperativeHandle(
@@ -457,11 +447,11 @@ export function SubscriberPage() {
             state.hierarchy.destinations,
             (data, path) =>
               [...path, data]
-                .map((x: RelatedHierarchyNode) => x.target.id)
+                .map((x: RelatedHierarchyNode) => x.target)
                 .join('/'),
             (data) =>
               data.children.filter((child) => {
-                const childTarget = getTarget(state.relations, child.target);
+                const childTarget = state.relations.targets[child.target];
                 return (
                   time !== undefined &&
                   childTarget.startTime <= time &&

@@ -25,11 +25,6 @@ export interface RelatedObservable extends ObservableRef {
 
 export type RelatedTarget = RelatedSubscriber | RelatedObservable;
 
-export interface TargetId {
-  type: 'subscriber' | 'observable';
-  id: number;
-}
-
 export interface RelatedTask {
   id: number;
   name: string;
@@ -40,14 +35,14 @@ export interface RelatedEvent extends EventRef {
   type: 'event';
   eventType: 'next' | 'error' | 'complete' | 'subscribe' | 'unsubscribe';
   name: string;
-  target: TargetId;
+  target: number;
   task: number;
   precedingEvent: number | undefined;
   succeedingEvents: number[];
 }
 
 export interface RelatedHierarchyNode {
-  target: TargetId;
+  target: number;
   children: RelatedHierarchyNode[];
 }
 
@@ -57,8 +52,7 @@ export interface RelatedHierarchyTree {
 }
 
 export interface Relations {
-  observables: Record<number, RelatedTarget>;
-  subscribers: Record<number, RelatedTarget>;
+  targets: Record<number, RelatedTarget>;
   events: Record<number, RelatedEvent>;
   tasks: Record<number, RelatedTask>;
 }

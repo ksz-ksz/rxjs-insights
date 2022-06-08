@@ -10,7 +10,12 @@
     }
   },
   "files": [
-    "src/app/main.tsx"
+    "src/app/main.tsx",
+    "src/background.ts",
+    "src/content-script.ts",
+    "src/devtools-page.ts",
+    "src/page-script.ts",
+    "src/sources-page.ts"
   ],
   "exclude": [
     "**/*"

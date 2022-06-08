@@ -172,15 +172,6 @@ const refs = new RefsService();
 
 startServer<Refs>(createInspectedWindowEvalServerAdapter(RefsChannel), refs);
 
-function getTargets(relations: Relations, type: 'subscriber' | 'observable') {
-  switch (type) {
-    case 'subscriber':
-      return relations.subscribers;
-    case 'observable':
-      return relations.observables;
-  }
-}
-
 function getStartTime(events: Event[]) {
   if (events.length === 0) {
     return Infinity;
@@ -209,7 +200,7 @@ function addRelatedTarget(
   relations: Relations,
   target: Subscriber | Observable
 ) {
-  const targets = getTargets(relations, target.type);
+  const targets = relations.targets;
   if (targets[target.id] === undefined) {
     targets[target.id] = {
       id: target.id,
@@ -240,10 +231,7 @@ function addRelatedEvent(relations: Relations, event: Event) {
     const succeedingEvents = getSucceedingEvents(event);
     events[event.time] = {
       ...(refs.create(event) as EventRef),
-      target: {
-        type: event.target.type,
-        id: event.target.id,
-      },
+      target: event.target.id,
       task: event.task.id,
       precedingEvent: precedingEvent?.time,
       succeedingEvents: succeedingEvents.map(({ time }) => time),
@@ -271,10 +259,7 @@ function collectRelatedTargets(
   const relatedTargets = new Set(relatedEvents.map(({ target }) => target));
   relatedTargets.delete(target);
   return {
-    target: {
-      type: target.type,
-      id: target.id,
-    },
+    target: target.id,
     children: Array.from(relatedTargets).map((relatedTarget) =>
       collectRelatedTargets(relations, relatedTarget, getRelatedEvents)
     ),
@@ -285,8 +270,7 @@ function getTargetState(target: Observable): ObservableState;
 function getTargetState(target: Subscriber | Observable) {
   const ref = refs.create(target);
   const relations: Relations = {
-    observables: {},
-    subscribers: {},
+    targets: {},
     events: {},
     tasks: {},
   };
