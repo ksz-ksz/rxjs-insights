@@ -33,6 +33,8 @@ import {
 
 import gsap from 'gsap';
 import { Locations } from '@rxjs-insights/core';
+import { partition } from '@app/utils/partition';
+import { getEventElementId } from '@app/utils/get-event-element-id';
 
 function getTargetColors(theme: Theme, target: RelatedTarget) {
   switch (target.type) {
@@ -238,49 +240,114 @@ interface EventEntry {
   event: RelatedEvent;
 }
 
-// interface EventContinuationEntry {
-//   type: 'event-continuation';
-//   indent: number;
-//   task: RelatedTask;
-//   event: RelatedEvent;
-// }
+interface EventAsyncEntry {
+  type: 'event-async';
+  indent: number;
+  task: RelatedTask;
+  event: RelatedEvent;
+}
 
 interface TaskEntry {
   type: 'task';
   task: RelatedTask;
 }
 
-type Entry = EventEntry | TaskEntry;
+type Entry = EventEntry | EventAsyncEntry | TaskEntry;
 
-function getEventLog(relations: Relations) {
+interface EventNode {
+  event: RelatedEvent;
+  childEvents: EventNode[];
+}
+
+interface TaskNode {
+  task: RelatedTask;
+  childEvents: EventNode[];
+}
+
+function getEventNode(relations: Relations, event: RelatedEvent): EventNode {
+  return {
+    event,
+    childEvents: event.succeedingEvents.map((event) =>
+      getEventNode(relations, relations.events[event])
+    ),
+  };
+}
+
+function getTaskNode(relations: Relations, events: RelatedEvent[]): TaskNode {
+  const rootEvents = events.filter(
+    (event) =>
+      event.precedingEvent === undefined ||
+      relations.events[event.precedingEvent] === undefined ||
+      relations.events[event.precedingEvent].task !== event.task
+  );
+  return {
+    task: relations.tasks[rootEvents[0].task],
+    childEvents: rootEvents.map((rootEvent) =>
+      getEventNode(relations, rootEvent)
+    ),
+  };
+}
+
+function getTaskNodes(relations: Relations) {
   const events = Object.values(relations.events).sort(
     (a, b) => a.time - b.time
   );
+  return partition(events, (a, b) => a.task !== b.task).map((events) =>
+    getTaskNode(relations, events)
+  );
+}
+
+function visitEventNodes(
+  relations: Relations,
+  entries: Entry[],
+  indents: Record<number, number>,
+  childEvents: EventNode[],
+  parentEvent?: EventNode
+) {
+  for (const childEvent of childEvents) {
+    if (
+      parentEvent === undefined ||
+      childEvent.event.task === parentEvent.event.task
+    ) {
+      const indent =
+        parentEvent !== undefined ? indents[parentEvent.event.time] + 1 : 0;
+      indents[childEvent.event.time] = indent;
+      entries.push({
+        type: 'event',
+        event: childEvent.event,
+        indent,
+      });
+      visitEventNodes(
+        relations,
+        entries,
+        indents,
+        childEvent.childEvents,
+        childEvent
+      );
+    } else {
+      const indent = indents[parentEvent.event.time] + 1;
+      entries.push({
+        type: 'event-async',
+        event: childEvent.event,
+        task: relations.tasks[childEvent.event.task],
+        indent,
+      });
+    }
+  }
+}
+
+function getEventLog(relations: Relations) {
+  const taskNodes = getTaskNodes(relations);
 
   const entries: Entry[] = [];
   const indents: Record<number, number> = {};
-  for (let i = 0; i < events.length; i++) {
-    const event = events[i];
-    const prevEvent = events[i - 1];
-    if (prevEvent?.task !== event.task) {
-      entries.push({
-        type: 'task',
-        task: relations.tasks[event.task],
-      });
-    }
-    const indent =
-      event.precedingEvent !== undefined
-        ? indents[event.precedingEvent] + 1
-        : 0;
-    indents[event.time] = indent;
+  for (const taskNode of taskNodes) {
     entries.push({
-      type: 'event',
-      event: event,
-      indent,
+      type: 'task',
+      task: taskNode.task,
     });
+    visitEventNodes(relations, entries, indents, taskNode.childEvents);
   }
-
-  console.log(indents);
 
   return entries;
 }
@@ -416,22 +483,42 @@ export function EventsLog() {
   );
   return (
     <EventsLogDiv>
-      {entries.map((entry) =>
-        entry.type === 'event' ? (
-          <EventSpan
-            data-type={entry.event.eventType}
-            data-selected={entry.event.time === time}
-            onClick={() => onEventSelected(entry.event)}
-          >
-            <Indent indent={entry.indent} />
-            <RefOutlet summary reference={entry.event} />
-          </EventSpan>
-        ) : (
-          <TaskSpan>
-            {entry.task.name} #{entry.task.id}
-          </TaskSpan>
-        )
-      )}
+      {entries.map((entry) => {
+        switch (entry.type) {
+          case 'task':
+            return (
+              <TaskSpan>
+                {entry.task.name} #{entry.task.id}
+              </TaskSpan>
+            );
+          case 'event':
+            return (
+              <EventSpan
+                id={getEventElementId(entry.event.time)}
+                data-type={entry.event.eventType}
+                data-selected={entry.event.time === time}
+                onClick={() => onEventSelected(entry.event)}
+              >
+                <Indent indent={entry.indent} />
+                <RefOutlet summary reference={entry.event} />
+              </EventSpan>
+            );
+          case 'event-async':
+            return (
+              <EventSpan
+                title={`${entry.task.name} #${entry.task.id}`}
+                data-type={entry.event.eventType}
+                data-selected={entry.event.time === time}
+                onClick={() => onEventSelected(entry.event)}
+              >
+                <Indent indent={entry.indent} />
+                <span style={{ opacity: 0.5 }}>
+                  <RefOutlet summary reference={entry.event} />
+                </span>
+              </EventSpan>
+            );
+        }
+      })}
     </EventsLogDiv>
   );
 }
