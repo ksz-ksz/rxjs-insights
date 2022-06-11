@@ -172,9 +172,12 @@ const refs = new RefsService();
 
 startServer<Refs>(createInspectedWindowEvalServerAdapter(RefsChannel), refs);
 
+const OUT_OF_BOUNDS_MIN_TIME = -1;
+const OUT_OF_BOUNDS_MAX_TIME = Number.MAX_SAFE_INTEGER;
+
 function getStartTime(events: Event[]) {
   if (events.length === 0) {
-    return undefined;
+    return OUT_OF_BOUNDS_MAX_TIME;
   } else {
     return events[0].time;
   }
@@ -182,7 +185,7 @@ function getStartTime(events: Event[]) {
 
 function getEndTime(events: Event[]) {
   if (events.length === 0) {
-    return undefined;
+    return OUT_OF_BOUNDS_MIN_TIME;
   } else {
     const lastEvent = events.at(-1)!;
     switch (lastEvent.type) {
@@ -191,7 +194,7 @@ function getEndTime(events: Event[]) {
       case 'unsubscribe':
         return lastEvent.time;
       default:
-        return undefined;
+        return OUT_OF_BOUNDS_MAX_TIME;
     }
   }
 }
@@ -208,9 +211,13 @@ function addRelatedTarget(
       type: target.type,
       tags: target.tags,
       startTime:
-        target.type === 'subscriber' ? getStartTime(target.events) : undefined,
+        target.type === 'subscriber'
+          ? getStartTime(target.events)
+          : OUT_OF_BOUNDS_MIN_TIME,
       endTime:
-        target.type === 'subscriber' ? getEndTime(target.events) : undefined,
+        target.type === 'subscriber'
+          ? getEndTime(target.events)
+          : OUT_OF_BOUNDS_MAX_TIME,
       locations: target.declaration.locations,
     };
   }

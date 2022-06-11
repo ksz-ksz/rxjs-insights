@@ -8,8 +8,8 @@ export interface RelatedSubscriber extends SubscriberRef {
   type: 'subscriber';
   name: string;
   tags: string[];
-  startTime?: number;
-  endTime?: number;
+  startTime: number;
+  endTime: number;
   locations: Locations;
 }
 
@@ -18,8 +18,8 @@ export interface RelatedObservable extends ObservableRef {
   type: 'observable';
   name: string;
   tags: string[];
-  startTime?: number;
-  endTime?: number;
+  startTime: number;
+  endTime: number;
   locations: Locations;
 }
 

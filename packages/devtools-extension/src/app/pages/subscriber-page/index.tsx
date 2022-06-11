@@ -248,10 +248,9 @@ export function SubscriberPage() {
               data.children.filter((child) => {
                 const childTarget = state.relations.targets[child.target];
                 return (
-                  childTarget.type === 'observable' ||
-                  (time !== undefined &&
-                    (childTarget.startTime ?? Infinity) <= time &&
-                    time <= (childTarget.endTime ?? Infinity))
+                  time !== undefined &&
+                  time >= childTarget.startTime &&
+                  time <= childTarget.endTime
                 );
               })
           )
