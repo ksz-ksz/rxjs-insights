@@ -25,3 +25,8 @@ export const timeSelector = createSelector(
   { insights: insightsSelector },
   ({ insights }) => insights.time
 );
+
+export const playingSelector = createSelector(
+  { insights: insightsSelector },
+  ({ insights }) => insights.playing
+);

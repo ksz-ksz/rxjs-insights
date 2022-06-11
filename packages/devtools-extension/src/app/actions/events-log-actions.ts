@@ -5,6 +5,10 @@ export interface EventsLogActions {
   EventSelected: {
     event: RelatedEvent;
   };
+  Play: {
+    events: RelatedEvent[];
+  };
+  Pause: void;
 }
 
 export const eventsLogActions =

@@ -10,7 +10,20 @@ import {
   router,
   subscriberRouteToken,
 } from '@app/router';
-import { EMPTY, from, map, switchMap } from 'rxjs';
+import {
+  concat,
+  concatAll,
+  delay,
+  EMPTY,
+  endWith,
+  from,
+  map,
+  merge,
+  of,
+  scheduled,
+  switchMap,
+  takeUntil,
+} from 'rxjs';
 import { insightsClient } from '@app/clients/insights';
 import { insightsActions } from '@app/actions/insights-actions';
 import { inspect } from '@rxjs-insights/console';
@@ -55,7 +68,10 @@ export const insightsReaction = combineReactions()
   .add(
     createReaction((action$) =>
       action$.pipe(
-        filterActions(eventsLogActions.EventSelected),
+        filterActions([
+          eventsLogActions.EventSelected,
+          insightsActions.PlayNextEvent,
+        ]),
         effect((action) => {
           const element = document.getElementById(
             getEventElementId(action.payload.event.time)
@@ -68,6 +84,36 @@ export const insightsReaction = combineReactions()
             });
           }
         })
+      )
+    )
+  )
+  .add(
+    createReaction((action$) =>
+      action$.pipe(
+        filterActions(eventsLogActions.Play),
+        switchMap((action) =>
+          concat(
+            ...action.payload.events.map((event) =>
+              of(insightsActions.PlayNextEvent({ event })).pipe(delay(1000))
+            )
+          ).pipe(
+            takeUntil(
+              merge(
+                action$.pipe(
+                  filterActions([
+                    eventsLogActions.Pause,
+                    eventsLogActions.EventSelected,
+                  ])
+                ),
+                action$.pipe(
+                  filterActions(router.actions.RouteLeave),
+                  filterRoute(router, subscriberRouteToken)
+                )
+              )
+            ),
+            endWith(insightsActions.PlayDone())
+          )
+        )
       )
     )
   );

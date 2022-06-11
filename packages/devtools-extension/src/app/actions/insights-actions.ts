@@ -1,5 +1,6 @@
 import { createActions } from '@lib/store';
 import { ObservableState, SubscriberState } from '@app/store/insights';
+import { RelatedEvent } from '@app/protocols/insights';
 
 export interface InsightsActions {
   ObservableStateLoaded: {
@@ -8,6 +9,10 @@ export interface InsightsActions {
   SubscriberStateLoaded: {
     state: SubscriberState | undefined;
   };
+  PlayNextEvent: {
+    event: RelatedEvent;
+  };
+  PlayDone: void;
 }
 
 export const insightsActions =

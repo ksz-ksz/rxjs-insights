@@ -1,138 +1,27 @@
-import { RelatedEvent, RelatedTask, Relations } from '@app/protocols/insights';
+import { RelatedEvent } from '@app/protocols/insights';
 import React, { ReactNode, useCallback, useMemo } from 'react';
 import { IconButton, Stack, styled } from '@mui/material';
 import { useDispatch, useSelector } from '@app/store';
-import { timeSelector } from '@app/selectors/insights-selectors';
+import {
+  playingSelector,
+  timeSelector,
+} from '@app/selectors/insights-selectors';
 import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { getEventElementId } from '@app/utils/get-event-element-id';
 import { RefOutlet } from '@app/components/ref-outlet';
-import { partition } from '@app/utils/partition';
 import {
   FastForward,
   FastRewind,
+  Pause,
   PlayArrow,
   SkipNext,
   SkipPrevious,
 } from '@mui/icons-material';
-
-interface EventEntry {
-  type: 'event';
-  indent: number;
-  event: RelatedEvent;
-}
-
-interface EventAsyncEntry {
-  type: 'event-async';
-  indent: number;
-  task: RelatedTask;
-  event: RelatedEvent;
-}
-
-interface TaskEntry {
-  type: 'task';
-  task: RelatedTask;
-}
-
-type Entry = EventEntry | EventAsyncEntry | TaskEntry;
-
-interface EventNode {
-  event: RelatedEvent;
-  childEvents: EventNode[];
-}
-
-interface TaskNode {
-  task: RelatedTask;
-  childEvents: EventNode[];
-}
-
-function getEventNode(relations: Relations, event: RelatedEvent): EventNode {
-  return {
-    event,
-    childEvents: event.succeedingEvents.map((event) =>
-      getEventNode(relations, relations.events[event])
-    ),
-  };
-}
-
-function getTaskNode(relations: Relations, events: RelatedEvent[]): TaskNode {
-  const rootEvents = events.filter(
-    (event) =>
-      event.precedingEvent === undefined ||
-      relations.events[event.precedingEvent] === undefined ||
-      relations.events[event.precedingEvent].task !== event.task
-  );
-  return {
-    task: relations.tasks[rootEvents[0].task],
-    childEvents: rootEvents.map((rootEvent) =>
-      getEventNode(relations, rootEvent)
-    ),
-  };
-}
-
-function getTaskNodes(relations: Relations) {
-  const events = Object.values(relations.events).sort(
-    (a, b) => a.time - b.time
-  );
-  return partition(events, (a, b) => a.task !== b.task).map((events) =>
-    getTaskNode(relations, events)
-  );
-}
-
-function visitEventNodes(
-  relations: Relations,
-  entries: Entry[],
-  indents: Record<number, number>,
-  childEvents: EventNode[],
-  parentEvent?: EventNode
-) {
-  for (const childEvent of childEvents) {
-    if (
-      parentEvent === undefined ||
-      childEvent.event.task === parentEvent.event.task
-    ) {
-      const indent =
-        parentEvent !== undefined ? indents[parentEvent.event.time] + 1 : 0;
-      indents[childEvent.event.time] = indent;
-      entries.push({
-        type: 'event',
-        event: childEvent.event,
-        indent,
-      });
-      visitEventNodes(
-        relations,
-        entries,
-        indents,
-        childEvent.childEvents,
-        childEvent
-      );
-    } else {
-      const indent = indents[parentEvent.event.time] + 1;
-      entries.push({
-        type: 'event-async',
-        event: childEvent.event,
-        task: relations.tasks[childEvent.event.task],
-        indent,
-      });
-    }
-  }
-}
-
-function getEventLog(relations: Relations) {
-  const taskNodes = getTaskNodes(relations);
-
-  const entries: Entry[] = [];
-  const indents: Record<number, number> = {};
-  for (const taskNode of taskNodes) {
-    entries.push({
-      type: 'task',
-      task: taskNode.task,
-    });
-    visitEventNodes(relations, entries, indents, taskNode.childEvents);
-  }
-
-  return entries;
-}
+import {
+  EventLogEntry,
+  getEventLogEntries,
+} from '@app/pages/subscriber-page/get-event-log-entries';
 
 const IndentSpan = styled('span')(({ theme }) => ({
   display: 'inline-block',
@@ -187,13 +76,17 @@ const EventSpan = styled('span')(({ theme }) => ({
   },
 }));
 
-// const EventsControlsDiv = styled('div')(({theme}) => ({
-//   display: 'flex',
-//   flexDirection: 'row',
-//   justifyContent: 'center'
-// }))
+interface EventsControlsProps {
+  playing: boolean;
+  onGoToFirst(): void;
+  onGoToPrev(): void;
+  onPlay(): void;
+  onPause(): void;
+  onGoToNext(): void;
+  onGoToLast(): void;
+}
 
-export function EventsControls() {
+export function EventsControls(props: EventsControlsProps) {
   return (
     <Stack
       sx={{ backgroundColor: 'divider' }}
@@ -201,38 +94,38 @@ export function EventsControls() {
       spacing={1}
       justifyContent="center"
     >
-      <IconButton>
+      <IconButton onClick={props.onGoToFirst}>
         <SkipPrevious />
       </IconButton>
-      <IconButton>
+      <IconButton onClick={props.onGoToPrev}>
         <FastRewind />
       </IconButton>
-      <IconButton>
-        <PlayArrow />
-      </IconButton>
-      <IconButton>
+      {props.playing ? (
+        <IconButton onClick={props.onPause}>
+          <Pause />
+        </IconButton>
+      ) : (
+        <IconButton onClick={props.onPlay}>
+          <PlayArrow />
+        </IconButton>
+      )}
+      <IconButton onClick={props.onGoToNext}>
         <FastForward />
       </IconButton>
-      <IconButton>
+      <IconButton onClick={props.onGoToLast}>
         <SkipNext />
       </IconButton>
     </Stack>
   );
 }
 
-function EventsLog() {
-  const dispatch = useDispatch();
-  const time = useSelector(timeSelector);
-  const state = useSelector(activeSubscriberStateSelector)!;
-  const entries = useMemo(
-    () => (state ? getEventLog(state.relations) : []),
-    [state]
-  );
-  const onEventSelected = useCallback(
-    (event: RelatedEvent) =>
-      dispatch(eventsLogActions.EventSelected({ event })),
-    []
-  );
+interface EventLogProps {
+  time: number;
+  entries: EventLogEntry[];
+  onEventSelected(event: RelatedEvent): void;
+}
+
+function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
   return (
     <EventsLogDiv>
       {entries.map((entry) => {
@@ -282,10 +175,69 @@ const EventsPanelDiv = styled('div')({
 });
 
 export function EventsPanel() {
+  const dispatch = useDispatch();
+  const time = useSelector(timeSelector);
+  const playing = useSelector(playingSelector);
+  const state = useSelector(activeSubscriberStateSelector)!;
+  const events = useMemo(
+    () => Object.values(state.relations.events).sort((a, b) => a.time - b.time),
+    [state]
+  );
+  const entries = useMemo(
+    () => getEventLogEntries(events, state.relations),
+    [state, events]
+  );
+  const onEventSelected = useCallback(
+    (event: RelatedEvent) =>
+      dispatch(eventsLogActions.EventSelected({ event })),
+    []
+  );
+  const onGoToFirst = useCallback(() => {
+    const first = events.at(0)!;
+    dispatch(eventsLogActions.EventSelected({ event: first }));
+  }, []);
+  const onGoToPrev = useCallback(() => {
+    const currentEventIndex = events.findIndex((event) => event.time === time);
+    const prevEvent = events[currentEventIndex - 1];
+    if (prevEvent) {
+      dispatch(eventsLogActions.EventSelected({ event: prevEvent }));
+    }
+  }, [events, time]);
+  const onPlay = useCallback(() => {
+    const currentEventIndex = events.findIndex((event) => event.time === time);
+    const restEvents = events.slice(currentEventIndex + 1);
+    dispatch(eventsLogActions.Play({ events: restEvents }));
+  }, [events, time]);
+  const onPause = useCallback(() => {
+    dispatch(eventsLogActions.Pause());
+  }, []);
+  const onGoToNext = useCallback(() => {
+    const currentEventIndex = events.findIndex((event) => event.time === time);
+    const nextEvent = events[currentEventIndex + 1];
+    if (nextEvent) {
+      dispatch(eventsLogActions.EventSelected({ event: nextEvent }));
+    }
+  }, [events, time]);
+  const onGoToLast = useCallback(() => {
+    const last = events.at(-1)!;
+    dispatch(eventsLogActions.EventSelected({ event: last }));
+  }, [events]);
   return (
     <EventsPanelDiv>
-      <EventsLog />
-      <EventsControls />
+      <EventsLog
+        time={time}
+        entries={entries}
+        onEventSelected={onEventSelected}
+      />
+      <EventsControls
+        playing={playing}
+        onGoToFirst={onGoToFirst}
+        onGoToPrev={onGoToPrev}
+        onPlay={onPlay}
+        onPause={onPause}
+        onGoToNext={onGoToNext}
+        onGoToLast={onGoToLast}
+      />
     </EventsPanelDiv>
   );
 }
