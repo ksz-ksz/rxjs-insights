@@ -1,13 +1,7 @@
-import React, {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
-import { useDispatch, useSelector } from '@app/store';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { useSelector } from '@app/store';
 import { RefOutlet } from '@app/components/ref-outlet';
-import { Box, Stack, styled, Theme, useTheme } from '@mui/material';
+import { Box, Stack, Theme, useTheme } from '@mui/material';
 import {
   DefaultLinkControl,
   Graph,
@@ -19,13 +13,11 @@ import {
   RelatedEvent,
   RelatedHierarchyNode,
   RelatedTarget,
-  RelatedTask,
   Relations,
 } from '@app/protocols/insights';
 import { getDoubleTree } from '@app/components/tree';
 import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
 import { timeSelector } from '@app/selectors/insights-selectors';
-import { eventsLogActions } from '@app/actions/events-log-actions';
 import {
   DefaultNodeControl,
   NodeControl,
@@ -33,8 +25,8 @@ import {
 
 import gsap from 'gsap';
 import { Locations } from '@rxjs-insights/core';
-import { partition } from '@app/utils/partition';
-import { getEventElementId } from '@app/utils/get-event-element-id';
+import { SidePanel, SidePanelSection } from '@app/components';
+import { EventsPanel } from '@app/pages/subscriber-page/events-panel';
 
 function getTargetColors(theme: Theme, target: RelatedTarget) {
   switch (target.type) {
@@ -234,295 +226,6 @@ function getLinkRenderer(relations: Relations) {
   );
 }
 
-interface EventEntry {
-  type: 'event';
-  indent: number;
-  event: RelatedEvent;
-}
-
-interface EventAsyncEntry {
-  type: 'event-async';
-  indent: number;
-  task: RelatedTask;
-  event: RelatedEvent;
-}
-
-interface TaskEntry {
-  type: 'task';
-  task: RelatedTask;
-}
-
-type Entry = EventEntry | EventAsyncEntry | TaskEntry;
-
-interface EventNode {
-  event: RelatedEvent;
-  childEvents: EventNode[];
-}
-
-interface TaskNode {
-  task: RelatedTask;
-  childEvents: EventNode[];
-}
-
-function getEventNode(relations: Relations, event: RelatedEvent): EventNode {
-  return {
-    event,
-    childEvents: event.succeedingEvents.map((event) =>
-      getEventNode(relations, relations.events[event])
-    ),
-  };
-}
-
-function getTaskNode(relations: Relations, events: RelatedEvent[]): TaskNode {
-  const rootEvents = events.filter(
-    (event) =>
-      event.precedingEvent === undefined ||
-      relations.events[event.precedingEvent] === undefined ||
-      relations.events[event.precedingEvent].task !== event.task
-  );
-  return {
-    task: relations.tasks[rootEvents[0].task],
-    childEvents: rootEvents.map((rootEvent) =>
-      getEventNode(relations, rootEvent)
-    ),
-  };
-}
-
-function getTaskNodes(relations: Relations) {
-  const events = Object.values(relations.events).sort(
-    (a, b) => a.time - b.time
-  );
-  return partition(events, (a, b) => a.task !== b.task).map((events) =>
-    getTaskNode(relations, events)
-  );
-}
-
-function visitEventNodes(
-  relations: Relations,
-  entries: Entry[],
-  indents: Record<number, number>,
-  childEvents: EventNode[],
-  parentEvent?: EventNode
-) {
-  for (const childEvent of childEvents) {
-    if (
-      parentEvent === undefined ||
-      childEvent.event.task === parentEvent.event.task
-    ) {
-      const indent =
-        parentEvent !== undefined ? indents[parentEvent.event.time] + 1 : 0;
-      indents[childEvent.event.time] = indent;
-      entries.push({
-        type: 'event',
-        event: childEvent.event,
-        indent,
-      });
-      visitEventNodes(
-        relations,
-        entries,
-        indents,
-        childEvent.childEvents,
-        childEvent
-      );
-    } else {
-      const indent = indents[parentEvent.event.time] + 1;
-      entries.push({
-        type: 'event-async',
-        event: childEvent.event,
-        task: relations.tasks[childEvent.event.task],
-        indent,
-      });
-    }
-  }
-}
-
-function getEventLog(relations: Relations) {
-  const taskNodes = getTaskNodes(relations);
-
-  const entries: Entry[] = [];
-  const indents: Record<number, number> = {};
-  for (const taskNode of taskNodes) {
-    entries.push({
-      type: 'task',
-      task: taskNode.task,
-    });
-    visitEventNodes(relations, entries, indents, taskNode.childEvents);
-  }
-
-  return entries;
-}
-
-const IndentSpan = styled('span')(({ theme }) => ({
-  display: 'inline-block',
-  width: '1rem',
-  height: '1.5rem',
-  borderRight: `thin solid ${theme.palette.divider}`,
-  margin: '-0.25rem 0',
-}));
-
-const TaskSpan = styled('span')(({ theme }) => ({
-  display: 'inline-flex',
-  fontFamily: 'Monospace',
-  fontStyle: 'oblique',
-  color: theme.palette.text.secondary,
-  marginLeft: '1rem',
-  '&:after': {
-    borderTop: `thin solid ${theme.palette.divider}`,
-    content: '""',
-    flexGrow: 1,
-    alignSelf: 'center',
-    marginLeft: '1rem',
-  },
-}));
-
-const SidePanelDiv = styled('div')({
-  display: 'flex',
-  flexDirection: 'row',
-});
-
-const SidePanelContentDiv = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-});
-
-const SidePanelResizerDiv = styled('div')(({ theme }) => ({
-  width: '8px',
-  borderLeft: `thin solid ${theme.palette.divider}`,
-}));
-
-const SidePanelSectionDiv = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  overflow: 'hidden',
-  flexBasis: 0,
-});
-
-const SidePanelSectionHeaderDiv = styled('div')(({ theme }) => ({
-  padding: '0 1rem',
-  backgroundColor: theme.palette.divider,
-  fontFamily: 'Monospace',
-  fontWeight: 'bold',
-}));
-
-const SidePanelSectionBodyDiv = styled('div')({
-  overflow: 'auto',
-});
-
-export interface SidePanelProps {
-  children: ReactNode | ReactNode[];
-}
-
-export function SidePanel(props: SidePanelProps) {
-  return (
-    <SidePanelDiv>
-      <SidePanelContentDiv>{props.children}</SidePanelContentDiv>
-      <SidePanelResizerDiv />
-    </SidePanelDiv>
-  );
-}
-
-export interface SidePanelSectionProps {
-  title: string;
-  basis: number;
-  children: ReactNode | ReactNode[];
-}
-
-export function SidePanelSection(props: SidePanelSectionProps) {
-  return (
-    <SidePanelSectionDiv
-      sx={{ flexGrow: props.basis, flexShrink: props.basis }}
-    >
-      <SidePanelSectionHeaderDiv>{props.title}</SidePanelSectionHeaderDiv>
-      <SidePanelSectionBodyDiv>{props.children}</SidePanelSectionBodyDiv>
-    </SidePanelSectionDiv>
-  );
-}
-
-const EventsLogDiv = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  whiteSpace: 'nowrap',
-  marginTop: '0.5rem',
-  marginBottom: '0.5rem',
-});
-
-interface IndentProps {
-  indent: number;
-}
-
-function Indent({ indent }: IndentProps) {
-  const children = useMemo(() => {
-    const children: ReactNode[] = [];
-    for (let i = 0; i < indent; i++) {
-      children.push(<IndentSpan />);
-    }
-    return children;
-  }, [indent]);
-  return <>{children}</>;
-}
-
-const EventSpan = styled('span')(({ theme }) => ({
-  paddingRight: '1rem',
-  '&[data-selected=true]': {
-    backgroundColor: theme.palette.action.selected,
-  },
-}));
-
-export function EventsLog() {
-  const dispatch = useDispatch();
-  const time = useSelector(timeSelector);
-  const state = useSelector(activeSubscriberStateSelector)!;
-  const entries = useMemo(
-    () => (state ? getEventLog(state.relations) : []),
-    [state]
-  );
-  const onEventSelected = useCallback(
-    (event: RelatedEvent) =>
-      dispatch(eventsLogActions.EventSelected({ event })),
-    []
-  );
-  return (
-    <EventsLogDiv>
-      {entries.map((entry) => {
-        switch (entry.type) {
-          case 'task':
-            return (
-              <TaskSpan>
-                {entry.task.name} #{entry.task.id}
-              </TaskSpan>
-            );
-          case 'event':
-            return (
-              <EventSpan
-                id={getEventElementId(entry.event.time)}
-                data-type={entry.event.eventType}
-                data-selected={entry.event.time === time}
-                onClick={() => onEventSelected(entry.event)}
-              >
-                <Indent indent={entry.indent} />
-                <RefOutlet summary reference={entry.event} />
-              </EventSpan>
-            );
-          case 'event-async':
-            return (
-              <EventSpan
-                title={`${entry.task.name} #${entry.task.id}`}
-                data-type={entry.event.eventType}
-                data-selected={entry.event.time === time}
-                onClick={() => onEventSelected(entry.event)}
-              >
-                <Indent indent={entry.indent} />
-                <span style={{ opacity: 0.5 }}>
-                  <RefOutlet summary reference={entry.event} />
-                </span>
-              </EventSpan>
-            );
-        }
-      })}
-    </EventsLogDiv>
-  );
-}
-
 export function SubscriberPage() {
   const time = useSelector(timeSelector);
   const state = useSelector(activeSubscriberStateSelector)!;
@@ -566,14 +269,14 @@ export function SubscriberPage() {
       }}
     >
       <SidePanel>
-        <SidePanelSection title="EVENTS" basis={2}>
-          <EventsLog />
-        </SidePanelSection>
         <SidePanelSection title="CONTEXT" basis={1}>
           <Stack>
-            <RefOutlet label="root" reference={state.ref} />
+            <RefOutlet label="target" reference={state.ref} />
             {event && <RefOutlet label="event" reference={event} />}
           </Stack>
+        </SidePanelSection>
+        <SidePanelSection title="EVENTS" basis={2}>
+          <EventsPanel />
         </SidePanelSection>
       </SidePanel>
       <Box sx={{ flexGrow: 1, flexShrink: 1 }}>
