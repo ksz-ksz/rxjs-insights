@@ -1,4 +1,4 @@
-import { RelatedEvent } from '@app/protocols/insights';
+import { RelatedEvent, Relations } from '@app/protocols/insights';
 import React, { ReactNode, useCallback, useMemo } from 'react';
 import { IconButton, Stack, styled } from '@mui/material';
 import { useDispatch, useSelector } from '@app/store';
@@ -174,15 +174,18 @@ const EventsPanelDiv = styled('div')({
   height: '100%',
 });
 
+function getEvents(relations: Relations) {
+  return Object.values(relations.events)
+    .filter((event) => relations.targets[event.target] !== undefined)
+    .sort((a, b) => a.time - b.time);
+}
+
 export function EventsPanel() {
   const dispatch = useDispatch();
   const time = useSelector(timeSelector);
   const playing = useSelector(playingSelector);
   const state = useSelector(activeSubscriberStateSelector)!;
-  const events = useMemo(
-    () => Object.values(state.relations.events).sort((a, b) => a.time - b.time),
-    [state]
-  );
+  const events = useMemo(() => getEvents(state.relations), [state]);
   const entries = useMemo(
     () => getEventLogEntries(events, state.relations),
     [state, events]

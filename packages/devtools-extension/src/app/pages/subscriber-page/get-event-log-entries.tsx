@@ -31,27 +31,48 @@ interface TaskNode {
   childEvents: EventNode[];
 }
 
+function getChildEvents(relations: Relations, event: RelatedEvent) {
+  const childEvents: EventNode[] = [];
+  for (const childEventId of event.succeedingEvents) {
+    const childEvent = relations.events[childEventId];
+    if (relations.targets[childEvent.target] !== undefined) {
+      childEvents.push(getEventNode(relations, childEvent));
+    }
+  }
+  return childEvents;
+}
+
 function getEventNode(relations: Relations, event: RelatedEvent): EventNode {
   return {
     event,
-    childEvents: event.succeedingEvents.map((event) =>
-      getEventNode(relations, relations.events[event])
-    ),
+    childEvents: getChildEvents(relations, event),
   };
 }
 
+function isRootEvent(relations: Relations, event: RelatedEvent) {
+  if (event.precedingEvent === undefined) {
+    return true;
+  }
+  const precedingEvent = relations.events[event.precedingEvent];
+  if (relations.targets[precedingEvent.target] === undefined) {
+    return true;
+  }
+  return precedingEvent.task !== event.task;
+}
+
 function getTaskNode(relations: Relations, events: RelatedEvent[]): TaskNode {
-  const rootEvents = events.filter(
-    (event) =>
-      event.precedingEvent === undefined ||
-      relations.events[event.precedingEvent] === undefined ||
-      relations.events[event.precedingEvent].task !== event.task
-  );
+  const rootEvents = events.filter((event) => isRootEvent(relations, event));
+  const childEvents: EventNode[] = [];
+  for (const childEvent of events) {
+    if (isRootEvent(relations, childEvent)) {
+      if (relations.targets[childEvent.target] !== undefined) {
+        childEvents.push(getEventNode(relations, childEvent));
+      }
+    }
+  }
   return {
     task: relations.tasks[rootEvents[0].task],
-    childEvents: rootEvents.map((rootEvent) =>
-      getEventNode(relations, rootEvent)
-    ),
+    childEvents,
   };
 }
 
