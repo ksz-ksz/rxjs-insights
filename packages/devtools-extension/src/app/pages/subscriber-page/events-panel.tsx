@@ -126,6 +126,14 @@ interface EventLogProps {
   onEventSelected(event: RelatedEvent): void;
 }
 
+const RefOutletSpan = styled('span')({
+  fontFamily: 'Monospace',
+  cursor: 'default',
+  '&[data-dim=true]': {
+    opacity: 0.5,
+  },
+});
+
 function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
   return (
     <EventsLogDiv>
@@ -140,14 +148,17 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
           case 'event':
             return (
               <EventSpan
-                sx={{ opacity: entry.excluded ? 0.5 : 1 }}
                 id={getEventElementId(entry.event.time)}
+                title={entry.excluded ? 'Excluded' : undefined}
                 data-type={entry.event.eventType}
                 data-selected={entry.event.time === time}
                 onClick={() => onEventSelected(entry.event)}
               >
                 <Indent indent={entry.indent} />
-                <RefOutlet summary reference={entry.event} />
+                <RefOutletSpan data-dim={entry.excluded}>
+                  <RefOutlet summary reference={entry.event} />
+                  {entry.excluded ? ' ⨯' : ''}
+                </RefOutletSpan>
               </EventSpan>
             );
           case 'event-async':
@@ -159,9 +170,10 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
                 onClick={() => onEventSelected(entry.event)}
               >
                 <Indent indent={entry.indent} />
-                <span style={{ opacity: 0.5 }}>
+                <RefOutletSpan data-dim={true}>
                   <RefOutlet summary reference={entry.event} />
-                </span>
+                  {' ↴'}
+                </RefOutletSpan>
               </EventSpan>
             );
         }
