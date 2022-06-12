@@ -82,7 +82,7 @@ function getLocationStrings(locations: Locations) {
 
 function getNodeRenderer(relations: Relations, rootTargetId: number) {
   return React.forwardRef<NodeControl, NodeRendererProps<RelatedHierarchyNode>>(
-    function DefaultNodeRenderer({ node }, forwardedRef) {
+    function NodeRenderer({ node }, forwardedRef) {
       const elementRef = useRef<SVGGElement | null>(null);
       React.useImperativeHandle(
         forwardedRef,
@@ -95,6 +95,7 @@ function getNodeRenderer(relations: Relations, rootTargetId: number) {
       const target = relations.targets[node.data.target];
       const isRoot = target.id === rootTargetId;
       const isSelected = event && event.target === target.id;
+      const isActive = target.startTime <= time && time <= target.endTime;
 
       const targetColors = getTargetColors(theme, target);
       const eventColors = getEventColors(theme, event);
@@ -131,9 +132,22 @@ function getNodeRenderer(relations: Relations, rootTargetId: number) {
 
       return (
         <g ref={elementRef}>
-          <circle r="4" fill={targetColors.secondary} />
+          <circle
+            r="4"
+            fill={
+              isActive ? targetColors.secondary : theme.palette.action.disabled
+            }
+          />
           {isRoot && (
-            <circle r={5} fill="transparent" stroke={targetColors.primary} />
+            <circle
+              r={5}
+              fill="transparent"
+              stroke={
+                isActive
+                  ? targetColors.primary
+                  : theme.palette.action.disabledBackground
+              }
+            />
           )}
           {isSelected && (
             <circle
@@ -175,7 +189,7 @@ function getNodeRenderer(relations: Relations, rootTargetId: number) {
 
 function getLinkRenderer(relations: Relations) {
   return React.forwardRef<LinkControl, LinkRendererProps<RelatedHierarchyNode>>(
-    function DefaultLinkRenderer({ link }, forwardedRef) {
+    function LinkRenderer({ link }, forwardedRef) {
       const theme = useTheme();
       const time = useSelector(timeSelector);
       const event = relations.events[time];
@@ -234,29 +248,29 @@ export function SubscriberPage() {
     [state]
   );
   const LinkRenderer = useMemo(() => getLinkRenderer(state.relations), [state]);
-  const { nodes, links } = useMemo(
-    () =>
-      state
-        ? getDoubleTree(
-            state.hierarchy.sources,
-            state.hierarchy.destinations,
-            (data, path) =>
-              [...path, data]
-                .map((x: RelatedHierarchyNode) => x.target)
-                .join('/'),
-            (data) =>
-              data.children.filter((child) => {
-                const childTarget = state.relations.targets[child.target];
-                return (
-                  time !== undefined &&
-                  time >= childTarget.startTime &&
-                  time <= childTarget.endTime
-                );
-              })
-          )
-        : { nodes: [], links: [] },
-    [state, time]
-  );
+  const { nodes, links } = useMemo(() => {
+    return getDoubleTree(
+      state.hierarchy.sources,
+      state.hierarchy.destinations,
+      (data, path) =>
+        [...path, data].map((x: RelatedHierarchyNode) => x.target).join('/'),
+      (data) => {
+        const target = state.relations.targets[data.target];
+        return time !== undefined &&
+          time >= target.startTime &&
+          time <= target.endTime
+          ? data.children.filter((child) => {
+              const childTarget = state.relations.targets[child.target];
+              return (
+                time !== undefined &&
+                time >= childTarget.startTime &&
+                time <= childTarget.endTime
+              );
+            })
+          : [];
+      }
+    );
+  }, [state, time]);
   const event = state.relations.events[time];
   return (
     <Box

@@ -20,6 +20,7 @@ const inspectDevtools: typeof inspect =
 
 export function playground() {
   const obs1 = scheduled([of('a', 'b', 'c'), of(1, 2, 3)], asapScheduler).pipe(
+    map((x) => x),
     switchMap((x) => x),
     (source) =>
       new Observable((observer) => {
