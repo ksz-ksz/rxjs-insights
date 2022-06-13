@@ -43,6 +43,7 @@ const TaskSpan = styled('span')(({ theme }) => ({
   fontStyle: 'oblique',
   color: theme.palette.text.secondary,
   marginLeft: '1rem',
+  marginRight: '1rem',
   '&:after': {
     borderTop: `thin solid ${theme.palette.divider}`,
     content: '""',

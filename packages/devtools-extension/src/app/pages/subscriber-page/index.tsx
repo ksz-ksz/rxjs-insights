@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import { SidePanel, SidePanelSection } from '@app/components';
 import { EventsPanel } from '@app/pages/subscriber-page/events-panel';
 import { SubscribersGraph } from '@app/pages/subscriber-page/subscribers-graph';
+import { ContextPanel } from '@app/pages/subscriber-page/context-panel';
 
 export function SubscriberPage() {
   return (
@@ -16,10 +17,7 @@ export function SubscriberPage() {
     >
       <SidePanel>
         <SidePanelSection title="CONTEXT" basis={1}>
-          {/*<Stack>*/}
-          {/*  <RefOutlet label="target" reference={state.ref} />*/}
-          {/*  {event && <RefOutlet label="event" reference={event} />}*/}
-          {/*</Stack>*/}
+          <ContextPanel />
         </SidePanelSection>
         <SidePanelSection title="EVENTS" basis={2}>
           <EventsPanel />
