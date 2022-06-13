@@ -1,10 +1,9 @@
 import { State, Store } from './store';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Action } from './action';
-import { Selector } from './selector';
-import { first, map } from 'rxjs';
 import { StoreContext } from './context';
-import { select } from './operators';
+import { Selector } from './selector';
+import { SelectionObserver } from './selection-observer';
 
 export function useStore<STATE>(): Store<STATE> {
   return useContext(StoreContext);
@@ -19,31 +18,27 @@ export function useSelector<STATE, RESULT>(
   selector: Selector<STATE, RESULT>
 ): RESULT {
   const store = useStore<STATE>();
-  const [result, setResult] = useState<RESULT>(() => {
-    let initialState: RESULT;
-    store.pipe(first(), map(selector.select)).subscribe({
-      next(value) {
-        initialState = value;
-      },
-      error(err) {
-        throw err;
-      },
-    });
-    return initialState!;
-  });
+  const selection = useMemo(() => selector.selection(), [selector]);
+  const [result, setResult] = useState<RESULT>(() =>
+    selection.get(store.get())
+  );
   useEffect(() => {
-    const subscription = store.pipe(select(selector)).subscribe({
-      next(value) {
-        setResult(value);
-      },
-      error(err) {
-        console.error('useSelector.error', selector, err);
-        throw err;
-      },
-    });
+    const subscription = store.subscribe(
+      new SelectionObserver<STATE, RESULT>(selection, {
+        next(value) {
+          setResult(value);
+        },
+        error(err) {
+          console.error('useSelector.error', selector, err);
+          throw err;
+        },
+        complete() {},
+      })
+    );
 
     return () => subscription.unsubscribe();
-  }, [selector]);
+  }, [selection]);
+
   return result;
 }
 

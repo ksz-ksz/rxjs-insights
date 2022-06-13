@@ -23,7 +23,7 @@ import React, {
   useMemo,
 } from 'react';
 import { styled } from '@mui/material';
-import { getRefState } from '@app/selectors/refs-selectors';
+import { refStateSelector } from '@app/selectors/refs-selectors';
 import { useDispatch, useSelector } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 
@@ -509,11 +509,11 @@ const RefOutletPropsDiv = styled('div')({
 });
 
 function ObjectRefOutlet(props: ObjectRefOutletProps) {
-  const refStateSelector = useMemo(
-    () => getRefState(props.reference.refId),
+  const refStateSelectorMemo = useMemo(
+    () => refStateSelector(props.reference.refId),
     [props.reference.refId]
   );
-  const refState = useSelector(refStateSelector);
+  const refState = useSelector(refStateSelectorMemo);
   const dispatch = useDispatch();
   const onToggle = useCallback(() => {
     if (refState.expanded) {
@@ -570,11 +570,11 @@ interface GetterRefOutletProps {
 }
 
 function GetterRefOutlet(props: GetterRefOutletProps) {
-  const refStateSelector = useMemo(
-    () => getRefState(props.reference.refId),
+  const refStateSelectorMemo = useMemo(
+    () => refStateSelector(props.reference.refId),
     [props.reference.refId]
   );
-  const refState = useSelector(refStateSelector);
+  const refState = useSelector(refStateSelectorMemo);
   const dispatch = useDispatch();
   const onInvoke = useCallback(() => {
     dispatch(refOutletActions.InvokeGetter({ refId: props.reference.refId }));

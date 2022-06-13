@@ -18,18 +18,16 @@ import {
   EMPTY,
   filter,
   from,
-  ignoreElements,
   map,
   of,
   startWith,
   switchMap,
-  tap,
   withLatestFrom,
 } from 'rxjs';
 import { targetsClient } from '@app/clients/targets';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { RouterSlice } from '@app/store/router';
-import { activeTarget } from '@app/selectors/targets-selectors';
+import { activeTargetSelector } from '@app/selectors/targets-selectors';
 import { createUrl } from '@lib/store-router';
 import { router } from '@app/router';
 import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
@@ -97,7 +95,7 @@ export const targetReaction = combineReactions()
           })
         ),
       (store: Store<RouterSlice>) => ({
-        activeTarget$: store.pipe(select(activeTarget)),
+        activeTarget$: store.pipe(select(activeTargetSelector)),
       })
     )
   );

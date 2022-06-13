@@ -1,7 +1,6 @@
-import { createSliceSelector } from '@lib/store';
-import { StatisticsState } from '@app/store/statisctics';
+import { createSelector } from '@lib/store';
+import { StatisticsSlice } from '@app/store/statisctics';
 
-export const statisticsSelector = createSliceSelector<
-  'statistics',
-  StatisticsState
->('statistics');
+export const statisticsSelector = createSelector(
+  (state: StatisticsSlice) => state.statistics
+);

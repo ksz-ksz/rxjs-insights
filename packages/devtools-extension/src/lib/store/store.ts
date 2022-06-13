@@ -12,8 +12,8 @@ import { Action, createAction } from './action';
 import { Reducer } from './reducer';
 import { Reaction } from './reaction';
 import { Super } from './super';
-import { Selector } from './selector';
 import { inspect } from '@rxjs-insights/console';
+import { Selector } from './selector';
 
 export const ReducerAdded = createAction<{ slice: string }>(
   '<store>',

@@ -9,7 +9,7 @@ import { EMPTY, filter, from, map, switchMap } from 'rxjs';
 import { refsClient } from '@app/clients/refs';
 import { refsActions } from '@app/actions/refs-actions';
 import { RefsSlice } from '@app/store/refs/slice';
-import { getRefState } from '@app/selectors/refs-selectors';
+import { refStateSelector } from '@app/selectors/refs-selectors';
 
 export const refsReaction = combineReactions()
   .add(
@@ -18,7 +18,7 @@ export const refsReaction = combineReactions()
         action$.pipe(
           filterActions(refOutletActions.Expand),
           switchMap((action) => {
-            const { props } = store.get(getRefState(action.payload.refId));
+            const { props } = store.get(refStateSelector(action.payload.refId));
             return props !== undefined
               ? EMPTY
               : from(refsClient.expand(action.payload.refId)).pipe(
@@ -41,7 +41,7 @@ export const refsReaction = combineReactions()
         action$.pipe(
           filterActions(refOutletActions.InvokeGetter),
           switchMap((action) => {
-            const { ref } = store.get(getRefState(action.payload.refId));
+            const { ref } = store.get(refStateSelector(action.payload.refId));
             return ref !== undefined
               ? EMPTY
               : from(refsClient.invokeGetter(action.payload.refId)).pipe(

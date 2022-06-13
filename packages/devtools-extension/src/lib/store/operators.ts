@@ -1,9 +1,7 @@
 import { Action, ActionFactory, ActionFactoryPayload } from './action';
 import {
-  distinctUntilChanged,
   filter,
   ignoreElements,
-  map,
   Observable,
   OperatorFunction,
   pipe,
@@ -11,6 +9,7 @@ import {
   UnaryFunction,
 } from 'rxjs';
 import { Selector } from './selector';
+import { SelectionObserver } from './selection-observer';
 
 export function filterActions<PAYLOAD>(
   actionFactory: ActionFactory<PAYLOAD>,
@@ -59,12 +58,17 @@ function filterActionsAll<FACTORIES extends ActionFactory<any>[]>(
 
 export type Item<T> = T extends (infer U)[] ? U : never;
 
-export function select<STATE, RESULT>(selector: Selector<STATE, RESULT>) {
-  return pipe(map(selector.select), distinctUntilChanged());
-}
-
 export function effect<T>(
   run: (value: T) => void
 ): UnaryFunction<Observable<T>, Observable<never>> {
   return pipe(tap(run), ignoreElements());
+}
+
+export function select<STATE, RESULT>(
+  selector: Selector<STATE, RESULT>
+): OperatorFunction<STATE, RESULT> {
+  return (source) =>
+    new Observable((observer) =>
+      source.subscribe(new SelectionObserver(selector.selection(), observer))
+    );
 }

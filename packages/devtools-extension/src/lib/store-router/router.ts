@@ -8,7 +8,6 @@ import {
   createReaction,
   createReducer,
   createSelector,
-  createSliceSelector,
   filterActions,
   Selector,
   Slice,
@@ -17,10 +16,8 @@ import {
 import { createUrl, Url } from './url';
 import {
   concat,
-  concatAll,
   concatMap,
   EMPTY,
-  filter,
   first,
   ignoreElements,
   Observable,
@@ -69,19 +66,16 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
 
   const routerActions = createActions<RouterActions<DATA>>(routerSlice);
 
-  const routerSelector = createSliceSelector<SLICE, RouterState<DATA>>(
-    routerSlice
+  const routerSelector = createSelector(
+    (state: Slice<SLICE, RouterState<DATA>>) => state[routerSlice]
   );
 
   const routerSelectors: RouterSelectors<SLICE, DATA, METADATA> = {
-    url: createSelector({ state: routerSelector }, ({ state }) => state.url),
-    routes: createSelector(
-      { state: routerSelector },
-      ({ state }) => state.routes
-    ),
+    url: createSelector([routerSelector], ([router]) => router.url),
+    routes: createSelector([routerSelector], ([router]) => router.routes),
     route(routeToken: RouteToken) {
-      return createSelector({ state: routerSelector }, ({ state }) =>
-        state.routes.find(
+      return createSelector([routerSelector], ([router]) =>
+        router.routes.find(
           (route) =>
             routeMatcher.getRouteConfig(route.routeConfigId)?.token ===
             routeToken

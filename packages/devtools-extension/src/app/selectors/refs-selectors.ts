@@ -1,10 +1,10 @@
-import { createSelector, createSliceSelector } from '@lib/store';
-import { RefsState } from '@app/store/refs';
+import { createSelector } from '@lib/store';
+import { RefsSlice } from '@app/store/refs';
 
-const refsState = createSliceSelector<'refs', RefsState>('refs');
+const refsSelector = createSelector((state: RefsSlice) => state.refs);
 
-export function getRefState(refId: number) {
-  return createSelector({ state: refsState }, ({ state }) => {
-    return state.refs[refId] ?? {};
+export function refStateSelector(refId: number) {
+  return createSelector([refsSelector], ([refs]) => {
+    return refs.refs[refId] ?? {};
   });
 }

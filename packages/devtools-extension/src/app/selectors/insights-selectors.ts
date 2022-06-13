@@ -1,32 +1,28 @@
-import { createSelector, createSliceSelector } from '@lib/store';
-import { InsightsState } from '@app/store/insights';
+import { createSelector } from '@lib/store';
+import { InsightsSlice } from '@app/store/insights';
 
-export const insightsSelector = createSliceSelector<'insights', InsightsState>(
-  'insights'
+export const insightsSelector = createSelector(
+  (state: InsightsSlice) => state.insights
 );
 
 export const observableStateSelector = (observableId: number) =>
   createSelector(
-    {
-      insights: insightsSelector,
-    },
-    ({ insights }) => insights.observables[observableId]
+    [insightsSelector],
+    ([insights]) => insights.observables[observableId]
   );
 
 export const subscriberStateSelector = (subscriberId: number) =>
   createSelector(
-    {
-      insights: insightsSelector,
-    },
-    ({ insights }) => insights.subscribers[subscriberId]
+    [insightsSelector],
+    ([insights]) => insights.subscribers[subscriberId]
   );
 
 export const timeSelector = createSelector(
-  { insights: insightsSelector },
-  ({ insights }) => insights.time
+  [insightsSelector],
+  ([insights]) => insights.time
 );
 
 export const playingSelector = createSelector(
-  { insights: insightsSelector },
-  ({ insights }) => insights.playing
+  [insightsSelector],
+  ([insights]) => insights.playing
 );
