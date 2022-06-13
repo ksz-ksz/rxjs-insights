@@ -1,4 +1,8 @@
-import { RelatedEvent, Relations } from '@app/protocols/insights';
+import {
+  RelatedEvent,
+  RelatedTarget,
+  Relations,
+} from '@app/protocols/insights';
 import React, { ReactNode, useCallback, useMemo } from 'react';
 import { IconButton, Stack, styled } from '@mui/material';
 import { useDispatch, useSelector } from '@app/store';
@@ -23,6 +27,7 @@ import {
   getEventLogEntries,
 } from '@app/pages/subscriber-page/get-event-log-entries';
 import { isExcluded } from '@app/pages/subscriber-page/is-excluded';
+import { createSelector, useDispatchCallback } from '@lib/store';
 
 const IndentSpan = styled('span')(({ theme }) => ({
   display: 'inline-block',
@@ -189,11 +194,15 @@ const EventsPanelDiv = styled('div')({
 });
 
 function getEvents(relations: Relations) {
-  return (
-    Object.values(relations.events)
-      // .filter((event) => relations.targets[event.target] !== undefined)
-      .sort((a, b) => a.time - b.time)
-  );
+  return Object.values(relations.events).sort((a, b) => a.time - b.time);
+}
+
+function getIncludedEvents(
+  relations: Relations,
+  events: RelatedEvent[],
+  target: RelatedTarget
+) {
+  return events.filter((event) => !isExcluded(relations, event, target));
 }
 
 function findLastIndex<T>(items: T[], predicate: (item: T) => boolean): number {
@@ -217,86 +226,84 @@ function findFirstIndex<T>(
   return -1;
 }
 
+const eventsSelector = createSelector(
+  [activeSubscriberStateSelector],
+  ([activeSubscriberState]) => {
+    const { ref, relations } = activeSubscriberState!;
+    const target = relations.targets[ref.id];
+    const allEvents = getEvents(relations);
+    const events = getIncludedEvents(relations, allEvents, target);
+    const entries = getEventLogEntries(relations, allEvents, target);
+
+    return { events, entries };
+  }
+);
+
+const vmSelector = createSelector(
+  [eventsSelector, timeSelector, playingSelector],
+  ([events, time, playing]) => ({ ...events, time, playing })
+);
+
 export function EventsPanel() {
-  const dispatch = useDispatch();
-  const time = useSelector(timeSelector);
-  const playing = useSelector(playingSelector);
-  const state = useSelector(activeSubscriberStateSelector)!;
-  const events = useMemo(() => getEvents(state.relations), [state]);
-  const includedEvents = useMemo(
-    () =>
-      events.filter(
-        (event) =>
-          !isExcluded(
-            state.relations,
-            event,
-            state.relations.targets[state.ref.id]
-          )
-      ),
-    [events]
-  );
-  const entries = useMemo(
-    () =>
-      getEventLogEntries(
-        state.relations.targets[state.ref.id],
-        events,
-        state.relations
-      ),
-    [state, events]
-  );
-  const onEventSelected = useCallback(
-    (event: RelatedEvent) =>
-      dispatch(eventsLogActions.EventSelected({ event })),
+  const vm = useSelector(vmSelector);
+
+  const onEventSelected = useDispatchCallback(
+    (event: RelatedEvent) => eventsLogActions.EventSelected({ event }),
     []
   );
-  const onGoToFirst = useCallback(() => {
-    const first = includedEvents.at(0)!;
-    dispatch(eventsLogActions.EventSelected({ event: first }));
-  }, [includedEvents]);
-  const onGoToPrev = useCallback(() => {
+
+  const onGoToFirst = useDispatchCallback(() => {
+    const first = vm.events.at(0)!;
+    return eventsLogActions.EventSelected({ event: first });
+  }, [vm.events]);
+
+  const onGoToPrev = useDispatchCallback(() => {
     const prevEventIndex = findLastIndex(
-      includedEvents,
-      (event) => event.time < time
+      vm.events,
+      (event) => event.time < vm.time
     );
-    const prevEvent = includedEvents[prevEventIndex];
-    if (prevEvent) {
-      dispatch(eventsLogActions.EventSelected({ event: prevEvent }));
-    }
-  }, [includedEvents, time]);
-  const onPlay = useCallback(() => {
+    const prevEvent = vm.events[prevEventIndex];
+    return prevEvent
+      ? eventsLogActions.EventSelected({ event: prevEvent })
+      : undefined;
+  }, [vm.events, vm.time]);
+
+  const onPlay = useDispatchCallback(() => {
     const nextEventIndex = findFirstIndex(
-      includedEvents,
-      (event) => event.time > time
+      vm.events,
+      (event) => event.time > vm.time
     );
-    const restEvents = includedEvents.slice(nextEventIndex);
-    dispatch(eventsLogActions.Play({ events: restEvents }));
-  }, [includedEvents, time]);
-  const onPause = useCallback(() => {
-    dispatch(eventsLogActions.Pause());
-  }, []);
-  const onGoToNext = useCallback(() => {
+    const restEvents = vm.events.slice(nextEventIndex);
+    return eventsLogActions.Play({ events: restEvents });
+  }, [vm.events, vm.time]);
+
+  const onPause = useDispatchCallback(() => eventsLogActions.Pause(), []);
+
+  const onGoToNext = useDispatchCallback(() => {
     const nextEventIndex = findFirstIndex(
-      includedEvents,
-      (event) => event.time > time
+      vm.events,
+      (event) => event.time > vm.time
     );
-    const nextEvent = includedEvents[nextEventIndex];
-    if (nextEvent) {
-      dispatch(eventsLogActions.EventSelected({ event: nextEvent }));
-    }
-  }, [includedEvents, time]);
-  const onGoToLast = useCallback(() => {
-    const last = includedEvents.at(-1)!;
-    dispatch(eventsLogActions.EventSelected({ event: last }));
-  }, [includedEvents]);
+    const nextEvent = vm.events[nextEventIndex];
+    return nextEvent
+      ? eventsLogActions.EventSelected({ event: nextEvent })
+      : undefined;
+  }, [vm.events, vm.time]);
+
+  const onGoToLast = useDispatchCallback(() => {
+    const last = vm.events.at(-1)!;
+    return eventsLogActions.EventSelected({ event: last });
+  }, [vm.events]);
+
   return (
     <EventsPanelDiv>
       <EventsLog
-        time={time}
-        entries={entries}
+        time={vm.time}
+        entries={vm.entries}
         onEventSelected={onEventSelected}
       />
       <EventsControls
-        playing={playing}
+        playing={vm.playing}
         onGoToFirst={onGoToFirst}
         onGoToPrev={onGoToPrev}
         onPlay={onPlay}

@@ -148,9 +148,9 @@ function visitEventNodes(
 }
 
 export function getEventLogEntries(
-  rootTarget: RelatedTarget,
+  relations: Relations,
   events: RelatedEvent[],
-  relations: Relations
+  rootTarget: RelatedTarget
 ) {
   const taskNodes = getTaskNodes(rootTarget, events, relations);
 

@@ -14,6 +14,19 @@ export function useDispatch() {
   return useCallback((action: Action) => store.dispatch(action), [store]);
 }
 
+export function useDispatchCallback<T extends any[]>(
+  callback: (...args: [...T]) => Action | undefined,
+  deps: ReadonlyArray<any>
+): (...args: [...T]) => void {
+  const dispatch = useDispatch();
+  return useCallback((...args) => {
+    const action = callback(...args);
+    if (action) {
+      dispatch(action);
+    }
+  }, deps);
+}
+
 export function useSelector<STATE, RESULT>(
   selector: Selector<STATE, RESULT>
 ): RESULT {
