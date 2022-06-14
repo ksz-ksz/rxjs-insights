@@ -28,5 +28,5 @@ export const store = createStore()
   .addReaction(insightsReaction)
   .addReducer(refsReducer)
   .addReaction(refsReaction);
-export const { useStore, useDispatch, useSelector } =
+export const { useStore, useDispatch, useSelector, useSelectorFunction } =
   createStoreHooks<typeof store>();

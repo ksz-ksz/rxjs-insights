@@ -7,7 +7,7 @@ import {
 } from '@app/components/graph';
 import { RelatedHierarchyNode } from '@app/protocols/insights';
 import { useTheme } from '@mui/material';
-import { useSelector } from '@app/store';
+import { useSelector, useSelectorFunction } from '@app/store';
 import { timeSelector } from '@app/selectors/insights-selectors';
 import {
   getDirection,
@@ -67,11 +67,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     []
   );
   const theme = useTheme();
-  const vmSelectorMemo = useMemo(
-    () => vmSelector(node.data.target),
-    [node.data.target]
-  );
-  const vm = useSelector(vmSelectorMemo);
+  const vm = useSelectorFunction(vmSelector, node.data.target);
 
   const targetColors = getTargetColors(theme, vm.target);
   const eventColors = getEventColors(theme, vm.event);

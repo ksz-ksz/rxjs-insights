@@ -16,15 +16,10 @@ import {
   TextRef,
   ValueRef,
 } from '@app/protocols/refs';
-import React, {
-  JSXElementConstructor,
-  MouseEvent,
-  useCallback,
-  useMemo,
-} from 'react';
+import React, { JSXElementConstructor, MouseEvent, useCallback } from 'react';
 import { styled } from '@mui/material';
 import { refStateSelector } from '@app/selectors/refs-selectors';
-import { useDispatch, useSelector } from '@app/store';
+import { useDispatch, useSelectorFunction } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 
 interface TagRendererProps<REF extends Ref> {
@@ -509,11 +504,7 @@ const RefOutletPropsDiv = styled('div')({
 });
 
 function ObjectRefOutlet(props: ObjectRefOutletProps) {
-  const refStateSelectorMemo = useMemo(
-    () => refStateSelector(props.reference.refId),
-    [props.reference.refId]
-  );
-  const refState = useSelector(refStateSelectorMemo);
+  const refState = useSelectorFunction(refStateSelector, props.reference.refId);
   const dispatch = useDispatch();
   const onToggle = useCallback(() => {
     if (refState.expanded) {
@@ -570,11 +561,7 @@ interface GetterRefOutletProps {
 }
 
 function GetterRefOutlet(props: GetterRefOutletProps) {
-  const refStateSelectorMemo = useMemo(
-    () => refStateSelector(props.reference.refId),
-    [props.reference.refId]
-  );
-  const refState = useSelector(refStateSelectorMemo);
+  const refState = useSelectorFunction(refStateSelector, props.reference.refId);
   const dispatch = useDispatch();
   const onInvoke = useCallback(() => {
     dispatch(refOutletActions.InvokeGetter({ refId: props.reference.refId }));

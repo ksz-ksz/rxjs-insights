@@ -50,10 +50,26 @@ export function useSelector<STATE, RESULT>(
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+export function useSelectorFunction<STATE, RESULT, ARGS extends any[]>(
+  selectorFunction: (...args: [...ARGS]) => Selector<STATE, RESULT>,
+  ...args: [...ARGS]
+) {
+  const selector = useMemo(
+    () => selectorFunction(...args),
+    [selectorFunction, ...args]
+  );
+
+  return useSelector(selector);
+}
+
 export interface StoreHooks<STATE> {
   useStore(): Store<STATE>;
   useDispatch(): Store<STATE>['dispatch'];
   useSelector<RESULT>(selector: Selector<STATE, RESULT>): RESULT;
+  useSelectorFunction<RESULT, ARGS extends any[]>(
+    selectorFunction: (...args: [...ARGS]) => Selector<STATE, RESULT>,
+    ...args: [...ARGS]
+  ): RESULT;
 }
 
 export function createStoreHooks<STORE extends Store<any>>(): StoreHooks<
@@ -63,5 +79,6 @@ export function createStoreHooks<STORE extends Store<any>>(): StoreHooks<
     useStore,
     useDispatch,
     useSelector,
+    useSelectorFunction,
   };
 }

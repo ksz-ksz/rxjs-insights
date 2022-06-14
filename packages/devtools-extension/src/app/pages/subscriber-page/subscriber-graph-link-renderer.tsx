@@ -6,7 +6,7 @@ import {
 } from '@app/components/graph';
 import { RelatedHierarchyNode } from '@app/protocols/insights';
 import { useTheme } from '@mui/material';
-import { useSelector } from '@app/store';
+import { useSelector, useSelectorFunction } from '@app/store';
 import { timeSelector } from '@app/selectors/insights-selectors';
 import {
   getDirection,
@@ -14,7 +14,7 @@ import {
   getTargetColors,
 } from '@app/pages/subscriber-page/subscriber-graph-utils';
 import gsap from 'gsap';
-import { createSelector } from '@lib/store';
+import { createSelector, Selector } from '@lib/store';
 import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
 
 const vmSelector = (targetId: number) =>
@@ -39,11 +39,7 @@ export const SubscriberGraphLinkRenderer = React.forwardRef<
   LinkRendererProps<RelatedHierarchyNode>
 >(function LinkRenderer({ link }, forwardedRef) {
   const theme = useTheme();
-  const vmSelectorMemo = useMemo(
-    () => vmSelector(link.source.data.target),
-    [link.source.data.target]
-  );
-  const vm = useSelector(vmSelectorMemo);
+  const vm = useSelectorFunction(vmSelector, link.source.data.target);
 
   const elementRef = useRef<SVGPathElement | null>(null);
   React.useImperativeHandle(
