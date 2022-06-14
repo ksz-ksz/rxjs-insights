@@ -1,9 +1,9 @@
 import { State, Store } from './store';
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useMemo } from 'react';
 import { Action } from './action';
 import { StoreContext } from './context';
 import { Selector } from './selector';
-import { SelectionObserver } from './selection-observer';
+import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
 export function useStore<STATE>(): Store<STATE> {
   return useContext(StoreContext);
@@ -27,32 +27,27 @@ export function useDispatchCallback<T extends any[]>(
   }, deps);
 }
 
+function useSelection<STATE, RESULT>(selector: Selector<STATE, RESULT>) {
+  return useMemo(() => selector.selection(), [selector]);
+}
+
 export function useSelector<STATE, RESULT>(
   selector: Selector<STATE, RESULT>
 ): RESULT {
   const store = useStore<STATE>();
-  const selection = useMemo(() => selector.selection(), [selector]);
-  const [result, setResult] = useState<RESULT>(() =>
-    selection.get(store.get())
+  const selection = useSelection(selector);
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      const subscription = store.subscribe(callback);
+      return () => subscription.unsubscribe();
+    },
+    [store]
   );
-  useEffect(() => {
-    const subscription = store.subscribe(
-      new SelectionObserver<STATE, RESULT>(selection, {
-        next(value) {
-          setResult(value);
-        },
-        error(err) {
-          console.error('useSelector.error', selector, err);
-          throw err;
-        },
-        complete() {},
-      })
-    );
-
-    return () => subscription.unsubscribe();
-  }, [selection]);
-
-  return result;
+  const getSnapshot = useCallback(
+    () => selection.get(store.get()),
+    [store, selection]
+  );
+  return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 export interface StoreHooks<STATE> {
