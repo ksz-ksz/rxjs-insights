@@ -201,7 +201,10 @@ function getEndTime(events: Event[]) {
 
 function addRelatedTarget(
   relations: Relations,
-  target: Subscriber | Observable
+  target: Subscriber | Observable,
+  relation: 'sources' | 'destinations',
+  relatedTargets: Set<Subscriber | Observable>,
+  root: boolean
 ) {
   const targets = relations.targets;
   if (targets[target.id] === undefined) {
@@ -219,7 +222,12 @@ function addRelatedTarget(
           ? getEndTime(target.events)
           : OUT_OF_BOUNDS_MAX_TIME,
       locations: target.declaration.locations,
+      [relation]: Array.from(relatedTargets).map(({ id }) => id),
     };
+  } else if (root) {
+    targets[target.id][relation] = Array.from(relatedTargets).map(
+      ({ id }) => id
+    );
   }
 }
 
@@ -258,21 +266,23 @@ function addRelatedEvent(relations: Relations, event: Event) {
 function collectRelatedTargets(
   relations: Relations,
   target: Subscriber | Observable,
-  getRelatedEvents: (event: Event) => Event[]
-): RelatedHierarchyNode {
-  addRelatedTarget(relations, target);
-  for (const event of target.events) {
-    addRelatedEvent(relations, event);
+  relation: 'sources' | 'destinations',
+  getRelatedEvents: (event: Event) => Event[],
+  root = false
+) {
+  if (!root && relations.targets[target.id] !== undefined) {
+    return;
   }
   const relatedEvents = target.events.flatMap(getRelatedEvents);
   const relatedTargets = new Set(relatedEvents.map(({ target }) => target));
   relatedTargets.delete(target);
-  return {
-    target: target.id,
-    children: Array.from(relatedTargets).map((relatedTarget) =>
-      collectRelatedTargets(relations, relatedTarget, getRelatedEvents)
-    ),
-  };
+  addRelatedTarget(relations, target, relation, relatedTargets, root);
+  for (const event of target.events) {
+    addRelatedEvent(relations, event);
+  }
+  for (let relatedTarget of relatedTargets) {
+    collectRelatedTargets(relations, relatedTarget, relation, getRelatedEvents);
+  }
 }
 function getTargetState(target: Subscriber): SubscriberState;
 function getTargetState(target: Observable): ObservableState;
@@ -283,16 +293,16 @@ function getTargetState(target: Subscriber | Observable) {
     events: {},
     tasks: {},
   };
-  const hierarchy: RelatedHierarchyTree = {
-    sources: collectRelatedTargets(relations, target, getSourceEvents),
-    destinations: collectRelatedTargets(
-      relations,
-      target,
-      getDestinationEvents
-    ),
-  };
+  collectRelatedTargets(relations, target, 'sources', getSourceEvents, true);
+  collectRelatedTargets(
+    relations,
+    target,
+    'destinations',
+    getDestinationEvents,
+    true
+  );
 
-  return { ref, relations, hierarchy };
+  return { ref, relations };
 }
 
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {

@@ -26,16 +26,31 @@ function getActiveChildren(
     : [];
 }
 
+function getRelatedHierarchyNode(
+  relations: Relations,
+  relation: 'sources' | 'destinations',
+  target: number,
+  parentKey?: string
+): RelatedHierarchyNode {
+  const key = parentKey ? `${parentKey}.${target}` : `${target}`;
+  return {
+    key,
+    target,
+    children: relations.targets[target][relation]!.map((childTarget) =>
+      getRelatedHierarchyNode(relations, relation, childTarget, key)
+    ),
+  };
+}
+
 const vmSelector = createSelector(
   [activeSubscriberStateSelector, timeSelector],
   ([activeSubscriberState, time]) => {
-    const { ref, relations, hierarchy } = activeSubscriberState!;
+    const { ref, relations } = activeSubscriberState!;
     const target = relations.targets[ref.id];
     const { nodes, links } = getDoubleTree(
-      hierarchy.sources,
-      hierarchy.destinations,
-      (data, path) =>
-        [...path, data].map((x: RelatedHierarchyNode) => x.target).join('/'),
+      getRelatedHierarchyNode(relations, 'sources', ref.id),
+      getRelatedHierarchyNode(relations, 'destinations', ref.id),
+      (data) => data.key,
       (data) => getActiveChildren(target, data, relations, time)
     );
 

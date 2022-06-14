@@ -25,12 +25,11 @@ function visitNodesAndLinks<T>(
   node: HierarchyPointNode<T>,
   nodes: Record<NodeId, NodeData<T>>,
   links: [NodeId, NodeId][],
-  path: T[],
-  getId: (data: T, path: T[]) => NodeId,
+  getId: (data: T) => NodeId,
   getX: (x: number, y: number) => number,
   getY: (x: number, y: number) => number
 ) {
-  const id = getId(node.data, path);
+  const id = getId(node.data);
   nodes[id] = {
     id,
     x: getX(node.x, node.y),
@@ -39,24 +38,15 @@ function visitNodesAndLinks<T>(
   };
   for (let link of node.links()) {
     if (link.source === node) {
-      const childPath = [...path, node.data];
-      links.push([id, getId(link.target.data, childPath)]);
-      visitNodesAndLinks(
-        link.target,
-        nodes,
-        links,
-        childPath,
-        getId,
-        getX,
-        getY
-      );
+      links.push([id, getId(link.target.data)]);
+      visitNodesAndLinks(link.target, nodes, links, getId, getX, getY);
     }
   }
 }
 
 export function getTree<T>(
   root: T,
-  getId: (data: T, path: T[]) => NodeId,
+  getId: (data: T) => NodeId,
   getChildren: (data: T) => T[],
   getX: (x: number, y: number) => number = (x, y) => y,
   getY: (x: number, y: number) => number = (x, y) => x
@@ -68,7 +58,6 @@ export function getTree<T>(
     treeLayout(hierarchy<T>(root, getChildren)),
     nodesIndex,
     linkConnections,
-    [],
     getId,
     getX,
     getY
@@ -99,7 +88,7 @@ function getLinksA<T>(linksA: LinkData<T>[]): LinkData<T>[] {
 export function getDoubleTree<T>(
   rootA: T,
   rootB: T,
-  getId: (data: T, path: T[]) => NodeId,
+  getId: (data: T) => NodeId,
   getChildren: (data: T) => T[]
 ): TreeData<T> {
   const { nodes: nodesA, links: linksA } = getTree(

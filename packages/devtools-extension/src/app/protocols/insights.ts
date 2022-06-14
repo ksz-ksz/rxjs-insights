@@ -11,6 +11,8 @@ export interface RelatedSubscriber extends SubscriberRef {
   startTime: number;
   endTime: number;
   locations: Locations;
+  sources?: number[];
+  destinations?: number[];
 }
 
 export interface RelatedObservable extends ObservableRef {
@@ -21,6 +23,8 @@ export interface RelatedObservable extends ObservableRef {
   startTime: number;
   endTime: number;
   locations: Locations;
+  sources?: number[];
+  destinations?: number[];
 }
 
 export type RelatedTarget = RelatedSubscriber | RelatedObservable;
@@ -42,6 +46,7 @@ export interface RelatedEvent extends EventRef {
 }
 
 export interface RelatedHierarchyNode {
+  key: string;
   target: number;
   children: RelatedHierarchyNode[];
 }
@@ -60,13 +65,11 @@ export interface Relations {
 export interface SubscriberState {
   ref: SubscriberRef;
   relations: Relations;
-  hierarchy: RelatedHierarchyTree;
 }
 
 export interface ObservableState {
   ref: ObservableRef;
   relations: Relations;
-  hierarchy: RelatedHierarchyTree;
 }
 
 export interface Insights {
