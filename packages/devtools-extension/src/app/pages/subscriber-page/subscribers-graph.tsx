@@ -13,19 +13,21 @@ import { SubscriberGraphNodeRenderer } from '@app/pages/subscriber-page/subscrib
 import { SubscriberGraphLinkRenderer } from '@app/pages/subscriber-page/subscriber-graph-link-renderer';
 import { RelatedTargetHierarchyNode } from '@app/pages/subscriber-page/related-target-hierarchy-node';
 
-function isExpanded(expanded: Set<string>, data: RelatedTargetHierarchyNode) {
-  return expanded.has(data.key);
+function isKeyVisible(visibleKeys: Set<string>, key: string) {
+  return visibleKeys.has(key);
 }
 
 function getActiveChildren(
   target: RelatedTarget,
   data: RelatedTargetHierarchyNode,
   time: number,
-  expanded: Set<string>
+  visibleKeys: Set<string>
 ) {
-  return isActive(time, target)
+  return isTargetActive(time, target)
     ? data.children.filter(
-        (child) => isActive(time, child.target) && isExpanded(expanded, child)
+        (child) =>
+          isTargetActive(time, child.target) &&
+          isKeyVisible(visibleKeys, child.key)
       )
     : [];
 }
@@ -76,7 +78,7 @@ const vmSelector = createSelector(
   }
 );
 
-function isActive(time: number, target: RelatedTarget) {
+function isTargetActive(time: number, target: RelatedTarget) {
   return (
     time !== undefined && time >= target.startTime && time <= target.endTime
   );
