@@ -42,13 +42,16 @@ interface TaskNode {
 function getChildEvents(
   rootTarget: RelatedTarget,
   relations: Relations,
-  event: RelatedEvent
+  event: RelatedEvent,
+  expandedIds: Set<number>
 ) {
   const childEvents: EventNode[] = [];
   for (const childEventId of event.succeedingEvents) {
     const childEvent = relations.events[childEventId];
     // if (relations.targets[childEvent.target] !== undefined) {
-    childEvents.push(getEventNode(rootTarget, relations, childEvent));
+    childEvents.push(
+      getEventNode(rootTarget, relations, childEvent, expandedIds)
+    );
     // }
   }
   return childEvents;
@@ -57,12 +60,13 @@ function getChildEvents(
 function getEventNode(
   rootTarget: RelatedTarget,
   relations: Relations,
-  event: RelatedEvent
+  event: RelatedEvent,
+  expandedIds: Set<number>
 ): EventNode {
   return {
     event,
-    excluded: isExcluded(relations, event, rootTarget),
-    childEvents: getChildEvents(rootTarget, relations, event),
+    excluded: isExcluded(relations, event, rootTarget, expandedIds),
+    childEvents: getChildEvents(rootTarget, relations, event, expandedIds),
   };
 }
 
@@ -71,24 +75,22 @@ function isRootEvent(relations: Relations, event: RelatedEvent) {
     return true;
   }
   const precedingEvent = relations.events[event.precedingEvent];
-  // if (relations.targets[precedingEvent.target] === undefined) {
-  //   return true;
-  // }
   return precedingEvent.task !== event.task;
 }
 
 function getTaskNode(
   rootTarget: RelatedTarget,
   relations: Relations,
-  events: RelatedEvent[]
+  events: RelatedEvent[],
+  expandedIds: Set<number>
 ): TaskNode {
   const rootEvents = events.filter((event) => isRootEvent(relations, event));
   const childEvents: EventNode[] = [];
   for (const childEvent of events) {
     if (isRootEvent(relations, childEvent)) {
-      // if (relations.targets[childEvent.target] !== undefined) {
-      childEvents.push(getEventNode(rootTarget, relations, childEvent));
-      // }
+      childEvents.push(
+        getEventNode(rootTarget, relations, childEvent, expandedIds)
+      );
     }
   }
   return {
@@ -100,10 +102,11 @@ function getTaskNode(
 function getTaskNodes(
   rootTarget: RelatedTarget,
   events: RelatedEvent[],
-  relations: Relations
+  relations: Relations,
+  expandedIds: Set<number>
 ) {
   return partition(events, (a, b) => a.task !== b.task).map((events) =>
-    getTaskNode(rootTarget, relations, events)
+    getTaskNode(rootTarget, relations, events, expandedIds)
   );
 }
 
@@ -150,9 +153,10 @@ function visitEventNodes(
 export function getEventLogEntries(
   relations: Relations,
   events: RelatedEvent[],
-  rootTarget: RelatedTarget
+  rootTarget: RelatedTarget,
+  expandedIds: Set<number>
 ) {
-  const taskNodes = getTaskNodes(rootTarget, events, relations);
+  const taskNodes = getTaskNodes(rootTarget, events, relations, expandedIds);
 
   const entries: EventLogEntry[] = [];
   const indents: Record<number, number> = {};

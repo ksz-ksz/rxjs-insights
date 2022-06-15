@@ -10,7 +10,10 @@ import {
   playingSelector,
   timeSelector,
 } from '@app/selectors/insights-selectors';
-import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
+import {
+  activeSubscriberStateSelector,
+  activeSubscriberUiStateSelector,
+} from '@app/selectors/active-target-state-selector';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { getEventElementId } from '@app/utils/get-event-element-id';
 import { RefOutlet } from '@app/components/ref-outlet';
@@ -201,9 +204,12 @@ function getEvents(relations: Relations) {
 function getIncludedEvents(
   relations: Relations,
   events: RelatedEvent[],
-  target: RelatedTarget
+  target: RelatedTarget,
+  expandedIds: Set<number>
 ) {
-  return events.filter((event) => !isExcluded(relations, event, target));
+  return events.filter(
+    (event) => !isExcluded(relations, event, target, expandedIds)
+  );
 }
 
 function findLastIndex<T>(items: T[], predicate: (item: T) => boolean): number {
@@ -228,13 +234,19 @@ function findFirstIndex<T>(
 }
 
 const eventsSelector = createSelector(
-  [activeSubscriberStateSelector],
-  ([activeSubscriberState]) => {
+  [activeSubscriberStateSelector, activeSubscriberUiStateSelector],
+  ([activeSubscriberState, activeSubscriberUiState]) => {
     const { ref, relations } = activeSubscriberState!;
+    const { visibleIds } = activeSubscriberUiState!;
     const target = relations.targets[ref.id];
     const allEvents = getEvents(relations);
-    const events = getIncludedEvents(relations, allEvents, target);
-    const entries = getEventLogEntries(relations, allEvents, target);
+    const events = getIncludedEvents(relations, allEvents, target, visibleIds);
+    const entries = getEventLogEntries(
+      relations,
+      allEvents,
+      target,
+      visibleIds
+    );
 
     return { events, entries };
   }

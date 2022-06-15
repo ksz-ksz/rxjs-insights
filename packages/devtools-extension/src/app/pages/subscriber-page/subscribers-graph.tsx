@@ -4,7 +4,10 @@ import {
   Relations,
 } from '@app/protocols/insights';
 import { createSelector } from '@lib/store';
-import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
+import {
+  activeSubscriberStateSelector,
+  activeSubscriberUiStateSelector,
+} from '@app/selectors/active-target-state-selector';
 import { timeSelector } from '@app/selectors/insights-selectors';
 import { getDoubleTree } from '@app/components/tree';
 import { useSelector } from '@app/store';
@@ -13,15 +16,22 @@ import React from 'react';
 import { SubscriberGraphNodeRenderer } from '@app/pages/subscriber-page/subscriber-graph-node-renderer';
 import { SubscriberGraphLinkRenderer } from '@app/pages/subscriber-page/subscriber-graph-link-renderer';
 
+function isExpanded(expanded: Set<string>, data: RelatedHierarchyNode) {
+  return expanded.has(data.key);
+}
+
 function getActiveChildren(
   target: RelatedTarget,
   data: RelatedHierarchyNode,
   relations: Relations,
-  time: number
+  time: number,
+  expanded: Set<string>
 ) {
   return isActive(time, target)
-    ? data.children.filter((child) =>
-        isActive(time, relations.targets[child.target])
+    ? data.children.filter(
+        (child) =>
+          isActive(time, relations.targets[child.target]) &&
+          isExpanded(expanded, child)
       )
     : [];
 }
@@ -43,15 +53,20 @@ function getRelatedHierarchyNode(
 }
 
 const vmSelector = createSelector(
-  [activeSubscriberStateSelector, timeSelector],
-  ([activeSubscriberState, time]) => {
+  [
+    activeSubscriberStateSelector,
+    activeSubscriberUiStateSelector,
+    timeSelector,
+  ],
+  ([activeSubscriberState, activeSubscriberUiState, time]) => {
     const { ref, relations } = activeSubscriberState!;
+    const { visibleKeys } = activeSubscriberUiState!;
     const target = relations.targets[ref.id];
     const { nodes, links } = getDoubleTree(
       getRelatedHierarchyNode(relations, 'sources', ref.id),
       getRelatedHierarchyNode(relations, 'destinations', ref.id),
       (data) => data.key,
-      (data) => getActiveChildren(target, data, relations, time)
+      (data) => getActiveChildren(target, data, relations, time, visibleKeys)
     );
 
     return {

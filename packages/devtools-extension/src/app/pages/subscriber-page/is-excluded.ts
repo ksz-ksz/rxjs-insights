@@ -7,9 +7,11 @@ import {
 export function isExcluded(
   relations: Relations,
   event: RelatedEvent,
-  rootTarget: RelatedTarget
+  rootTarget: RelatedTarget,
+  expandedIds: Set<number>
 ) {
   return (
+    !expandedIds.has(event.target) ||
     relations.targets[event.target] === undefined ||
     event.time < rootTarget.startTime ||
     event.time > rootTarget.endTime

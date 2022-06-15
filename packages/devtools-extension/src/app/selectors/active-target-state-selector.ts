@@ -20,3 +20,11 @@ export const activeSubscriberStateSelector = createSelector(
       ? insights.subscribers[parseInt(route.params.subscriberId, 10)]
       : undefined
 );
+
+export const activeSubscriberUiStateSelector = createSelector(
+  [router.selectors.route(subscriberRouteToken), insightsSelector],
+  ([route, insights]) =>
+    route?.params?.subscriberId
+      ? insights.subscribersUi[parseInt(route.params.subscriberId, 10)]
+      : undefined
+);

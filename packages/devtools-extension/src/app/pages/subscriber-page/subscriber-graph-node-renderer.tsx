@@ -15,8 +15,9 @@ import {
   getTargetColors,
 } from '@app/pages/subscriber-page/subscriber-graph-utils';
 import gsap from 'gsap';
-import { createSelector } from '@lib/store';
+import { createSelector, useDispatchCallback } from '@lib/store';
 import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
+import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 
 const circleRadius = 6;
 const circleCircumference = 2 * Math.PI * circleRadius;
@@ -38,6 +39,7 @@ const vmSelector = (targetId: number) =>
     [activeSubscriberStateSelector, timeSelector],
     ([activeSubscriberState, time]) => {
       const { ref, relations } = activeSubscriberState!;
+      const root = relations.targets[ref.id];
       const target = relations.targets[targetId];
       const event = relations.events[time];
       const location = getLocationStrings(target.locations);
@@ -46,6 +48,7 @@ const vmSelector = (targetId: number) =>
       const isSelected = event && event.target === target.id;
 
       return {
+        root,
         target,
         event,
         location,
@@ -75,6 +78,16 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
   const circleRef = useRef<SVGCircleElement | null>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
 
+  const toggle = useDispatchCallback(
+    () =>
+      subscribersGraphActions.Toggle({
+        target: vm.root.id,
+        key: node.id as string,
+        id: vm.target.id,
+      }),
+    [vm.target.id, node.id]
+  );
+
   useEffect(() => {
     tweenRef.current?.kill();
     if (vm.isSelected) {
@@ -101,7 +114,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
   }, [vm.isSelected && vm.event.eventType]);
 
   return (
-    <g ref={elementRef}>
+    <g ref={elementRef} onClick={toggle}>
       <circle
         r="4"
         fill={
@@ -137,6 +150,16 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
       >
         {vm.target.name}{' '}
         <tspan fill={theme.palette.text.secondary}>#{vm.target.id}</tspan>
+      </text>
+      <text
+        fontFamily="Monospace"
+        fontStyle="oblique"
+        fontSize="4"
+        textAnchor="middle"
+        fill={theme.palette.text.secondary}
+        y="24"
+      >
+        {node.data.key}
       </text>
       {vm.location && (
         <text
