@@ -45,17 +45,6 @@ export interface RelatedEvent extends EventRef {
   succeedingEvents: number[];
 }
 
-export interface RelatedHierarchyNode {
-  key: string;
-  target: number;
-  children: RelatedHierarchyNode[];
-}
-
-export interface RelatedHierarchyTree {
-  sources: RelatedHierarchyNode;
-  destinations: RelatedHierarchyNode;
-}
-
 export interface Relations {
   targets: Record<number, RelatedTarget>;
   events: Record<number, RelatedEvent>;

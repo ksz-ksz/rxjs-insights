@@ -30,8 +30,6 @@ import {
   Insights,
   InsightsChannel,
   ObservableState,
-  RelatedHierarchyNode,
-  RelatedHierarchyTree,
   Relations,
   SubscriberState,
 } from '@app/protocols/insights';

@@ -5,7 +5,6 @@ import {
   NodeControl,
   NodeRendererProps,
 } from '@app/components/graph';
-import { RelatedHierarchyNode } from '@app/protocols/insights';
 import { useTheme } from '@mui/material';
 import { useSelectorFunction } from '@app/store';
 import { timeSelector } from '@app/selectors/insights-selectors';
@@ -21,6 +20,7 @@ import {
   activeSubscriberUiStateSelector,
 } from '@app/selectors/active-target-state-selector';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
+import { RelatedTargetHierarchyNode } from '@app/pages/subscriber-page/related-target-hierarchy-node';
 
 const circleRadius = 6;
 const circleCircumference = 2 * Math.PI * circleRadius;
@@ -77,7 +77,7 @@ const vmSelector = (targetId: number, nodeKey: string) =>
 
 export const SubscriberGraphNodeRenderer = React.forwardRef<
   NodeControl,
-  NodeRendererProps<RelatedHierarchyNode>
+  NodeRendererProps<RelatedTargetHierarchyNode>
 >(function SubscriberGraphNodeRenderer({ node }, forwardedRef) {
   const elementRef = useRef<SVGGElement | null>(null);
   React.useImperativeHandle(
@@ -86,7 +86,11 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     []
   );
   const theme = useTheme();
-  const vm = useSelectorFunction(vmSelector, node.data.target, node.data.key);
+  const vm = useSelectorFunction(
+    vmSelector,
+    node.data.target.id,
+    node.data.key
+  );
 
   const targetColors = getTargetColors(theme, vm.target);
   const eventColors = getEventColors(theme, vm.event);

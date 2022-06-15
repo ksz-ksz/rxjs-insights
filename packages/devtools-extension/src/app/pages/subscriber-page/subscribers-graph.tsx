@@ -1,8 +1,4 @@
-import {
-  RelatedHierarchyNode,
-  RelatedTarget,
-  Relations,
-} from '@app/protocols/insights';
+import { RelatedTarget, Relations } from '@app/protocols/insights';
 import { createSelector } from '@lib/store';
 import {
   activeSubscriberStateSelector,
@@ -15,23 +11,21 @@ import { Graph } from '@app/components/graph';
 import React from 'react';
 import { SubscriberGraphNodeRenderer } from '@app/pages/subscriber-page/subscriber-graph-node-renderer';
 import { SubscriberGraphLinkRenderer } from '@app/pages/subscriber-page/subscriber-graph-link-renderer';
+import { RelatedTargetHierarchyNode } from '@app/pages/subscriber-page/related-target-hierarchy-node';
 
-function isExpanded(expanded: Set<string>, data: RelatedHierarchyNode) {
+function isExpanded(expanded: Set<string>, data: RelatedTargetHierarchyNode) {
   return expanded.has(data.key);
 }
 
 function getActiveChildren(
   target: RelatedTarget,
-  data: RelatedHierarchyNode,
-  relations: Relations,
+  data: RelatedTargetHierarchyNode,
   time: number,
   expanded: Set<string>
 ) {
   return isActive(time, target)
     ? data.children.filter(
-        (child) =>
-          isActive(time, relations.targets[child.target]) &&
-          isExpanded(expanded, child)
+        (child) => isActive(time, child.target) && isExpanded(expanded, child)
       )
     : [];
 }
@@ -39,15 +33,20 @@ function getActiveChildren(
 function getRelatedHierarchyNode(
   relations: Relations,
   relation: 'sources' | 'destinations',
-  target: number,
+  target: RelatedTarget,
   parentKey?: string
-): RelatedHierarchyNode {
-  const key = parentKey ? `${parentKey}.${target}` : `${target}`;
+): RelatedTargetHierarchyNode {
+  const key = parentKey ? `${parentKey}.${target.id}` : `${target.id}`;
   return {
     key,
     target,
-    children: relations.targets[target][relation]!.map((childTarget) =>
-      getRelatedHierarchyNode(relations, relation, childTarget, key)
+    children: target[relation]!.map((childTarget) =>
+      getRelatedHierarchyNode(
+        relations,
+        relation,
+        relations.targets[childTarget],
+        key
+      )
     ),
   };
 }
@@ -63,10 +62,10 @@ const vmSelector = createSelector(
     const { visibleKeys } = activeSubscriberUiState!;
     const target = relations.targets[ref.id];
     const { nodes, links } = getDoubleTree(
-      getRelatedHierarchyNode(relations, 'sources', ref.id),
-      getRelatedHierarchyNode(relations, 'destinations', ref.id),
+      getRelatedHierarchyNode(relations, 'sources', target),
+      getRelatedHierarchyNode(relations, 'destinations', target),
       (data) => data.key,
-      (data) => getActiveChildren(target, data, relations, time, visibleKeys)
+      (data) => getActiveChildren(target, data, time, visibleKeys)
     );
 
     return {
