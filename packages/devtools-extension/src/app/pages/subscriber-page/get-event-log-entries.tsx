@@ -31,6 +31,7 @@ export type EventLogEntry = EventEntry | EventAsyncEntry | TaskEntry;
 interface EventNode {
   event: RelatedEvent;
   excluded: boolean;
+  childrenExcluded: boolean;
   childEvents: EventNode[];
 }
 
@@ -43,14 +44,14 @@ function getChildEvents(
   rootTarget: RelatedTarget,
   relations: Relations,
   event: RelatedEvent,
-  expandedIds: Set<number>
+  visibleIds: Set<number>
 ) {
   const childEvents: EventNode[] = [];
   for (const childEventId of event.succeedingEvents) {
     const childEvent = relations.events[childEventId];
     // if (relations.targets[childEvent.target] !== undefined) {
     childEvents.push(
-      getEventNode(rootTarget, relations, childEvent, expandedIds)
+      getEventNode(rootTarget, relations, childEvent, visibleIds)
     );
     // }
   }
@@ -61,12 +62,18 @@ function getEventNode(
   rootTarget: RelatedTarget,
   relations: Relations,
   event: RelatedEvent,
-  expandedIds: Set<number>
+  visibleIds: Set<number>
 ): EventNode {
+  const excluded = isExcluded(relations, event, rootTarget, visibleIds);
+  const childEvents = getChildEvents(rootTarget, relations, event, visibleIds);
+  const childrenExcluded = childEvents
+    .map((child) => child.excluded && child.childrenExcluded)
+    .reduce((acc, x) => acc && x, true);
   return {
     event,
-    excluded: isExcluded(relations, event, rootTarget, expandedIds),
-    childEvents: getChildEvents(rootTarget, relations, event, expandedIds),
+    excluded,
+    childEvents,
+    childrenExcluded,
   };
 }
 
@@ -82,15 +89,21 @@ function getTaskNode(
   rootTarget: RelatedTarget,
   relations: Relations,
   events: RelatedEvent[],
-  expandedIds: Set<number>
+  visibleIds: Set<number>
 ): TaskNode {
   const rootEvents = events.filter((event) => isRootEvent(relations, event));
   const childEvents: EventNode[] = [];
   for (const childEvent of events) {
     if (isRootEvent(relations, childEvent)) {
-      childEvents.push(
-        getEventNode(rootTarget, relations, childEvent, expandedIds)
+      const eventNode = getEventNode(
+        rootTarget,
+        relations,
+        childEvent,
+        visibleIds
       );
+      if (!eventNode.childrenExcluded) {
+        childEvents.push(eventNode);
+      }
     }
   }
   return {
@@ -103,10 +116,10 @@ function getTaskNodes(
   rootTarget: RelatedTarget,
   events: RelatedEvent[],
   relations: Relations,
-  expandedIds: Set<number>
+  visibleIds: Set<number>
 ) {
   return partition(events, (a, b) => a.task !== b.task).map((events) =>
-    getTaskNode(rootTarget, relations, events, expandedIds)
+    getTaskNode(rootTarget, relations, events, visibleIds)
   );
 }
 
@@ -154,18 +167,20 @@ export function getEventLogEntries(
   relations: Relations,
   events: RelatedEvent[],
   rootTarget: RelatedTarget,
-  expandedIds: Set<number>
+  visibleIds: Set<number>
 ) {
-  const taskNodes = getTaskNodes(rootTarget, events, relations, expandedIds);
+  const taskNodes = getTaskNodes(rootTarget, events, relations, visibleIds);
 
   const entries: EventLogEntry[] = [];
   const indents: Record<number, number> = {};
   for (const taskNode of taskNodes) {
-    entries.push({
-      type: 'task',
-      task: taskNode.task,
-    });
-    visitEventNodes(relations, entries, indents, taskNode.childEvents);
+    if (taskNode.childEvents.length !== 0) {
+      entries.push({
+        type: 'task',
+        task: taskNode.task,
+      });
+      visitEventNodes(relations, entries, indents, taskNode.childEvents);
+    }
   }
 
   return entries;
