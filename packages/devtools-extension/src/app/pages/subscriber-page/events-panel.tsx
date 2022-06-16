@@ -233,12 +233,63 @@ function findFirstIndex<T>(
   return -1;
 }
 
+function getVisibleIdsVisitor(
+  target: RelatedTarget,
+  targetKey: string,
+  relations: Relations,
+  relation: 'sources' | 'destinations',
+  expandedKeys: Set<string>,
+  visibleKeys: Set<number>
+) {
+  visibleKeys.add(target.id);
+  if (expandedKeys.has(targetKey)) {
+    for (const childId of target[relation]!) {
+      const childTarget = relations.targets[childId];
+      const childTargetKey = `${targetKey}.${childId}`;
+      getVisibleIdsVisitor(
+        childTarget,
+        childTargetKey,
+        relations,
+        relation,
+        expandedKeys,
+        visibleKeys
+      );
+    }
+  }
+}
+
+function getVisibleIds(
+  root: RelatedTarget,
+  relations: Relations,
+  expandedKeys: Set<string>
+): Set<number> {
+  const visibleIds = new Set<number>();
+  getVisibleIdsVisitor(
+    root,
+    String(root.id),
+    relations,
+    'sources',
+    expandedKeys,
+    visibleIds
+  );
+  getVisibleIdsVisitor(
+    root,
+    String(root.id),
+    relations,
+    'destinations',
+    expandedKeys,
+    visibleIds
+  );
+  return visibleIds;
+}
+
 const eventsSelector = createSelector(
   [activeSubscriberStateSelector, activeSubscriberUiStateSelector],
   ([activeSubscriberState, activeSubscriberUiState]) => {
     const { ref, relations } = activeSubscriberState!;
-    const { visibleIds } = activeSubscriberUiState!;
+    const { expandedKeys } = activeSubscriberUiState!;
     const target = relations.targets[ref.id];
+    const visibleIds = getVisibleIds(target, relations, expandedKeys);
     const allEvents = getEvents(relations);
     const events = getIncludedEvents(relations, allEvents, target, visibleIds);
     const entries = getEventLogEntries(

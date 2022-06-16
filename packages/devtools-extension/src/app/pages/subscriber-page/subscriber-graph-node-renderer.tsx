@@ -2,6 +2,7 @@ import { Locations } from '@rxjs-insights/core';
 import React, { useEffect, useRef } from 'react';
 import {
   DefaultNodeControl,
+  duration,
   NodeControl,
   NodeRendererProps,
 } from '@app/components/graph';
@@ -55,14 +56,6 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       const isActive = target.startTime <= time && time <= target.endTime;
       const isSelected = event && event.target === target.id;
       const isExpanded = expandedKeys.has(node.key);
-      const isSource = isRoot || node.type === 'source';
-      const isDestination = isRoot || node.type === 'destination';
-      const hasSources =
-        isSource && target.sources !== undefined && target.sources.length !== 0;
-      const hasDestinations =
-        isDestination &&
-        target.destinations !== undefined &&
-        target.destinations.length !== 0;
       const targetColors = getTargetColors(theme, target);
       const rootNodeColor = isActive
         ? targetColors.primary
@@ -78,13 +71,8 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
         event,
         location,
         isRoot,
-        isSource,
-        isDestination,
-        isActive,
         isSelected,
         isExpanded,
-        hasSources,
-        hasDestinations,
         rootNodeColor,
         nodeColor,
         selectedColor,
@@ -145,48 +133,51 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
 
   return (
     <g ref={elementRef} onClick={toggle}>
-      <circle r="4" fill={vm.nodeColor} />
-      {vm.isRoot && (
-        <circle r={5} fill="transparent" stroke={vm.rootNodeColor} />
-      )}
-      {vm.isSelected && (
-        <circle
-          ref={circleRef}
-          r={circleRadius}
-          fill="transparent"
-          stroke={vm.selectedColor}
-        />
-      )}
-      {!vm.isExpanded && vm.hasSources && (
-        <circle cx={-8} r={1} fill={vm.nodeColor} />
-      )}
-      {!vm.isExpanded && vm.hasDestinations && (
-        <circle cx={8} r={1} fill={vm.nodeColor} />
-      )}
-      <text
-        fontFamily="Monospace"
-        fontStyle="oblique"
-        fontSize="6"
-        textAnchor="middle"
-        fill={vm.nodeColor}
-        y="12"
+      <g
+        opacity={vm.isExpanded || vm.isRoot ? 1 : 0.5}
+        style={{ transition: `opacity ${duration}s` }}
       >
-        {vm.target.name}{' '}
-        <tspan fill={theme.palette.text.secondary}>#{vm.target.id}</tspan>
-      </text>
-      {vm.location && (
+        <circle
+          r={vm.isExpanded ? 4 : 3}
+          fill={vm.nodeColor}
+          style={{ transition: `r ${duration}s` }}
+        />
+        {vm.isRoot && (
+          <circle r={5} fill="transparent" stroke={vm.rootNodeColor} />
+        )}
+        {vm.isSelected && (
+          <circle
+            ref={circleRef}
+            r={circleRadius}
+            fill="transparent"
+            stroke={vm.selectedColor}
+          />
+        )}
         <text
           fontFamily="Monospace"
           fontStyle="oblique"
-          fontSize="4"
+          fontSize="6"
           textAnchor="middle"
-          fill={theme.palette.text.secondary}
-          y="18"
+          fill={vm.nodeColor}
+          y="12"
         >
-          {vm.location.short}
-          <title>{vm.location.long}</title>
+          {vm.target.name}{' '}
+          <tspan fill={theme.palette.text.secondary}>#{vm.target.id}</tspan>
         </text>
-      )}
+        {vm.location && (
+          <text
+            fontFamily="Monospace"
+            fontStyle="oblique"
+            fontSize="4"
+            textAnchor="middle"
+            fill={theme.palette.text.secondary}
+            y="18"
+          >
+            {vm.location.short}
+            <title>{vm.location.long}</title>
+          </text>
+        )}
+      </g>
     </g>
   );
 });

@@ -12,6 +12,7 @@ import React from 'react';
 import { SubscriberGraphNodeRenderer } from '@app/pages/subscriber-page/subscriber-graph-node-renderer';
 import { SubscriberGraphLinkRenderer } from '@app/pages/subscriber-page/subscriber-graph-link-renderer';
 import { RelatedTargetHierarchyNode } from '@app/pages/subscriber-page/related-target-hierarchy-node';
+import { setRef } from '@mui/material';
 
 function isKeyVisible(visibleKeys: Set<string>, key: string) {
   return visibleKeys.has(key);
@@ -80,12 +81,63 @@ function getRelatedHierarchyNode(
   };
 }
 
+function getVisibleKeysVisitor(
+  target: RelatedTarget,
+  targetKey: string,
+  relations: Relations,
+  relation: 'sources' | 'destinations',
+  expandedKeys: Set<string>,
+  visibleKeys: Set<string>
+) {
+  visibleKeys.add(targetKey);
+  if (expandedKeys.has(targetKey)) {
+    for (const childId of target[relation]!) {
+      const childTarget = relations.targets[childId];
+      const childTargetKey = `${targetKey}.${childId}`;
+      getVisibleKeysVisitor(
+        childTarget,
+        childTargetKey,
+        relations,
+        relation,
+        expandedKeys,
+        visibleKeys
+      );
+    }
+  }
+}
+
+function getVisibleKeys(
+  root: RelatedTarget,
+  relations: Relations,
+  expandedKeys: Set<string>
+): Set<string> {
+  const visibleKeys = new Set<string>();
+  getVisibleKeysVisitor(
+    root,
+    String(root.id),
+    relations,
+    'sources',
+    expandedKeys,
+    visibleKeys
+  );
+  getVisibleKeysVisitor(
+    root,
+    String(root.id),
+    relations,
+    'destinations',
+    expandedKeys,
+    visibleKeys
+  );
+  return visibleKeys;
+}
+
 const hierarchyTreeSelector = createSelector(
   [activeSubscriberStateSelector, activeSubscriberUiStateSelector],
   ([activeSubscriberState, activeSubscriberUiState]) => {
     const { ref, relations } = activeSubscriberState!;
-    const { visibleKeys } = activeSubscriberUiState!;
+    const { expandedKeys } = activeSubscriberUiState!;
     const target = relations.targets[ref.id];
+    const visibleKeys = getVisibleKeys(target, relations, expandedKeys);
     const sources = getRelatedHierarchyNode(
       relations,
       'sources',
