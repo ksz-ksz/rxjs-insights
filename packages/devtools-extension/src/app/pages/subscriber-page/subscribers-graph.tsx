@@ -17,17 +17,9 @@ function isKeyVisible(visibleKeys: Set<string>, key: string) {
   return visibleKeys.has(key);
 }
 
-function getActiveChildren(
-  node: RelatedTargetHierarchyNode,
-  time: number,
-  visibleKeys: Set<string>
-) {
+function getActiveChildren(node: RelatedTargetHierarchyNode, time: number) {
   return isTargetActive(time, node.target)
-    ? node.children.filter(
-        (child) =>
-          isTargetActive(time, child.target) &&
-          isKeyVisible(visibleKeys, child.key)
-      )
+    ? node.children.filter((child) => isTargetActive(time, child.target))
     : [];
 }
 
@@ -70,37 +62,44 @@ function getRelatedHierarchyNode(
   };
 }
 
-const vmSelector = createSelector(
-  [
-    activeSubscriberStateSelector,
-    activeSubscriberUiStateSelector,
-    timeSelector,
-  ],
-  ([activeSubscriberState, activeSubscriberUiState, time]) => {
+const hierarchyTreeSelector = createSelector(
+  [activeSubscriberStateSelector, activeSubscriberUiStateSelector],
+  ([activeSubscriberState, activeSubscriberUiState]) => {
     const { ref, relations } = activeSubscriberState!;
     const { visibleKeys } = activeSubscriberUiState!;
     const target = relations.targets[ref.id];
+    const sources = getRelatedHierarchyNode(
+      relations,
+      'sources',
+      target,
+      String(target.id),
+      visibleKeys
+    );
+    const destinations = getRelatedHierarchyNode(
+      relations,
+      'destinations',
+      target,
+      String(target.id),
+      visibleKeys
+    );
+
+    return { target, sources, destinations };
+  }
+);
+
+const vmSelector = createSelector(
+  [hierarchyTreeSelector, timeSelector],
+  ([hierarchyTree, time]) => {
+    const { target, sources, destinations } = hierarchyTree;
     const { nodes, links } = getDoubleTree(
-      getRelatedHierarchyNode(
-        relations,
-        'sources',
-        target,
-        String(target.id),
-        visibleKeys
-      ),
-      getRelatedHierarchyNode(
-        relations,
-        'destinations',
-        target,
-        String(target.id),
-        visibleKeys
-      ),
+      sources,
+      destinations,
       (node) => node.key,
-      (node) => getActiveChildren(node, time, visibleKeys)
+      (node) => getActiveChildren(node, time)
     );
 
     return {
-      key: ref.id,
+      key: target.id,
       nodes,
       links,
     };

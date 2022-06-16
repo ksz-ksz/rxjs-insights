@@ -5,7 +5,7 @@ import {
   NodeControl,
   NodeRendererProps,
 } from '@app/components/graph';
-import { useTheme } from '@mui/material';
+import { Theme, useTheme } from '@mui/material';
 import { useSelectorFunction } from '@app/store';
 import { timeSelector } from '@app/selectors/insights-selectors';
 import {
@@ -37,7 +37,7 @@ function getLocationStrings(locations: Locations) {
   }
 }
 
-const vmSelector = (targetId: number, nodeKey: string) =>
+const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(
     [
       activeSubscriberStateSelector,
@@ -48,17 +48,25 @@ const vmSelector = (targetId: number, nodeKey: string) =>
       const { ref, relations } = activeSubscriberState!;
       const { expandedKeys } = activeSubscriberUiState!;
       const root = relations.targets[ref.id];
-      const target = relations.targets[targetId];
+      const target = relations.targets[node.target.id];
       const event = relations.events[time];
       const location = getLocationStrings(target.locations);
       const isRoot = target.id === ref.id;
       const isActive = target.startTime <= time && time <= target.endTime;
       const isSelected = event && event.target === target.id;
-      const isExpanded = expandedKeys.has(nodeKey);
+      const isExpanded = expandedKeys.has(node.key);
       const hasSources =
         target.sources !== undefined && target.sources.length !== 0;
       const hasDestinations =
         target.destinations !== undefined && target.destinations.length !== 0;
+      const targetColors = getTargetColors(theme, target);
+      const rootNodeColor = isActive
+        ? targetColors.primary
+        : theme.palette.action.disabledBackground;
+      const nodeColor = isActive
+        ? targetColors.secondary
+        : theme.palette.action.disabled;
+      const selectedColor = event && getEventColors(theme, event).secondary;
 
       return {
         root,
@@ -71,6 +79,9 @@ const vmSelector = (targetId: number, nodeKey: string) =>
         isExpanded,
         hasSources,
         hasDestinations,
+        rootNodeColor,
+        nodeColor,
+        selectedColor,
       };
     }
   );
@@ -86,14 +97,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     []
   );
   const theme = useTheme();
-  const vm = useSelectorFunction(
-    vmSelector,
-    node.data.target.id,
-    node.data.key
-  );
-
-  const targetColors = getTargetColors(theme, vm.target);
-  const eventColors = getEventColors(theme, vm.event);
+  const vm = useSelectorFunction(vmSelector, node.data, theme);
 
   const circleRef = useRef<SVGCircleElement | null>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
@@ -133,51 +137,36 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     }
   }, [vm.isSelected && vm.event.eventType]);
 
-  const primaryColor = vm.isActive
-    ? targetColors.primary
-    : theme.palette.action.disabledBackground;
-  const secondaryColor = vm.isActive
-    ? targetColors.secondary
-    : theme.palette.action.disabled;
-
   return (
     <g ref={elementRef} onClick={toggle}>
-      <circle r="4" fill={secondaryColor} />
-      {vm.isRoot && <circle r={5} fill="transparent" stroke={primaryColor} />}
+      <circle r="4" fill={vm.nodeColor} />
+      {vm.isRoot && (
+        <circle r={5} fill="transparent" stroke={vm.rootNodeColor} />
+      )}
       {vm.isSelected && (
         <circle
           ref={circleRef}
           r={circleRadius}
           fill="transparent"
-          stroke={eventColors.secondary}
+          stroke={vm.selectedColor}
         />
       )}
       {!vm.isExpanded && vm.hasSources && (
-        <circle cx={-8} r={1} fill={secondaryColor} />
+        <circle cx={-8} r={1} fill={vm.nodeColor} />
       )}
       {!vm.isExpanded && vm.hasDestinations && (
-        <circle cx={8} r={1} fill={secondaryColor} />
+        <circle cx={8} r={1} fill={vm.nodeColor} />
       )}
       <text
         fontFamily="Monospace"
         fontStyle="oblique"
         fontSize="6"
         textAnchor="middle"
-        fill={targetColors.secondary}
+        fill={vm.nodeColor}
         y="12"
       >
         {vm.target.name}{' '}
         <tspan fill={theme.palette.text.secondary}>#{vm.target.id}</tspan>
-      </text>
-      <text
-        fontFamily="Monospace"
-        fontStyle="oblique"
-        fontSize="4"
-        textAnchor="middle"
-        fill={theme.palette.text.secondary}
-        y="24"
-      >
-        {node.data.key}
       </text>
       {vm.location && (
         <text

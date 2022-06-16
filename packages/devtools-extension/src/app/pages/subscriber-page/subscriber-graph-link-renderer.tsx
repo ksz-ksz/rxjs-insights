@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   DefaultLinkControl,
   LinkControl,
   LinkRendererProps,
 } from '@app/components/graph';
-import { useTheme } from '@mui/material';
-import { useSelector, useSelectorFunction } from '@app/store';
+import { Theme, useTheme } from '@mui/material';
+import { useSelectorFunction } from '@app/store';
 import { timeSelector } from '@app/selectors/insights-selectors';
 import {
   getDirection,
@@ -13,23 +13,36 @@ import {
   getTargetColors,
 } from '@app/pages/subscriber-page/subscriber-graph-utils';
 import gsap from 'gsap';
-import { createSelector, Selector } from '@lib/store';
+import { createSelector } from '@lib/store';
 import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
 import { RelatedTargetHierarchyNode } from '@app/pages/subscriber-page/related-target-hierarchy-node';
 
-const vmSelector = (targetId: number) =>
+const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(
     [activeSubscriberStateSelector, timeSelector],
     ([activeSubscriberState, time]) => {
       const { relations } = activeSubscriberState!;
       const event = relations.events[time];
-      const target = relations.targets[targetId];
+      const target = relations.targets[node.target.id];
       const isSelected = event && event.target === target.id;
+      const linkColor = getTargetColors(theme, target).secondary;
+      const selectedColor = event && getEventColors(theme, event).secondary;
+
+      console.log(
+        'isSelected: %o, %clinkColor: %o, %cselectedColor: %o',
+        isSelected,
+        `color: ${linkColor};`,
+        linkColor,
+        `color: ${selectedColor};`,
+        selectedColor
+      );
 
       return {
         event,
         target,
         isSelected,
+        linkColor,
+        selectedColor,
       };
     }
   );
@@ -39,7 +52,7 @@ export const SubscriberGraphLinkRenderer = React.forwardRef<
   LinkRendererProps<RelatedTargetHierarchyNode>
 >(function LinkRenderer({ link }, forwardedRef) {
   const theme = useTheme();
-  const vm = useSelectorFunction(vmSelector, link.source.data.target.id);
+  const vm = useSelectorFunction(vmSelector, link.source.data, theme);
 
   const elementRef = useRef<SVGPathElement | null>(null);
   React.useImperativeHandle(
@@ -47,9 +60,6 @@ export const SubscriberGraphLinkRenderer = React.forwardRef<
     () => new DefaultLinkControl(elementRef, 6),
     []
   );
-
-  const targetColors = getTargetColors(theme, vm.target);
-  const eventColors = getEventColors(theme, vm.event);
 
   const tweenRef = useRef<gsap.core.Tween | null>(null);
   useEffect(() => {
@@ -77,7 +87,7 @@ export const SubscriberGraphLinkRenderer = React.forwardRef<
   return (
     <path
       ref={elementRef}
-      stroke={vm.isSelected ? eventColors.secondary : targetColors.secondary}
+      stroke={vm.isSelected ? vm.selectedColor : vm.linkColor}
       fill="transparent"
     />
   );
