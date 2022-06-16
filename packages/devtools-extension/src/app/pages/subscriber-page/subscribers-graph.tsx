@@ -18,13 +18,12 @@ function isKeyVisible(visibleKeys: Set<string>, key: string) {
 }
 
 function getActiveChildren(
-  target: RelatedTarget,
-  data: RelatedTargetHierarchyNode,
+  node: RelatedTargetHierarchyNode,
   time: number,
   visibleKeys: Set<string>
 ) {
-  return isTargetActive(time, target)
-    ? data.children.filter(
+  return isTargetActive(time, node.target)
+    ? node.children.filter(
         (child) =>
           isTargetActive(time, child.target) &&
           isKeyVisible(visibleKeys, child.key)
@@ -32,24 +31,42 @@ function getActiveChildren(
     : [];
 }
 
+function getVisibleChildren(
+  target: RelatedTarget,
+  relation: 'sources' | 'destinations',
+  key: string,
+  visibleKeys: Set<string>,
+  relations: Relations
+) {
+  const visibleChildren: RelatedTargetHierarchyNode[] = [];
+  for (const childTarget of target[relation]!) {
+    const childKey = `${key}.${childTarget}`;
+    if (isKeyVisible(visibleKeys, childKey)) {
+      visibleChildren.push(
+        getRelatedHierarchyNode(
+          relations,
+          relation,
+          relations.targets[childTarget],
+          childKey,
+          visibleKeys
+        )
+      );
+    }
+  }
+  return visibleChildren;
+}
+
 function getRelatedHierarchyNode(
   relations: Relations,
   relation: 'sources' | 'destinations',
   target: RelatedTarget,
-  parentKey?: string
+  key: string,
+  visibleKeys: Set<string>
 ): RelatedTargetHierarchyNode {
-  const key = parentKey ? `${parentKey}.${target.id}` : `${target.id}`;
   return {
     key,
     target,
-    children: target[relation]!.map((childTarget) =>
-      getRelatedHierarchyNode(
-        relations,
-        relation,
-        relations.targets[childTarget],
-        key
-      )
-    ),
+    children: getVisibleChildren(target, relation, key, visibleKeys, relations),
   };
 }
 
@@ -64,10 +81,22 @@ const vmSelector = createSelector(
     const { visibleKeys } = activeSubscriberUiState!;
     const target = relations.targets[ref.id];
     const { nodes, links } = getDoubleTree(
-      getRelatedHierarchyNode(relations, 'sources', target),
-      getRelatedHierarchyNode(relations, 'destinations', target),
-      (data) => data.key,
-      (data) => getActiveChildren(target, data, time, visibleKeys)
+      getRelatedHierarchyNode(
+        relations,
+        'sources',
+        target,
+        String(target.id),
+        visibleKeys
+      ),
+      getRelatedHierarchyNode(
+        relations,
+        'destinations',
+        target,
+        String(target.id),
+        visibleKeys
+      ),
+      (node) => node.key,
+      (node) => getActiveChildren(node, time, visibleKeys)
     );
 
     return {

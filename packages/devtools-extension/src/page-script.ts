@@ -201,8 +201,7 @@ function addRelatedTarget(
   relations: Relations,
   target: Subscriber | Observable,
   relation: 'sources' | 'destinations',
-  relatedTargets: Set<Subscriber | Observable>,
-  root: boolean
+  relatedTargets: Set<Subscriber | Observable>
 ) {
   const targets = relations.targets;
   if (targets[target.id] === undefined) {
@@ -222,7 +221,7 @@ function addRelatedTarget(
       locations: target.declaration.locations,
       [relation]: Array.from(relatedTargets).map(({ id }) => id),
     };
-  } else if (root) {
+  } else if (targets[target.id][relation] === undefined) {
     targets[target.id][relation] = Array.from(relatedTargets).map(
       ({ id }) => id
     );
@@ -262,24 +261,31 @@ function addRelatedEvent(relations: Relations, event: Event) {
 }
 
 function collectRelatedTargets(
+  targets: Set<number>,
   relations: Relations,
   target: Subscriber | Observable,
   relation: 'sources' | 'destinations',
-  getRelatedEvents: (event: Event) => Event[],
-  root = false
+  getRelatedEvents: (event: Event) => Event[]
 ) {
-  if (!root && relations.targets[target.id] !== undefined) {
+  if (targets.has(target.id)) {
     return;
   }
+  targets.add(target.id);
   const relatedEvents = target.events.flatMap(getRelatedEvents);
   const relatedTargets = new Set(relatedEvents.map(({ target }) => target));
   relatedTargets.delete(target);
-  addRelatedTarget(relations, target, relation, relatedTargets, root);
+  addRelatedTarget(relations, target, relation, relatedTargets);
   for (const event of target.events) {
     addRelatedEvent(relations, event);
   }
   for (let relatedTarget of relatedTargets) {
-    collectRelatedTargets(relations, relatedTarget, relation, getRelatedEvents);
+    collectRelatedTargets(
+      targets,
+      relations,
+      relatedTarget,
+      relation,
+      getRelatedEvents
+    );
   }
 }
 function getTargetState(target: Subscriber): SubscriberState;
@@ -291,13 +297,19 @@ function getTargetState(target: Subscriber | Observable) {
     events: {},
     tasks: {},
   };
-  collectRelatedTargets(relations, target, 'sources', getSourceEvents, true);
   collectRelatedTargets(
+    new Set(),
+    relations,
+    target,
+    'sources',
+    getSourceEvents
+  );
+  collectRelatedTargets(
+    new Set(),
     relations,
     target,
     'destinations',
-    getDestinationEvents,
-    true
+    getDestinationEvents
   );
 
   return { ref, relations };

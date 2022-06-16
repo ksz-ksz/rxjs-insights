@@ -91,7 +91,6 @@ function getTaskNode(
   events: RelatedEvent[],
   visibleIds: Set<number>
 ): TaskNode {
-  const rootEvents = events.filter((event) => isRootEvent(relations, event));
   const childEvents: EventNode[] = [];
   for (const childEvent of events) {
     if (isRootEvent(relations, childEvent)) {
@@ -107,7 +106,7 @@ function getTaskNode(
     }
   }
   return {
-    task: relations.tasks[rootEvents[0].task],
+    task: relations.tasks[events[0].task],
     childEvents,
   };
 }
