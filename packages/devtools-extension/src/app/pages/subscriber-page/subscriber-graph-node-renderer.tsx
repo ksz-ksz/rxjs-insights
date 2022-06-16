@@ -52,7 +52,7 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       const target = relations.targets[node.target.id];
       const event = relations.events[time];
       const location = getLocationStrings(target.locations);
-      const isRoot = node.type === 'root';
+      const isRoot = !node.key.includes('.');
       const isActive = target.startTime <= time && time <= target.endTime;
       const isSelected = event && event.target === target.id;
       const isExpanded = expandedKeys.has(node.key);

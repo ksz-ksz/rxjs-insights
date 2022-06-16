@@ -70,13 +70,11 @@ function getRelatedHierarchyNode(
   relation: 'sources' | 'destinations',
   target: RelatedTarget,
   key: string,
-  visibleKeys: Set<string>,
-  root = false
+  visibleKeys: Set<string>
 ): RelatedTargetHierarchyNode {
   return {
     key,
     target,
-    type: getNodeType(root, relation),
     children: getVisibleChildren(target, relation, key, visibleKeys, relations),
   };
 }
@@ -143,16 +141,14 @@ const hierarchyTreeSelector = createSelector(
       'sources',
       target,
       String(target.id),
-      visibleKeys,
-      true
+      visibleKeys
     );
     const destinations = getRelatedHierarchyNode(
       relations,
       'destinations',
       target,
       String(target.id),
-      visibleKeys,
-      true
+      visibleKeys
     );
 
     return { target, sources, destinations };
