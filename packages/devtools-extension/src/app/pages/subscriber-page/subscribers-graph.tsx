@@ -48,16 +48,34 @@ function getVisibleChildren(
   return visibleChildren;
 }
 
+function getNodeType(
+  root: boolean,
+  relation: 'sources' | 'destinations'
+): 'root' | 'source' | 'destination' {
+  if (root) {
+    return 'root';
+  } else {
+    switch (relation) {
+      case 'sources':
+        return 'source';
+      case 'destinations':
+        return 'destination';
+    }
+  }
+}
+
 function getRelatedHierarchyNode(
   relations: Relations,
   relation: 'sources' | 'destinations',
   target: RelatedTarget,
   key: string,
-  visibleKeys: Set<string>
+  visibleKeys: Set<string>,
+  root = false
 ): RelatedTargetHierarchyNode {
   return {
     key,
     target,
+    type: getNodeType(root, relation),
     children: getVisibleChildren(target, relation, key, visibleKeys, relations),
   };
 }
@@ -73,14 +91,16 @@ const hierarchyTreeSelector = createSelector(
       'sources',
       target,
       String(target.id),
-      visibleKeys
+      visibleKeys,
+      true
     );
     const destinations = getRelatedHierarchyNode(
       relations,
       'destinations',
       target,
       String(target.id),
-      visibleKeys
+      visibleKeys,
+      true
     );
 
     return { target, sources, destinations };

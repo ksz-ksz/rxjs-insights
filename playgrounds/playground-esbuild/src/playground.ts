@@ -32,10 +32,10 @@ export function playground() {
     share()
   );
   const subject = new Subject();
-  const obs = merge(obs1, obs1, subject, subject);
-  const sub = obs.subscribe(subscriber('A'));
+  const obs = merge(obs1, obs1, subject);
+  const sub = obs.pipe(take(10), delay(1000)).subscribe(subject);
 
-  subject.next('asd');
+  subject.next(0);
 
   setTimeout(() => {
     inspect(obs);

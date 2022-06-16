@@ -51,14 +51,18 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       const target = relations.targets[node.target.id];
       const event = relations.events[time];
       const location = getLocationStrings(target.locations);
-      const isRoot = target.id === ref.id;
+      const isRoot = node.type === 'root';
       const isActive = target.startTime <= time && time <= target.endTime;
       const isSelected = event && event.target === target.id;
       const isExpanded = expandedKeys.has(node.key);
+      const isSource = isRoot || node.type === 'source';
+      const isDestination = isRoot || node.type === 'destination';
       const hasSources =
-        target.sources !== undefined && target.sources.length !== 0;
+        isSource && target.sources !== undefined && target.sources.length !== 0;
       const hasDestinations =
-        target.destinations !== undefined && target.destinations.length !== 0;
+        isDestination &&
+        target.destinations !== undefined &&
+        target.destinations.length !== 0;
       const targetColors = getTargetColors(theme, target);
       const rootNodeColor = isActive
         ? targetColors.primary
@@ -74,6 +78,8 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
         event,
         location,
         isRoot,
+        isSource,
+        isDestination,
         isActive,
         isSelected,
         isExpanded,
