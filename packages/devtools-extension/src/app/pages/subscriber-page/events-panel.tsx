@@ -1,6 +1,6 @@
 import { RelatedEvent } from '@app/protocols/insights';
 import React, { ReactNode, useMemo } from 'react';
-import { IconButton, Stack, styled } from '@mui/material';
+import { styled } from '@mui/material';
 import { useSelector } from '@app/store';
 import {
   playingSelector,
@@ -14,14 +14,6 @@ import { eventsLogActions } from '@app/actions/events-log-actions';
 import { getEventElementId } from '@app/utils/get-event-element-id';
 import { RefOutlet } from '@app/components/ref-outlet';
 import {
-  FastForward,
-  FastRewind,
-  Pause,
-  PlayArrow,
-  SkipNext,
-  SkipPrevious,
-} from '@mui/icons-material';
-import {
   EventLogEntry,
   getEventLogEntries,
 } from '@app/pages/subscriber-page/get-event-log-entries';
@@ -29,7 +21,9 @@ import { createSelector, useDispatchCallback } from '@lib/store';
 import { getTargetTimeframes } from '@app/pages/subscriber-page/get-target-timeframes';
 import { getEvents } from '@app/pages/subscriber-page/get-events';
 import { getIncludedEvents } from '@app/pages/subscriber-page/get-included-events';
-import { Timeline } from '@app/pages/subscriber-page/timeline';
+import { EventsTimeline } from '@app/pages/subscriber-page/events-timeline';
+import { EventsControls } from '@app/pages/subscriber-page/events-controls';
+import { getTimeline } from '@app/pages/subscriber-page/get-timeline';
 
 const IndentSpan = styled('span')(({ theme }) => ({
   display: 'inline-block',
@@ -84,49 +78,6 @@ const EventSpan = styled('span')(({ theme }) => ({
     backgroundColor: theme.palette.action.selected,
   },
 }));
-
-interface EventsControlsProps {
-  playing: boolean;
-  onGoToFirst(): void;
-  onGoToPrev(): void;
-  onPlay(): void;
-  onPause(): void;
-  onGoToNext(): void;
-  onGoToLast(): void;
-}
-
-export function EventsControls(props: EventsControlsProps) {
-  return (
-    <Stack
-      sx={{ backgroundColor: 'divider' }}
-      direction="row"
-      spacing={1}
-      justifyContent="center"
-    >
-      <IconButton onClick={props.onGoToFirst}>
-        <SkipPrevious />
-      </IconButton>
-      <IconButton onClick={props.onGoToPrev}>
-        <FastRewind />
-      </IconButton>
-      {props.playing ? (
-        <IconButton onClick={props.onPause}>
-          <Pause />
-        </IconButton>
-      ) : (
-        <IconButton onClick={props.onPlay}>
-          <PlayArrow />
-        </IconButton>
-      )}
-      <IconButton onClick={props.onGoToNext}>
-        <FastForward />
-      </IconButton>
-      <IconButton onClick={props.onGoToLast}>
-        <SkipNext />
-      </IconButton>
-    </Stack>
-  );
-}
 
 interface EventLogProps {
   time: number;
@@ -226,13 +177,19 @@ const eventsSelector = createSelector(
     const events = getIncludedEvents(relations, allEvents, timeframes);
     const entries = getEventLogEntries(relations, allEvents, timeframes);
 
-    return { events, entries };
+    return { events, entries, relations };
   }
 );
 
 const vmSelector = createSelector(
   [eventsSelector, timeSelector, playingSelector],
-  ([events, time, playing]) => ({ ...events, time, playing })
+  ([{ events, entries, relations }, time, playing]) => ({
+    events,
+    entries,
+    time,
+    playing,
+    event: relations.events[time],
+  })
 );
 
 export function EventsPanel() {
@@ -293,7 +250,7 @@ export function EventsPanel() {
         entries={vm.entries}
         onEventSelected={onEventSelected}
       />
-      <Timeline />
+      <EventsTimeline events={vm.events} event={vm.event} />
       <EventsControls
         playing={vm.playing}
         onGoToFirst={onGoToFirst}
