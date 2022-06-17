@@ -1,9 +1,4 @@
-import {
-  RelatedEvent,
-  RelatedTarget,
-  RelatedTask,
-  Relations,
-} from '@app/protocols/insights';
+import { RelatedEvent, RelatedTask, Relations } from '@app/protocols/insights';
 import { partition } from '@app/utils/partition';
 import { isExcluded } from '@app/pages/subscriber-page/is-excluded';
 import { Timeframe } from '@app/pages/subscriber-page/get-target-timeframes';

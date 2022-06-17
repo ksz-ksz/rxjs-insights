@@ -1,4 +1,4 @@
-import React, { JSXElementConstructor, ReactNode, useContext } from 'react';
+import React, { JSXElementConstructor, useContext } from 'react';
 import { Router } from './router';
 import { useRouterOutlet } from './use-router-outlet';
 import { getRouterOutletContext } from './router-outlet-context';

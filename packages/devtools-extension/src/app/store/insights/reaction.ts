@@ -12,7 +12,6 @@ import {
 } from '@app/router';
 import {
   concat,
-  concatAll,
   delay,
   EMPTY,
   endWith,
@@ -20,13 +19,11 @@ import {
   map,
   merge,
   of,
-  scheduled,
   switchMap,
   takeUntil,
 } from 'rxjs';
 import { insightsClient } from '@app/clients/insights';
 import { insightsActions } from '@app/actions/insights-actions';
-import { inspect } from '@rxjs-insights/console';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { getEventElementId } from '@app/utils/get-event-element-id';
 

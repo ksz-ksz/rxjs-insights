@@ -1,8 +1,4 @@
-import {
-  RelatedEvent,
-  RelatedTarget,
-  Relations,
-} from '@app/protocols/insights';
+import { RelatedEvent, Relations } from '@app/protocols/insights';
 import React, { ReactNode, useMemo } from 'react';
 import { IconButton, Stack, styled } from '@mui/material';
 import { useSelector } from '@app/store';

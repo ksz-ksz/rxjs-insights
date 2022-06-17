@@ -1,5 +1,5 @@
 import { GetterRef, PropertyRef, Ref, Refs } from '@app/protocols/refs';
-import { Observable, Subscriber, Event } from '@rxjs-insights/recorder';
+import { Event, Observable, Subscriber } from '@rxjs-insights/recorder';
 import {
   getObservable,
   getPrecedingEvent,

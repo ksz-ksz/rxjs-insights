@@ -1,4 +1,4 @@
-import React, { JSXElementConstructor, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { TransitionGroup } from 'react-transition-group';
 import { LinkData, NodeData } from '@app/components/tree';

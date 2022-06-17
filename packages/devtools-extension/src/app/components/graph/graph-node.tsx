@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { usePrevious } from '@app/utils';
 import { duration } from '@app/components/graph/constants';
 import { Transition } from 'react-transition-group';
 import { NodeData } from '@app/components/tree';
