@@ -158,7 +158,6 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
             return (
               <EventSpan
                 id={getEventElementId(entry.event.time)}
-                title={entry.excluded ? 'Excluded' : undefined}
                 data-type={entry.event.eventType}
                 data-selected={entry.event.time === time}
                 onClick={() => onEventSelected(entry.event)}
@@ -166,7 +165,6 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
                 <Indent indent={entry.indent} />
                 <RefOutletSpan data-dim={entry.excluded}>
                   <RefOutlet summary reference={entry.event} />
-                  {entry.excluded ? ' ⨯' : ''}
                 </RefOutletSpan>
               </EventSpan>
             );
@@ -179,7 +177,7 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
                 onClick={() => onEventSelected(entry.event)}
               >
                 <Indent indent={entry.indent} />
-                <RefOutletSpan data-dim={true}>
+                <RefOutletSpan data-dim={entry.excluded}>
                   <RefOutlet summary reference={entry.event} />
                   {' ↴'}
                 </RefOutletSpan>

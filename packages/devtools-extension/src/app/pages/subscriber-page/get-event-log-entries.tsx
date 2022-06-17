@@ -15,6 +15,7 @@ export interface EventAsyncEntry {
   indent: number;
   task: RelatedTask;
   event: RelatedEvent;
+  excluded: boolean;
 }
 
 export interface TaskEntry {
@@ -146,6 +147,7 @@ function visitEventNodes(
         event: childEvent.event,
         task: relations.tasks[childEvent.event.task],
         indent,
+        excluded: childEvent.excluded,
       });
     }
   }
