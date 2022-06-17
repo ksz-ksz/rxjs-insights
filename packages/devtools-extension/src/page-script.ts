@@ -246,6 +246,7 @@ function addRelatedEvent(relations: Relations, event: Event) {
     const succeedingEvents = getSucceedingEvents(event);
     events[event.time] = {
       ...(refs.create(event) as EventRef),
+      timestamp: event.timestamp,
       target: event.target.id,
       task: event.task.id,
       precedingEvent: precedingEvent?.time,

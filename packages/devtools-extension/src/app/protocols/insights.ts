@@ -36,6 +36,7 @@ export interface RelatedTask {
 
 export interface RelatedEvent extends EventRef {
   time: number;
+  timestamp: number;
   type: 'event';
   eventType: 'next' | 'error' | 'complete' | 'subscribe' | 'unsubscribe';
   name: string;

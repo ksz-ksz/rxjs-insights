@@ -1,4 +1,4 @@
-import { RelatedEvent, Relations } from '@app/protocols/insights';
+import { RelatedEvent } from '@app/protocols/insights';
 import React, { ReactNode, useMemo } from 'react';
 import { IconButton, Stack, styled } from '@mui/material';
 import { useSelector } from '@app/store';
@@ -25,12 +25,11 @@ import {
   EventLogEntry,
   getEventLogEntries,
 } from '@app/pages/subscriber-page/get-event-log-entries';
-import { isExcluded } from '@app/pages/subscriber-page/is-excluded';
 import { createSelector, useDispatchCallback } from '@lib/store';
-import {
-  getTargetTimeframes,
-  Timeframe,
-} from '@app/pages/subscriber-page/get-target-timeframes';
+import { getTargetTimeframes } from '@app/pages/subscriber-page/get-target-timeframes';
+import { getEvents } from '@app/pages/subscriber-page/get-events';
+import { getIncludedEvents } from '@app/pages/subscriber-page/get-included-events';
+import { Timeline } from '@app/pages/subscriber-page/timeline';
 
 const IndentSpan = styled('span')(({ theme }) => ({
   display: 'inline-block',
@@ -195,18 +194,6 @@ const EventsPanelDiv = styled('div')({
   height: '100%',
 });
 
-function getEvents(relations: Relations) {
-  return Object.values(relations.events).sort((a, b) => a.time - b.time);
-}
-
-function getIncludedEvents(
-  relations: Relations,
-  events: RelatedEvent[],
-  timeframes: Record<number, Timeframe>
-) {
-  return events.filter((event) => !isExcluded(relations, event, timeframes));
-}
-
 function findLastIndex<T>(items: T[], predicate: (item: T) => boolean): number {
   for (let i = items.length - 1; i >= 0; i--) {
     if (predicate(items[i])) {
@@ -306,6 +293,7 @@ export function EventsPanel() {
         entries={vm.entries}
         onEventSelected={onEventSelected}
       />
+      <Timeline />
       <EventsControls
         playing={vm.playing}
         onGoToFirst={onGoToFirst}

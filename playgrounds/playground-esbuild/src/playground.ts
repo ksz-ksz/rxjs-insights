@@ -33,7 +33,7 @@ export function playground() {
   );
   const subject = new Subject();
   const obs = merge(obs1, subject);
-  const sub = obs.pipe(delay(1000), delay(1000), take(10)).subscribe(subject);
+  const sub = obs.pipe(delay(0), take(10)).subscribe(subject);
 
   subject.next('woohoo');
 
