@@ -12,7 +12,6 @@ import React from 'react';
 import { SubscriberGraphNodeRenderer } from '@app/pages/subscriber-page/subscriber-graph-node-renderer';
 import { SubscriberGraphLinkRenderer } from '@app/pages/subscriber-page/subscriber-graph-link-renderer';
 import { RelatedTargetHierarchyNode } from '@app/pages/subscriber-page/related-target-hierarchy-node';
-import { setRef } from '@mui/material';
 
 function isKeyVisible(visibleKeys: Set<string>, key: string) {
   return visibleKeys.has(key);
