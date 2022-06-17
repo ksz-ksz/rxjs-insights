@@ -192,6 +192,44 @@ const vmSelector = createSelector(
   })
 );
 
+function binarySearch<T, U>(
+  array: T[],
+  item: U,
+  compare: (a: U, b: T) => number
+) {
+  let m = 0;
+  let n = array.length - 1;
+  while (m <= n) {
+    const k = (n + m) >> 1;
+    const c = compare(item, array[k]);
+    if (c > 0) {
+      m = k + 1;
+    } else if (c < 0) {
+      n = k - 1;
+    } else {
+      return k;
+    }
+  }
+  return -m - 1;
+}
+
+function getClosestEvent(
+  events: RelatedEvent[],
+  index: number,
+  timestamp: number
+) {
+  const a = events[index - 1];
+  const b = events[index];
+  if (
+    a &&
+    Math.abs(a.timestamp - timestamp) < Math.abs(b.timestamp - timestamp)
+  ) {
+    return a;
+  } else {
+    return b;
+  }
+}
+
 export function EventsPanel() {
   const vm = useSelector(vmSelector);
 
@@ -243,6 +281,23 @@ export function EventsPanel() {
     return eventsLogActions.EventSelected({ event: last });
   }, [vm.events]);
 
+  const onTimestampSelected = useDispatchCallback(
+    (timestamp) => {
+      const index = binarySearch(
+        vm.events,
+        timestamp,
+        (t, e) => t - e.timestamp
+      );
+      console.log(timestamp, index);
+      const event =
+        index >= 0
+          ? vm.events[index]
+          : getClosestEvent(vm.events, -index - 1, timestamp);
+      return eventsLogActions.EventSelected({ event });
+    },
+    [vm.events]
+  );
+
   return (
     <EventsPanelDiv>
       <EventsLog
@@ -250,7 +305,11 @@ export function EventsPanel() {
         entries={vm.entries}
         onEventSelected={onEventSelected}
       />
-      <EventsTimeline events={vm.events} event={vm.event} />
+      <EventsTimeline
+        events={vm.events}
+        event={vm.event}
+        onTimestampSelected={onTimestampSelected}
+      />
       <EventsControls
         playing={vm.playing}
         onGoToFirst={onGoToFirst}

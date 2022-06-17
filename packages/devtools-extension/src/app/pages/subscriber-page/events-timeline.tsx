@@ -112,6 +112,7 @@ function useElementSize(elementRef: RefObject<Element>) {
 export interface EventsTimelineProps {
   events: RelatedEvent[];
   event?: RelatedEvent;
+  onTimestampSelected: (timestamp: number) => void;
 }
 
 function pad(number: number, length: number) {
@@ -126,7 +127,11 @@ function getTimestamp(timestamp: number) {
   )}.${pad(t.getMilliseconds(), 3)}`;
 }
 
-export function EventsTimeline({ events, event }: EventsTimelineProps) {
+export function EventsTimeline({
+  events,
+  event,
+  onTimestampSelected,
+}: EventsTimelineProps) {
   const theme = useTheme();
   const elementRef = useRef<HTMLDivElement | null>(null);
   const { width } = useElementSize(elementRef);
@@ -164,10 +169,15 @@ export function EventsTimeline({ events, event }: EventsTimelineProps) {
     [setTimestamp, timeline, timelineWidth]
   );
 
+  const onClick = useCallback(() => {
+    onTimestampSelected(timestamp);
+  }, [timestamp]);
+
   return (
     <Tooltip followCursor title={getTimestamp(timestamp)}>
       <div
         ref={elementRef}
+        onClick={onClick}
         onMouseMove={onMouseMove}
         style={{
           width: '100%',
