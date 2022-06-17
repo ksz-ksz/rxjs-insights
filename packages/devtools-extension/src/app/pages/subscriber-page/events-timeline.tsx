@@ -1,6 +1,15 @@
-import React, { RefObject, useEffect, useMemo, useRef, useState } from 'react';
-import { useTheme } from '@mui/material';
+import React, {
+  MouseEvent,
+  RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { Tooltip, useTheme } from '@mui/material';
 import {
+  getOffsetTimestamp,
   getTimeline,
   getTimestampOffset,
   TimelineSlice,
@@ -105,6 +114,18 @@ export interface EventsTimelineProps {
   event?: RelatedEvent;
 }
 
+function pad(number: number, length: number) {
+  return String(number).padStart(length, '0');
+}
+
+function getTimestamp(timestamp: number) {
+  const t = new Date(timestamp);
+  return `${pad(t.getHours(), 2)}:${pad(t.getMinutes(), 2)}:${pad(
+    t.getSeconds(),
+    2
+  )}.${pad(t.getMilliseconds(), 3)}`;
+}
+
 export function EventsTimeline({ events, event }: EventsTimelineProps) {
   const theme = useTheme();
   const elementRef = useRef<HTMLDivElement | null>(null);
@@ -114,6 +135,7 @@ export function EventsTimeline({ events, event }: EventsTimelineProps) {
     () => getTimeline(events, timelineWidth),
     [events, timelineWidth]
   );
+  const [timestamp, setTimestamp] = useState('');
   const offset = useMemo(
     () =>
       event
@@ -127,33 +149,53 @@ export function EventsTimeline({ events, event }: EventsTimelineProps) {
     [event, timeline, timelineWidth]
   );
 
+  const onMouseMove = useCallback(
+    (event: MouseEvent) => {
+      const offset = (event.clientX - paddingX) / 2;
+      setTimestamp(
+        getTimestamp(
+          getOffsetTimestamp(
+            offset,
+            timeline.startTimestamp,
+            timeline.endTimestamp,
+            timelineWidth
+          )
+        )
+      );
+    },
+    [setTimestamp, timeline, timelineWidth]
+  );
+
   return (
-    <div
-      ref={elementRef}
-      style={{
-        width: '100%',
-        display: 'flex',
-        backgroundColor: theme.palette.divider,
-        borderBottom: `thin solid ${theme.palette.background.default}`,
-      }}
-    >
-      <svg viewBox={`0 0 ${width} ${height}`}>
-        {timeline.slices.map((slice, offset) => (
-          <EventsTimelineSlice slice={slice} offset={offset * 2 + paddingX} />
-        ))}
-        <circle
-          fill={theme.palette.text.primary}
-          r={3}
-          cx={offset * 2 + paddingX}
-          cy={0}
-        />
-        <circle
-          fill={theme.palette.text.primary}
-          r={3}
-          cx={offset * 2 + paddingX}
-          cy={height}
-        />
-      </svg>
-    </div>
+    <Tooltip followCursor title={timestamp}>
+      <div
+        ref={elementRef}
+        onMouseMove={onMouseMove}
+        style={{
+          width: '100%',
+          display: 'flex',
+          backgroundColor: theme.palette.divider,
+          borderBottom: `thin solid ${theme.palette.background.default}`,
+        }}
+      >
+        <svg viewBox={`0 0 ${width} ${height}`}>
+          {timeline.slices.map((slice, offset) => (
+            <EventsTimelineSlice slice={slice} offset={offset * 2 + paddingX} />
+          ))}
+          <circle
+            fill={theme.palette.text.primary}
+            r={3}
+            cx={offset * 2 + paddingX}
+            cy={0}
+          />
+          <circle
+            fill={theme.palette.text.primary}
+            r={3}
+            cx={offset * 2 + paddingX}
+            cy={height}
+          />
+        </svg>
+      </div>
+    </Tooltip>
   );
 }
