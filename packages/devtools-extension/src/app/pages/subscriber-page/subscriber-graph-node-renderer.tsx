@@ -23,7 +23,7 @@ import {
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { RelatedTargetHierarchyNode } from '@app/pages/subscriber-page/related-target-hierarchy-node';
 
-const circleRadius = 6;
+const circleRadius = 5;
 const circleCircumference = 2 * Math.PI * circleRadius;
 
 function getLocationStrings(locations: Locations) {
@@ -57,12 +57,10 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       const isSelected = event && event.target === target.id;
       const isExpanded = expandedKeys.has(node.key);
       const targetColors = getTargetColors(theme, target);
-      const rootNodeColor = isActive
-        ? targetColors.primary
-        : theme.palette.action.disabledBackground;
+      const textColor = isRoot ? targetColors.primary : targetColors.secondary;
       const nodeColor = isActive
-        ? targetColors.secondary
-        : theme.palette.action.disabled;
+        ? textColor
+        : theme.palette.action.disabledBackground;
       const selectedColor = event && getEventColors(theme, event).secondary;
 
       return {
@@ -73,7 +71,7 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
         isRoot,
         isSelected,
         isExpanded,
-        rootNodeColor,
+        textColor,
         nodeColor,
         selectedColor,
       };
@@ -142,9 +140,6 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
           fill={vm.nodeColor}
           style={{ transition: `r ${duration}s` }}
         />
-        {vm.isRoot && (
-          <circle r={5} fill="transparent" stroke={vm.rootNodeColor} />
-        )}
         {vm.isSelected && (
           <circle
             ref={circleRef}
@@ -158,7 +153,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
           fontStyle="oblique"
           fontSize="6"
           textAnchor="middle"
-          fill={vm.nodeColor}
+          fill={vm.textColor}
           y="12"
         >
           {vm.target.name}{' '}
