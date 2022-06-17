@@ -135,7 +135,7 @@ export function EventsTimeline({ events, event }: EventsTimelineProps) {
     () => getTimeline(events, timelineWidth),
     [events, timelineWidth]
   );
-  const [timestamp, setTimestamp] = useState('');
+  const [timestamp, setTimestamp] = useState(0);
   const offset = useMemo(
     () =>
       event
@@ -153,13 +153,11 @@ export function EventsTimeline({ events, event }: EventsTimelineProps) {
     (event: MouseEvent) => {
       const offset = (event.clientX - paddingX) / 2;
       setTimestamp(
-        getTimestamp(
-          getOffsetTimestamp(
-            offset,
-            timeline.startTimestamp,
-            timeline.endTimestamp,
-            timelineWidth
-          )
+        getOffsetTimestamp(
+          offset,
+          timeline.startTimestamp,
+          timeline.endTimestamp,
+          timelineWidth
         )
       );
     },
@@ -167,7 +165,7 @@ export function EventsTimeline({ events, event }: EventsTimelineProps) {
   );
 
   return (
-    <Tooltip followCursor title={timestamp}>
+    <Tooltip followCursor title={getTimestamp(timestamp)}>
       <div
         ref={elementRef}
         onMouseMove={onMouseMove}
