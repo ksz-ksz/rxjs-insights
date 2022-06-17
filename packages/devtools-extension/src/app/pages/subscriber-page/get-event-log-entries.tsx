@@ -27,32 +27,35 @@ export type EventLogEntry = EventEntry | EventAsyncEntry | TaskEntry;
 
 interface EventNode {
   event: RelatedEvent;
-  excluded: boolean;
-  subtreeExcluded: boolean;
-  childEvents: EventNode[];
+  nodeExcluded: boolean;
+  treeExcluded: boolean;
+  childEventNodes: EventNode[];
 }
 
 interface TaskNode {
   task: RelatedTask;
-  childEvents: EventNode[];
+  rootEventNodes: EventNode[];
 }
 
-function getChildEvents(
+function getChildEventNodes(
   relations: Relations,
   event: RelatedEvent,
-  timeframes: Record<number, Timeframe>
+  timeframes: Record<number, Timeframe>,
+  eventNodes: Record<number, EventNode>
 ) {
   const childEvents: EventNode[] = [];
   for (const childEventId of event.succeedingEvents) {
     const childEvent = relations.events[childEventId];
-    childEvents.push(getEventNode(relations, childEvent, timeframes));
+    childEvents.push(
+      getEventNode(relations, childEvent, timeframes, eventNodes)
+    );
   }
   return childEvents;
 }
 
-function getChildrenExcluded(childEvents: EventNode[]) {
+function getChildEventNodesExcluded(childEvents: EventNode[]) {
   for (let childEvent of childEvents) {
-    if (!childEvent.subtreeExcluded) {
+    if (!childEvent.treeExcluded) {
       return false;
     }
   }
@@ -62,16 +65,28 @@ function getChildrenExcluded(childEvents: EventNode[]) {
 function getEventNode(
   relations: Relations,
   event: RelatedEvent,
-  timeframes: Record<number, Timeframe>
+  timeframes: Record<number, Timeframe>,
+  eventNodes: Record<number, EventNode>
 ): EventNode {
-  const excluded = isExcluded(relations, event, timeframes);
-  const childEvents = getChildEvents(relations, event, timeframes);
-  return {
-    event,
-    excluded,
-    childEvents,
-    subtreeExcluded: excluded && getChildrenExcluded(childEvents),
-  };
+  let eventNode = eventNodes[event.time];
+  if (eventNode === undefined) {
+    const excluded = isExcluded(relations, event, timeframes);
+    const childEventNodes = getChildEventNodes(
+      relations,
+      event,
+      timeframes,
+      eventNodes
+    );
+    eventNode = {
+      event,
+      childEventNodes,
+      nodeExcluded: excluded,
+      treeExcluded: excluded && getChildEventNodesExcluded(childEventNodes),
+    };
+    eventNodes[event.time] = eventNode;
+  }
+
+  return eventNode;
 }
 
 function isRootEvent(relations: Relations, event: RelatedEvent) {
@@ -82,24 +97,22 @@ function isRootEvent(relations: Relations, event: RelatedEvent) {
   return precedingEvent.task !== event.task;
 }
 
-function getTaskNode(
-  relations: Relations,
+function getRootEventNodes(
   events: RelatedEvent[],
+  relations: Relations,
   timeframes: Record<number, Timeframe>
-): TaskNode {
-  const childEvents: EventNode[] = [];
-  for (const childEvent of events) {
-    if (isRootEvent(relations, childEvent)) {
-      const eventNode = getEventNode(relations, childEvent, timeframes);
-      if (!eventNode.subtreeExcluded) {
-        childEvents.push(eventNode);
+) {
+  const eventNodes: Record<number, EventNode> = {};
+  const rootEventNodes: EventNode[] = [];
+  for (let event of events) {
+    if (isRootEvent(relations, event)) {
+      const eventNode = getEventNode(relations, event, timeframes, eventNodes);
+      if (!eventNode.treeExcluded) {
+        rootEventNodes.push(eventNode);
       }
     }
   }
-  return {
-    task: relations.tasks[events[0].task],
-    childEvents,
-  };
+  return rootEventNodes;
 }
 
 function getTaskNodes(
@@ -107,8 +120,13 @@ function getTaskNodes(
   relations: Relations,
   timeframes: Record<number, Timeframe>
 ) {
-  return partition(events, (a, b) => a.task !== b.task).map((events) =>
-    getTaskNode(relations, events, timeframes)
+  const rootEventNodes = getRootEventNodes(events, relations, timeframes);
+
+  return partition(rootEventNodes, (a, b) => a.event.task !== b.event.task).map(
+    (taskRootEventNodes): TaskNode => ({
+      task: relations.tasks[taskRootEventNodes[0].event.task],
+      rootEventNodes: taskRootEventNodes,
+    })
   );
 }
 
@@ -130,14 +148,14 @@ function visitEventNodes(
       entries.push({
         type: 'event',
         event: childEvent.event,
-        excluded: childEvent.excluded,
+        excluded: childEvent.nodeExcluded,
         indent,
       });
       visitEventNodes(
         relations,
         entries,
         indents,
-        childEvent.childEvents,
+        childEvent.childEventNodes,
         childEvent
       );
     } else {
@@ -147,7 +165,7 @@ function visitEventNodes(
         event: childEvent.event,
         task: relations.tasks[childEvent.event.task],
         indent,
-        excluded: childEvent.excluded,
+        excluded: childEvent.nodeExcluded,
       });
     }
   }
@@ -163,12 +181,12 @@ export function getEventLogEntries(
   const entries: EventLogEntry[] = [];
   const indents: Record<number, number> = {};
   for (const taskNode of taskNodes) {
-    if (taskNode.childEvents.length !== 0) {
+    if (taskNode.rootEventNodes.length !== 0) {
       entries.push({
         type: 'task',
         task: taskNode.task,
       });
-      visitEventNodes(relations, entries, indents, taskNode.childEvents);
+      visitEventNodes(relations, entries, indents, taskNode.rootEventNodes);
     }
   }
 
