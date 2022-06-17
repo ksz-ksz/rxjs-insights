@@ -6,6 +6,7 @@ import {
 } from '@app/protocols/insights';
 import { partition } from '@app/utils/partition';
 import { isExcluded } from '@app/pages/subscriber-page/is-excluded';
+import { Timeframe } from '@app/pages/subscriber-page/get-target-timeframes';
 
 export interface EventEntry {
   type: 'event';
@@ -41,31 +42,25 @@ interface TaskNode {
 }
 
 function getChildEvents(
-  rootTarget: RelatedTarget,
   relations: Relations,
   event: RelatedEvent,
-  visibleIds: Set<number>
+  timeframes: Record<number, Timeframe>
 ) {
   const childEvents: EventNode[] = [];
   for (const childEventId of event.succeedingEvents) {
     const childEvent = relations.events[childEventId];
-    // if (relations.targets[childEvent.target] !== undefined) {
-    childEvents.push(
-      getEventNode(rootTarget, relations, childEvent, visibleIds)
-    );
-    // }
+    childEvents.push(getEventNode(relations, childEvent, timeframes));
   }
   return childEvents;
 }
 
 function getEventNode(
-  rootTarget: RelatedTarget,
   relations: Relations,
   event: RelatedEvent,
-  visibleIds: Set<number>
+  timeframes: Record<number, Timeframe>
 ): EventNode {
-  const excluded = isExcluded(relations, event, rootTarget, visibleIds);
-  const childEvents = getChildEvents(rootTarget, relations, event, visibleIds);
+  const excluded = isExcluded(relations, event, timeframes);
+  const childEvents = getChildEvents(relations, event, timeframes);
   const childrenExcluded = childEvents
     .map((child) => child.excluded && child.childrenExcluded)
     .reduce((acc, x) => acc && x, true);
@@ -86,20 +81,14 @@ function isRootEvent(relations: Relations, event: RelatedEvent) {
 }
 
 function getTaskNode(
-  rootTarget: RelatedTarget,
   relations: Relations,
   events: RelatedEvent[],
-  visibleIds: Set<number>
+  timeframes: Record<number, Timeframe>
 ): TaskNode {
   const childEvents: EventNode[] = [];
   for (const childEvent of events) {
     if (isRootEvent(relations, childEvent)) {
-      const eventNode = getEventNode(
-        rootTarget,
-        relations,
-        childEvent,
-        visibleIds
-      );
+      const eventNode = getEventNode(relations, childEvent, timeframes);
       if (!eventNode.childrenExcluded) {
         childEvents.push(eventNode);
       }
@@ -112,13 +101,12 @@ function getTaskNode(
 }
 
 function getTaskNodes(
-  rootTarget: RelatedTarget,
   events: RelatedEvent[],
   relations: Relations,
-  visibleIds: Set<number>
+  timeframes: Record<number, Timeframe>
 ) {
   return partition(events, (a, b) => a.task !== b.task).map((events) =>
-    getTaskNode(rootTarget, relations, events, visibleIds)
+    getTaskNode(relations, events, timeframes)
   );
 }
 
@@ -165,10 +153,9 @@ function visitEventNodes(
 export function getEventLogEntries(
   relations: Relations,
   events: RelatedEvent[],
-  rootTarget: RelatedTarget,
-  visibleIds: Set<number>
+  timeframes: Record<number, Timeframe>
 ) {
-  const taskNodes = getTaskNodes(rootTarget, events, relations, visibleIds);
+  const taskNodes = getTaskNodes(events, relations, timeframes);
 
   const entries: EventLogEntry[] = [];
   const indents: Record<number, number> = {};

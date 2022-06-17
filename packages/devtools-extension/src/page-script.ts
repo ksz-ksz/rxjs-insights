@@ -51,6 +51,10 @@ import {
   isObservableTarget,
   isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
+import {
+  OUT_OF_BOUNDS_MAX_TIME,
+  OUT_OF_BOUNDS_MIN_TIME,
+} from '@app/constants/timeframe';
 
 const RXJS_INSIGHTS_ENABLED_KEY = 'RXJS_INSIGHTS_ENABLED';
 
@@ -169,9 +173,6 @@ const refs = new RefsService();
 (window as any).REFS = refs;
 
 startServer<Refs>(createInspectedWindowEvalServerAdapter(RefsChannel), refs);
-
-const OUT_OF_BOUNDS_MIN_TIME = -1;
-const OUT_OF_BOUNDS_MAX_TIME = Number.MAX_SAFE_INTEGER;
 
 function getStartTime(events: Event[]) {
   if (events.length === 0) {

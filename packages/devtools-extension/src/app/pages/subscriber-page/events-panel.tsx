@@ -3,9 +3,9 @@ import {
   RelatedTarget,
   Relations,
 } from '@app/protocols/insights';
-import React, { ReactNode, useCallback, useMemo } from 'react';
+import React, { ReactNode, useMemo } from 'react';
 import { IconButton, Stack, styled } from '@mui/material';
-import { useDispatch, useSelector } from '@app/store';
+import { useSelector } from '@app/store';
 import {
   playingSelector,
   timeSelector,
@@ -31,6 +31,10 @@ import {
 } from '@app/pages/subscriber-page/get-event-log-entries';
 import { isExcluded } from '@app/pages/subscriber-page/is-excluded';
 import { createSelector, useDispatchCallback } from '@lib/store';
+import {
+  getTargetTimeframes,
+  Timeframe,
+} from '@app/pages/subscriber-page/get-target-timeframes';
 
 const IndentSpan = styled('span')(({ theme }) => ({
   display: 'inline-block',
@@ -204,12 +208,9 @@ function getEvents(relations: Relations) {
 function getIncludedEvents(
   relations: Relations,
   events: RelatedEvent[],
-  target: RelatedTarget,
-  expandedIds: Set<number>
+  timeframes: Record<number, Timeframe>
 ) {
-  return events.filter(
-    (event) => !isExcluded(relations, event, target, expandedIds)
-  );
+  return events.filter((event) => !isExcluded(relations, event, timeframes));
 }
 
 function findLastIndex<T>(items: T[], predicate: (item: T) => boolean): number {
@@ -233,71 +234,16 @@ function findFirstIndex<T>(
   return -1;
 }
 
-function getVisibleIdsVisitor(
-  target: RelatedTarget,
-  targetKey: string,
-  relations: Relations,
-  relation: 'sources' | 'destinations',
-  expandedKeys: Set<string>,
-  visibleKeys: Set<number>
-) {
-  visibleKeys.add(target.id);
-  if (expandedKeys.has(targetKey)) {
-    for (const childId of target[relation]!) {
-      const childTarget = relations.targets[childId];
-      const childTargetKey = `${targetKey}.${childId}`;
-      getVisibleIdsVisitor(
-        childTarget,
-        childTargetKey,
-        relations,
-        relation,
-        expandedKeys,
-        visibleKeys
-      );
-    }
-  }
-}
-
-function getVisibleIds(
-  root: RelatedTarget,
-  relations: Relations,
-  expandedKeys: Set<string>
-): Set<number> {
-  const visibleIds = new Set<number>();
-  getVisibleIdsVisitor(
-    root,
-    String(root.id),
-    relations,
-    'sources',
-    expandedKeys,
-    visibleIds
-  );
-  getVisibleIdsVisitor(
-    root,
-    String(root.id),
-    relations,
-    'destinations',
-    expandedKeys,
-    visibleIds
-  );
-  return visibleIds;
-}
-
 const eventsSelector = createSelector(
   [activeSubscriberStateSelector, activeSubscriberUiStateSelector],
   ([activeSubscriberState, activeSubscriberUiState]) => {
     const { ref, relations } = activeSubscriberState!;
     const { expandedKeys } = activeSubscriberUiState!;
     const target = relations.targets[ref.id];
-    const visibleIds = getVisibleIds(target, relations, expandedKeys);
+    const timeframes = getTargetTimeframes(target, relations, expandedKeys);
     const allEvents = getEvents(relations);
-    const events = getIncludedEvents(relations, allEvents, target, visibleIds);
-    const entries = getEventLogEntries(
-      relations,
-      allEvents,
-      target,
-      visibleIds
-    );
+    const events = getIncludedEvents(relations, allEvents, timeframes);
+    const entries = getEventLogEntries(relations, allEvents, timeframes);
 
     return { events, entries };
   }

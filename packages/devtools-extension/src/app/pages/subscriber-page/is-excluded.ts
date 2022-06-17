@@ -1,19 +1,15 @@
-import {
-  RelatedEvent,
-  RelatedTarget,
-  Relations,
-} from '@app/protocols/insights';
+import { RelatedEvent, Relations } from '@app/protocols/insights';
+import { Timeframe } from './get-target-timeframes';
 
 export function isExcluded(
   relations: Relations,
   event: RelatedEvent,
-  rootTarget: RelatedTarget,
-  expandedIds: Set<number>
+  timeframes: Record<number, Timeframe>
 ) {
+  const targetTimeframe = timeframes[event.target];
   return (
-    !expandedIds.has(event.target) ||
-    relations.targets[event.target] === undefined ||
-    event.time < rootTarget.startTime ||
-    event.time > rootTarget.endTime
+    targetTimeframe === undefined ||
+    event.time < targetTimeframe.startTime ||
+    event.time > targetTimeframe.endTime
   );
 }
