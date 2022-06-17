@@ -20,7 +20,7 @@ const inspectDevtools: typeof inspect =
   (window as any).RXJS_ISNIGHTS_DEVTOOLS_INSPECT ?? inspect;
 
 export function playground() {
-  const obs1 = scheduled([of('a', 'b', 'c'), of(1, 2, 3)], asapScheduler).pipe(
+  const obs1 = scheduled([of('a', 'b'), of(1, 2)], asapScheduler).pipe(
     map((x) => x),
     switchMap((x) => x),
     (source) =>
@@ -32,10 +32,10 @@ export function playground() {
     share()
   );
   const subject = new Subject();
-  const obs = merge(obs1, obs1, subject);
-  const sub = obs.pipe(take(10), delay(1000)).subscribe(subject);
+  const obs = merge(obs1, subject);
+  const sub = obs.pipe(delay(1000), delay(1000), take(10)).subscribe(subject);
 
-  subject.next(0);
+  subject.next('woohoo');
 
   setTimeout(() => {
     inspect(obs);
