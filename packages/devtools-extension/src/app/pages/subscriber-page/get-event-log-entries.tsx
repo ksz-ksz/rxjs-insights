@@ -27,7 +27,7 @@ export type EventLogEntry = EventEntry | EventAsyncEntry | TaskEntry;
 interface EventNode {
   event: RelatedEvent;
   excluded: boolean;
-  childrenExcluded: boolean;
+  subtreeExcluded: boolean;
   childEvents: EventNode[];
 }
 
@@ -49,6 +49,15 @@ function getChildEvents(
   return childEvents;
 }
 
+function getChildrenExcluded(childEvents: EventNode[]) {
+  for (let childEvent of childEvents) {
+    if (!childEvent.subtreeExcluded) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function getEventNode(
   relations: Relations,
   event: RelatedEvent,
@@ -56,14 +65,11 @@ function getEventNode(
 ): EventNode {
   const excluded = isExcluded(relations, event, timeframes);
   const childEvents = getChildEvents(relations, event, timeframes);
-  const childrenExcluded = childEvents
-    .map((child) => child.excluded && child.childrenExcluded)
-    .reduce((acc, x) => acc && x, true);
   return {
     event,
     excluded,
     childEvents,
-    childrenExcluded,
+    subtreeExcluded: excluded && getChildrenExcluded(childEvents),
   };
 }
 
@@ -84,7 +90,7 @@ function getTaskNode(
   for (const childEvent of events) {
     if (isRootEvent(relations, childEvent)) {
       const eventNode = getEventNode(relations, childEvent, timeframes);
-      if (!eventNode.childrenExcluded) {
+      if (!eventNode.subtreeExcluded) {
         childEvents.push(eventNode);
       }
     }

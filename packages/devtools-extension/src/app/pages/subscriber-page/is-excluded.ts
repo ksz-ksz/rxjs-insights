@@ -9,7 +9,7 @@ export function isExcluded(
   const targetTimeframe = timeframes[event.target];
   return (
     targetTimeframe === undefined ||
-    event.time < targetTimeframe.startTime ||
-    event.time > targetTimeframe.endTime
+    event.time <= targetTimeframe.startTime ||
+    event.time >= targetTimeframe.endTime
   );
 }
