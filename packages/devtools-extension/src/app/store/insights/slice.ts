@@ -1,6 +1,10 @@
 import { createReducer, Slice } from '@lib/store';
 import { insightsActions } from '@app/actions/insights-actions';
-import { ObservableState, SubscriberState } from '@app/protocols/insights';
+import {
+  ObservableState,
+  Relations,
+  SubscriberState,
+} from '@app/protocols/insights';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 
@@ -17,6 +21,43 @@ export interface InsightsState {
 }
 
 export type InsightsSlice = Slice<'insights', InsightsState>;
+
+function expandVisitor(
+  visitedTargets: Set<number>,
+  relations: Relations,
+  expandedKeys: Set<string>,
+  key: string
+) {
+  const targetId = Number(key.split('.').pop());
+  if (visitedTargets.has(targetId)) {
+    return;
+  }
+  visitedTargets.add(targetId);
+  expandedKeys.add(key);
+  const target = relations.targets[targetId];
+  // TODO: expand only in one direction
+  if (target.sources) {
+    for (const source of target.sources) {
+      expandVisitor(
+        visitedTargets,
+        relations,
+        expandedKeys,
+        `${key}.${source}`
+      );
+    }
+  }
+  // TODO: expand only in one direction
+  if (target.destinations) {
+    for (const source of target.destinations!) {
+      expandVisitor(
+        visitedTargets,
+        relations,
+        expandedKeys,
+        `${key}.${source}`
+      );
+    }
+  }
+}
 
 export const insightsReducer = createReducer('insights', {
   time: 0,
@@ -55,12 +96,28 @@ export const insightsReducer = createReducer('insights', {
   .add(insightsActions.PlayDone, (state) => {
     state.playing = false;
   })
-  .add(subscribersGraphActions.Toggle, (state, action) => {
-    const { key } = action.payload;
-    const { expandedKeys } = state.subscribersUi[action.payload.target];
-    if (!expandedKeys.has(key)) {
-      expandedKeys.add(key);
-    } else {
-      expandedKeys.delete(key);
+  .add(subscribersGraphActions.Expand, (state, action) => {
+    const { target, key } = action.payload;
+    const { expandedKeys } = state.subscribersUi[target];
+    expandedKeys.add(key);
+  })
+  .add(subscribersGraphActions.Collapse, (state, action) => {
+    const { target, key } = action.payload;
+    const { expandedKeys } = state.subscribersUi[target];
+    expandedKeys.delete(key);
+  })
+  .add(subscribersGraphActions.ExpandAll, (state, action) => {
+    const { target, key } = action.payload;
+    const { relations } = state.subscribers[target];
+    const { expandedKeys } = state.subscribersUi[target];
+    expandVisitor(new Set(), relations, expandedKeys, key);
+  })
+  .add(subscribersGraphActions.CollapseAll, (state, action) => {
+    const { target, key } = action.payload;
+    const { expandedKeys } = state.subscribersUi[target];
+    for (const expandedKey of Array.from(expandedKeys.values())) {
+      if (expandedKey.startsWith(key)) {
+        expandedKeys.delete(expandedKey);
+      }
     }
   });

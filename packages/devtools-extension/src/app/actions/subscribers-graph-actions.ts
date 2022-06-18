@@ -1,10 +1,30 @@
 import { createActions } from '@lib/store';
 
 export interface SubscribersGraphActions {
-  Toggle: {
-    target: number; // TODO: rename: root
+  Expand: {
+    target: number;
     key: string;
-    id: number;
+  };
+
+  ExpandAll: {
+    target: number;
+    key: string;
+  };
+
+  Collapse: {
+    target: number;
+    key: string;
+  };
+
+  CollapseAll: {
+    target: number;
+    key: string;
+  };
+
+  FocusTarget: {
+    target: number;
+    fromKey?: string;
+    toKey?: string;
   };
 }
 

@@ -1,12 +1,18 @@
 import { Locations } from '@rxjs-insights/core';
-import React, { useEffect, useRef } from 'react';
+import React, {
+  MouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   DefaultNodeControl,
   duration,
   NodeControl,
   NodeRendererProps,
 } from '@app/components/graph';
-import { Theme, useTheme } from '@mui/material';
+import { Menu, MenuItem, Theme, useTheme } from '@mui/material';
 import { useSelectorFunction } from '@app/store';
 import { timeSelector } from '@app/selectors/insights-selectors';
 import {
@@ -49,7 +55,9 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       const { ref, relations } = activeSubscriberState!;
       const { expandedKeys } = activeSubscriberUiState!;
       const root = relations.targets[ref.id];
+      const rootKey = String(ref.id);
       const target = relations.targets[node.target.id];
+      const targetKey = node.key;
       const event = relations.events[time];
       const location = getLocationStrings(target.locations);
       const isRoot = !node.key.includes('.');
@@ -65,7 +73,9 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
 
       return {
         root,
+        rootKey,
         target,
+        targetKey,
         event,
         location,
         isRoot,
@@ -77,6 +87,16 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       };
     }
   );
+
+interface MenuState {
+  position: {
+    top: number;
+    left: number;
+  };
+  focusOptionVisible: boolean;
+  expandOptionVisible: boolean;
+  collapseOptionVisible: boolean;
+}
 
 export const SubscriberGraphNodeRenderer = React.forwardRef<
   NodeControl,
@@ -94,14 +114,114 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
   const circleRef = useRef<SVGCircleElement | null>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
 
-  const toggle = useDispatchCallback(
-    () =>
-      subscribersGraphActions.Toggle({
+  const [menu, setMenu] = useState<MenuState | undefined>(undefined);
+  const onContextMenuOpen = useCallback(
+    (event: MouseEvent) => {
+      setMenu({
+        position: { top: event.clientY, left: event.clientX },
+        focusOptionVisible: !vm.isRoot,
+        expandOptionVisible: !vm.isExpanded,
+        collapseOptionVisible: vm.isExpanded,
+      });
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    [setMenu, vm.isRoot, vm.isExpanded]
+  );
+
+  const onContextMenuClose = useCallback(
+    (event: MouseEvent) => {
+      setMenu(undefined);
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    [setMenu]
+  );
+
+  const onFocus = useDispatchCallback(
+    (event: MouseEvent) => {
+      onContextMenuClose(event);
+      return subscribersGraphActions.FocusTarget({
+        target: vm.target.id,
+        fromKey: vm.rootKey,
+        toKey: vm.targetKey,
+      });
+    },
+    [onContextMenuClose, vm.target.id, vm.rootKey, vm.targetKey]
+  );
+
+  const onExpand = useDispatchCallback(
+    (event: MouseEvent) => {
+      onContextMenuClose(event);
+      return subscribersGraphActions.Expand({
         target: vm.root.id,
-        key: node.id as string,
-        id: vm.target.id,
-      }),
-    [vm.target.id, node.id]
+        key: vm.targetKey,
+      });
+    },
+    [onContextMenuClose, vm.root.id, vm.targetKey]
+  );
+
+  const onExpandAll = useDispatchCallback(
+    (event: MouseEvent) => {
+      onContextMenuClose(event);
+      return subscribersGraphActions.ExpandAll({
+        target: vm.root.id,
+        key: vm.targetKey,
+      });
+    },
+    [onContextMenuClose, vm.root.id, vm.targetKey]
+  );
+
+  const onCollapse = useDispatchCallback(
+    (event: MouseEvent) => {
+      onContextMenuClose(event);
+      return subscribersGraphActions.Collapse({
+        target: vm.root.id,
+        key: vm.targetKey,
+      });
+    },
+    [onContextMenuClose, vm.root.id, vm.targetKey]
+  );
+
+  const onCollapseAll = useDispatchCallback(
+    (event: MouseEvent) => {
+      onContextMenuClose(event);
+      return subscribersGraphActions.CollapseAll({
+        target: vm.root.id,
+        key: vm.targetKey,
+      });
+    },
+    [onContextMenuClose, vm.root.id, vm.targetKey]
+  );
+
+  const onClick = useDispatchCallback(
+    (event: MouseEvent) =>
+      event.ctrlKey
+        ? subscribersGraphActions.FocusTarget({
+            target: vm.target.id,
+            fromKey: vm.rootKey,
+            toKey: vm.targetKey,
+          })
+        : vm.isExpanded
+        ? event.shiftKey
+          ? subscribersGraphActions.CollapseAll({
+              target: vm.root.id,
+              key: vm.targetKey,
+            })
+          : subscribersGraphActions.Collapse({
+              target: vm.root.id,
+              key: vm.targetKey,
+            })
+        : event.shiftKey
+        ? subscribersGraphActions.ExpandAll({
+            target: vm.root.id,
+            key: vm.targetKey,
+          })
+        : subscribersGraphActions.Expand({
+            target: vm.root.id,
+            key: vm.targetKey,
+          }),
+    [vm.isExpanded, vm.root.id, vm.targetKey]
   );
 
   useEffect(() => {
@@ -130,16 +250,29 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
   }, [vm.isSelected && vm.event.eventType]);
 
   return (
-    <g ref={elementRef} onClick={toggle}>
+    <g ref={elementRef} onClick={onClick}>
+      <Menu
+        open={menu !== undefined}
+        onClose={onContextMenuClose}
+        anchorReference="anchorPosition"
+        anchorPosition={menu?.position}
+      >
+        {menu?.focusOptionVisible && (
+          <MenuItem onClick={onFocus}>Focus</MenuItem>
+        )}
+        {menu?.expandOptionVisible && (
+          <MenuItem onClick={onExpand}>Expand</MenuItem>
+        )}
+        {menu?.collapseOptionVisible && (
+          <MenuItem onClick={onCollapse}>Collapse</MenuItem>
+        )}
+        <MenuItem onClick={onExpandAll}>Expand all</MenuItem>
+        <MenuItem onClick={onCollapseAll}>Collapse all</MenuItem>
+      </Menu>
       <g
         opacity={vm.isExpanded || vm.isRoot ? 1 : 0.5}
         style={{ transition: `opacity ${duration}s` }}
       >
-        <circle
-          r={vm.isExpanded ? 4 : 3}
-          fill={vm.nodeColor}
-          style={{ transition: `r ${duration}s` }}
-        />
         {vm.isSelected && (
           <circle
             ref={circleRef}
@@ -148,6 +281,12 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
             stroke={vm.selectedColor}
           />
         )}
+        <circle
+          r={vm.isExpanded ? 4 : 3}
+          fill={vm.nodeColor}
+          style={{ transition: `r ${duration}s` }}
+          onContextMenu={onContextMenuOpen}
+        />
         <text
           fontFamily="Monospace"
           fontStyle="oblique"
