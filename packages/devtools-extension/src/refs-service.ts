@@ -8,6 +8,7 @@ import {
   isObservableTarget,
   isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
+import { formatTimestamp } from '@app/utils/format-timestamp';
 
 class Getter {
   constructor(readonly target: unknown, readonly getter: () => unknown) {}
@@ -72,11 +73,6 @@ function property(key: string, val: Ref): PropertyRef {
     key: key,
     val: val,
   };
-}
-
-function getTimestamp(timestamp: number) {
-  const t = new Date(timestamp);
-  return `${t.getHours()}:${t.getMinutes()}:${t.getSeconds()}.${t.getMilliseconds()}`;
 }
 
 export class RefsService implements Refs {
@@ -425,7 +421,7 @@ export class RefsService implements Refs {
       }),
       property('Timestamp', {
         type: 'text',
-        text: getTimestamp(timestamp),
+        text: formatTimestamp(timestamp),
       }),
       ...(type === 'next'
         ? [property('Value', this.create(declaration.args?.[0], refId))]

@@ -19,7 +19,7 @@ function getTargetTimeframesVisitor(
   timeframes: Record<number, Timeframe>
 ) {
   const timeframe: Timeframe = {
-    startTime: Math.min(parentTimeframe.startTime, target.startTime),
+    startTime: Math.max(parentTimeframe.startTime, target.startTime),
     endTime: Math.min(parentTimeframe.endTime, target.endTime),
   };
   if (timeframes[target.id] === undefined) {
@@ -27,7 +27,7 @@ function getTargetTimeframesVisitor(
   } else {
     const { startTime, endTime } = timeframes[target.id];
     timeframes[target.id] = {
-      startTime: Math.max(startTime, timeframe.startTime),
+      startTime: Math.min(startTime, timeframe.startTime),
       endTime: Math.max(endTime, timeframe.endTime),
     };
   }

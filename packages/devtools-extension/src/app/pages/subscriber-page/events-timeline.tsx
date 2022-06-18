@@ -15,6 +15,7 @@ import {
   TimelineSlice,
 } from '@app/pages/subscriber-page/get-timeline';
 import { RelatedEvent } from '@app/protocols/insights';
+import { formatTimestamp } from '@app/utils/format-timestamp';
 
 const height = 24;
 const paddingX = 4;
@@ -115,18 +116,6 @@ export interface EventsTimelineProps {
   onTimestampSelected: (timestamp: number) => void;
 }
 
-function pad(number: number, length: number) {
-  return String(number).padStart(length, '0');
-}
-
-function getTimestamp(timestamp: number) {
-  const t = new Date(timestamp);
-  return `${pad(t.getHours(), 2)}:${pad(t.getMinutes(), 2)}:${pad(
-    t.getSeconds(),
-    2
-  )}.${pad(t.getMilliseconds(), 3)}`;
-}
-
 export function EventsTimeline({
   events,
   event,
@@ -174,7 +163,7 @@ export function EventsTimeline({
   }, [timestamp]);
 
   return (
-    <Tooltip followCursor title={getTimestamp(timestamp)}>
+    <Tooltip followCursor title={formatTimestamp(timestamp)}>
       <div
         ref={elementRef}
         onClick={onClick}
