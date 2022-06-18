@@ -89,13 +89,14 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   );
 
 interface MenuState {
-  position: {
+  open: boolean;
+  position?: {
     top: number;
     left: number;
   };
-  focusOptionVisible: boolean;
-  expandOptionVisible: boolean;
-  collapseOptionVisible: boolean;
+  focusOptionVisible?: boolean;
+  expandOptionVisible?: boolean;
+  collapseOptionVisible?: boolean;
 }
 
 export const SubscriberGraphNodeRenderer = React.forwardRef<
@@ -114,10 +115,11 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
   const circleRef = useRef<SVGCircleElement | null>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
 
-  const [menu, setMenu] = useState<MenuState | undefined>(undefined);
+  const [menu, setMenu] = useState<MenuState>({ open: false });
   const onContextMenuOpen = useCallback(
     (event: MouseEvent) => {
       setMenu({
+        open: true,
         position: { top: event.clientY, left: event.clientX },
         focusOptionVisible: !vm.isRoot,
         expandOptionVisible: !vm.isExpanded,
@@ -131,11 +133,11 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
 
   const onContextMenuClose = useCallback(
     (event: MouseEvent) => {
-      setMenu(undefined);
+      setMenu({ ...menu, open: false });
       event.preventDefault();
       event.stopPropagation();
     },
-    [setMenu]
+    [setMenu, menu]
   );
 
   const onFocus = useDispatchCallback(
@@ -252,18 +254,18 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
   return (
     <g ref={elementRef} onClick={onClick}>
       <Menu
-        open={menu !== undefined}
+        open={menu.open}
         onClose={onContextMenuClose}
         anchorReference="anchorPosition"
-        anchorPosition={menu?.position}
+        anchorPosition={menu.position}
       >
-        {menu?.focusOptionVisible && (
+        {menu.focusOptionVisible && (
           <MenuItem onClick={onFocus}>Focus</MenuItem>
         )}
-        {menu?.expandOptionVisible && (
+        {menu.expandOptionVisible && (
           <MenuItem onClick={onExpand}>Expand</MenuItem>
         )}
-        {menu?.collapseOptionVisible && (
+        {menu.collapseOptionVisible && (
           <MenuItem onClick={onCollapse}>Collapse</MenuItem>
         )}
         <MenuItem onClick={onExpandAll}>Expand all</MenuItem>
