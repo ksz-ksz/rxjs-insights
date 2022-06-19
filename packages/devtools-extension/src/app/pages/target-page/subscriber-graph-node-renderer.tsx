@@ -19,15 +19,15 @@ import {
   getDirection,
   getEventColors,
   getTargetColors,
-} from '@app/pages/subscriber-page/subscriber-graph-utils';
+} from '@app/pages/target-page/subscriber-graph-utils';
 import gsap from 'gsap';
 import { createSelector, useDispatchCallback } from '@lib/store';
 import {
-  activeSubscriberStateSelector,
-  activeSubscriberUiStateSelector,
+  activeTargetStateSelector,
+  activeTargetUiStateSelector,
 } from '@app/selectors/active-target-state-selector';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
-import { RelatedTargetHierarchyNode } from '@app/pages/subscriber-page/related-target-hierarchy-node';
+import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 
 const circleRadius = 5;
 const circleCircumference = 2 * Math.PI * circleRadius;
@@ -46,14 +46,10 @@ function getLocationStrings(locations: Locations) {
 
 const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(
-    [
-      activeSubscriberStateSelector,
-      activeSubscriberUiStateSelector,
-      timeSelector,
-    ],
-    ([activeSubscriberState, activeSubscriberUiState, time]) => {
-      const { ref, relations } = activeSubscriberState!;
-      const { expandedKeys } = activeSubscriberUiState!;
+    [activeTargetStateSelector, activeTargetUiStateSelector, timeSelector],
+    ([activeTargetState, activeTargetUiState, time]) => {
+      const { ref, relations } = activeTargetState!;
+      const { expandedKeys } = activeTargetUiState!;
       const root = relations.targets[ref.id];
       const rootKey = String(ref.id);
       const target = relations.targets[node.target.id];

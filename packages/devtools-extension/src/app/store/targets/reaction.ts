@@ -27,7 +27,7 @@ import {
 import { targetsClient } from '@app/clients/targets';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { RouterSlice } from '@app/store/router';
-import { activeTargetSelector } from '@app/selectors/targets-selectors';
+import { activeTargetIdSelector } from '@app/selectors/targets-selectors';
 import { createUrl } from '@lib/store-router';
 import { router } from '@app/router';
 import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
@@ -75,17 +75,13 @@ export const targetReaction = combineReactions()
   )
   .add(
     createReaction(
-      (action$, { activeTarget$ }) =>
+      (action$, { activeTargetId$ }) =>
         action$.pipe(
           filterActions(appBarActions.CloseTarget),
-          withLatestFrom(activeTarget$),
-          switchMap(([action, activeTarget]) => {
+          withLatestFrom(activeTargetId$),
+          switchMap(([action, activeTargetId]) => {
             const target = action.payload.target;
-            if (
-              activeTarget &&
-              target.type === activeTarget.type &&
-              target.id === activeTarget.id
-            ) {
+            if (activeTargetId !== undefined && target.id === activeTargetId) {
               return of(
                 router.actions.Navigate({ url: createUrl(['dashboard']) })
               );
@@ -95,7 +91,7 @@ export const targetReaction = combineReactions()
           })
         ),
       (store: Store<RouterSlice>) => ({
-        activeTarget$: store.pipe(select(activeTargetSelector)),
+        activeTargetId$: store.pipe(select(activeTargetIdSelector)),
       })
     )
   );

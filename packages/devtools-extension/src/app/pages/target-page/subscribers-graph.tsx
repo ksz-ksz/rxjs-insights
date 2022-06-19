@@ -1,17 +1,17 @@
 import { RelatedTarget, Relations } from '@app/protocols/insights';
 import { createSelector } from '@lib/store';
 import {
-  activeSubscriberStateSelector,
-  activeSubscriberUiStateSelector,
+  activeTargetStateSelector,
+  activeTargetUiStateSelector,
 } from '@app/selectors/active-target-state-selector';
 import { timeSelector } from '@app/selectors/insights-selectors';
 import { getDoubleTree } from '@app/components/tree';
 import { useSelector } from '@app/store';
 import { Graph } from '@app/components/graph';
 import React from 'react';
-import { SubscriberGraphNodeRenderer } from '@app/pages/subscriber-page/subscriber-graph-node-renderer';
-import { SubscriberGraphLinkRenderer } from '@app/pages/subscriber-page/subscriber-graph-link-renderer';
-import { RelatedTargetHierarchyNode } from '@app/pages/subscriber-page/related-target-hierarchy-node';
+import { SubscriberGraphNodeRenderer } from '@app/pages/target-page/subscriber-graph-node-renderer';
+import { SubscriberGraphLinkRenderer } from '@app/pages/target-page/subscriber-graph-link-renderer';
+import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 
 function isKeyVisible(visibleKeys: Set<string>, key: string) {
   return visibleKeys.has(key);
@@ -129,10 +129,10 @@ function getVisibleKeys(
 }
 
 const hierarchyTreeSelector = createSelector(
-  [activeSubscriberStateSelector, activeSubscriberUiStateSelector],
-  ([activeSubscriberState, activeSubscriberUiState]) => {
-    const { ref, relations } = activeSubscriberState!;
-    const { expandedKeys } = activeSubscriberUiState!;
+  [activeTargetStateSelector, activeTargetUiStateSelector],
+  ([activeTargetState, activeTargetUiState]) => {
+    const { ref, relations } = activeTargetState!;
+    const { expandedKeys } = activeTargetUiState!;
     const target = relations.targets[ref.id];
     const visibleKeys = getVisibleKeys(target, relations, expandedKeys);
     const sources = getRelatedHierarchyNode(

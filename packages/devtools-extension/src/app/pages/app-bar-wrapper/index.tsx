@@ -1,33 +1,27 @@
 import { AppBar, Box, IconButton, Tab, Tabs, Toolbar } from '@mui/material';
 import React from 'react';
 import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
-import {
-  dashboardRouteToken,
-  observableRouteToken,
-  router,
-  subscriberRouteToken,
-} from '@app/router';
+import { dashboardRouteToken, router, targetRouteToken } from '@app/router';
 import { Close, Refresh } from '@mui/icons-material';
 import { useDispatch, useSelector } from '@app/store';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { targetsSelector } from '@app/store/targets';
-import { ObservablePage } from '@app/pages/observable-page';
-import { SubscriberPage } from '@app/pages/subscriber-page';
+import { TargetPage } from '@app/pages/target-page';
 import { DashboardPage } from '@app/pages/dashboard-page';
+import { activeTargetIdSelector } from '@app/selectors/targets-selectors';
 
 export function AppBarWrapper() {
   const dispatch = useDispatch();
 
   const targets = useSelector(targetsSelector).targets;
+  const activeTargetId = useSelector(activeTargetIdSelector);
 
-  const url = useSelector(router.selectors.url);
-  const link = url.path.join('/');
   return (
     <Box display="flex" height="100%" flexDirection="column">
       <AppBar color="transparent" position="static" sx={{ flex: '0 0 0' }}>
         <Toolbar>
           <Tabs
-            value={link}
+            value={activeTargetId}
             variant="scrollable"
             scrollButtons="auto"
             aria-label="scrollable auto tabs example"
@@ -44,8 +38,8 @@ export function AppBarWrapper() {
               <Tab
                 component={RouterLink}
                 router={router}
-                value={`${target.type}/${target.id}`}
-                to={createUrl([target.type, String(target.id)])}
+                value={target.id}
+                to={createUrl(['target', String(target.id)])}
                 label={
                   <Box>
                     {target.name} #{target.id}
@@ -87,13 +81,8 @@ export function AppBarWrapper() {
         />
         <RouterOutlet
           router={router}
-          token={observableRouteToken}
-          component={ObservablePage}
-        />
-        <RouterOutlet
-          router={router}
-          token={subscriberRouteToken}
-          component={SubscriberPage}
+          token={targetRouteToken}
+          component={TargetPage}
         />
       </Box>
     </Box>

@@ -29,9 +29,8 @@ import {
 import {
   Insights,
   InsightsChannel,
-  ObservableState,
   Relations,
-  SubscriberState,
+  TargetState,
 } from '@app/protocols/insights';
 import {
   Trace,
@@ -40,7 +39,13 @@ import {
   TracesChannel,
 } from '@app/protocols/traces';
 import { RefsService } from './refs-service';
-import { EventRef, Refs, RefsChannel } from '@app/protocols/refs';
+import {
+  EventRef,
+  ObservableRef,
+  Refs,
+  RefsChannel,
+  SubscriberRef,
+} from '@app/protocols/refs';
 import {
   getDestinationEvents,
   getObservable,
@@ -269,8 +274,8 @@ function collectRelatedTargets(
   }
 }
 
-function getTargetState(target: Subscriber | Observable) {
-  const ref = refs.create(target);
+function getTargetState(target: Subscriber | Observable): TargetState {
+  const ref = refs.create(target) as ObservableRef | SubscriberRef;
   const relations: Relations = {
     targets: {},
     events: {},
@@ -295,20 +300,12 @@ function getTargetState(target: Subscriber | Observable) {
 }
 
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
-  getObservableState(observableId: number): ObservableState | undefined {
-    const observable = targets[observableId];
+  getTargetState(targetId: number): TargetState | undefined {
+    const observable = targets[targetId];
     if (!observable) {
       return undefined;
     } else {
-      return getTargetState(observable) as ObservableState;
-    }
-  },
-  getSubscriberState(subscriberId: number): SubscriberState | undefined {
-    const subscriber = targets[subscriberId];
-    if (!subscriber) {
-      return undefined;
-    } else {
-      return getTargetState(subscriber) as SubscriberState;
+      return getTargetState(observable);
     }
   },
 });

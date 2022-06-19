@@ -1,6 +1,6 @@
 import { RelatedEvent, Relations } from '@app/protocols/insights';
-import { Timeframe } from '@app/pages/subscriber-page/get-target-timeframes';
-import { isExcluded } from '@app/pages/subscriber-page/is-excluded';
+import { Timeframe } from '@app/pages/target-page/get-target-timeframes';
+import { isExcluded } from '@app/pages/target-page/is-excluded';
 
 export function getIncludedEvents(
   relations: Relations,

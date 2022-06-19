@@ -27,6 +27,7 @@ const SidePanelSectionHeaderDiv = styled('div')(({ theme }) => ({
 }));
 const SidePanelSectionBodyDiv = styled('div')({
   overflow: 'hidden',
+  height: '100%',
 });
 
 export interface SidePanelProps {

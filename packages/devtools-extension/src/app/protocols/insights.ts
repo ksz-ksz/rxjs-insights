@@ -52,17 +52,11 @@ export interface Relations {
   tasks: Record<number, RelatedTask>;
 }
 
-export interface SubscriberState {
-  ref: SubscriberRef;
-  relations: Relations;
-}
-
-export interface ObservableState {
-  ref: ObservableRef;
+export interface TargetState {
+  ref: ObservableRef | SubscriberRef;
   relations: Relations;
 }
 
 export interface Insights {
-  getObservableState(observableId: number): ObservableState | undefined;
-  getSubscriberState(subscriberId: number): SubscriberState | undefined;
+  getTargetState(targetId: number): TargetState | undefined;
 }

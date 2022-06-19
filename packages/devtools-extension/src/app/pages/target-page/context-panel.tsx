@@ -2,7 +2,7 @@ import React from 'react';
 import { styled } from '@mui/material';
 import { RefOutlet } from '@app/components/ref-outlet';
 import { createSelector } from '@lib/store';
-import { activeSubscriberStateSelector } from '@app/selectors/active-target-state-selector';
+import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { timeSelector } from '@app/selectors/insights-selectors';
 import { useSelector } from '@app/store';
 
@@ -11,12 +11,14 @@ const ContextPanelDiv = styled('div')({
   flexDirection: 'column',
   height: '100%',
   overflow: 'auto',
+  whiteSpace: 'nowrap',
+  paddingRight: '1rem',
 });
 
 const vmSelector = createSelector(
-  [activeSubscriberStateSelector, timeSelector],
-  ([activeSubscriberState, time]) => {
-    const { ref, relations } = activeSubscriberState!;
+  [activeTargetStateSelector, timeSelector],
+  ([activeTargetState, time]) => {
+    const { ref, relations } = activeTargetState!;
     const target = ref;
     const event = relations.events[time];
 

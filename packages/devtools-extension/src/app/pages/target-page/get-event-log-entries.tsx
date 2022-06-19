@@ -1,7 +1,7 @@
 import { RelatedEvent, RelatedTask, Relations } from '@app/protocols/insights';
 import { partition } from '@app/utils/partition';
-import { isExcluded } from '@app/pages/subscriber-page/is-excluded';
-import { Timeframe } from '@app/pages/subscriber-page/get-target-timeframes';
+import { isExcluded } from '@app/pages/target-page/is-excluded';
+import { Timeframe } from '@app/pages/target-page/get-target-timeframes';
 
 export interface EventEntry {
   type: 'event';
@@ -176,8 +176,10 @@ export function getEventLogEntries(
   events: RelatedEvent[],
   timeframes: Record<number, Timeframe>
 ) {
+  if (events.length === 0) {
+    return [];
+  }
   const taskNodes = getTaskNodes(events, relations, timeframes);
-
   const entries: EventLogEntry[] = [];
   const indents: Record<number, number> = {};
   for (const taskNode of taskNodes) {

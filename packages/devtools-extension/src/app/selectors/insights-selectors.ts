@@ -5,16 +5,10 @@ export const insightsSelector = createSelector(
   (state: InsightsSlice) => state.insights
 );
 
-export const observableStateSelector = (observableId: number) =>
+export const targetStateSelector = (targetId: number) =>
   createSelector(
     [insightsSelector],
-    ([insights]) => insights.observables[observableId]
-  );
-
-export const subscriberStateSelector = (subscriberId: number) =>
-  createSelector(
-    [insightsSelector],
-    ([insights]) => insights.subscribers[subscriberId]
+    ([insights]) => insights.targets[targetId]
   );
 
 export const timeSelector = createSelector(

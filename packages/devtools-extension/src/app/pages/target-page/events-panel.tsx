@@ -7,8 +7,8 @@ import {
   timeSelector,
 } from '@app/selectors/insights-selectors';
 import {
-  activeSubscriberStateSelector,
-  activeSubscriberUiStateSelector,
+  activeTargetStateSelector,
+  activeTargetUiStateSelector,
 } from '@app/selectors/active-target-state-selector';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { getEventElementId } from '@app/utils/get-event-element-id';
@@ -16,14 +16,14 @@ import { RefOutlet } from '@app/components/ref-outlet';
 import {
   EventLogEntry,
   getEventLogEntries,
-} from '@app/pages/subscriber-page/get-event-log-entries';
+} from '@app/pages/target-page/get-event-log-entries';
 import { createSelector, useDispatchCallback } from '@lib/store';
-import { getTargetTimeframes } from '@app/pages/subscriber-page/get-target-timeframes';
-import { getEvents } from '@app/pages/subscriber-page/get-events';
-import { getIncludedEvents } from '@app/pages/subscriber-page/get-included-events';
-import { EventsTimeline } from '@app/pages/subscriber-page/events-timeline';
-import { EventsControls } from '@app/pages/subscriber-page/events-controls';
-import { getTimeline } from '@app/pages/subscriber-page/get-timeline';
+import { getTargetTimeframes } from '@app/pages/target-page/get-target-timeframes';
+import { getEvents } from '@app/pages/target-page/get-events';
+import { getIncludedEvents } from '@app/pages/target-page/get-included-events';
+import { EventsTimeline } from '@app/pages/target-page/events-timeline';
+import { EventsControls } from '@app/pages/target-page/events-controls';
+import { getTimeline } from '@app/pages/target-page/get-timeline';
 
 const IndentSpan = styled('span')(({ theme }) => ({
   display: 'inline-block',
@@ -167,10 +167,10 @@ function findFirstIndex<T>(
 }
 
 const eventsSelector = createSelector(
-  [activeSubscriberStateSelector, activeSubscriberUiStateSelector],
-  ([activeSubscriberState, activeSubscriberUiState]) => {
-    const { ref, relations } = activeSubscriberState!;
-    const { expandedKeys } = activeSubscriberUiState!;
+  [activeTargetStateSelector, activeTargetUiStateSelector],
+  ([activeTargetState, activeTargetUiState]) => {
+    const { ref, relations } = activeTargetState!;
+    const { expandedKeys } = activeTargetUiState!;
     const target = relations.targets[ref.id];
     const timeframes = getTargetTimeframes(target, relations, expandedKeys);
     const allEvents = getEvents(relations);

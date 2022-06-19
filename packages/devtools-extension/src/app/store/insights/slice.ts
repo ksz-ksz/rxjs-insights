@@ -1,10 +1,6 @@
 import { createReducer, Slice } from '@lib/store';
 import { insightsActions } from '@app/actions/insights-actions';
-import {
-  ObservableState,
-  Relations,
-  SubscriberState,
-} from '@app/protocols/insights';
+import { Relations, TargetState } from '@app/protocols/insights';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 
@@ -15,9 +11,8 @@ export interface SubscriberUiState {
 export interface InsightsState {
   time: number;
   playing: boolean;
-  subscribersUi: Record<number, SubscriberUiState>;
-  subscribers: Record<number, SubscriberState>;
-  observables: Record<number, ObservableState>;
+  targetsUi: Record<number, SubscriberUiState>;
+  targets: Record<number, TargetState>;
 }
 
 export type InsightsSlice = Slice<'insights', InsightsState>;
@@ -62,22 +57,15 @@ function expandVisitor(
 export const insightsReducer = createReducer('insights', {
   time: 0,
   playing: false,
-  subscribersUi: {},
-  subscribers: {},
-  observables: {},
+  targetsUi: {},
+  targets: {},
 } as InsightsState)
-  .add(insightsActions.ObservableStateLoaded, (state, action) => {
-    const { state: observableState } = action.payload;
-    if (observableState !== undefined) {
-      state.observables[observableState.ref.id] = observableState;
-    }
-  })
-  .add(insightsActions.SubscriberStateLoaded, (state, action) => {
-    const { state: subscriberState } = action.payload;
-    if (subscriberState !== undefined) {
-      state.subscribers[subscriberState.ref.id] = subscriberState;
-      state.subscribersUi[subscriberState.ref.id] = {
-        expandedKeys: new Set([String(subscriberState.ref.id)]),
+  .add(insightsActions.TargetStateLoaded, (state, action) => {
+    const { state: targetState } = action.payload;
+    if (targetState !== undefined) {
+      state.targets[targetState.ref.id] = targetState;
+      state.targetsUi[targetState.ref.id] = {
+        expandedKeys: new Set([String(targetState.ref.id)]),
       };
     }
   })
@@ -98,23 +86,23 @@ export const insightsReducer = createReducer('insights', {
   })
   .add(subscribersGraphActions.Expand, (state, action) => {
     const { target, key } = action.payload;
-    const { expandedKeys } = state.subscribersUi[target];
+    const { expandedKeys } = state.targetsUi[target];
     expandedKeys.add(key);
   })
   .add(subscribersGraphActions.Collapse, (state, action) => {
     const { target, key } = action.payload;
-    const { expandedKeys } = state.subscribersUi[target];
+    const { expandedKeys } = state.targetsUi[target];
     expandedKeys.delete(key);
   })
   .add(subscribersGraphActions.ExpandAll, (state, action) => {
     const { target, key } = action.payload;
-    const { relations } = state.subscribers[target];
-    const { expandedKeys } = state.subscribersUi[target];
+    const { relations } = state.targets[target];
+    const { expandedKeys } = state.targetsUi[target];
     expandVisitor(new Set(), relations, expandedKeys, key);
   })
   .add(subscribersGraphActions.CollapseAll, (state, action) => {
     const { target, key } = action.payload;
-    const { expandedKeys } = state.subscribersUi[target];
+    const { expandedKeys } = state.targetsUi[target];
     for (const expandedKey of Array.from(expandedKeys.values())) {
       if (expandedKey.startsWith(key)) {
         expandedKeys.delete(expandedKey);

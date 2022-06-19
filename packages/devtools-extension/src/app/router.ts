@@ -7,13 +7,12 @@ import {
 import { JSXElementConstructor } from 'react';
 import { select, Store } from '@lib/store';
 import { statusSelector, StatusSlice } from '@app/store/status';
-import { subscriberStateSelector } from '@app/selectors/insights-selectors';
+import { targetStateSelector } from '@app/selectors/insights-selectors';
 
 export const statusRouteToken = createRouteToken('status');
 export const dashboardRouteToken = createRouteToken('dashboard');
 export const appBarRouteToken = createRouteToken('appBar');
-export const observableRouteToken = createRouteToken('observable');
-export const subscriberRouteToken = createRouteToken('subscriber');
+export const targetRouteToken = createRouteToken('target');
 
 export const routerConfig: RouterConfig<
   void,
@@ -43,19 +42,11 @@ export const routerConfig: RouterConfig<
           path: ['dashboard'],
         },
         {
-          token: observableRouteToken,
-          path: ['observable', ':observableId'],
-        },
-        {
-          token: subscriberRouteToken,
-          path: ['subscriber', ':subscriberId'],
+          token: targetRouteToken,
+          path: ['target', ':targetId'],
           await(store, url, route) {
             return store.pipe(
-              select(
-                subscriberStateSelector(
-                  parseInt(route.params!.subscriberId, 10)
-                )
-              )
+              select(targetStateSelector(Number(route.params!.targetId)))
             );
           },
         },

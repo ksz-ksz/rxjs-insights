@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { SidePanel, SidePanelSection } from '@app/components';
-import { EventsPanel } from '@app/pages/subscriber-page/events-panel';
-import { SubscribersGraph } from '@app/pages/subscriber-page/subscribers-graph';
-import { ContextPanel } from '@app/pages/subscriber-page/context-panel';
+import { EventsPanel } from '@app/pages/target-page/events-panel';
+import { SubscribersGraph } from '@app/pages/target-page/subscribers-graph';
+import { ContextPanel } from '@app/pages/target-page/context-panel';
 
-export function SubscriberPage() {
+export function TargetPage() {
   return (
     <Box
       sx={{

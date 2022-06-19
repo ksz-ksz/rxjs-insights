@@ -1,32 +1,18 @@
 import { createSelector } from '@lib/store';
-import {
-  observableRouteToken,
-  router,
-  subscriberRouteToken,
-} from '@app/router';
-import { Target } from '@app/protocols/targets';
+import { router, targetRouteToken } from '@app/router';
 import { TargetsSlice } from '@app/store/targets';
 
 export const targetsSelector = createSelector(
   (state: TargetsSlice) => state.targets
 );
 
-export const activeTargetSelector = createSelector(
+export const activeTargetIdSelector = createSelector(
   [router.selectors.routes],
-  ([routes]): Omit<Target, 'name'> | undefined => {
+  ([routes]): number | undefined => {
     for (let route of routes) {
       const routeToken = router.getRouteConfig(route.routeConfigId)?.token;
-      switch (routeToken) {
-        case observableRouteToken:
-          return {
-            type: 'observable',
-            id: parseInt(route.params!.observableId, 10),
-          };
-        case subscriberRouteToken:
-          return {
-            type: 'subscriber',
-            id: parseInt(route.params!.subscriberId, 10),
-          };
+      if (routeToken === targetRouteToken) {
+        return Number(route.params!.targetId);
       }
     }
     return undefined;

@@ -5,11 +5,7 @@ import {
   filterActions,
 } from '@lib/store';
 import { filterRoute } from '@lib/store-router';
-import {
-  observableRouteToken,
-  router,
-  subscriberRouteToken,
-} from '@app/router';
+import { router, targetRouteToken } from '@app/router';
 import {
   concat,
   delay,
@@ -32,33 +28,14 @@ export const insightsReaction = combineReactions()
     createReaction((action$) =>
       action$.pipe(
         filterActions(router.actions.RouteEnter),
-        filterRoute(router, observableRouteToken),
+        filterRoute(router, targetRouteToken),
         switchMap((route) => {
-          const observableId = route.params?.observableId;
-          return observableId !== undefined
-            ? from(
-                insightsClient.getObservableState(parseInt(observableId, 10))
-              )
+          const targetId = route.params?.targetId;
+          return targetId !== undefined
+            ? from(insightsClient.getTargetState(parseInt(targetId, 10)))
             : EMPTY;
         }),
-        map((state) => insightsActions.ObservableStateLoaded({ state }))
-      )
-    )
-  )
-  .add(
-    createReaction((action$) =>
-      action$.pipe(
-        filterActions(router.actions.RouteEnter),
-        filterRoute(router, subscriberRouteToken),
-        switchMap((route) => {
-          const subscriberId = route.params?.subscriberId;
-          return subscriberId !== undefined
-            ? from(
-                insightsClient.getSubscriberState(parseInt(subscriberId, 10))
-              )
-            : EMPTY;
-        }),
-        map((state) => insightsActions.SubscriberStateLoaded({ state }))
+        map((state) => insightsActions.TargetStateLoaded({ state }))
       )
     )
   )
@@ -104,7 +81,7 @@ export const insightsReaction = combineReactions()
                 ),
                 action$.pipe(
                   filterActions(router.actions.RouteLeave),
-                  filterRoute(router, subscriberRouteToken)
+                  filterRoute(router, targetRouteToken)
                 )
               )
             ),

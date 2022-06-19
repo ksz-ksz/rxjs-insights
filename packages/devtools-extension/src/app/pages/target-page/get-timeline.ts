@@ -34,10 +34,6 @@ export function getTimestampOffset(
   );
 }
 
-// offset*2+px =  w *(t-st) /(et-st)
-// (offset*2+px)*(et-st)/w + st= (t)
-// (offset*2+px)*(et-st)/w + st= (t)
-
 export function getOffsetTimestamp(
   offset: number,
   startTimestamp: number,
@@ -54,6 +50,13 @@ export interface Timeline {
 }
 
 export function getTimeline(events: RelatedEvent[], width: number): Timeline {
+  if (events.length === 0) {
+    return {
+      slices: [],
+      startTimestamp: 0,
+      endTimestamp: 0,
+    };
+  }
   const startTimestamp = events[0].timestamp;
   const endTimestamp = events.at(-1)!.timestamp;
   const slices: TimelineSlice[] = [];

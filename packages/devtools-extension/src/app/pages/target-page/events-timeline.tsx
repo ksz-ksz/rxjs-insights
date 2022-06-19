@@ -13,7 +13,7 @@ import {
   getTimeline,
   getTimestampOffset,
   TimelineSlice,
-} from '@app/pages/subscriber-page/get-timeline';
+} from '@app/pages/target-page/get-timeline';
 import { RelatedEvent } from '@app/protocols/insights';
 import { formatTimestamp } from '@app/utils/format-timestamp';
 
