@@ -13,6 +13,7 @@ const ContextPanelDiv = styled('div')({
   overflow: 'auto',
   whiteSpace: 'nowrap',
   paddingRight: '1rem',
+  cursor: 'default',
 });
 
 const vmSelector = createSelector(

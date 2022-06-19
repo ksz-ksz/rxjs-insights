@@ -494,7 +494,6 @@ const RefOutletDiv = styled('div')({
 const RefOutletLabelDiv = styled('div')({
   display: 'inline-block',
   textAlign: 'left',
-  cursor: 'default',
 });
 
 const RefOutletPropsDiv = styled('div')({

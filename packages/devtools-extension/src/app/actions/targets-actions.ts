@@ -1,9 +1,9 @@
 import { createActions } from '@lib/store';
-import { Target } from '@app/protocols/targets';
+import { TargetRef } from '@app/protocols/refs';
 
 export interface TargetsActions {
-  TargetsLoaded: { targets: Target[] };
-  TargetNotificationReceived: { target: Target };
+  TargetsLoaded: { targets: TargetRef[] };
+  TargetNotificationReceived: { target: TargetRef };
 }
 
 export const targetsActions = createActions<TargetsActions>('Targets');

@@ -21,7 +21,7 @@ import {
   Subscriber,
   Task,
 } from '@rxjs-insights/recorder';
-import { Target, Targets, TargetsChannel } from '@app/protocols/targets';
+import { Targets, TargetsChannel } from '@app/protocols/targets';
 import {
   TargetsNotifications,
   TargetsNotificationsChannel,
@@ -45,6 +45,7 @@ import {
   Refs,
   RefsChannel,
   SubscriberRef,
+  TargetRef,
 } from '@app/protocols/refs';
 import {
   getDestinationEvents,
@@ -133,16 +134,12 @@ startServer<Instrumentation>(
 const targets: Record<number, Observable | Subscriber> = {};
 
 startServer<Targets>(createInspectedWindowEvalServerAdapter(TargetsChannel), {
-  releaseTarget(target: Target) {
-    delete targets[target.id];
+  releaseTarget(targetId) {
+    delete targets[targetId];
   },
-  getTargets(): Target[] {
+  getTargets() {
     return Object.values(targets).map(
-      ({ id, type, declaration: { name } }): Target => ({
-        type,
-        id,
-        name,
-      })
+      (target) => refs.create(target, undefined, false) as TargetRef
     );
   },
 });
@@ -310,24 +307,23 @@ startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
   },
 });
 
-function inspect(target: ObservableLike | SubscriberLike) {
-  if (isSubscriberTarget(target)) {
-    const subscriber = getSubscriber(target);
-    targets[subscriber.id] = subscriber;
-    targetsNotificationsClient.notifyTarget({
-      type: 'subscriber',
-      id: subscriber.id,
-      name: subscriber.declaration.name,
-    });
+function getTarget(maybeTarget: ObservableLike | SubscriberLike) {
+  if (isSubscriberTarget(maybeTarget)) {
+    return getSubscriber(maybeTarget);
   }
-  if (isObservableTarget(target)) {
-    const observable = getObservable(target);
-    targets[observable.id] = observable;
-    targetsNotificationsClient.notifyTarget({
-      type: 'observable',
-      id: observable.id,
-      name: observable.declaration.name,
-    });
+  if (isObservableTarget(maybeTarget)) {
+    return getObservable(maybeTarget);
+  }
+  return undefined;
+}
+
+function inspect(maybeTarget: ObservableLike | SubscriberLike) {
+  const target = getTarget(maybeTarget);
+  if (target) {
+    targets[target.id] = target;
+    void targetsNotificationsClient.notifyTarget(
+      refs.create(target, undefined, false) as TargetRef
+    );
   }
 }
 

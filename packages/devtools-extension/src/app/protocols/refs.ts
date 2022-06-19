@@ -96,6 +96,8 @@ export interface SubscriberRef {
   tags: string[];
 }
 
+export type TargetRef = ObservableRef | SubscriberRef;
+
 export interface EventRef {
   type: 'event';
   refId?: number;

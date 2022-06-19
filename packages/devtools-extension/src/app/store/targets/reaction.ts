@@ -12,7 +12,6 @@ import {
   TargetsNotifications,
   TargetsNotificationsChannel,
 } from '@app/protocols/targets-notifications';
-import { Target } from '@app/protocols/targets';
 import { targetsActions } from '@app/actions/targets-actions';
 import {
   EMPTY,
@@ -31,6 +30,7 @@ import { activeTargetIdSelector } from '@app/selectors/targets-selectors';
 import { createUrl } from '@lib/store-router';
 import { router } from '@app/router';
 import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
+import { TargetRef } from '@app/protocols/refs';
 
 export const targetReaction = combineReactions()
   .add(
@@ -53,7 +53,7 @@ export const targetReaction = combineReactions()
         startServer<TargetsNotifications>(
           createChromeRuntimeServerAdapter(TargetsNotificationsChannel),
           {
-            notifyTarget(target: Target) {
+            notifyTarget(target: TargetRef) {
               observer.next(
                 targetsActions.TargetNotificationReceived({ target })
               );
@@ -68,7 +68,7 @@ export const targetReaction = combineReactions()
       action$.pipe(
         filterActions(appBarActions.CloseTarget),
         effect((action) => {
-          void targetsClient.releaseTarget(action.payload.target);
+          void targetsClient.releaseTarget(action.payload.targetId);
         })
       )
     )
@@ -80,8 +80,8 @@ export const targetReaction = combineReactions()
           filterActions(appBarActions.CloseTarget),
           withLatestFrom(activeTargetId$),
           switchMap(([action, activeTargetId]) => {
-            const target = action.payload.target;
-            if (activeTargetId !== undefined && target.id === activeTargetId) {
+            const targetId = action.payload.targetId;
+            if (activeTargetId !== undefined && targetId === activeTargetId) {
               return of(
                 router.actions.Navigate({ url: createUrl(['dashboard']) })
               );

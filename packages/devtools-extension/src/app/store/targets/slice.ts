@@ -1,10 +1,10 @@
 import { createReducer, Slice } from '@lib/store';
-import { Target } from '@app/protocols/targets';
 import { targetsActions } from '@app/actions/targets-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
+import { TargetRef } from '@app/protocols/refs';
 
 export interface TargetsState {
-  targets: Target[];
+  targets: TargetRef[];
 }
 
 export type TargetsSlice = Slice<'targets', TargetsState>;
@@ -20,10 +20,6 @@ export const targetsReducer = createReducer('targets', {
   })
   .add(appBarActions.CloseTarget, (state, action) => {
     state.targets = state.targets.filter(
-      (target) =>
-        !(
-          target.type === action.payload.target.type &&
-          target.id === action.payload.target.id
-        )
+      (target) => !(target.id === action.payload.targetId)
     );
   });

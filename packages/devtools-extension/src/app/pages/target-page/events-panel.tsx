@@ -59,6 +59,7 @@ const EventsLogDiv = styled('div')({
   whiteSpace: 'nowrap',
   height: '100%',
   overflow: 'auto',
+  cursor: 'default',
 });
 
 function Indent({ indent }: IndentProps) {

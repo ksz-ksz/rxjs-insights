@@ -1,7 +1,7 @@
-import { Target } from '@app/protocols/targets';
+import { TargetRef } from '@app/protocols/refs';
 
 export const TargetsNotificationsChannel = 'TargetsNotificationsChannel';
 
 export interface TargetsNotifications {
-  notifyTarget(target: Target): void;
+  notifyTarget(target: TargetRef): void;
 }
