@@ -5,7 +5,7 @@ import {
   activeTargetUiStateSelector,
 } from '@app/selectors/active-target-state-selector';
 import { timeSelector } from '@app/selectors/insights-selectors';
-import { getDoubleTree } from '@app/components/tree';
+import { getDoubleTree, LinkData, NodeData } from '@app/components/tree';
 import { useSelector } from '@app/store';
 import { Graph } from '@app/components/graph';
 import React from 'react';
@@ -132,7 +132,7 @@ const hierarchyTreeSelector = createSelector(
   [activeTargetStateSelector, activeTargetUiStateSelector],
   ([activeTargetState, activeTargetUiState]) => {
     const { target, relations } = activeTargetState!;
-    const { expandedKeys } = activeTargetUiState!;
+    const { expandedKeys, keysMapping } = activeTargetUiState!;
     const visibleKeys = getVisibleKeys(target, relations, expandedKeys);
     const sources = getRelatedHierarchyNode(
       relations,
@@ -148,15 +148,22 @@ const hierarchyTreeSelector = createSelector(
       String(target.id),
       visibleKeys
     );
+    const getNodeKey = (node: NodeData<RelatedTargetHierarchyNode>) =>
+      keysMapping[node.data.key];
+    const getLinkKey = (link: LinkData<RelatedTargetHierarchyNode>) =>
+      `${keysMapping[link.source.data.key]}:${
+        keysMapping[link.target.data.key]
+      }`;
 
-    return { target, sources, destinations };
+    return { target, sources, destinations, getNodeKey, getLinkKey };
   }
 );
 
 const vmSelector = createSelector(
   [hierarchyTreeSelector, timeSelector],
   ([hierarchyTree, time]) => {
-    const { target, sources, destinations } = hierarchyTree;
+    const { target, sources, destinations, getNodeKey, getLinkKey } =
+      hierarchyTree;
     const { nodes, links } = getDoubleTree(
       sources,
       destinations,
@@ -168,6 +175,8 @@ const vmSelector = createSelector(
       key: target.id,
       nodes,
       links,
+      getNodeKey,
+      getLinkKey,
     };
   }
 );
@@ -188,6 +197,8 @@ export function SubscribersGraph() {
       links={vm.links}
       nodeRenderer={SubscriberGraphNodeRenderer}
       linkRenderer={SubscriberGraphLinkRenderer}
+      getNodeKey={vm.getNodeKey}
+      getLinkKey={vm.getLinkKey}
     />
   );
 }

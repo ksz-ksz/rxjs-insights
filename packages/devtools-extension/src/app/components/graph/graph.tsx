@@ -11,14 +11,6 @@ import { LinkRendererProps } from '@app/components/graph/link-renderer';
 import { GraphLink } from '@app/components/graph/graph-link';
 import { NodeControl } from './node-control';
 
-function getNodeKey(node: NodeData<any>) {
-  return node.id;
-}
-
-function getLinkKey(link: LinkData<unknown>) {
-  return `${link.source.id}:${link.target.id}`;
-}
-
 function getBounds(nodes: NodeData<unknown>[], focus: (number | string)[]) {
   let minX = Infinity;
   let maxX = -Infinity;
@@ -67,6 +59,8 @@ export interface GraphProps<T> {
   focus?: (number | string)[];
   nodeRenderer?: Renderer<NodeRendererProps<T>, NodeControl>;
   linkRenderer?: Renderer<LinkRendererProps<T>, LinkControl>;
+  getNodeKey(node: NodeData<T>): number | string;
+  getLinkKey(link: LinkData<T>): number | string;
 }
 
 const viewBoxPadding = 40;
@@ -77,6 +71,8 @@ export function Graph<T>({
   focus,
   nodeRenderer,
   linkRenderer,
+  getNodeKey,
+  getLinkKey,
 }: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
