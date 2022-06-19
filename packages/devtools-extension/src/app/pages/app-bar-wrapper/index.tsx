@@ -22,7 +22,7 @@ export function AppBarWrapper() {
       <AppBar color="transparent" position="static" sx={{ flex: '0 0 0' }}>
         <Toolbar>
           <Tabs
-            value={activeTargetId}
+            value={activeTargetId ?? 'dashboard'}
             variant="scrollable"
             scrollButtons="auto"
             aria-label="scrollable auto tabs example"
