@@ -9,7 +9,9 @@ export interface NodeControl {
 }
 
 export class DefaultNodeControl implements NodeControl {
-  constructor(private readonly elementRef: RefObject<SVGElement>) {}
+  constructor(private readonly elementRef: RefObject<SVGElement>) {
+    console.log('new DefaultNodeControl', elementRef);
+  }
 
   private _opacity = 0;
   private _position = {

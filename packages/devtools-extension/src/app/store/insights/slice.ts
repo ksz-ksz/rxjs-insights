@@ -3,6 +3,7 @@ import { insightsActions } from '@app/actions/insights-actions';
 import { RelatedTarget, Relations, TargetState } from '@app/protocols/insights';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
+import { rebaseKeys } from '@app/store/insights/rebase-keys';
 
 let nextKeyId = 0;
 
@@ -23,6 +24,7 @@ export type InsightsSlice = Slice<'insights', InsightsState>;
 function expandVisitor(
   visitedTargets: Set<number>,
   relations: Relations,
+  relation: 'sources' | 'destinations',
   expandedKeys: Set<string>,
   key: string
 ) {
@@ -33,25 +35,15 @@ function expandVisitor(
   visitedTargets.add(targetId);
   expandedKeys.add(key);
   const target = relations.targets[targetId];
-  // TODO: expand only in one direction
-  if (target.sources) {
-    for (const source of target.sources) {
+  const relatedTargets = target[relation];
+  if (relatedTargets) {
+    for (const id of relatedTargets) {
       expandVisitor(
         visitedTargets,
         relations,
+        relation,
         expandedKeys,
-        `${key}.${source}`
-      );
-    }
-  }
-  // TODO: expand only in one direction
-  if (target.destinations) {
-    for (const source of target.destinations!) {
-      expandVisitor(
-        visitedTargets,
-        relations,
-        expandedKeys,
-        `${key}.${source}`
+        `${key}.${id}`
       );
     }
   }
@@ -121,6 +113,20 @@ function updateKeyMapping(state: InsightsState, targetId: number) {
   );
 }
 
+function getPrefixes(toKey: string) {
+  const path = toKey.split('.');
+  const prefixes = [];
+  let p = '';
+  for (let seg of path) {
+    if (p !== '') {
+      p += '.';
+    }
+    p += seg;
+    prefixes.push(p);
+  }
+  return prefixes;
+}
+
 export const insightsReducer = createReducer('insights', {
   time: 0,
   playing: false,
@@ -173,7 +179,8 @@ export const insightsReducer = createReducer('insights', {
     const { target, key } = action.payload;
     const { relations } = state.targets[target];
     const { expandedKeys } = state.targetsUi[target];
-    expandVisitor(new Set(), relations, expandedKeys, key);
+    expandVisitor(new Set(), relations, 'sources', expandedKeys, key);
+    expandVisitor(new Set(), relations, 'destinations', expandedKeys, key);
     updateKeyMapping(state, target);
   })
   .add(subscribersGraphActions.CollapseAll, (state, action) => {
@@ -185,4 +192,13 @@ export const insightsReducer = createReducer('insights', {
       }
     }
     updateKeyMapping(state, target);
+  })
+  .add(subscribersGraphActions.FocusTarget, (state, action) => {
+    const { target, fromKey, toKey } = action.payload;
+    const { keysMapping } = state.targetsUi[Number(fromKey)];
+    const rebasedKeysMapping = rebaseKeys(keysMapping, toKey);
+    state.targetsUi[target.id] = state.targetsUi[target.id] ?? {
+      expandedKeys: new Set([String(target.id)]),
+    };
+    state.targetsUi[target.id].keysMapping = rebasedKeysMapping;
   });

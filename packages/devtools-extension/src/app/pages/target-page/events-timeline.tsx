@@ -91,7 +91,6 @@ function useElementSize(elementRef: RefObject<Element>) {
     const element = elementRef.current;
     if (element) {
       const observer = new ResizeObserver((entries) => {
-        console.log('ResizeObserver', entries);
         for (let entry of entries) {
           if (entry.contentBoxSize) {
             setSize({

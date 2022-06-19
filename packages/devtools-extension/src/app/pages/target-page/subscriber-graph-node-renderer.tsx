@@ -66,7 +66,7 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
         : theme.palette.action.disabledBackground;
       const selectedColor = event && getEventColors(theme, event).secondary;
 
-      return {
+      const vm = {
         rootTarget,
         rootTargetKey,
         target,
@@ -80,6 +80,8 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
         nodeColor,
         selectedColor,
       };
+      console.log(vm);
+      return vm;
     }
   );
 
@@ -308,6 +310,16 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
             <title>{vm.location.long}</title>
           </text>
         )}
+        <text
+          fontFamily="Monospace"
+          fontStyle="oblique"
+          fontSize="4"
+          textAnchor="middle"
+          fill={theme.palette.text.secondary}
+          y="24"
+        >
+          {vm.targetKey}
+        </text>
       </g>
     </g>
   );

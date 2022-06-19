@@ -2,7 +2,7 @@ import {
   DefaultLinkRenderer,
   LinkRendererProps,
 } from '@app/components/graph/link-renderer';
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { LinkControl } from '@app/components/graph/link-control';
 import gsap from 'gsap';
 import { duration } from '@app/components/graph/constants';
@@ -65,13 +65,28 @@ export function GraphLink<T>({
     [link]
   );
 
+  const setRef = useCallback((ref) => {
+    if (ref && linkRef.current !== ref) {
+      linkRef.current = ref;
+      requestAnimationFrame(() => {
+        linkRef.current!.opacity = 0;
+        linkRef.current!.position = {
+          sourceX: link.source.x,
+          sourceY: link.source.y,
+          targetX: link.target.x,
+          targetY: link.target.y,
+        };
+      });
+    }
+  }, []);
+
   return (
     <Transition<any>
       appear={true}
+      mountOnEnter
+      unmountOnExit
       in={inProp}
-      addEndListener={(node: any, done: () => void) => {
-        doneRef.current = done;
-      }}
+      timeout={duration * 3000}
       onEnter={() => {
         opacityTweenRef.current = gsap.to(linkRef.current!, {
           opacity: 1,
@@ -101,7 +116,7 @@ export function GraphLink<T>({
         });
       }}
     >
-      <LinkRenderer link={link} ref={linkRef} />
+      <LinkRenderer link={link} ref={setRef} />
     </Transition>
   );
 }

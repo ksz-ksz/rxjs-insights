@@ -24,8 +24,8 @@ export interface SubscribersGraphActions {
 
   FocusTarget: {
     target: RelatedTarget;
-    fromKey?: string;
-    toKey?: string;
+    fromKey: string;
+    toKey: string;
   };
 }
 

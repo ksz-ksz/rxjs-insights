@@ -192,7 +192,6 @@ export function SubscribersGraph() {
 
   return (
     <Graph
-      key={vm.key}
       nodes={vm.nodes}
       links={vm.links}
       nodeRenderer={SubscriberGraphNodeRenderer}

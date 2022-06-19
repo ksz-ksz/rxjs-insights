@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { duration } from '@app/components/graph/constants';
 import { Transition } from 'react-transition-group';
@@ -55,13 +55,23 @@ export function GraphNode<T>({
 
   const NodeRenderer = nodeRenderer;
 
+  const setRef = useCallback((ref) => {
+    if (ref && nodeRef.current !== ref) {
+      nodeRef.current = ref;
+      requestAnimationFrame(() => {
+        ref.opacity = 0;
+        ref.position = { x: node.x, y: node.y };
+      });
+    }
+  }, []);
+
   return (
     <Transition<any>
       appear={true}
+      mountOnEnter
+      unmountOnExit
       in={inProp}
-      addEndListener={(node: any, done: () => void) => {
-        doneRef.current = done;
-      }}
+      timeout={duration * 3000}
       onEnter={() => {
         opacityTweenRef.current = gsap.to(nodeRef.current!, {
           opacity: 1,
@@ -84,7 +94,7 @@ export function GraphNode<T>({
         });
       }}
     >
-      <NodeRenderer node={node} ref={nodeRef} />
+      <NodeRenderer node={node} ref={setRef} />
     </Transition>
   );
 }
