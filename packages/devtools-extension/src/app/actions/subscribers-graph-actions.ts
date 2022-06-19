@@ -1,4 +1,5 @@
 import { createActions } from '@lib/store';
+import { RelatedTarget } from '@app/protocols/insights';
 
 export interface SubscribersGraphActions {
   Expand: {
@@ -22,7 +23,7 @@ export interface SubscribersGraphActions {
   };
 
   FocusTarget: {
-    target: number;
+    target: RelatedTarget;
     fromKey?: string;
     toKey?: string;
   };

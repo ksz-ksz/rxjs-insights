@@ -82,6 +82,10 @@ export class RefsService implements Refs {
     { target: unknown; children: number[] }
   > = {};
 
+  getRefTarget(refId: number): unknown | undefined {
+    return this.refs[refId]?.target;
+  }
+
   create(target: unknown, parentRefId?: number, store = true): Ref {
     if (typeof target === 'object' && target !== null) {
       if (isObservableTarget(target)) {

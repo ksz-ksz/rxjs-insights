@@ -139,7 +139,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     (event: MouseEvent) => {
       onContextMenuClose(event);
       return subscribersGraphActions.FocusTarget({
-        target: vm.target.id,
+        target: vm.target,
         fromKey: vm.rootTargetKey,
         toKey: vm.targetKey,
       });
@@ -195,7 +195,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     (event: MouseEvent) =>
       event.ctrlKey
         ? subscribersGraphActions.FocusTarget({
-            target: vm.target.id,
+            target: vm.target,
             fromKey: vm.rootTargetKey,
             toKey: vm.targetKey,
           })
