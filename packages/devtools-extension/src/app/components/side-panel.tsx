@@ -8,6 +8,7 @@ const SidePanelDiv = styled('div')({
 const SidePanelContentDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
+  width: '100%',
 });
 const SidePanelResizerDiv = styled('div')(({ theme }) => ({
   width: '8px',
