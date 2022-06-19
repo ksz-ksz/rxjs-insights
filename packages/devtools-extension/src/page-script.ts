@@ -125,42 +125,20 @@ startServer<Instrumentation>(
   }
 );
 
-const targets: {
-  observables: Record<number, Observable>;
-  subscribers: Record<number, Subscriber>;
-} = {
-  observables: {},
-  subscribers: {},
-};
+const targets: Record<number, Observable | Subscriber> = {};
 
 startServer<Targets>(createInspectedWindowEvalServerAdapter(TargetsChannel), {
   releaseTarget(target: Target) {
-    switch (target.type) {
-      case 'subscriber':
-        delete targets.subscribers[target.id];
-        return;
-      case 'observable':
-        delete targets.observables[target.id];
-        return;
-    }
+    delete targets[target.id];
   },
   getTargets(): Target[] {
-    return [
-      ...Object.values(targets.observables).map(
-        ({ id, declaration: { name } }): Target => ({
-          type: 'observable',
-          id,
-          name,
-        })
-      ),
-      ...Object.values(targets.subscribers).map(
-        ({ id, declaration: { name } }): Target => ({
-          type: 'subscriber',
-          id,
-          name,
-        })
-      ),
-    ];
+    return Object.values(targets).map(
+      ({ id, type, declaration: { name } }): Target => ({
+        type,
+        id,
+        name,
+      })
+    );
   },
 });
 
@@ -290,8 +268,7 @@ function collectRelatedTargets(
     );
   }
 }
-function getTargetState(target: Subscriber): SubscriberState;
-function getTargetState(target: Observable): ObservableState;
+
 function getTargetState(target: Subscriber | Observable) {
   const ref = refs.create(target);
   const relations: Relations = {
@@ -319,19 +296,19 @@ function getTargetState(target: Subscriber | Observable) {
 
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
   getObservableState(observableId: number): ObservableState | undefined {
-    const observable = targets.observables[observableId];
+    const observable = targets[observableId];
     if (!observable) {
       return undefined;
     } else {
-      return getTargetState(observable);
+      return getTargetState(observable) as ObservableState;
     }
   },
   getSubscriberState(subscriberId: number): SubscriberState | undefined {
-    const subscriber = targets.subscribers[subscriberId];
+    const subscriber = targets[subscriberId];
     if (!subscriber) {
       return undefined;
     } else {
-      return getTargetState(subscriber);
+      return getTargetState(subscriber) as SubscriberState;
     }
   },
 });
@@ -339,7 +316,7 @@ startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
 function inspect(target: ObservableLike | SubscriberLike) {
   if (isSubscriberTarget(target)) {
     const subscriber = getSubscriber(target);
-    targets.subscribers[subscriber.id] = subscriber;
+    targets[subscriber.id] = subscriber;
     targetsNotificationsClient.notifyTarget({
       type: 'subscriber',
       id: subscriber.id,
@@ -348,7 +325,7 @@ function inspect(target: ObservableLike | SubscriberLike) {
   }
   if (isObservableTarget(target)) {
     const observable = getObservable(target);
-    targets.observables[observable.id] = observable;
+    targets[observable.id] = observable;
     targetsNotificationsClient.notifyTarget({
       type: 'observable',
       id: observable.id,
