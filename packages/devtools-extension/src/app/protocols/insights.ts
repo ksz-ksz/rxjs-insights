@@ -53,7 +53,7 @@ export interface Relations {
 }
 
 export interface TargetState {
-  ref: ObservableRef | SubscriberRef;
+  target: RelatedTarget;
   relations: Relations;
 }
 

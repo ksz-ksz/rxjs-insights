@@ -19,8 +19,7 @@ const ContextPanelDiv = styled('div')({
 const vmSelector = createSelector(
   [activeTargetStateSelector, timeSelector],
   ([activeTargetState, time]) => {
-    const { ref, relations } = activeTargetState!;
-    const target = ref;
+    const { target, relations } = activeTargetState!;
     const event = relations.events[time];
 
     return {

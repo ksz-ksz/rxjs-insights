@@ -29,6 +29,7 @@ import {
 import {
   Insights,
   InsightsChannel,
+  RelatedTarget,
   Relations,
   TargetState,
 } from '@app/protocols/insights';
@@ -187,10 +188,7 @@ function addRelatedTarget(
   const targets = relations.targets;
   if (targets[target.id] === undefined) {
     targets[target.id] = {
-      id: target.id,
-      name: target.declaration.name,
-      type: target.type,
-      tags: target.tags,
+      ...(refs.create(target, undefined, false) as TargetRef),
       startTime:
         target.type === 'subscriber'
           ? getStartTime(target.events)
@@ -272,12 +270,24 @@ function collectRelatedTargets(
 }
 
 function getTargetState(target: Subscriber | Observable): TargetState {
-  const ref = refs.create(target) as ObservableRef | SubscriberRef;
+  const rootTarget: RelatedTarget = {
+    ...(refs.create(target) as TargetRef),
+    startTime:
+      target.type === 'subscriber'
+        ? getStartTime(target.events)
+        : OUT_OF_BOUNDS_MIN_TIME,
+    endTime:
+      target.type === 'subscriber'
+        ? getEndTime(target.events)
+        : OUT_OF_BOUNDS_MAX_TIME,
+    locations: target.declaration.locations,
+  };
   const relations: Relations = {
     targets: {},
     events: {},
     tasks: {},
   };
+  relations.targets[rootTarget.id] = rootTarget;
   collectRelatedTargets(
     new Set(),
     relations,
@@ -293,7 +303,7 @@ function getTargetState(target: Subscriber | Observable): TargetState {
     getDestinationEvents
   );
 
-  return { ref, relations };
+  return { target: rootTarget, relations };
 }
 
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {

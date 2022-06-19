@@ -48,10 +48,9 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(
     [activeTargetStateSelector, activeTargetUiStateSelector, timeSelector],
     ([activeTargetState, activeTargetUiState, time]) => {
-      const { ref, relations } = activeTargetState!;
+      const { target: rootTarget, relations } = activeTargetState!;
       const { expandedKeys } = activeTargetUiState!;
-      const root = relations.targets[ref.id];
-      const rootKey = String(ref.id);
+      const rootTargetKey = String(rootTarget.id);
       const target = relations.targets[node.target.id];
       const targetKey = node.key;
       const event = relations.events[time];
@@ -68,8 +67,8 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       const selectedColor = event && getEventColors(theme, event).secondary;
 
       return {
-        root,
-        rootKey,
+        rootTarget,
+        rootTargetKey,
         target,
         targetKey,
         event,
@@ -141,55 +140,55 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
       onContextMenuClose(event);
       return subscribersGraphActions.FocusTarget({
         target: vm.target.id,
-        fromKey: vm.rootKey,
+        fromKey: vm.rootTargetKey,
         toKey: vm.targetKey,
       });
     },
-    [onContextMenuClose, vm.target.id, vm.rootKey, vm.targetKey]
+    [onContextMenuClose, vm.target.id, vm.rootTargetKey, vm.targetKey]
   );
 
   const onExpand = useDispatchCallback(
     (event: MouseEvent) => {
       onContextMenuClose(event);
       return subscribersGraphActions.Expand({
-        target: vm.root.id,
+        target: vm.rootTarget.id,
         key: vm.targetKey,
       });
     },
-    [onContextMenuClose, vm.root.id, vm.targetKey]
+    [onContextMenuClose, vm.rootTarget.id, vm.targetKey]
   );
 
   const onExpandAll = useDispatchCallback(
     (event: MouseEvent) => {
       onContextMenuClose(event);
       return subscribersGraphActions.ExpandAll({
-        target: vm.root.id,
+        target: vm.rootTarget.id,
         key: vm.targetKey,
       });
     },
-    [onContextMenuClose, vm.root.id, vm.targetKey]
+    [onContextMenuClose, vm.rootTarget.id, vm.targetKey]
   );
 
   const onCollapse = useDispatchCallback(
     (event: MouseEvent) => {
       onContextMenuClose(event);
       return subscribersGraphActions.Collapse({
-        target: vm.root.id,
+        target: vm.rootTarget.id,
         key: vm.targetKey,
       });
     },
-    [onContextMenuClose, vm.root.id, vm.targetKey]
+    [onContextMenuClose, vm.rootTarget.id, vm.targetKey]
   );
 
   const onCollapseAll = useDispatchCallback(
     (event: MouseEvent) => {
       onContextMenuClose(event);
       return subscribersGraphActions.CollapseAll({
-        target: vm.root.id,
+        target: vm.rootTarget.id,
         key: vm.targetKey,
       });
     },
-    [onContextMenuClose, vm.root.id, vm.targetKey]
+    [onContextMenuClose, vm.rootTarget.id, vm.targetKey]
   );
 
   const onClick = useDispatchCallback(
@@ -197,29 +196,29 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
       event.ctrlKey
         ? subscribersGraphActions.FocusTarget({
             target: vm.target.id,
-            fromKey: vm.rootKey,
+            fromKey: vm.rootTargetKey,
             toKey: vm.targetKey,
           })
         : vm.isExpanded
         ? event.shiftKey
           ? subscribersGraphActions.CollapseAll({
-              target: vm.root.id,
+              target: vm.rootTarget.id,
               key: vm.targetKey,
             })
           : subscribersGraphActions.Collapse({
-              target: vm.root.id,
+              target: vm.rootTarget.id,
               key: vm.targetKey,
             })
         : event.shiftKey
         ? subscribersGraphActions.ExpandAll({
-            target: vm.root.id,
+            target: vm.rootTarget.id,
             key: vm.targetKey,
           })
         : subscribersGraphActions.Expand({
-            target: vm.root.id,
+            target: vm.rootTarget.id,
             key: vm.targetKey,
           }),
-    [vm.isExpanded, vm.root.id, vm.targetKey]
+    [vm.isExpanded, vm.rootTarget.id, vm.targetKey]
   );
 
   useEffect(() => {

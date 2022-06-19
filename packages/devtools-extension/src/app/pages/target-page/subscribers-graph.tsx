@@ -131,9 +131,8 @@ function getVisibleKeys(
 const hierarchyTreeSelector = createSelector(
   [activeTargetStateSelector, activeTargetUiStateSelector],
   ([activeTargetState, activeTargetUiState]) => {
-    const { ref, relations } = activeTargetState!;
+    const { target, relations } = activeTargetState!;
     const { expandedKeys } = activeTargetUiState!;
-    const target = relations.targets[ref.id];
     const visibleKeys = getVisibleKeys(target, relations, expandedKeys);
     const sources = getRelatedHierarchyNode(
       relations,

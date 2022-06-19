@@ -170,9 +170,8 @@ function findFirstIndex<T>(
 const eventsSelector = createSelector(
   [activeTargetStateSelector, activeTargetUiStateSelector],
   ([activeTargetState, activeTargetUiState]) => {
-    const { ref, relations } = activeTargetState!;
+    const { target, relations } = activeTargetState!;
     const { expandedKeys } = activeTargetUiState!;
-    const target = relations.targets[ref.id];
     const timeframes = getTargetTimeframes(target, relations, expandedKeys);
     const allEvents = getEvents(relations);
     const events = getIncludedEvents(relations, allEvents, timeframes);

@@ -63,9 +63,9 @@ export const insightsReducer = createReducer('insights', {
   .add(insightsActions.TargetStateLoaded, (state, action) => {
     const { state: targetState } = action.payload;
     if (targetState !== undefined) {
-      state.targets[targetState.ref.id] = targetState;
-      state.targetsUi[targetState.ref.id] = {
-        expandedKeys: new Set([String(targetState.ref.id)]),
+      state.targets[targetState.target.id] = targetState;
+      state.targetsUi[targetState.target.id] = {
+        expandedKeys: new Set([String(targetState.target.id)]),
       };
     }
   })
