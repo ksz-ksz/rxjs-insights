@@ -64,9 +64,11 @@ export const insightsReducer = createReducer('insights', {
     const { state: targetState } = action.payload;
     if (targetState !== undefined) {
       state.targets[targetState.target.id] = targetState;
-      state.targetsUi[targetState.target.id] = {
-        expandedKeys: new Set([String(targetState.target.id)]),
-      };
+      if (!state.targetsUi[targetState.target.id]) {
+        state.targetsUi[targetState.target.id] = {
+          expandedKeys: new Set([String(targetState.target.id)]),
+        };
+      }
     }
   })
   .add(eventsLogActions.EventSelected, (state, action) => {
