@@ -1,9 +1,9 @@
-import { EventRef, ObservableRef } from './recorder';
+import { EventRef, TargetRef } from './recorder';
 import { InstrumentationContext } from './env';
 
 export interface Trace {
   eventRef: EventRef;
-  observableRef: ObservableRef | undefined;
+  targetRef: TargetRef | undefined;
 }
 
 export interface Tracer {

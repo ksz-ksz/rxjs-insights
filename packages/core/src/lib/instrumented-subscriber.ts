@@ -1,4 +1,4 @@
-import { ObservableRef, SubscriberRef } from './recorder';
+import { SubscriberRef, TargetRef } from './recorder';
 import { InstrumentationContext } from './env';
 import { setMeta } from './meta';
 import { Constructor, ObserverLike, SubscriberLike } from './types';
@@ -7,7 +7,7 @@ export interface InstrumentedSubscriberConstructor {
   new (
     context: InstrumentationContext,
     subscriptionRef: SubscriberRef,
-    destinationRef: ObservableRef | undefined,
+    destinationRef: TargetRef | undefined,
     destination: ObserverLike
   ): SubscriberLike;
 }
@@ -19,7 +19,7 @@ export function createInstrumentedSubscriberConstructor(
     constructor(
       private readonly context: InstrumentationContext,
       private readonly subscriberRef: SubscriberRef,
-      private readonly destinationRef: ObservableRef | undefined,
+      private readonly destinationRef: TargetRef | undefined,
       destination: ObserverLike
     ) {
       super(destination);
@@ -44,7 +44,7 @@ export function createInstrumentedSubscriberConstructor(
         sourceEventRef
       );
       return this.context.tracer.run(
-        { eventRef, observableRef: this.destinationRef },
+        { eventRef, targetRef: this.destinationRef },
         () => super.next(data)
       );
     }
@@ -65,7 +65,7 @@ export function createInstrumentedSubscriberConstructor(
         sourceEventRef
       );
       return this.context.tracer.run(
-        { eventRef, observableRef: this.destinationRef },
+        { eventRef, targetRef: this.destinationRef },
         () => super.error(data)
       );
     }
@@ -86,7 +86,7 @@ export function createInstrumentedSubscriberConstructor(
         sourceEventRef
       );
       return this.context.tracer.run(
-        { eventRef, observableRef: this.destinationRef },
+        { eventRef, targetRef: this.destinationRef },
         () => super.complete()
       );
     }
@@ -107,7 +107,7 @@ export function createInstrumentedSubscriberConstructor(
         sourceEventRef
       );
       return this.context.tracer.run(
-        { eventRef, observableRef: this.destinationRef },
+        { eventRef, targetRef: this.destinationRef },
         () => super.unsubscribe()
       );
     }

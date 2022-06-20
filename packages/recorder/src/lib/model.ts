@@ -54,7 +54,7 @@ export class Subscriber extends Target {
   constructor(
     readonly target: any[],
     readonly observable: Observable,
-    readonly destinationObservable: Observable | undefined,
+    readonly destination: Target | undefined,
     readonly events: SubscriberEvent[] = []
   ) {
     super();

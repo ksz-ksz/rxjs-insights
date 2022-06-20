@@ -20,7 +20,7 @@ export function createInstrumentedSubjectNext(
       subjectRef,
       sourceEventRef
     );
-    context.tracer.run({ eventRef, observableRef: subjectRef }, () =>
+    context.tracer.run({ eventRef, targetRef: subjectRef }, () =>
       next.call(this, data)
     );
   };
@@ -46,7 +46,7 @@ export function createInstrumentedSubjectError(
       subjectRef,
       sourceEventRef
     );
-    context.tracer.run({ eventRef, observableRef: subjectRef }, () =>
+    context.tracer.run({ eventRef, targetRef: subjectRef }, () =>
       error.call(this, data)
     );
   };
@@ -72,7 +72,7 @@ export function createInstrumentedSubjectComplete(
       subjectRef,
       sourceEventRef
     );
-    context.tracer.run({ eventRef, observableRef: subjectRef }, () =>
+    context.tracer.run({ eventRef, targetRef: subjectRef }, () =>
       complete.call(this)
     );
   };

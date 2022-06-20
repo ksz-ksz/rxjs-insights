@@ -20,6 +20,7 @@ export type {
   RecorderStats,
   SubscriberEventRef,
   SubscriberRef,
+  TargetRef,
 } from './lib/recorder';
 export type {
   Complete,

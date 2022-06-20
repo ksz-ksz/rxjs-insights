@@ -6,8 +6,10 @@ import {
   ObservableLike,
   ObservableRef,
   Recorder,
+  RecorderStats,
   SubscriberEventRef,
   SubscriberRef,
+  TargetRef,
 } from '@rxjs-insights/core';
 import {
   Declaration,
@@ -20,7 +22,6 @@ import {
   Task,
 } from './model';
 import { queueCleanup } from './queue-cleanup';
-import { RecorderStats } from '@rxjs-insights/core/src/lib/recorder';
 
 function incStats(stats: Record<string, number>, name: string) {
   if (stats[name] === undefined) {
@@ -73,15 +74,11 @@ export class ModelRecorder implements Recorder {
   subscriberRef(
     target: any[],
     observableRef: ObservableRef,
-    destinationObservableRef: ObservableRef | undefined
+    destinationTargetRef: TargetRef | undefined
   ): SubscriberRef {
     const observable = deref(observableRef);
-    const destinationObservable = deref(destinationObservableRef);
-    const subscriber = new Subscriber(
-      target,
-      observable,
-      destinationObservable
-    );
+    const destination = deref(destinationTargetRef);
+    const subscriber = new Subscriber(target, observable, destination);
 
     observable.subscribers.push(subscriber);
 

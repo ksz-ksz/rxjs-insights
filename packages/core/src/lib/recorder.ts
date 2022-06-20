@@ -9,6 +9,7 @@ export type SubscriberRef = { readonly [ref]: 'SubscriberRef' };
 export type SubscriberEventRef = { readonly [ref]: 'SubscriberEventRef' };
 export type ObservableEventRef = { readonly [ref]: 'ObservableEventRef' };
 export type EventRef = SubscriberEventRef | ObservableEventRef;
+export type TargetRef = ObservableRef | SubscriberRef;
 
 export interface RecorderStats {
   observables: Record<string, number>;
@@ -38,7 +39,7 @@ export interface Recorder {
   subscriberRef(
     target: any[],
     observableRef: ObservableRef,
-    destinationObservableRef: ObservableRef | undefined
+    destinationTargetRef: TargetRef | undefined
   ): SubscriberRef;
 
   observableEventRef(

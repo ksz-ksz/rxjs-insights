@@ -43,15 +43,12 @@ function getObserver(
   }
 }
 
-function getDestinationObservableRef(
-  context: InstrumentationContext,
-  args: any[]
-) {
+function getDestinationTargetRef(context: InstrumentationContext, args: any[]) {
   const [maybeObserver] = args;
   if (maybeObserver instanceof context.Subject) {
     return getObservableRef(context, maybeObserver);
   } else {
-    return context.tracer.getTrace()?.observableRef;
+    return context.tracer.getTrace()?.targetRef;
   }
 }
 
@@ -63,11 +60,11 @@ export function createInstrumentedSubscribe(
   return function instrumentedSubscribe(this: ObservableLike, ...args: any[]) {
     const observable = this;
     const observableRef = getObservableRef(context, observable);
-    const destinationObservableRef = getDestinationObservableRef(context, args);
+    const destinationTargetRef = getDestinationTargetRef(context, args);
     const subscriberRef = context.recorder.subscriberRef(
       args,
       observableRef,
-      destinationObservableRef
+      destinationTargetRef
     );
     const subscribeDeclarationRef = context.recorder.declarationRef(
       'subscribe',
@@ -85,12 +82,12 @@ export function createInstrumentedSubscribe(
     const subscriber = new Subscriber(
       context,
       subscriberRef,
-      destinationObservableRef,
+      destinationTargetRef,
       observer
     );
 
     return context.tracer.run(
-      { eventRef: subscribeEventRef, observableRef },
+      { eventRef: subscribeEventRef, targetRef: subscriberRef },
       () => subscribe.call(observable, subscriber)
     );
   };
