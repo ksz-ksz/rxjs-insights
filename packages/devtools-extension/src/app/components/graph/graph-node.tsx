@@ -57,7 +57,7 @@ export function GraphNode<T>({
 
   // TODO: cleanup
   const setRef = useCallback((ref) => {
-    if (ref && nodeRef.current !== ref) {
+    if (ref) {
       nodeRef.current = ref;
       requestAnimationFrame(() => {
         ref.opacity = 0;

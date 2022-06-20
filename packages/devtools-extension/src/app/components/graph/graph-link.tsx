@@ -67,7 +67,7 @@ export function GraphLink<T>({
 
   // TODO: cleanup
   const setRef = useCallback((ref) => {
-    if (ref && linkRef.current !== ref) {
+    if (ref) {
       linkRef.current = ref;
       requestAnimationFrame(() => {
         linkRef.current!.opacity = 0;
