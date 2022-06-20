@@ -26,29 +26,23 @@ export function GraphNode<T>({
 
   useEffect(
     function onUpdate() {
-      if (initRef.current) {
-        initRef.current = false;
-        nodeRef.current!.opacity = 0;
-        nodeRef.current!.position = { x: node.x, y: node.y };
-      } else if (inProp) {
-        positionTweenRef.current?.kill();
-        positionTweenRef.current = gsap.to(
-          { ...nodeRef.current!.position },
-          {
-            x: node.x,
-            y: node.y,
-            onUpdate() {
-              const [target] = this.targets();
-              nodeRef.current!.position = {
-                x: target.x,
-                y: target.y,
-              };
-            },
-            duration: duration,
-            delay: duration,
-          }
-        );
-      }
+      positionTweenRef.current?.kill();
+      positionTweenRef.current = gsap.to(
+        { ...nodeRef.current!.position },
+        {
+          x: node.x,
+          y: node.y,
+          onUpdate() {
+            const [target] = this.targets();
+            nodeRef.current!.position = {
+              x: target.x,
+              y: target.y,
+            };
+          },
+          duration: duration,
+          delay: duration,
+        }
+      );
     },
     [node]
   );
