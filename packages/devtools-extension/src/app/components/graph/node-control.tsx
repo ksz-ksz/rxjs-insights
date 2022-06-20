@@ -1,16 +1,18 @@
 import { RefObject } from 'react';
 
+type NodePosition = {
+  x: number;
+  y: number;
+};
+
 export interface NodeControl {
   opacity: number;
-  position: {
-    x: number;
-    y: number;
-  };
+  position: NodePosition;
 }
 
 export class DefaultNodeControl implements NodeControl {
   constructor(private readonly elementRef: RefObject<SVGElement>) {
-    console.log('new DefaultNodeControl', elementRef);
+    this.opacity = 0;
   }
 
   private _opacity = 0;
@@ -25,7 +27,7 @@ export class DefaultNodeControl implements NodeControl {
 
   set opacity(opacity: number) {
     this._opacity = opacity;
-    this.elementRef.current!.setAttribute('opacity', String(opacity));
+    this.elementRef.current?.setAttribute('opacity', String(opacity));
   }
 
   get position(): { x: number; y: number } {
@@ -34,7 +36,7 @@ export class DefaultNodeControl implements NodeControl {
 
   set position(position: { x: number; y: number }) {
     this._position = position;
-    this.elementRef.current!.setAttribute(
+    this.elementRef.current?.setAttribute(
       'transform',
       `translate(${position.x}, ${position.y})`
     );

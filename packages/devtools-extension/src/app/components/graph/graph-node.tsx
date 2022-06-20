@@ -3,20 +3,20 @@ import gsap from 'gsap';
 import { duration } from '@app/components/graph/constants';
 import { Transition } from 'react-transition-group';
 import { NodeData } from '@app/components/tree';
-import { DefaultNodeRenderer, NodeRendererProps } from './node-renderer';
+import { NodeRendererProps } from './node-renderer';
 import { Renderer } from './renderer';
 import { NodeControl } from './node-control';
 
 export interface GraphNodeProps<T> {
   in?: boolean;
   node: NodeData<T>;
-  nodeRenderer?: Renderer<NodeRendererProps<T>, NodeControl>;
+  nodeRenderer: Renderer<NodeRendererProps<T>, NodeControl>;
 }
 
 export function GraphNode<T>({
   in: inProp,
   node,
-  nodeRenderer = DefaultNodeRenderer,
+  nodeRenderer: NodeRenderer,
 }: GraphNodeProps<T>) {
   const nodeRef = useRef<NodeControl | null>(null);
   const positionTweenRef = useRef<gsap.core.Tween | null>(null);
@@ -45,16 +45,21 @@ export function GraphNode<T>({
     [node]
   );
 
-  const NodeRenderer = nodeRenderer;
+  const onEnter = useCallback(() => {
+    opacityTweenRef.current = gsap.to(nodeRef.current!, {
+      opacity: 1,
+      delay: 2 * duration,
+      duration,
+    });
+  }, []);
 
-  // TODO: cleanup
-  const setRef = useCallback((ref) => {
-    if (ref) {
-      nodeRef.current = ref;
-      requestAnimationFrame(() => {
-        ref.opacity = 0;
-      });
-    }
+  const onExit = useCallback(() => {
+    opacityTweenRef.current?.kill();
+    opacityTweenRef.current = gsap.to(nodeRef.current!, {
+      opacity: 0,
+      delay: 0,
+      duration,
+    });
   }, []);
 
   return (
@@ -64,23 +69,10 @@ export function GraphNode<T>({
       unmountOnExit
       in={inProp}
       timeout={duration * 3000}
-      onEnter={() => {
-        opacityTweenRef.current = gsap.to(nodeRef.current!, {
-          opacity: 1,
-          delay: 2 * duration,
-          duration,
-        });
-      }}
-      onExit={() => {
-        opacityTweenRef.current?.kill();
-        opacityTweenRef.current = gsap.to(nodeRef.current!, {
-          opacity: 0,
-          delay: 0,
-          duration,
-        });
-      }}
+      onEnter={onEnter}
+      onExit={onExit}
     >
-      <NodeRenderer node={node} ref={setRef} />
+      <NodeRenderer node={node} ref={nodeRef} />
     </Transition>
   );
 }

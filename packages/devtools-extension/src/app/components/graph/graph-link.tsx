@@ -1,7 +1,4 @@
-import {
-  DefaultLinkRenderer,
-  LinkRendererProps,
-} from '@app/components/graph/link-renderer';
+import { LinkRendererProps } from '@app/components/graph/link-renderer';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { LinkControl } from '@app/components/graph/link-control';
 import gsap from 'gsap';
@@ -13,13 +10,13 @@ import { Renderer } from '@app/components/graph/renderer';
 export interface GraphLinkProps<T> {
   in?: boolean;
   link: LinkData<T>;
-  linkRenderer?: Renderer<LinkRendererProps<T>, LinkControl>;
+  linkRenderer: Renderer<LinkRendererProps<T>, LinkControl>;
 }
 
 export function GraphLink<T>({
   in: inProp,
   link,
-  linkRenderer: LinkRenderer = DefaultLinkRenderer,
+  linkRenderer: LinkRenderer,
 }: GraphLinkProps<T>) {
   const linkRef = useRef<LinkControl | null>(null);
   const opacityTweenRef = useRef<gsap.core.Tween | null>(null);
@@ -52,14 +49,22 @@ export function GraphLink<T>({
     [link]
   );
 
-  // TODO: cleanup
-  const setRef = useCallback((ref) => {
-    if (ref) {
-      linkRef.current = ref;
-      requestAnimationFrame(() => {
-        linkRef.current!.opacity = 0;
-      });
-    }
+  const onEnter = useCallback(() => {
+    opacityTweenRef.current = gsap.to(linkRef.current!, {
+      opacity: 1,
+      duration,
+      delay: 2 * duration,
+    });
+  }, []);
+
+  const onExit = useCallback(() => {
+    opacityTweenRef.current?.kill();
+    opacityTweenRef.current = gsap.to(linkRef.current!, {
+      opacity: 0,
+      duration,
+      delay: 0,
+      ease: 'none',
+    });
   }, []);
 
   return (
@@ -69,24 +74,10 @@ export function GraphLink<T>({
       unmountOnExit
       in={inProp}
       timeout={duration * 3000}
-      onEnter={() => {
-        opacityTweenRef.current = gsap.to(linkRef.current!, {
-          opacity: 1,
-          duration,
-          delay: 2 * duration,
-        });
-      }}
-      onExit={() => {
-        opacityTweenRef.current?.kill();
-        opacityTweenRef.current = gsap.to(linkRef.current!, {
-          opacity: 0,
-          duration,
-          delay: 0,
-          ease: 'none',
-        });
-      }}
+      onEnter={onEnter}
+      onExit={onExit}
     >
-      <LinkRenderer link={link} ref={setRef} />
+      <LinkRenderer link={link} ref={linkRef} />
     </Transition>
   );
 }

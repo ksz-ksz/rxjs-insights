@@ -1,1 +1,1 @@
-export const duration = 0.24;
+export const duration = 1;
