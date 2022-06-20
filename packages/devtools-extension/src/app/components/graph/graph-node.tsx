@@ -18,9 +18,7 @@ export function GraphNode<T>({
   node,
   nodeRenderer = DefaultNodeRenderer,
 }: GraphNodeProps<T>) {
-  const initRef = useRef(true);
   const nodeRef = useRef<NodeControl | null>(null);
-  const doneRef = useRef<(() => void) | null>(null);
   const positionTweenRef = useRef<gsap.core.Tween | null>(null);
   const opacityTweenRef = useRef<gsap.core.Tween | null>(null);
 
@@ -71,12 +69,6 @@ export function GraphNode<T>({
           opacity: 1,
           delay: 2 * duration,
           duration,
-          onComplete() {
-            doneRef.current?.();
-          },
-          onInterrupt() {
-            doneRef.current?.();
-          },
         });
       }}
       onExit={() => {

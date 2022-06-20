@@ -21,24 +21,12 @@ export function GraphLink<T>({
   link,
   linkRenderer: LinkRenderer = DefaultLinkRenderer,
 }: GraphLinkProps<T>) {
-  const initRef = useRef(true);
   const linkRef = useRef<LinkControl | null>(null);
-  const doneRef = useRef<(() => void) | null>(null);
   const opacityTweenRef = useRef<gsap.core.Tween | null>(null);
   const positionTweenRef = useRef<gsap.core.Tween | null>(null);
 
   useEffect(
     function onUpdate() {
-      // if (initRef.current) {
-      //   initRef.current = false;
-      //   linkRef.current!.opacity = 0;
-      //   linkRef.current!.position = {
-      //     sourceX: link.source.x,
-      //     sourceY: link.source.y,
-      //     targetX: link.target.x,
-      //     targetY: link.target.y,
-      //   };
-      // } else if (inProp) {
       positionTweenRef.current?.kill();
       positionTweenRef.current = gsap.to(
         { ...linkRef.current!.position },
@@ -60,7 +48,6 @@ export function GraphLink<T>({
           delay: duration,
         }
       );
-      // }
     },
     [link]
   );
@@ -87,12 +74,6 @@ export function GraphLink<T>({
           opacity: 1,
           duration,
           delay: 2 * duration,
-          onComplete() {
-            doneRef.current?.();
-          },
-          onInterrupt() {
-            doneRef.current?.();
-          },
         });
       }}
       onExit={() => {
@@ -102,12 +83,6 @@ export function GraphLink<T>({
           duration,
           delay: 0,
           ease: 'none',
-          onComplete() {
-            doneRef.current?.();
-          },
-          onInterrupt() {
-            doneRef.current?.();
-          },
         });
       }}
     >
