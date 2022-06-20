@@ -31,15 +31,6 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       const linkColor = getTargetColors(theme, target).secondary;
       const selectedColor = event && getEventColors(theme, event).secondary;
 
-      console.log(
-        'isSelected: %o, %clinkColor: %o, %cselectedColor: %o',
-        isSelected,
-        `color: ${linkColor};`,
-        linkColor,
-        `color: ${selectedColor};`,
-        selectedColor
-      );
-
       return {
         event,
         target,

@@ -32,11 +32,11 @@ function expandVisitor(
   if (visitedTargets.has(targetId)) {
     return;
   }
-  visitedTargets.add(targetId);
   expandedKeys.add(key);
   const target = relations.targets[targetId];
   const relatedTargets = target[relation];
   if (relatedTargets) {
+    visitedTargets.add(targetId);
     for (const id of relatedTargets) {
       expandVisitor(
         visitedTargets,
@@ -46,6 +46,7 @@ function expandVisitor(
         `${key}.${id}`
       );
     }
+    visitedTargets.delete(targetId);
   }
 }
 

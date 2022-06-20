@@ -288,7 +288,6 @@ export function EventsPanel() {
         timestamp,
         (t, e) => t - e.timestamp
       );
-      console.log(timestamp, index);
       const event =
         index >= 0
           ? vm.events[index]
