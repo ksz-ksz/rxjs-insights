@@ -65,17 +65,12 @@ export function GraphLink<T>({
     [link]
   );
 
+  // TODO: cleanup
   const setRef = useCallback((ref) => {
     if (ref && linkRef.current !== ref) {
       linkRef.current = ref;
       requestAnimationFrame(() => {
         linkRef.current!.opacity = 0;
-        linkRef.current!.position = {
-          sourceX: link.source.x,
-          sourceY: link.source.y,
-          targetX: link.target.x,
-          targetY: link.target.y,
-        };
       });
     }
   }, []);

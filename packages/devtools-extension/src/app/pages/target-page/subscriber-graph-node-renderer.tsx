@@ -14,7 +14,11 @@ import {
 } from '@app/components/graph';
 import { Menu, MenuItem, Theme, useTheme } from '@mui/material';
 import { useSelectorFunction } from '@app/store';
-import { timeSelector } from '@app/selectors/insights-selectors';
+import {
+  targetStateSelector,
+  targetUiStateSelector,
+  timeSelector,
+} from '@app/selectors/insights-selectors';
 import {
   getDirection,
   getEventColors,
@@ -22,12 +26,9 @@ import {
 } from '@app/pages/target-page/subscriber-graph-utils';
 import gsap from 'gsap';
 import { createSelector, useDispatchCallback } from '@lib/store';
-import {
-  activeTargetStateSelector,
-  activeTargetUiStateSelector,
-} from '@app/selectors/active-target-state-selector';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
+import { getRootTargetId } from '@app/pages/target-page/get-root-target-id';
 
 const circleRadius = 5;
 const circleCircumference = 2 * Math.PI * circleRadius;
@@ -46,10 +47,14 @@ function getLocationStrings(locations: Locations) {
 
 const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(
-    [activeTargetStateSelector, activeTargetUiStateSelector, timeSelector],
-    ([activeTargetState, activeTargetUiState, time]) => {
-      const { target: rootTarget, relations } = activeTargetState!;
-      const { expandedKeys } = activeTargetUiState!;
+    [
+      targetStateSelector(getRootTargetId(node.key)),
+      targetUiStateSelector(getRootTargetId(node.key)),
+      timeSelector,
+    ],
+    ([targetState, targetUiState, time]) => {
+      const { target: rootTarget, relations } = targetState!;
+      const { expandedKeys } = targetUiState!;
       const rootTargetKey = String(rootTarget.id);
       const target = relations.targets[node.target.id];
       const targetKey = node.key;
@@ -66,7 +71,7 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
         : theme.palette.action.disabledBackground;
       const selectedColor = event && getEventColors(theme, event).secondary;
 
-      const vm = {
+      return {
         rootTarget,
         rootTargetKey,
         target,
@@ -80,8 +85,6 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
         nodeColor,
         selectedColor,
       };
-      console.log(vm);
-      return vm;
     }
   );
 

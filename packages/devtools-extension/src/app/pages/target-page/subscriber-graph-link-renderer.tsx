@@ -6,7 +6,10 @@ import {
 } from '@app/components/graph';
 import { Theme, useTheme } from '@mui/material';
 import { useSelectorFunction } from '@app/store';
-import { timeSelector } from '@app/selectors/insights-selectors';
+import {
+  targetStateSelector,
+  timeSelector,
+} from '@app/selectors/insights-selectors';
 import {
   getDirection,
   getEventColors,
@@ -14,14 +17,14 @@ import {
 } from '@app/pages/target-page/subscriber-graph-utils';
 import gsap from 'gsap';
 import { createSelector } from '@lib/store';
-import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
+import { getRootTargetId } from '@app/pages/target-page/get-root-target-id';
 
 const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(
-    [activeTargetStateSelector, timeSelector],
-    ([activeTargetState, time]) => {
-      const { relations } = activeTargetState!;
+    [targetStateSelector(getRootTargetId(node.key)), timeSelector],
+    ([targetState, time]) => {
+      const { relations } = targetState!;
       const event = relations.events[time];
       const target = relations.targets[node.target.id];
       const isSelected = event && event.target === target.id;

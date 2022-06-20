@@ -11,6 +11,12 @@ export const targetStateSelector = (targetId: number) =>
     ([insights]) => insights.targets[targetId]
   );
 
+export const targetUiStateSelector = (targetId: number) =>
+  createSelector(
+    [insightsSelector],
+    ([insights]) => insights.targetsUi[targetId]
+  );
+
 export const timeSelector = createSelector(
   [insightsSelector],
   ([insights]) => insights.time

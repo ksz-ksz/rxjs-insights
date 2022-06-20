@@ -55,12 +55,12 @@ export function GraphNode<T>({
 
   const NodeRenderer = nodeRenderer;
 
+  // TODO: cleanup
   const setRef = useCallback((ref) => {
     if (ref && nodeRef.current !== ref) {
       nodeRef.current = ref;
       requestAnimationFrame(() => {
         ref.opacity = 0;
-        ref.position = { x: node.x, y: node.y };
       });
     }
   }, []);
