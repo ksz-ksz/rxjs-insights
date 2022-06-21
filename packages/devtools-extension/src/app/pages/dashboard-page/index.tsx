@@ -6,6 +6,7 @@ import {
   Box,
   Divider,
   Paper,
+  styled,
   Table,
   TableBody,
   TableCell,
@@ -72,6 +73,15 @@ export function StatsLine({ label, stats }: StatsLineProps) {
   );
 }
 
+const TitleDiv = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  maxWidth: '600px',
+  background: `linear-gradient(to right, ${theme.insights.observable.secondary} 0%, ${theme.insights.subscriber.secondary} 100%)`,
+  '-webkit-background-clip': 'text',
+  '-webkit-text-fill-color': 'transparent',
+}));
+
 export function DashboardPage() {
   const statistics = useSelector(statisticsSelector);
 
@@ -84,10 +94,10 @@ export function DashboardPage() {
       overflow="hidden"
     >
       <Box flex="1 1 0" display="flex" justifyContent="right" padding={2}>
-        <Box maxWidth="600px">
+        <TitleDiv>
           <Typography variant="h1">RxJS Insights</Typography>
           <Typography variant="h4">See through the observables</Typography>
-        </Box>
+        </TitleDiv>
       </Box>
       <Divider orientation="vertical" variant="middle" />
       <Box flex="1 1 0" maxHeight="100%" overflow="auto" padding={2}>

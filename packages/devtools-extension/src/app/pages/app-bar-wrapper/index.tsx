@@ -1,4 +1,12 @@
-import { AppBar, Box, IconButton, Tab, Tabs, Toolbar } from '@mui/material';
+import {
+  AppBar,
+  Box,
+  IconButton,
+  styled,
+  Tab,
+  Tabs,
+  Toolbar,
+} from '@mui/material';
 import React from 'react';
 import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
 import { dashboardRouteToken, router, targetRouteToken } from '@app/router';
@@ -10,6 +18,13 @@ import { TargetPage } from '@app/pages/target-page';
 import { DashboardPage } from '@app/pages/dashboard-page';
 import { activeTargetIdSelector } from '@app/selectors/targets-selectors';
 import { RefOutlet } from '@app/components/ref-outlet';
+
+const HomeSpan = styled('span')(({ theme }) => ({
+  fontWeight: 600,
+  background: `linear-gradient(to bottom right, ${theme.insights.observable.secondary} 0%, ${theme.insights.subscriber.secondary} 100%)`,
+  '-webkit-background-clip': 'text',
+  '-webkit-text-fill-color': 'transparent',
+}));
 
 export function AppBarWrapper() {
   const dispatch = useDispatch();
@@ -33,7 +48,7 @@ export function AppBarWrapper() {
               router={router}
               value="dashboard"
               to={createUrl(['dashboard'])}
-              label="RxJS Insights"
+              label={<HomeSpan>RxJS Insights</HomeSpan>}
             />
             {targets.map((target) => (
               <Tab
