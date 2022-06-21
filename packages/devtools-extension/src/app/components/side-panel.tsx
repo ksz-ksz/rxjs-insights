@@ -1,6 +1,7 @@
 import { styled } from '@mui/material';
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { ChevronRight } from '@mui/icons-material';
+import { fromEvent, map, pairwise, scan, startWith, Subscription } from 'rxjs';
 
 const SidePanelDiv = styled('div')({
   display: 'flex',
@@ -9,17 +10,34 @@ const SidePanelDiv = styled('div')({
 const SidePanelContentDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
-  width: '100%',
+  minWidth: '400px',
   overflow: 'auto',
 });
 const SidePanelResizerDiv = styled('div')(({ theme }) => ({
-  width: '8px',
-  borderLeft: `thin solid ${theme.palette.divider}`,
+  width: '5px',
+  position: 'relative',
+  left: '-2px',
+  cursor: 'col-resize',
+  transition: 'background .24s .24s',
+  zIndex: 2,
+  '&:before': {
+    display: 'block',
+    content: '""',
+    width: '1px',
+    background: theme.palette.divider,
+    marginLeft: '2px',
+    height: '100%',
+  },
+  '&:hover': {
+    background: theme.palette.primary.main,
+  },
+  '&:active': {
+    background: theme.palette.primary.dark,
+  },
 }));
 const SidePanelSectionDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
-  minWidth: '420px',
 });
 const SidePanelSectionHeaderDiv = styled('div')(({ theme }) => ({
   paddingRight: '1rem',
@@ -40,10 +58,47 @@ export interface SidePanelProps {
 }
 
 export function SidePanel(props: SidePanelProps) {
+  const contentDivRef = useRef<HTMLDivElement | null>(null);
+  const [dragging, setDragging] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  useEffect(() => {
+    if (dragging && contentDivRef.current) {
+      const contentDiv = contentDivRef.current;
+      const initialContentDivWidth = contentDiv.getBoundingClientRect().width;
+      const subscription = new Subscription();
+      subscription.add(
+        fromEvent(document, 'mouseup').subscribe(() => {
+          setDragging(null);
+        })
+      );
+      subscription.add(
+        fromEvent(document, 'mousemove', (event: MouseEvent) => ({
+          x: event.clientX,
+          y: event.clientY,
+        }))
+          .pipe(map((b) => ({ x: b.x - dragging.x, y: b.y - dragging.y })))
+          .subscribe((diff) => {
+            contentDiv.style.width = `${initialContentDivWidth + diff.x}px`;
+          })
+      );
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [dragging]);
   return (
     <SidePanelDiv>
-      <SidePanelContentDiv>{props.children}</SidePanelContentDiv>
-      <SidePanelResizerDiv />
+      <SidePanelContentDiv ref={contentDivRef}>
+        {props.children}
+      </SidePanelContentDiv>
+      <SidePanelResizerDiv
+        onMouseDown={(event) =>
+          setDragging({ x: event.clientX, y: event.clientY })
+        }
+      />
     </SidePanelDiv>
   );
 }
