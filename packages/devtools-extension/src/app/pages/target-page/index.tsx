@@ -17,13 +17,13 @@ export function TargetPage() {
       }}
     >
       <SidePanel>
-        <SidePanelSection title="SCOPE" basis={1}>
+        <SidePanelSection title="SCOPE">
           <ContextPanel />
         </SidePanelSection>
-        <SidePanelSection title="TARGETS" basis={1}>
+        <SidePanelSection title="TARGETS">
           <TargetsPanel />
         </SidePanelSection>
-        <SidePanelSection title="EVENTS" basis={2}>
+        <SidePanelSection title="EVENTS">
           <EventsPanel />
         </SidePanelSection>
       </SidePanel>

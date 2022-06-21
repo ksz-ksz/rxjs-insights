@@ -21,6 +21,9 @@ import {
 
 declare module '@mui/material/styles' {
   interface Theme {
+    custom: {
+      sidePanelHeaderBackground: React.CSSProperties['color'];
+    };
     inspector: {
       primary: React.CSSProperties['color'];
       secondary: React.CSSProperties['color'];
@@ -66,6 +69,9 @@ declare module '@mui/material/styles' {
   }
 
   interface ThemeOptions {
+    custom: {
+      sidePanelHeaderBackground: React.CSSProperties['color'];
+    };
     inspector: {
       primary: React.CSSProperties['color'];
       secondary: React.CSSProperties['color'];
@@ -117,6 +123,9 @@ export function App() {
   const theme = React.useMemo(
     () =>
       createTheme({
+        custom: {
+          sidePanelHeaderBackground: '#2F2F2F',
+        },
         palette: {
           mode: prefersDarkMode ? 'dark' : 'light',
         },

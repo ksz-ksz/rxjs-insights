@@ -23,7 +23,6 @@ import { getEvents } from '@app/pages/target-page/get-events';
 import { getIncludedEvents } from '@app/pages/target-page/get-included-events';
 import { EventsTimeline } from '@app/pages/target-page/events-timeline';
 import { EventsControls } from '@app/pages/target-page/events-controls';
-import { getTimeline } from '@app/pages/target-page/get-timeline';
 
 const IndentSpan = styled('span')(({ theme }) => ({
   display: 'inline-block',
@@ -230,6 +229,13 @@ function getClosestEvent(
   }
 }
 
+const ControlsDiv = styled('div')(({ theme }) => ({
+  position: 'sticky',
+  bottom: 0,
+  zIndex: 1,
+  backgroundColor: theme.custom.sidePanelHeaderBackground,
+}));
+
 export function EventsPanel() {
   const vm = useSelector(vmSelector);
 
@@ -304,20 +310,22 @@ export function EventsPanel() {
         entries={vm.entries}
         onEventSelected={onEventSelected}
       />
-      <EventsTimeline
-        events={vm.events}
-        event={vm.event}
-        onTimestampSelected={onTimestampSelected}
-      />
-      <EventsControls
-        playing={vm.playing}
-        onGoToFirst={onGoToFirst}
-        onGoToPrev={onGoToPrev}
-        onPlay={onPlay}
-        onPause={onPause}
-        onGoToNext={onGoToNext}
-        onGoToLast={onGoToLast}
-      />
+      <ControlsDiv>
+        <EventsTimeline
+          events={vm.events}
+          event={vm.event}
+          onTimestampSelected={onTimestampSelected}
+        />
+        <EventsControls
+          playing={vm.playing}
+          onGoToFirst={onGoToFirst}
+          onGoToPrev={onGoToPrev}
+          onPlay={onPlay}
+          onPause={onPause}
+          onGoToNext={onGoToNext}
+          onGoToLast={onGoToLast}
+        />
+      </ControlsDiv>
     </EventsPanelDiv>
   );
 }

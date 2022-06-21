@@ -1,5 +1,6 @@
 import { styled } from '@mui/material';
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
+import { ChevronRight } from '@mui/icons-material';
 
 const SidePanelDiv = styled('div')({
   display: 'flex',
@@ -9,6 +10,7 @@ const SidePanelContentDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
   width: '100%',
+  overflow: 'auto',
 });
 const SidePanelResizerDiv = styled('div')(({ theme }) => ({
   width: '8px',
@@ -17,19 +19,21 @@ const SidePanelResizerDiv = styled('div')(({ theme }) => ({
 const SidePanelSectionDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
-  overflow: 'hidden',
-  flexBasis: 0,
+  minWidth: '420px',
 });
 const SidePanelSectionHeaderDiv = styled('div')(({ theme }) => ({
-  padding: '0 1rem',
-  backgroundColor: theme.palette.divider,
+  paddingRight: '1rem',
+  backgroundColor: theme.custom.sidePanelHeaderBackground,
   fontFamily: 'Monospace',
   fontWeight: 'bold',
+  display: 'flex',
+  borderBottom: `thin solid ${theme.palette.background.default}`,
+  cursor: 'pointer',
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
 }));
-const SidePanelSectionBodyDiv = styled('div')({
-  overflow: 'hidden',
-  height: '100%',
-});
+const SidePanelSectionBodyDiv = styled('div')({});
 
 export interface SidePanelProps {
   children: ReactNode | ReactNode[];
@@ -46,17 +50,23 @@ export function SidePanel(props: SidePanelProps) {
 
 export interface SidePanelSectionProps {
   title: string;
-  basis: number;
   children: ReactNode | ReactNode[];
 }
 
 export function SidePanelSection(props: SidePanelSectionProps) {
+  const [expanded, setExpanded] = useState(true);
+
   return (
-    <SidePanelSectionDiv
-      sx={{ flexGrow: props.basis, flexShrink: props.basis }}
-    >
-      <SidePanelSectionHeaderDiv>{props.title}</SidePanelSectionHeaderDiv>
-      <SidePanelSectionBodyDiv>{props.children}</SidePanelSectionBodyDiv>
+    <SidePanelSectionDiv>
+      <SidePanelSectionHeaderDiv onClick={() => setExpanded(!expanded)}>
+        <ChevronRight
+          style={{ transform: expanded ? 'rotate(90deg)' : 'none' }}
+        />
+        {props.title}
+      </SidePanelSectionHeaderDiv>
+      {expanded && (
+        <SidePanelSectionBodyDiv>{props.children}</SidePanelSectionBodyDiv>
+      )}
     </SidePanelSectionDiv>
   );
 }

@@ -170,7 +170,6 @@ export function EventsTimeline({
         style={{
           width: '100%',
           display: 'flex',
-          backgroundColor: theme.palette.divider,
           borderBottom: `thin solid ${theme.palette.background.default}`,
         }}
       >

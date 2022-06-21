@@ -27,12 +27,7 @@ interface EventsControlsProps {
 
 export function EventsControls(props: EventsControlsProps) {
   return (
-    <Stack
-      sx={{ backgroundColor: 'divider' }}
-      direction="row"
-      spacing={1}
-      justifyContent="center"
-    >
+    <Stack direction="row" spacing={1} justifyContent="center">
       <IconButton onClick={props.onGoToFirst}>
         <SkipPrevious />
       </IconButton>
