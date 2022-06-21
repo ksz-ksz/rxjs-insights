@@ -7,6 +7,7 @@ export {
   Subscriber,
   SubscriberEvent,
   Task,
+  Target,
   deref,
   ref,
 } from './lib/model';

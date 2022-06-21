@@ -80,6 +80,7 @@ export class ModelRecorder implements Recorder {
     const destination = deref(destinationTargetRef);
     const subscriber = new Subscriber(target, observable, destination);
 
+    destination?.sources?.push(subscriber);
     observable.subscribers.push(subscriber);
 
     incStats(this.stats.subscribers, observable.declaration.name);

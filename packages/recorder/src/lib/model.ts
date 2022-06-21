@@ -22,18 +22,23 @@ export class Declaration {
   ) {}
 }
 
-export abstract class Target {
+export abstract class Target<EVENT extends Event = Event> {
   private static IDS = 0;
 
   readonly id = Target.IDS++;
 
+  protected constructor(
+    readonly sources: Subscriber[] = [],
+    readonly events: EVENT[] = []
+  ) {}
+
   abstract readonly type: 'observable' | 'subscriber';
   abstract readonly tags: string[];
   abstract readonly declaration: Declaration;
-  abstract readonly events: Event[];
+  abstract readonly destinations: Target[];
 }
 
-export class Observable extends Target {
+export class Observable extends Target<ObservableEvent> {
   readonly type = 'observable';
 
   constructor(
@@ -41,23 +46,33 @@ export class Observable extends Target {
     readonly declaration: Declaration,
     readonly sourceObservable?: Observable,
     readonly subscribers: Subscriber[] = [],
-    readonly events: ObservableEvent[] = [],
+    sources: Subscriber[] = [],
+    events: ObservableEvent[] = [],
     readonly tags: string[] = []
   ) {
-    super();
+    super(sources, events);
+  }
+
+  get destinations(): Target[] {
+    return this.subscribers;
   }
 }
 
-export class Subscriber extends Target {
+export class Subscriber extends Target<SubscriberEvent> {
   readonly type = 'subscriber';
 
   constructor(
     readonly target: any[],
     readonly observable: Observable,
     readonly destination: Target | undefined,
-    readonly events: SubscriberEvent[] = []
+    sources: Subscriber[] = [],
+    events: SubscriberEvent[] = []
   ) {
-    super();
+    super(sources, events);
+  }
+
+  get destinations(): Target[] {
+    return this.destination ? [this.destination] : [];
   }
 
   get declaration() {

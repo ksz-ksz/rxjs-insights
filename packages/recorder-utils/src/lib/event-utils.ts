@@ -4,6 +4,12 @@ function isSubscriptionEvent(event: Event) {
   return event.type === 'subscribe' || event.type === 'unsubscribe';
 }
 
+function isNotificationEvent(event: Event) {
+  return (
+    event.type === 'next' || event.type === 'error' || event.type === 'complete'
+  );
+}
+
 function isInternal(event: Event) {
   return event.target.declaration.internal;
 }
@@ -38,4 +44,16 @@ export function getDestinationEvents(event: Event) {
   return isSubscriptionEvent(event)
     ? getPrecedingEvents(event)
     : getSucceedingEvents(event);
+}
+
+export function getSourceNotifications(event: Event) {
+  return isNotificationEvent(event)
+    ? getSourceEvents(event).filter(isNotificationEvent)
+    : [];
+}
+
+export function getDestinationNotifications(event: Event) {
+  return isNotificationEvent(event)
+    ? getDestinationEvents(event).filter(isNotificationEvent)
+    : [];
 }

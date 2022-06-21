@@ -19,6 +19,7 @@ import {
   Event,
   Observable,
   Subscriber,
+  Target,
   Task,
 } from '@rxjs-insights/recorder';
 import { Targets, TargetsChannel } from '@app/protocols/targets';
@@ -40,19 +41,12 @@ import {
   TracesChannel,
 } from '@app/protocols/traces';
 import { RefsService } from './refs-service';
+import { EventRef, Refs, RefsChannel, TargetRef } from '@app/protocols/refs';
 import {
-  EventRef,
-  ObservableRef,
-  Refs,
-  RefsChannel,
-  SubscriberRef,
-  TargetRef,
-} from '@app/protocols/refs';
-import {
-  getDestinationEvents,
   getObservable,
   getPrecedingEvent,
-  getSourceEvents,
+  getRelatedDestinationTargets,
+  getRelatedSourceTargets,
   getSubscriber,
   getSucceedingEvents,
   isObservableTarget,
@@ -186,9 +180,9 @@ function getEndTime(events: Event[]) {
 function addRelatedTarget(
   rootTargetRefId: number,
   relations: Relations,
-  target: Subscriber | Observable,
+  target: Target,
   relation: 'sources' | 'destinations',
-  relatedTargets: Set<Subscriber | Observable>
+  relatedTargets: Target[]
 ) {
   const targets = relations.targets;
   if (targets[target.id] === undefined) {
@@ -203,12 +197,10 @@ function addRelatedTarget(
           ? getEndTime(target.events)
           : OUT_OF_BOUNDS_MAX_TIME,
       locations: target.declaration.locations,
-      [relation]: Array.from(relatedTargets).map(({ id }) => id),
+      [relation]: relatedTargets.map(({ id }) => id),
     };
   } else if (targets[target.id][relation] === undefined) {
-    targets[target.id][relation] = Array.from(relatedTargets).map(
-      ({ id }) => id
-    );
+    targets[target.id][relation] = relatedTargets.map(({ id }) => id);
   }
 }
 
@@ -249,17 +241,15 @@ function collectRelatedTargets(
   rootTargetRefId: number,
   targets: Set<number>,
   relations: Relations,
-  target: Subscriber | Observable,
+  target: Target,
   relation: 'sources' | 'destinations',
-  getRelatedEvents: (event: Event) => Event[]
+  getRelatedTargets: (target: Target) => Target[]
 ) {
   if (targets.has(target.id)) {
     return;
   }
   targets.add(target.id);
-  const relatedEvents = target.events.flatMap(getRelatedEvents);
-  const relatedTargets = new Set(relatedEvents.map(({ target }) => target));
-  relatedTargets.delete(target);
+  const relatedTargets = getRelatedTargets(target);
   addRelatedTarget(
     rootTargetRefId,
     relations,
@@ -277,7 +267,7 @@ function collectRelatedTargets(
       relations,
       relatedTarget,
       relation,
-      getRelatedEvents
+      getRelatedTargets
     );
   }
 }
@@ -307,15 +297,16 @@ function getTargetState(target: Subscriber | Observable): TargetState {
     relations,
     target,
     'sources',
-    getSourceEvents
+    getRelatedSourceTargets
   );
+
   collectRelatedTargets(
     rootTarget.refId!,
     new Set(),
     relations,
     target,
     'destinations',
-    getDestinationEvents
+    getRelatedDestinationTargets
   );
 
   return { target: rootTarget, relations };
