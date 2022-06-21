@@ -34,7 +34,7 @@ const circleRadius = 5;
 const circleCircumference = 2 * Math.PI * circleRadius;
 
 function getLocationStrings(locations: Locations) {
-  const location = locations.generatedLocation ?? locations.generatedLocation;
+  const location = locations.originalLocation ?? locations.generatedLocation;
   if (location) {
     const { file, line, column } = location;
     const short = `${file.split('/').at(-1)}:${line}`;
