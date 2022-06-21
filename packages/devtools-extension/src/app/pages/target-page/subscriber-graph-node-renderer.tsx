@@ -313,16 +313,6 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
             <title>{vm.location.long}</title>
           </text>
         )}
-        <text
-          fontFamily="Monospace"
-          fontStyle="oblique"
-          fontSize="4"
-          textAnchor="middle"
-          fill={theme.palette.text.secondary}
-          y="24"
-        >
-          {vm.targetKey}
-        </text>
       </g>
     </g>
   );

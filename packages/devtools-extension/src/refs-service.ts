@@ -294,6 +294,7 @@ export class RefsService implements Refs {
       declaration,
       sourceObservable,
       subscribers,
+      sources,
       events,
       tags,
       id,
@@ -336,6 +337,7 @@ export class RefsService implements Refs {
         ? [property('SourceObservable', this.create(sourceObservable, refId))]
         : []),
       property('Subscribers', this.create(new Entries(subscribers), refId)),
+      property('Sources', this.create(new Entries(sources), refId)),
       property('Events', this.create(new Entries(events), refId)),
       property('Target', this.createDefault(target, refId)),
     ];
@@ -345,8 +347,16 @@ export class RefsService implements Refs {
     subscriber: Subscriber,
     refId: number
   ): PropertyRef[] {
-    const { id, observable, destination, declaration, tags, target, events } =
-      subscriber;
+    const {
+      id,
+      observable,
+      sources,
+      destination,
+      declaration,
+      tags,
+      target,
+      events,
+    } = subscriber;
     return [
       property('Id', this.create(id, refId)),
       property('Name', this.create(declaration.name, refId)),
@@ -384,6 +394,7 @@ export class RefsService implements Refs {
       ...(destination
         ? [property('Destination', this.create(destination, refId))]
         : []),
+      property('Sources', this.create(new Entries(sources), refId)),
       property('Events', this.create(new Entries(events), refId)),
       ...(target.length !== 0
         ? [
