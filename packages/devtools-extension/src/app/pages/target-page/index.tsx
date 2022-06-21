@@ -4,6 +4,7 @@ import { SidePanel, SidePanelSection } from '@app/components';
 import { EventsPanel } from '@app/pages/target-page/events-panel';
 import { SubscribersGraph } from '@app/pages/target-page/subscribers-graph';
 import { ContextPanel } from '@app/pages/target-page/context-panel';
+import { TargetsPanel } from '@app/pages/target-page/targets-panel';
 
 export function TargetPage() {
   return (
@@ -16,8 +17,11 @@ export function TargetPage() {
       }}
     >
       <SidePanel>
-        <SidePanelSection title="CONTEXT" basis={1}>
+        <SidePanelSection title="SCOPE" basis={1}>
           <ContextPanel />
+        </SidePanelSection>
+        <SidePanelSection title="TARGETS" basis={1}>
+          <TargetsPanel />
         </SidePanelSection>
         <SidePanelSection title="EVENTS" basis={2}>
           <EventsPanel />
