@@ -1,7 +1,7 @@
 import { styled } from '@mui/material';
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { ChevronRight } from '@mui/icons-material';
-import { fromEvent, map, pairwise, scan, startWith, Subscription } from 'rxjs';
+import { fromEvent, map, switchMap, takeUntil } from 'rxjs';
 
 const SidePanelDiv = styled('div')({
   display: 'flex',
@@ -59,46 +59,44 @@ export interface SidePanelProps {
 
 export function SidePanel(props: SidePanelProps) {
   const contentDivRef = useRef<HTMLDivElement | null>(null);
-  const [dragging, setDragging] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const resizerDivRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    if (dragging && contentDivRef.current) {
+    if (contentDivRef.current && resizerDivRef.current) {
       const contentDiv = contentDivRef.current;
-      const initialContentDivWidth = contentDiv.getBoundingClientRect().width;
-      const subscription = new Subscription();
-      subscription.add(
-        fromEvent(document, 'mouseup').subscribe(() => {
-          setDragging(null);
-        })
-      );
-      subscription.add(
-        fromEvent(document, 'mousemove', (event: MouseEvent) => ({
-          x: event.clientX,
-          y: event.clientY,
-        }))
-          .pipe(map((b) => ({ x: b.x - dragging.x, y: b.y - dragging.y })))
-          .subscribe((diff) => {
-            contentDiv.style.width = `${initialContentDivWidth + diff.x}px`;
+      const resizerDiv = resizerDivRef.current;
+      const subscription = fromEvent(
+        resizerDiv,
+        'mousedown',
+        (event: MouseEvent) => event.clientX
+      )
+        .pipe(
+          switchMap((initialMouseX) => {
+            const initialContentDivWidth =
+              contentDiv.getBoundingClientRect().width;
+            return fromEvent(document, 'mousemove', (event: MouseEvent) => {
+              event.preventDefault();
+              return event.clientX;
+            }).pipe(
+              map((mouseX) => initialContentDivWidth + mouseX - initialMouseX),
+              takeUntil(fromEvent(document, 'mouseup'))
+            );
           })
-      );
+        )
+        .subscribe((width) => {
+          contentDiv.style.width = `${width}px`;
+        });
 
       return () => {
         subscription.unsubscribe();
       };
     }
-  }, [dragging]);
+  }, []);
   return (
     <SidePanelDiv>
       <SidePanelContentDiv ref={contentDivRef}>
         {props.children}
       </SidePanelContentDiv>
-      <SidePanelResizerDiv
-        onMouseDown={(event) =>
-          setDragging({ x: event.clientX, y: event.clientY })
-        }
-      />
+      <SidePanelResizerDiv ref={resizerDivRef} />
     </SidePanelDiv>
   );
 }

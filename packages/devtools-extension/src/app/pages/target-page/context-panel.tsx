@@ -10,7 +10,6 @@ const ContextPanelDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
   height: '100%',
-  overflow: 'auto',
   whiteSpace: 'nowrap',
   paddingRight: '1rem',
   cursor: 'default',

@@ -57,7 +57,6 @@ const EventsLogDiv = styled('div')({
   flexDirection: 'column',
   whiteSpace: 'nowrap',
   height: '100%',
-  overflow: 'auto',
   cursor: 'default',
 });
 
