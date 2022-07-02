@@ -12,7 +12,7 @@ import {
 } from '@app/selectors/active-target-state-selector';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { getEventElementId } from '@app/utils/get-event-element-id';
-import { RefOutlet } from '@app/components/ref-outlet';
+import { RefOutlet, RefSummaryOutlet } from '@app/components/ref-outlet';
 import {
   EventLogEntry,
   getEventLogEntries,
@@ -91,11 +91,7 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
               >
                 <Indent indent={entry.indent} />
                 <RefOutletSpan data-dim={entry.excluded}>
-                  <RefOutlet
-                    summary
-                    reference={entry.event}
-                    stateKey={'summary'}
-                  />
+                  <RefSummaryOutlet reference={entry.event} />
                 </RefOutletSpan>
               </EventSpan>
             );
@@ -109,11 +105,7 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
               >
                 <Indent indent={entry.indent} />
                 <RefOutletSpan data-dim={entry.excluded}>
-                  <RefOutlet
-                    summary
-                    reference={entry.event}
-                    stateKey={'summary'}
-                  />
+                  <RefSummaryOutlet reference={entry.event} />
                   {' ↴'}
                 </RefOutletSpan>
               </EventSpan>

@@ -576,14 +576,6 @@ function GetterRefOutletRenderer(props: RefOutletRendererProps<GetterRef>) {
   );
 }
 
-export interface RefOutletProps {
-  type?: 'enumerable' | 'nonenumerable' | 'special';
-  label?: string;
-  summary?: boolean;
-  reference: Ref;
-  stateKey: string;
-}
-
 interface RefOutletEntry {
   indent: number;
   path: string;
@@ -716,49 +708,60 @@ export function RefOutletEntry({
   }
 }
 
+export interface RefSummaryOutletProps {
+  type?: 'enumerable' | 'nonenumerable' | 'special';
+  label?: string;
+  reference: Ref;
+}
+
+export function RefSummaryOutlet({
+  reference,
+  type,
+  label,
+}: RefSummaryOutletProps) {
+  return (
+    <ValueRefOutletRenderer
+      indent={0}
+      stateKey={'summary'}
+      type={type}
+      label={label}
+      path={'root'}
+      reference={reference}
+      expanded={false}
+      expandable={false}
+    />
+  );
+}
+
+export interface RefOutletProps {
+  type?: 'enumerable' | 'nonenumerable' | 'special';
+  label?: string;
+  reference: Ref;
+  stateKey: string;
+}
+
 export function RefOutlet({
   type = 'enumerable',
   label,
   reference,
-  summary = false,
   stateKey,
 }: RefOutletProps) {
-  if (summary) {
-    return (
-      <RefOutletEntry
-        indent={0}
-        stateKey={stateKey}
-        path={'root'}
-        reference={reference}
-        expanded={false}
-        expandable={false}
-        summary={true}
-      />
-    );
-  } else {
-    const vm = useSelectorFunction(
-      vmSelector,
-      stateKey,
-      reference,
-      type,
-      label
-    );
-    return (
-      <>
-        {vm.entries.map((entry) => (
-          <RefOutletEntry
-            indent={entry.indent}
-            stateKey={stateKey}
-            path={entry.path}
-            reference={entry.ref}
-            expanded={entry.expanded}
-            expandable={entry.expandable}
-            label={entry.label}
-            type={entry.type}
-            summary={false}
-          />
-        ))}
-      </>
-    );
-  }
+  const vm = useSelectorFunction(vmSelector, stateKey, reference, type, label);
+  return (
+    <>
+      {vm.entries.map((entry) => (
+        <RefOutletEntry
+          indent={entry.indent}
+          stateKey={stateKey}
+          path={entry.path}
+          reference={entry.ref}
+          expanded={entry.expanded}
+          expandable={entry.expandable}
+          label={entry.label}
+          type={entry.type}
+          summary={false}
+        />
+      ))}
+    </>
+  );
 }

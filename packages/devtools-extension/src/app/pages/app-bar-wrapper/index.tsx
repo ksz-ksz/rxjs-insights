@@ -17,7 +17,7 @@ import { targetsSelector } from '@app/store/targets';
 import { TargetPage } from '@app/pages/target-page';
 import { DashboardPage } from '@app/pages/dashboard-page';
 import { activeTargetIdSelector } from '@app/selectors/targets-selectors';
-import { RefOutlet } from '@app/components/ref-outlet';
+import { RefOutlet, RefSummaryOutlet } from '@app/components/ref-outlet';
 
 const HomeSpan = styled('span')(({ theme }) => ({
   fontWeight: 600,
@@ -58,11 +58,7 @@ export function AppBarWrapper() {
                 to={createUrl(['target', String(target.id)])}
                 label={
                   <Box>
-                    <RefOutlet
-                      summary
-                      reference={target}
-                      stateKey={'summary'}
-                    />
+                    <RefSummaryOutlet reference={target} />
                     <IconButton
                       size="small"
                       edge="start"
