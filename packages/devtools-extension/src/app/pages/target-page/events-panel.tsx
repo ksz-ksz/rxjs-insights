@@ -1,5 +1,5 @@
 import { RelatedEvent } from '@app/protocols/insights';
-import React, { ReactNode, useMemo } from 'react';
+import React from 'react';
 import { styled } from '@mui/material';
 import { useSelector } from '@app/store';
 import {
@@ -23,14 +23,7 @@ import { getEvents } from '@app/pages/target-page/get-events';
 import { getIncludedEvents } from '@app/pages/target-page/get-included-events';
 import { EventsTimeline } from '@app/pages/target-page/events-timeline';
 import { EventsControls } from '@app/pages/target-page/events-controls';
-
-const IndentSpan = styled('span')(({ theme }) => ({
-  display: 'inline-block',
-  width: '1rem',
-  height: '1.5rem',
-  borderRight: `thin solid ${theme.palette.divider}`,
-  margin: '-0.25rem 0',
-}));
+import { Indent } from '@app/components/indent';
 
 const TaskSpan = styled('span')(({ theme }) => ({
   display: 'inline-flex',
@@ -48,10 +41,6 @@ const TaskSpan = styled('span')(({ theme }) => ({
   },
 }));
 
-interface IndentProps {
-  indent: number;
-}
-
 const EventsLogDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
@@ -59,17 +48,6 @@ const EventsLogDiv = styled('div')({
   height: '100%',
   cursor: 'default',
 });
-
-function Indent({ indent }: IndentProps) {
-  const children = useMemo(() => {
-    const children: ReactNode[] = [];
-    for (let i = 0; i < indent; i++) {
-      children.push(<IndentSpan />);
-    }
-    return children;
-  }, [indent]);
-  return <>{children}</>;
-}
 
 const EventSpan = styled('span')(({ theme }) => ({
   paddingRight: '1rem',
@@ -113,7 +91,11 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
               >
                 <Indent indent={entry.indent} />
                 <RefOutletSpan data-dim={entry.excluded}>
-                  <RefOutlet summary reference={entry.event} />
+                  <RefOutlet
+                    summary
+                    reference={entry.event}
+                    stateKey={'summary'}
+                  />
                 </RefOutletSpan>
               </EventSpan>
             );
@@ -127,7 +109,11 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
               >
                 <Indent indent={entry.indent} />
                 <RefOutletSpan data-dim={entry.excluded}>
-                  <RefOutlet summary reference={entry.event} />
+                  <RefOutlet
+                    summary
+                    reference={entry.event}
+                    stateKey={'summary'}
+                  />
                   {' ↴'}
                 </RefOutletSpan>
               </EventSpan>

@@ -114,20 +114,6 @@ function updateKeyMapping(state: InsightsState, targetId: number) {
   );
 }
 
-function getPrefixes(toKey: string) {
-  const path = toKey.split('.');
-  const prefixes = [];
-  let p = '';
-  for (let seg of path) {
-    if (p !== '') {
-      p += '.';
-    }
-    p += seg;
-    prefixes.push(p);
-  }
-  return prefixes;
-}
-
 export const insightsReducer = createReducer('insights', {
   time: 0,
   playing: false,

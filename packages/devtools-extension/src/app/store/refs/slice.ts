@@ -1,56 +1,66 @@
 import { createReducer, Slice } from '@lib/store';
-import { PropertyRef, Ref } from '@app/protocols/refs';
+import { PropertyRef } from '@app/protocols/refs';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { refsActions } from '@app/actions/refs-actions';
 
 export interface RefState {
-  expanded?: boolean;
-  props?: PropertyRef[];
-  ref?: Ref; // resolved getter ref
+  expandedObjects: Record<number, PropertyRef[]>;
+}
+
+export interface RefUiState {
+  expandedPaths: Set<string>;
 }
 
 export interface RefsState {
-  refs: Record<number, RefState>;
+  states: Record<string, RefState>;
+  uiStates: Record<string, RefUiState>;
 }
 
 export type RefsSlice = Slice<'refs', RefsState>;
 
 export const refsReducer = createReducer('refs', {
-  refs: {},
+  states: {},
+  uiStates: {},
 } as RefsState)
   .add(refOutletActions.Expand, (state, action) => {
-    const ref = state.refs[action.payload.refId];
-    if (ref) {
-      ref.expanded = true;
-    } else {
-      state.refs[action.payload.refId] = { expanded: true };
+    const { stateKey, path } = action.payload;
+    if (!state.uiStates[stateKey]) {
+      state.uiStates[stateKey] = {
+        expandedPaths: new Set(),
+      };
     }
+    state.uiStates[stateKey].expandedPaths.add(path);
   })
   .add(refOutletActions.Collapse, (state, action) => {
-    const ref = state.refs[action.payload.refId];
-    if (ref) {
-      ref.expanded = false;
-    } else {
-      state.refs[action.payload.refId] = { expanded: false };
-    }
-  })
-  .add(refsActions.PropsLoaded, (state, action) => {
-    const ref = state.refs[action.payload.refId];
-    if (ref) {
-      ref.props = action.payload.props;
-    } else {
-      state.refs[action.payload.refId] = {
-        props: action.payload.props,
+    const { stateKey, path } = action.payload;
+    if (!state.uiStates[stateKey]) {
+      state.uiStates[stateKey] = {
+        expandedPaths: new Set(),
       };
     }
+    state.uiStates[stateKey].expandedPaths.delete(path);
   })
-  .add(refsActions.RefLoaded, (state, action) => {
-    const ref = state.refs[action.payload.refId];
-    if (ref) {
-      ref.ref = action.payload.ref;
-    } else {
-      state.refs[action.payload.refId] = {
-        ref: action.payload.ref,
+  .add(refsActions.RefsForExpandedPathsLoaded, (state, action) => {
+    const { stateKey, refs } = action.payload;
+    if (!state.states[stateKey]) {
+      state.states[stateKey] = {
+        expandedObjects: {},
       };
+    }
+    state.states[stateKey].expandedObjects = refs;
+  })
+  .add(refsActions.RefForInvokedGetterLoaded, (state, action) => {
+    const { stateKey, objectId, keyId, ref } = action.payload;
+    if (!state.states[stateKey]) {
+      state.states[stateKey] = {
+        expandedObjects: {},
+      };
+    }
+    const props = state.states[stateKey].expandedObjects[objectId];
+    for (let prop of props) {
+      if (prop.keyId === keyId) {
+        prop.val = ref;
+        break;
+      }
     }
   });

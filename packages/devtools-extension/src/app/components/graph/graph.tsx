@@ -57,8 +57,8 @@ export interface GraphProps<T> {
   nodes: NodeData<T>[];
   links: LinkData<T>[];
   focus?: (number | string)[];
-  nodeRenderer?: Renderer<NodeRendererProps<T>, NodeControl>;
-  linkRenderer?: Renderer<LinkRendererProps<T>, LinkControl>;
+  nodeRenderer: Renderer<NodeRendererProps<T>, NodeControl>;
+  linkRenderer: Renderer<LinkRendererProps<T>, LinkControl>;
   getNodeKey(node: NodeData<T>): number | string;
   getLinkKey(link: LinkData<T>): number | string;
 }

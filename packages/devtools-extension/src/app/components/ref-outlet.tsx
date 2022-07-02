@@ -9,6 +9,7 @@ import {
   MapRef,
   ObjectRef,
   ObservableRef,
+  PropertyRef,
   Ref,
   SetRef,
   SubscriberRef,
@@ -18,9 +19,15 @@ import {
 } from '@app/protocols/refs';
 import React, { JSXElementConstructor, MouseEvent, useCallback } from 'react';
 import { styled } from '@mui/material';
-import { refStateSelector } from '@app/selectors/refs-selectors';
+import {
+  refStateSelector,
+  refUiStateSelector,
+} from '@app/selectors/refs-selectors';
 import { useDispatch, useSelectorFunction } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
+import { RefState, RefUiState } from '@app/store/refs';
+import { createSelector } from '@lib/store';
+import { Indent } from '@app/components/indent';
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
@@ -478,13 +485,6 @@ const LabelSpan = styled('span')(({ theme }) => ({
     color: theme.inspector.secondary,
   },
 }));
-
-interface ObjectRefOutletProps {
-  type: 'enumerable' | 'nonenumerable' | 'special';
-  label?: string | number;
-  reference: Extract<Ref, { refId?: number }> & { refId: number };
-}
-
 const RefOutletDiv = styled('div')({
   display: 'inline-flex',
   flexDirection: 'column',
@@ -495,102 +495,225 @@ const RefOutletLabelDiv = styled('div')({
   display: 'inline-block',
   textAlign: 'left',
 });
-
-const RefOutletPropsDiv = styled('div')({
+styled('div')({
   display: 'inline-flex',
   flexDirection: 'column',
   marginLeft: '2ch',
 });
 
-function ObjectRefOutlet(props: ObjectRefOutletProps) {
-  const refState = useSelectorFunction(refStateSelector, props.reference.refId);
+function ObjectRefOutletRenderer(
+  props: RefOutletRendererProps<Extract<Ref, { objectId?: number }>>
+) {
   const dispatch = useDispatch();
   const onToggle = useCallback(() => {
-    if (refState.expanded) {
-      dispatch(refOutletActions.Collapse({ refId: props.reference.refId }));
+    if (props.expanded) {
+      dispatch(
+        refOutletActions.Collapse({
+          ref: props.reference,
+          stateKey: props.stateKey,
+          path: props.path,
+        })
+      );
     } else {
-      dispatch(refOutletActions.Expand({ refId: props.reference.refId }));
+      dispatch(
+        refOutletActions.Expand({
+          ref: props.reference,
+          stateKey: props.stateKey,
+          path: props.path,
+        })
+      );
     }
-  }, [refState, props.reference.refId]);
+  }, [props.expanded, props.reference.objectId]);
   const TagRenderer = getTagRenderer(props.reference.type);
 
   return (
     <RefOutletDiv>
       <RefOutletLabelDiv onClick={onToggle}>
+        <Indent indent={props.indent} />
         <LabelSpan
-          data-state={refState.expanded ? 'expanded' : 'collapsed'}
+          data-state={props.expanded ? 'expanded' : 'collapsed'}
           data-type={props.type}
         >
           {props.label}
         </LabelSpan>
         <TagRenderer reference={props.reference} />
       </RefOutletLabelDiv>
-      {refState.expanded && refState.props ? (
-        <RefOutletPropsDiv>
-          {refState.props.map((prop) => (
-            <RefOutlet label={prop.key} type={prop.type} reference={prop.val} />
-          ))}
-        </RefOutletPropsDiv>
-      ) : null}
     </RefOutletDiv>
   );
 }
-
-interface ValueRefOutletProps {
-  type: 'enumerable' | 'nonenumerable' | 'special';
-  label?: string | number;
-  reference: Ref;
-}
-
-function ValueRefOutlet(props: ValueRefOutletProps) {
+function ValueRefOutletRenderer(props: RefOutletRendererProps) {
   const TagRenderer = getTagRenderer(props.reference.type);
 
   return (
     <RefOutletLabelDiv>
+      <Indent indent={props.indent} />
       <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
       <TagRenderer reference={props.reference} />
     </RefOutletLabelDiv>
   );
 }
 
-interface GetterRefOutletProps {
-  type: 'enumerable' | 'nonenumerable' | 'special';
-  label?: string | number;
-  reference: GetterRef;
-}
-
-function GetterRefOutlet(props: GetterRefOutletProps) {
-  const refState = useSelectorFunction(refStateSelector, props.reference.refId);
+function GetterRefOutletRenderer(props: RefOutletRendererProps<GetterRef>) {
   const dispatch = useDispatch();
   const onInvoke = useCallback(() => {
-    dispatch(refOutletActions.InvokeGetter({ refId: props.reference.refId }));
-  }, [props.reference.refId]);
+    dispatch(
+      refOutletActions.InvokeGetter({
+        ref: props.reference,
+        stateKey: props.stateKey,
+        path: props.path,
+      })
+    );
+  }, [props.reference.objectId]);
 
-  if (refState.ref) {
-    return (
-      <RefOutlet
-        type={props.type}
-        label={props.label}
-        reference={refState.ref}
-      />
-    );
-  } else {
-    return (
-      <RefOutletLabelDiv>
-        <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
-        <a onClick={onInvoke}>
-          <MonospaceSpan sx={{ title: 'Invoke getter' }}>(...)</MonospaceSpan>
-        </a>
-      </RefOutletLabelDiv>
-    );
-  }
+  return (
+    <RefOutletLabelDiv>
+      <Indent indent={props.indent} />
+      <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
+      <a onClick={onInvoke}>
+        <MonospaceSpan sx={{ title: 'Invoke getter' }}>(...)</MonospaceSpan>
+      </a>
+    </RefOutletLabelDiv>
+  );
 }
 
 export interface RefOutletProps {
   type?: 'enumerable' | 'nonenumerable' | 'special';
-  label?: string | number;
+  label?: string;
   summary?: boolean;
   reference: Ref;
+  stateKey: string;
+}
+
+interface RefOutletEntry {
+  indent: number;
+  path: string;
+  ref: Ref;
+  type?: 'enumerable' | 'nonenumerable' | 'special';
+  label?: string;
+  parentRef?: Ref;
+  expandable: boolean;
+  expanded: boolean;
+}
+
+function getRefOutletEntriesVisitor(
+  entries: RefOutletEntry[],
+  ref: Ref,
+  indent: number,
+  path: string,
+  expandedObjects: Record<number, PropertyRef[]>,
+  expandedPaths: Set<string>,
+  type?: 'enumerable' | 'nonenumerable' | 'special',
+  label?: string,
+  parentRef?: Ref
+) {
+  const expandable = 'objectId' in ref && ref.objectId !== undefined;
+  const expanded = expandedPaths.has(path);
+
+  entries.push({
+    ref,
+    indent,
+    label,
+    type,
+    path,
+    parentRef,
+    expanded,
+    expandable,
+  });
+
+  const objectId = (ref as { objectId: number }).objectId;
+  if (expandable && expanded && expandedObjects[objectId]) {
+    for (const prop of expandedObjects[objectId]) {
+      getRefOutletEntriesVisitor(
+        entries,
+        prop.val,
+        indent + 1,
+        `${path}.${prop.keyId}`,
+        expandedObjects,
+        expandedPaths,
+        prop.type,
+        prop.key,
+        ref
+      );
+    }
+  }
+}
+
+function getRefOutletEntries(
+  rootRef: Ref,
+  state: RefState,
+  uiState: RefUiState,
+  type?: 'enumerable' | 'nonenumerable' | 'special',
+  label?: string
+) {
+  const entries: RefOutletEntry[] = [];
+
+  getRefOutletEntriesVisitor(
+    entries,
+    rootRef,
+    0,
+    'root',
+    state.expandedObjects,
+    uiState.expandedPaths,
+    type,
+    label
+  );
+  return entries;
+}
+
+const vmSelector = (
+  stateKey: string,
+  ref: Ref,
+  type?: 'enumerable' | 'nonenumerable' | 'special',
+  label?: string
+) =>
+  createSelector(
+    [refStateSelector(stateKey), refUiStateSelector(stateKey)],
+    ([state, uiState]) => {
+      const entries = getRefOutletEntries(ref, state, uiState, type, label);
+      console.log(stateKey);
+      return { entries };
+    }
+  );
+
+export interface RefOutletEntryProps {
+  type?: 'enumerable' | 'nonenumerable' | 'special';
+  label?: string | number;
+  indent: number;
+  stateKey: string;
+  path: string;
+  reference: Ref;
+  expanded: boolean;
+  expandable: boolean;
+  summary: boolean;
+}
+
+export interface RefOutletRendererProps<REF extends Ref = Ref> {
+  type?: 'enumerable' | 'nonenumerable' | 'special';
+  label?: string | number;
+  indent: number;
+  stateKey: string;
+  path: string;
+  reference: REF;
+  expanded: boolean;
+  expandable: boolean;
+}
+
+export function RefOutletEntry({
+  reference,
+  summary,
+  ...props
+}: RefOutletEntryProps) {
+  if (reference.type === 'getter') {
+    return <GetterRefOutletRenderer reference={reference} {...props} />;
+  } else if (
+    !summary &&
+    'objectId' in reference &&
+    reference.objectId !== undefined
+  ) {
+    return <ObjectRefOutletRenderer reference={reference} {...props} />;
+  } else {
+    return <ValueRefOutletRenderer reference={reference} {...props} />;
+  }
 }
 
 export function RefOutlet({
@@ -598,21 +721,44 @@ export function RefOutlet({
   label,
   reference,
   summary = false,
+  stateKey,
 }: RefOutletProps) {
-  if (reference.type === 'getter') {
-    return <GetterRefOutlet type={type} label={label} reference={reference} />;
-  } else if (
-    !summary &&
-    'refId' in reference &&
-    reference.refId !== undefined
-  ) {
-    const referenceWithId = reference as typeof reference & {
-      refId: number;
-    };
+  if (summary) {
     return (
-      <ObjectRefOutlet type={type} label={label} reference={referenceWithId} />
+      <RefOutletEntry
+        indent={0}
+        stateKey={stateKey}
+        path={'root'}
+        reference={reference}
+        expanded={false}
+        expandable={false}
+        summary={true}
+      />
     );
   } else {
-    return <ValueRefOutlet type={type} label={label} reference={reference} />;
+    const vm = useSelectorFunction(
+      vmSelector,
+      stateKey,
+      reference,
+      type,
+      label
+    );
+    return (
+      <>
+        {vm.entries.map((entry) => (
+          <RefOutletEntry
+            indent={entry.indent}
+            stateKey={stateKey}
+            path={entry.path}
+            reference={entry.ref}
+            expanded={entry.expanded}
+            expandable={entry.expandable}
+            label={entry.label}
+            type={entry.type}
+            summary={false}
+          />
+        ))}
+      </>
+    );
   }
 }

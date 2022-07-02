@@ -32,7 +32,7 @@ export function TargetsPanel() {
   return (
     <TargetsPanelDiv>
       {vm.targets.map((target) => (
-        <RefOutlet reference={target} />
+        <RefOutlet reference={target} stateKey={`target-${target.id}`} />
       ))}
     </TargetsPanelDiv>
   );

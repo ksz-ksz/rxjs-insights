@@ -33,8 +33,18 @@ export function ContextPanel() {
 
   return (
     <ContextPanelDiv>
-      <RefOutlet label="target" reference={vm.target} />
-      {vm.event && <RefOutlet label="event" reference={vm.event} />}
+      <RefOutlet
+        label="target"
+        reference={vm.target}
+        stateKey={'context-target'}
+      />
+      {vm.event && (
+        <RefOutlet
+          label="event"
+          reference={vm.event}
+          stateKey={'context-event'}
+        />
+      )}
     </ContextPanelDiv>
   );
 }

@@ -5,34 +5,43 @@ import {
   Store,
 } from '@lib/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
-import { EMPTY, filter, from, map, switchMap } from 'rxjs';
+import { catchError, concatMap, from, map, Observable, of } from 'rxjs';
 import { refsClient } from '@app/clients/refs';
 import { refsActions } from '@app/actions/refs-actions';
-import { RefsSlice } from '@app/store/refs/slice';
-import { refStateSelector } from '@app/selectors/refs-selectors';
+import { RefsSlice, RefState, RefUiState } from '@app/store/refs/slice';
+import {
+  refStateSelector,
+  refUiStateSelector,
+} from '@app/selectors/refs-selectors';
+import { PropertyRef, Ref } from '@app/protocols/refs';
 
 export const refsReaction = combineReactions()
   .add(
     createReaction(
-      (action$, store) =>
+      (action$, { getState, getUiState }) =>
         action$.pipe(
           filterActions(refOutletActions.Expand),
-          switchMap((action) => {
-            const { props } = store.get(refStateSelector(action.payload.refId));
-            return props !== undefined
-              ? EMPTY
-              : from(refsClient.expand(action.payload.refId)).pipe(
-                  filter(Boolean),
-                  map((props) =>
-                    refsActions.PropsLoaded({
-                      refId: action.payload.refId,
-                      props,
-                    })
-                  )
-                );
+          concatMap((action) => {
+            const { ref, path, stateKey } = action.payload;
+            const state = getState(stateKey);
+            const uiState = getUiState(stateKey);
+            return from(
+              loadRefsForExpandedPaths(path, ref, state, uiState)
+            ).pipe(
+              map((refs) =>
+                refsActions.RefsForExpandedPathsLoaded({ stateKey, refs })
+              )
+            );
           })
         ),
-      (store: Store<RefsSlice>) => store
+      (store: Store<RefsSlice>) => ({
+        getState(stateKey: string) {
+          return store.get(refStateSelector(stateKey));
+        },
+        getUiState(stateKey: string) {
+          return store.get(refUiStateSelector(stateKey));
+        },
+      })
     )
   )
   .add(
@@ -40,21 +49,91 @@ export const refsReaction = combineReactions()
       (action$, store) =>
         action$.pipe(
           filterActions(refOutletActions.InvokeGetter),
-          switchMap((action) => {
-            const { ref } = store.get(refStateSelector(action.payload.refId));
-            return ref !== undefined
-              ? EMPTY
-              : from(refsClient.invokeGetter(action.payload.refId)).pipe(
-                  filter(Boolean),
-                  map((ref) =>
-                    refsActions.RefLoaded({
-                      refId: action.payload.refId,
-                      ref,
-                    })
-                  )
-                );
+          concatMap((action) => {
+            const { ref, stateKey, path } = action.payload;
+            return from(refsClient.invokeGetter(ref)).pipe(
+              map((resolvedRef) =>
+                refsActions.RefForInvokedGetterLoaded({
+                  stateKey,
+                  objectId: ref.objectId,
+                  keyId: path.split('.').pop()!,
+                  ref: resolvedRef!,
+                })
+              )
+            );
           })
         ),
       (store: Store<RefsSlice>) => store
     )
   );
+
+function getExpandedPaths(expandedPaths: Set<string>) {
+  const prefixes = new Set(['']);
+  return new Set(
+    Array.from(expandedPaths)
+      .map((x) => x.split('.'))
+      .sort((a, b) => a.length - b.length)
+      .filter((x) => {
+        const prefix = x.slice(0, -1).join('.');
+        if (prefixes.has(prefix)) {
+          prefixes.add(x.join('.'));
+          return true;
+        } else {
+          return false;
+        }
+      })
+      .map((x) => x.join('.'))
+  );
+}
+
+async function loadRefsForExpandedPathsVisitor(
+  expandedObjects: Record<number, PropertyRef[]>,
+  expandedPaths: Set<string>,
+  path: string,
+  ref: Ref
+) {
+  if (!expandedPaths.has(path)) {
+    return;
+  }
+  if (!('objectId' in ref) || ref.objectId === undefined) {
+    return;
+  }
+
+  const props = (expandedObjects[ref.objectId] =
+    expandedObjects[ref.objectId] ?? (await refsClient.expand(ref)));
+
+  for (const prop of props) {
+    const propPath = `${path}.${prop.keyId}`;
+    const propRef = prop.val;
+    if (prop.val.type === 'getter' && expandedPaths.has(propPath)) {
+      prop.val = (await refsClient.invokeGetter(prop.val))!;
+    }
+    await loadRefsForExpandedPathsVisitor(
+      expandedObjects,
+      expandedPaths,
+      propPath,
+      propRef
+    );
+  }
+}
+
+async function loadRefsForExpandedPaths(
+  path: string,
+  ref: Ref,
+  state: RefState,
+  uiState: RefUiState
+) {
+  const expandedPaths = getExpandedPaths(uiState.expandedPaths);
+  const expandedObjects: Record<number, PropertyRef[]> = {
+    ...state.expandedObjects,
+  };
+
+  await loadRefsForExpandedPathsVisitor(
+    expandedObjects,
+    expandedPaths,
+    path,
+    ref
+  );
+
+  return expandedObjects;
+}

@@ -58,7 +58,11 @@ export function AppBarWrapper() {
                 to={createUrl(['target', String(target.id)])}
                 label={
                   <Box>
-                    <RefOutlet summary reference={target} />
+                    <RefOutlet
+                      summary
+                      reference={target}
+                      stateKey={'summary'}
+                    />
                     <IconButton
                       size="small"
                       edge="start"

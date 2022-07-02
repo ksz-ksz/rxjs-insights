@@ -111,7 +111,7 @@ export const insightsReaction = combineReactions()
             )
               ? of(action.payload.target.id)
               : from(
-                  targetsClient.addTarget(action.payload.target.refId!)
+                  targetsClient.addTarget(action.payload.target.objectId)
                 ).pipe(map(() => action.payload.target.id))
           ),
           map((targetId) =>

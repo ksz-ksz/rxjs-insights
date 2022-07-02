@@ -1,4 +1,20 @@
-import { GetterRef, PropertyRef, Ref, Refs } from '@app/protocols/refs';
+import {
+  ArrayRef,
+  EntriesRef,
+  EventRef,
+  FunctionRef,
+  GetterRef,
+  LocationRef,
+  MapEntryRef,
+  MapRef,
+  ObjectRef,
+  ObservableRef,
+  PropertyRef,
+  Ref,
+  Refs,
+  SetRef,
+  SubscriberRef,
+} from '@app/protocols/refs';
 import { Event, Observable, Subscriber } from '@rxjs-insights/recorder';
 import {
   getObservable,
@@ -9,40 +25,13 @@ import {
   isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
 import { formatTimestamp } from '@app/utils/format-timestamp';
+import { Location, Locations } from '@rxjs-insights/core';
 
-class Getter {
-  constructor(readonly target: unknown, readonly getter: () => unknown) {}
-}
-
-class Entries {
-  constructor(readonly entries: unknown[]) {}
-}
-
-class MapEntry {
-  constructor(readonly key: unknown, readonly val: unknown) {}
-}
-
-class Location {
-  constructor(
-    readonly file: string,
-    readonly line: number,
-    readonly column: number
-  ) {}
-
-  static from(location: Location | undefined) {
-    return location !== undefined
-      ? new Location(location.file, location.line, location.column)
-      : undefined;
-  }
-}
-
-class Locations {
-  constructor(readonly generated?: Location, readonly original?: Location) {}
-}
-
-function getPropertyDescriptors(target: any): [string, PropertyDescriptor][] {
+function getPropertyDescriptors(
+  target: any
+): [string | symbol, PropertyDescriptor][] {
   return Reflect.ownKeys(target).map((key) => [
-    String(key),
+    key,
     Reflect.getOwnPropertyDescriptor(target, key)!,
   ]);
 }
@@ -67,26 +56,72 @@ function isEvent(x: any): x is Event {
   );
 }
 
-function property(key: string, val: Ref): PropertyRef {
-  return {
-    type: 'enumerable',
-    key: key,
-    val: val,
-  };
+class ObjectsRegistry {
+  private nextObjectId = 0;
+  private readonly objects = new Map<number, WeakRef<object>>();
+  private readonly ids = new WeakMap<object, number>();
+
+  getObjectId(object: object) {
+    let objectId = this.ids.get(object);
+    if (objectId === undefined) {
+      objectId = this.nextObjectId++;
+      this.objects.set(objectId, new WeakRef(object));
+      this.ids.set(object, objectId);
+    }
+    return objectId;
+  }
+
+  getObject<T = object>(id: number): T | undefined {
+    return this.objects.get(id)?.deref() as T | undefined;
+  }
+}
+
+class KeysRegistry {
+  private nextKeyId = 0;
+  private readonly keys = new Map<string, string | number | symbol>();
+  private readonly ids = new Map<string | number | symbol, string>();
+
+  getKeyId(key: string | number | symbol) {
+    let keyId = this.ids.get(key);
+    if (keyId === undefined) {
+      keyId = String(this.nextKeyId++);
+      this.keys.set(keyId, key);
+      this.ids.set(key, keyId);
+    }
+    return keyId;
+  }
+
+  getKey(id: string) {
+    return this.keys.get(id);
+  }
+}
+
+class StrongRefsRegistry {
+  private nextStrongRefId = 0;
+  private readonly registry = new Map<number, unknown>();
+  private readonly finalizationRegistry = new FinalizationRegistry<number>(
+    (id: number) => {
+      this.registry.delete(id);
+    }
+  );
+
+  add(target: object, ref: unknown) {
+    const id = this.nextStrongRefId++;
+    this.registry.set(id, ref);
+    this.finalizationRegistry.register(target, id);
+  }
 }
 
 export class RefsService implements Refs {
-  private nextRefId = 0;
-  private readonly refs: Record<
-    number,
-    { target: unknown; children: number[] }
-  > = {};
+  private readonly objects = new ObjectsRegistry();
+  private readonly keys = new KeysRegistry();
+  private readonly strongRefs = new StrongRefsRegistry();
 
-  getRefTarget(refId: number): unknown | undefined {
-    return this.refs[refId]?.target;
+  getObject(objectId: number): unknown | undefined {
+    return this.objects.getObject(objectId);
   }
 
-  create(target: unknown, parentRefId?: number, store = true): Ref {
+  create(target: unknown): Ref {
     if (typeof target === 'object' && target !== null) {
       if (isObservableTarget(target)) {
         const observable = getObservable(target);
@@ -95,7 +130,7 @@ export class RefsService implements Refs {
           id: observable.id,
           name: observable.declaration.name,
           tags: observable.tags,
-          refId: this.refId(observable, parentRefId, store),
+          objectId: this.objects.getObjectId(observable),
         };
       } else if (isObservable(target)) {
         return {
@@ -103,7 +138,7 @@ export class RefsService implements Refs {
           id: target.id,
           name: target.declaration.name,
           tags: target.tags,
-          refId: this.refId(target, parentRefId, store),
+          objectId: this.objects.getObjectId(target),
         };
       } else if (isSubscriberTarget(target)) {
         const subscriber = getSubscriber(target);
@@ -112,7 +147,7 @@ export class RefsService implements Refs {
           id: subscriber.id,
           name: subscriber.declaration.name,
           tags: subscriber.tags,
-          refId: this.refId(subscriber, parentRefId, store),
+          objectId: this.objects.getObjectId(subscriber),
         };
       } else if (isSubscriber(target)) {
         return {
@@ -120,7 +155,7 @@ export class RefsService implements Refs {
           id: target.id,
           name: target.declaration.name,
           tags: target.tags,
-          refId: this.refId(target, parentRefId, store),
+          objectId: this.objects.getObjectId(target),
         };
       } else if (isEvent(target)) {
         return {
@@ -129,37 +164,17 @@ export class RefsService implements Refs {
           name: target.declaration.name,
           data:
             target.type === 'next' || target.type === 'error'
-              ? this.create(target.declaration.args?.[0], parentRefId, false)
+              ? this.create(target.declaration.args?.[0])
               : undefined,
           eventType: target.type,
-          refId: this.refId(target, parentRefId, store),
-        };
-      } else if (target instanceof Locations) {
-        const location = target.original ?? target.generated;
-        return {
-          type: 'location',
-          file: location?.file ?? 'unknown',
-          line: location?.line ?? 0,
-          column: location?.column ?? 0,
-          refId: this.refId(target, parentRefId, store),
-        };
-      } else if (target instanceof Location) {
-        return {
-          type: 'location',
-          file: target?.file ?? 'unknown',
-          line: target?.line ?? 0,
-          column: target?.column ?? 0,
+          objectId: this.objects.getObjectId(target),
         };
       }
     }
-    return this.createDefault(target, parentRefId, store);
+    return this.createDefault(target);
   }
 
-  private createDefault(
-    target: unknown,
-    parentRefId: number | undefined,
-    store = true
-  ): Ref {
+  private createDefault(target: unknown): Ref {
     switch (typeof target) {
       case 'undefined':
         return {
@@ -175,40 +190,27 @@ export class RefsService implements Refs {
             type: 'array',
             name: target?.constructor?.name ?? 'Array',
             length: target.length,
-            refId: this.refId(target, parentRefId, store),
+            objectId: this.objects.getObjectId(target),
           };
         } else if (target instanceof Set) {
           return {
             type: 'set',
             name: target?.constructor?.name ?? 'Set',
             size: target.size,
-            refId: this.refId(target, parentRefId, store),
+            objectId: this.objects.getObjectId(target),
           };
         } else if (target instanceof Map) {
           return {
             type: 'map',
             name: target?.constructor?.name ?? 'Map',
             size: target.size,
-            refId: this.refId(target, parentRefId, store),
-          };
-        } else if (target instanceof MapEntry) {
-          return {
-            type: 'map-entry',
-            key: this.create(target.key, parentRefId, false),
-            val: this.create(target.val, parentRefId, false),
-            refId: this.refId(target, parentRefId, store),
-          };
-        } else if (target instanceof Entries) {
-          return {
-            type: 'entries',
-            size: target.entries.length,
-            refId: this.refId(target, parentRefId, store),
+            objectId: this.objects.getObjectId(target),
           };
         } else {
           return {
             type: 'object',
             name: target?.constructor?.name ?? 'Object',
-            refId: this.refId(target, parentRefId, store),
+            objectId: this.objects.getObjectId(target),
           };
         }
       case 'boolean':
@@ -230,7 +232,7 @@ export class RefsService implements Refs {
         return {
           type: 'function',
           name: target.name ?? 'anonymous',
-          refId: this.refId(target, parentRefId, store),
+          objectId: this.objects.getObjectId(target),
         };
       case 'symbol':
         return {
@@ -245,50 +247,64 @@ export class RefsService implements Refs {
     }
   }
 
-  expand = (refId: number): PropertyRef[] => {
-    const target = this.refs[refId].target;
-    if (target instanceof Set) {
-      return this.expandSet(target, refId);
-    }
-    if (target instanceof Map) {
-      return this.expandMap(target, refId);
-    }
-    if (target instanceof Entries) {
-      return this.expandEntries(target, refId);
-    }
-    if (target instanceof MapEntry) {
-      return this.expandMapEntry(target, refId);
-    }
-    if (isObservable(target)) {
-      return this.expandObservable(target, refId);
-    }
-    if (isSubscriber(target)) {
-      return this.expandSubscriber(target, refId);
-    }
-    if (isEvent(target)) {
-      return this.expandEvent(target, refId);
-    }
-    if (target instanceof Locations) {
-      return this.expandLocations(target, refId);
-    }
-    return this.expandObject(target, refId);
-  };
-
-  private createGetter(
-    target: unknown,
-    getter: () => unknown,
-    parentRefId: number
-  ): GetterRef {
+  private createEntries(target: object, key: string, size: number): EntriesRef {
     return {
-      type: 'getter',
-      refId: this.refId(new Getter(target, getter), parentRefId),
+      type: 'entries',
+      objectId: this.objects.getObjectId(target),
+      key,
+      size,
     };
   }
 
-  private expandObservable(
-    observable: Observable,
-    refId: number
-  ): PropertyRef[] {
+  expand = (ref: Ref): PropertyRef[] => {
+    switch (ref.type) {
+      case 'object':
+      case 'array':
+      case 'function':
+        return this.expandObject(ref);
+      case 'set':
+        return this.expandSet(ref);
+      case 'map':
+        return this.expandMap(ref);
+      case 'map-entry':
+        return this.expandMapEntry(ref);
+      case 'entries':
+        return this.expandEntries(ref);
+      case 'observable':
+        return this.expandObservable(ref);
+      case 'subscriber':
+        return this.expandSubscriber(ref);
+      case 'event':
+        return this.expandEvent(ref);
+      case 'location':
+        return this.expandLocations(ref);
+      default:
+        return [];
+    }
+  };
+
+  private createGetter(target: object, getter: () => unknown): GetterRef {
+    return {
+      type: 'getter',
+      objectId: this.objects.getObjectId(target),
+      getterObjectId: this.objects.getObjectId(getter),
+    };
+  }
+
+  private property(key: string, val: Ref): PropertyRef {
+    return {
+      type: 'enumerable',
+      key: key,
+      keyId: this.keys.getKeyId(key),
+      val: val,
+    };
+  }
+
+  private expandObservable(ref: ObservableRef): PropertyRef[] {
+    const observable = this.objects.getObject<Observable>(ref.objectId);
+    if (!observable) {
+      return [];
+    }
     const {
       target,
       declaration,
@@ -301,52 +317,59 @@ export class RefsService implements Refs {
     } = observable;
 
     return [
-      property('Id', this.create(id, refId)),
-      property('Name', this.create(declaration.name, refId)),
-      property('Tags', this.create(new Entries(tags), refId)),
+      this.property('Id', this.create(id)),
+      this.property('Name', this.create(declaration.name)),
+      this.property(
+        'Tags',
+        this.createEntries(observable, 'tags', tags.length)
+      ),
       ...(declaration.internal
-        ? [property('Internal', this.create(declaration.internal, refId))]
+        ? [this.property('Internal', this.create(declaration.internal))]
         : []),
       ...(declaration.func
-        ? [property('Function', this.create(declaration.func, refId))]
+        ? [this.property('Function', this.create(declaration.func))]
         : []),
       ...(declaration.args
         ? [
-            property(
+            this.property(
               'Arguments',
-              this.create(new Entries(declaration.args), refId)
+              this.createEntries(declaration, 'args', declaration.args.length)
             ),
           ]
         : []),
       ...(declaration.locations?.generatedLocation !== undefined ||
-      declaration.locations.originalLocation !== undefined
+      declaration.locations?.originalLocation !== undefined
         ? [
-            property(
+            this.property(
               'Location',
-              this.create(
-                new Locations(
-                  Location.from(declaration.locations.generatedLocation),
-                  Location.from(declaration.locations.originalLocation)
-                ),
-                refId
-              )
+              this.createLocations(declaration.locations)
             ),
           ]
         : []),
       ...(sourceObservable
-        ? [property('SourceObservable', this.create(sourceObservable, refId))]
+        ? [this.property('SourceObservable', this.create(sourceObservable))]
         : []),
-      property('Subscribers', this.create(new Entries(subscribers), refId)),
-      property('Sources', this.create(new Entries(sources), refId)),
-      property('Events', this.create(new Entries(events), refId)),
-      property('Target', this.createDefault(target, refId)),
+      this.property(
+        'Subscribers',
+        this.createEntries(observable, 'subscribers', subscribers.length)
+      ),
+      this.property(
+        'Sources',
+        this.createEntries(observable, 'sources', sources.length)
+      ),
+      this.property(
+        'Events',
+        this.createEntries(observable, 'events', events.length)
+      ),
+      this.property('Target', this.createDefault(target)),
     ];
   }
 
-  private expandSubscriber(
-    subscriber: Subscriber,
-    refId: number
-  ): PropertyRef[] {
+  private expandSubscriber(ref: SubscriberRef): PropertyRef[] {
+    const subscriber = this.objects.getObject<Subscriber>(ref.objectId);
+    if (!subscriber) {
+      return [];
+    }
     const {
       id,
       observable,
@@ -358,86 +381,90 @@ export class RefsService implements Refs {
       events,
     } = subscriber;
     return [
-      property('Id', this.create(id, refId)),
-      property('Name', this.create(declaration.name, refId)),
-      property('Tags', this.create(new Entries(tags), refId)),
+      this.property('Id', this.create(id)),
+      this.property('Name', this.create(declaration.name)),
+      this.property('Tags', this.createEntries(target, 'tags', tags.length)),
       ...(declaration.internal
-        ? [property('Internal', this.create(declaration.internal, refId))]
+        ? [this.property('Internal', this.create(declaration.internal))]
         : []),
       ...(declaration.func
-        ? [property('Function', this.create(declaration.func, refId))]
+        ? [this.property('Function', this.create(declaration.func))]
         : []),
       ...(declaration.args
         ? [
-            property(
+            this.property(
               'Arguments',
-              this.create(new Entries(declaration.args), refId)
+              this.createEntries(declaration, 'args', declaration.args.length)
             ),
           ]
         : []),
       ...(declaration.locations?.generatedLocation !== undefined ||
       declaration.locations.originalLocation !== undefined
         ? [
-            property(
+            this.property(
               'Location',
-              this.create(
-                new Locations(
-                  Location.from(declaration.locations.generatedLocation),
-                  Location.from(declaration.locations.originalLocation)
-                ),
-                refId
-              )
+              this.createLocations(declaration.locations)
             ),
           ]
         : []),
-      property('Observable', this.create(observable, refId)),
+      this.property('Observable', this.create(observable)),
       ...(destination
-        ? [property('Destination', this.create(destination, refId))]
+        ? [this.property('Destination', this.create(destination))]
         : []),
-      property('Sources', this.create(new Entries(sources), refId)),
-      property('Events', this.create(new Entries(events), refId)),
+      this.property(
+        'Sources',
+        this.createEntries(target, 'sources', sources.length)
+      ),
+      this.property(
+        'Events',
+        this.createEntries(target, 'events', events.length)
+      ),
       ...(target.length !== 0
         ? [
-            property(
+            this.property(
               'Target',
               target.length === 1
-                ? this.createDefault(target[0], refId)
-                : this.create(new Entries(target), refId)
+                ? this.createDefault(target[0])
+                : this.createEntries(target, 'target', target.length)
             ),
           ]
         : []),
     ];
   }
 
-  private expandEvent(event: Event, refId: number): PropertyRef[] {
+  private expandEvent(ref: EventRef): PropertyRef[] {
+    const event = this.objects.getObject<Event>(ref.objectId);
+    if (!event) {
+      return [];
+    }
     const { time, declaration, type, target, timestamp, task } = event;
     const precedingEvent = getPrecedingEvent(event);
     const succeedingEvents = getSucceedingEvents(event);
     return [
-      property('Time', this.create(time, refId)),
-      property('Name', this.create(declaration.name, refId)),
-      property('Type', this.create(type, refId)),
-      property('Task', {
+      this.property('Time', this.create(time)),
+      this.property('Name', this.create(declaration.name)),
+      this.property('Type', this.create(type)),
+      this.property('Task', {
         type: 'text',
         text: task.name,
         suffix: `#${task.id}`,
       }),
-      property('Timestamp', {
+      this.property('Timestamp', {
         type: 'text',
         text: formatTimestamp(timestamp),
       }),
       ...(type === 'next'
-        ? [property('Value', this.create(declaration.args?.[0], refId))]
+        ? [this.property('Value', this.create(declaration.args?.[0]))]
         : []),
       ...(type === 'error'
-        ? [property('Error', this.create(declaration.args?.[0], refId))]
+        ? [this.property('Error', this.create(declaration.args?.[0]))]
         : []),
       ...((type === 'subscribe' && declaration.args?.length) ?? 0 !== 0
         ? [
-            property(
+            this.property(
               'Subscriber',
               declaration.args?.length === 1
-                ? this.create(declaration.args?.[0], refId)
+                ? this.create(declaration.args?.[0])
                 : this.create(declaration.args)
             ),
           ]
@@ -445,149 +472,208 @@ export class RefsService implements Refs {
       ...(declaration.locations?.generatedLocation !== undefined ||
       declaration.locations.originalLocation !== undefined
         ? [
-            property(
+            this.property(
               'Location',
-              this.create(
-                new Locations(
-                  Location.from(declaration.locations.generatedLocation),
-                  Location.from(declaration.locations.originalLocation)
-                ),
-                refId
-              )
+              this.createLocations(declaration.locations)
             ),
           ]
         : []),
-      property('Target', this.create(target, refId)),
-      property('PrecedingEvent', this.create(precedingEvent, refId)),
-      property(
+      this.property('Target', this.create(target)),
+      this.property('PrecedingEvent', this.create(precedingEvent)),
+      this.property(
         'SucceedingEvents',
-        this.create(new Entries(succeedingEvents), refId)
+        this.createEntries(event, 'succeedingEvents', succeedingEvents.length)
       ),
     ];
   }
-  private expandLocations(target: Locations, refId: number): PropertyRef[] {
-    const { original, generated } = target;
-    return [
-      ...(original
-        ? [property('SourceLocation', this.create(original, refId))]
-        : []),
-      ...(generated
-        ? [property('BundleLocation', this.create(generated, refId))]
-        : []),
-    ];
+  private expandLocations(ref: LocationRef): PropertyRef[] {
+    const locations = this.objects.getObject<Locations>(ref.objectId ?? -1);
+
+    if (locations) {
+      const { originalLocation, generatedLocation } = locations;
+      return [
+        ...(originalLocation
+          ? [
+              this.property(
+                'SourceLocation',
+                this.createLocation(originalLocation)
+              ),
+            ]
+          : []),
+        ...(generatedLocation
+          ? [
+              this.property(
+                'BundleLocation',
+                this.createLocation(generatedLocation)
+              ),
+            ]
+          : []),
+      ];
+    } else {
+      return [];
+    }
   }
 
-  private expandObject(target: unknown, refId: number): PropertyRef[] {
-    const props = this.getProps(target, refId);
-    const proto = this.getProto(target, refId);
+  private expandObject(ref: ObjectRef | ArrayRef | FunctionRef): PropertyRef[] {
+    const target = this.objects.getObject(ref.objectId);
 
-    return [...props, proto];
+    if (target) {
+      const props = this.getProps(target);
+      const proto = this.getProto(target);
+
+      return [...props, proto];
+    } else {
+      return [];
+    }
   }
 
-  private getSetEntries(set: Set<unknown>, parentRefId: number): PropertyRef {
+  private getSetEntries(set: Set<unknown>): PropertyRef {
     return {
+      keyId: this.keys.getKeyId('[[Entries]]'),
       key: '[[Entries]]',
       val: {
         type: 'entries',
         size: set.size,
-        refId: this.refId(new Entries(Array.from(set.values())), parentRefId),
+        key: 'entries',
+        objectId: this.objects.getObjectId(set),
       },
       type: 'special',
     };
   }
 
-  private getMapEntries(
-    map: Map<unknown, unknown>,
-    parentRefId: number
-  ): PropertyRef {
+  private getMapEntries(map: Map<unknown, unknown>): PropertyRef {
     return {
       key: '[[Entries]]',
+      keyId: this.keys.getKeyId('[[Entries]]'),
       val: {
         type: 'entries',
         size: map.size,
-        refId: this.refId(
-          new Entries(
-            Array.from(map.entries()).map(
-              ([key, val]) => new MapEntry(key, val)
-            )
-          ),
-          parentRefId
-        ),
+        key: 'entries',
+        objectId: this.objects.getObjectId(map),
       },
       type: 'special',
     };
   }
 
-  private expandSet(target: Set<unknown>, refId: number): PropertyRef[] {
-    const entries = this.getSetEntries(target, refId);
-    const props = this.getProps(target, refId);
-    const proto = this.getProto(target, refId);
+  private expandSet(ref: SetRef): PropertyRef[] {
+    const set = this.objects.getObject(ref.objectId) as Set<unknown>;
+    if (set) {
+      const entries = this.getSetEntries(set);
+      const props = this.getProps(set);
+      const proto = this.getProto(set);
 
-    return [entries, ...props, proto];
+      return [entries, ...props, proto];
+    } else {
+      return [];
+    }
   }
 
-  private expandMap(
-    target: Map<unknown, unknown>,
-    refId: number
-  ): PropertyRef[] {
-    const entries = this.getMapEntries(target, refId);
-    const props = this.getProps(target, refId);
-    const proto = this.getProto(target, refId);
+  private expandMap(ref: MapRef): PropertyRef[] {
+    const map = this.objects.getObject(ref.objectId) as Map<unknown, unknown>;
+    if (map) {
+      const entries = this.getMapEntries(map);
+      const props = this.getProps(map);
+      const proto = this.getProto(map);
 
-    return [entries, ...props, proto];
+      return [entries, ...props, proto];
+    } else {
+      return [];
+    }
   }
 
-  private expandEntries(target: Entries, refId: number): PropertyRef[] {
-    return target.entries.map((val, index) => ({
+  private expandMapEntry(ref: MapEntryRef): PropertyRef[] {
+    return [this.property('key', ref.key), this.property('val', ref.val)];
+  }
+
+  private expandEntries(ref: EntriesRef): PropertyRef[] {
+    const target = this.objects.getObject(ref.objectId);
+    if (target) {
+      if (target instanceof Set) {
+        return this.expandSetEntries(target);
+      } else if (target instanceof Map) {
+        return this.expandMapEntries(target);
+      } else {
+        return this.expandEntriesByKey(target, ref.key);
+      }
+    } else {
+      return [];
+    }
+  }
+
+  private entries(entries: Array<unknown>): PropertyRef[] {
+    return entries.map((val, index) => ({
       key: String(index),
-      val: this.create(val, refId),
+      keyId: this.keys.getKeyId(String(index)),
+      val: this.create(val),
       type: 'enumerable',
     }));
   }
 
-  private expandMapEntry(target: MapEntry, refId: number): PropertyRef[] {
-    return [
-      {
-        key: 'key',
-        val: this.create(target.key, refId),
-        type: 'enumerable',
-      },
-      {
-        key: 'val',
-        val: this.create(target.val, refId),
-        type: 'enumerable',
-      },
-    ];
+  private expandSetEntries(target: Set<unknown>): PropertyRef[] {
+    return this.entries(Array.from(target.values()));
   }
 
-  invokeGetter(refId: number): Ref {
-    const { target, getter } = this.refs[refId].target as Getter;
-    try {
-      const result = getter.call(target);
-      return this.create(result, refId);
-    } catch (error) {
-      return this.create(error, refId);
+  private expandMapEntries(target: Map<unknown, unknown>): PropertyRef[] {
+    return Array.from(target.entries()).map(([key, val], index) => ({
+      key: String(index),
+      keyId: this.keys.getKeyId(String(index)),
+      val: {
+        type: 'map-entry',
+        key: this.create(key),
+        val: this.create(val),
+      },
+      type: 'enumerable',
+    }));
+  }
+
+  private expandEntriesByKey(target: any, key: string) {
+    const entries = target[key];
+    if (Array.isArray(entries)) {
+      return this.entries(entries);
+    } else {
+      return [];
     }
   }
 
-  private getProps(object: unknown, parentRefId: number): PropertyRef[] {
+  invokeGetter(ref: GetterRef): Ref {
+    const target = this.objects.getObject<object>(ref.objectId);
+    const getter = this.objects.getObject<() => unknown>(ref.getterObjectId);
+    if (target && getter) {
+      try {
+        const result = getter.call(target);
+        this.strongRefs.add(target, result);
+        return this.create(result);
+      } catch (e) {
+        this.strongRefs.add(target, e);
+        return this.create(e);
+      }
+    } else {
+      return this.create(null);
+    }
+  }
+
+  private getProps(object: object): PropertyRef[] {
+    const keys = new Set<string | symbol>(['__proto__']);
     const enumerableProps: PropertyRef[] = [];
     const nonenumerableProps: PropertyRef[] = [];
     const accessors: PropertyRef[] = [];
 
     for (const [key, propDescriptor] of getPropertyDescriptors(object)) {
+      keys.add(key);
       if (propDescriptor.hasOwnProperty('value')) {
         const { value, enumerable } = propDescriptor;
         if (enumerable) {
           enumerableProps.push({
-            key,
-            val: this.create(value, parentRefId),
+            key: String(key),
+            keyId: this.keys.getKeyId(key),
+            val: this.create(value),
             type: 'enumerable',
           });
         } else {
           nonenumerableProps.push({
-            key,
-            val: this.create(value, parentRefId),
+            key: String(key),
+            keyId: this.keys.getKeyId(key),
+            val: this.create(value),
             type: 'nonenumerable',
           });
         }
@@ -596,27 +682,31 @@ export class RefsService implements Refs {
         if (get !== undefined) {
           if (enumerable) {
             enumerableProps.push({
-              key,
-              val: this.createGetter(object, get, parentRefId),
+              key: String(key),
+              keyId: this.keys.getKeyId(key),
+              val: this.createGetter(object, get),
               type: 'enumerable',
             });
           } else {
             nonenumerableProps.push({
-              key,
-              val: this.createGetter(object, get, parentRefId),
+              key: String(key),
+              keyId: this.keys.getKeyId(key),
+              val: this.createGetter(object, get),
               type: 'nonenumerable',
             });
           }
           accessors.push({
-            key: `get ${key}`,
-            val: this.create(get, parentRefId),
+            key: `get ${String(key)}`,
+            keyId: this.keys.getKeyId(`get ${String(key)}`),
+            val: this.create(get),
             type: 'nonenumerable',
           });
         }
         if (set !== undefined) {
           accessors.push({
-            key: `set ${key}`,
-            val: this.create(set, parentRefId),
+            key: `set ${String(key)}`,
+            keyId: this.keys.getKeyId(`set ${String(key)}`),
+            val: this.create(set),
             type: 'nonenumerable',
           });
         }
@@ -626,19 +716,22 @@ export class RefsService implements Refs {
     let proto = Object.getPrototypeOf(object);
     while (proto !== null) {
       for (const [key, propDescriptor] of getPropertyDescriptors(proto)) {
-        if (key !== '__proto__') {
+        if (!keys.has(key)) {
+          keys.add(key);
           const { get, enumerable } = propDescriptor;
           if (get !== undefined) {
             if (enumerable) {
               enumerableProps.push({
-                key,
-                val: this.createGetter(object, get, parentRefId),
+                key: String(key),
+                keyId: this.keys.getKeyId(key),
+                val: this.createGetter(object, get),
                 type: 'enumerable',
               });
             } else {
               nonenumerableProps.push({
-                key,
-                val: this.createGetter(object, get, parentRefId),
+                key: String(key),
+                keyId: this.keys.getKeyId(key),
+                val: this.createGetter(object, get),
                 type: 'nonenumerable',
               });
             }
@@ -651,37 +744,36 @@ export class RefsService implements Refs {
     return [...enumerableProps, ...nonenumerableProps, ...accessors];
   }
 
-  private getProto(object: unknown, parentRefId: number): PropertyRef {
+  private getProto(object: object): PropertyRef {
     return {
       key: '[[Prototype]]',
-      val: this.create(Object.getPrototypeOf(object), parentRefId),
+      keyId: this.keys.getKeyId('[[Prototype]]'),
+      val: this.create(Object.getPrototypeOf(object)),
       type: 'special',
     };
   }
 
-  private refId(target: unknown, parentRefId: number | undefined): number;
-  private refId(
-    target: unknown,
-    parentRefId: number | undefined,
-    store: boolean
-  ): number | undefined;
-  private refId(
-    target: unknown,
-    parentRefId: number | undefined,
-    store: boolean = true
-  ): number | undefined {
-    if (store) {
-      const refId = this.nextRefId++;
-      this.refs[refId] = {
-        target,
-        children: [],
-      };
-      if (parentRefId !== undefined) {
-        this.refs[parentRefId].children.push(refId);
-      }
-      return refId;
-    } else {
-      return undefined;
-    }
+  private createLocations(locations: Locations): LocationRef {
+    const location = (
+      locations.originalLocation
+        ? locations.originalLocation
+        : locations.generatedLocation
+    )!;
+    return {
+      type: 'location',
+      file: location.file,
+      line: location.line,
+      column: location.column,
+      objectId: this.objects.getObjectId(locations),
+    };
+  }
+
+  private createLocation(location: Location): LocationRef {
+    return {
+      type: 'location',
+      file: location.file,
+      line: location.line,
+      column: location.column,
+    };
   }
 }

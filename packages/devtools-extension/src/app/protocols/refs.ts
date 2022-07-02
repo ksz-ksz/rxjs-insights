@@ -1,65 +1,67 @@
 export const RefsChannel = 'RefsChannel';
 
 export interface PropertyRef {
+  keyId: string;
   key: string;
   val: Ref;
   type: 'enumerable' | 'nonenumerable' | 'special';
 }
 
 export interface Refs {
-  expand(refId?: number): PropertyRef[];
-  invokeGetter(refId?: number): Ref;
+  expand(ref: Ref): PropertyRef[];
+  invokeGetter(ref: GetterRef): Ref;
 }
 
 export interface ObjectRef {
   type: 'object';
-  refId?: number;
   name: string;
+  objectId: number;
 }
 
 export interface ArrayRef {
   type: 'array';
-  refId?: number;
   name: string;
   length: number;
+  objectId: number;
 }
 
 export interface FunctionRef {
   type: 'function';
-  refId?: number;
   name: string;
+  objectId: number;
 }
 
 export interface SetRef {
   type: 'set';
-  refId?: number;
   name: string;
   size: number;
+  objectId: number;
 }
 
 export interface MapRef {
   type: 'map';
-  refId?: number;
   name: string;
   size: number;
+  objectId: number;
 }
 
 export interface MapEntryRef {
   type: 'map-entry';
-  refId?: number;
   key: Ref;
   val: Ref;
 }
 
 export interface EntriesRef {
   type: 'entries';
-  refId?: number;
+  key: string;
   size: number;
+  objectId: number;
 }
 
 export interface GetterRef {
   type: 'getter';
-  refId: number;
+  objectId: number;
+  getterObjectId: number;
 }
 
 export interface ValueRef {
@@ -82,37 +84,37 @@ export interface NullRef {
 
 export interface ObservableRef {
   type: 'observable';
-  refId?: number;
   id: number;
   name: string;
   tags: string[];
+  objectId: number;
 }
 
 export interface SubscriberRef {
   type: 'subscriber';
-  refId?: number;
   id: number;
   name: string;
   tags: string[];
+  objectId: number;
 }
 
 export type TargetRef = ObservableRef | SubscriberRef;
 
 export interface EventRef {
   type: 'event';
-  refId?: number;
   time: number;
   name: string;
   data?: Ref;
   eventType: 'subscribe' | 'unsubscribe' | 'next' | 'error' | 'complete';
+  objectId: number;
 }
 
 export interface LocationRef {
   type: 'location';
-  refId?: number;
   file: string;
   column: number;
   line: number;
+  objectId?: number;
 }
 
 export interface TextRef {

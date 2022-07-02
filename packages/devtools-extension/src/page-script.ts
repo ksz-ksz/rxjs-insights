@@ -129,8 +129,8 @@ startServer<Instrumentation>(
 const targets: Record<number, Observable | Subscriber> = {};
 
 startServer<Targets>(createInspectedWindowEvalServerAdapter(TargetsChannel), {
-  addTarget(refId: number) {
-    const target = refs.getRefTarget(refId)! as Observable | Subscriber;
+  addTarget(objectId: number) {
+    const target = refs.getObject(objectId)! as Observable | Subscriber;
     targets[target.id] = target;
   },
   releaseTarget(targetId) {
@@ -138,7 +138,7 @@ startServer<Targets>(createInspectedWindowEvalServerAdapter(TargetsChannel), {
   },
   getTargets() {
     return Object.values(targets).map(
-      (target) => refs.create(target, undefined, false) as TargetRef
+      (target) => refs.create(target) as TargetRef
     );
   },
 });
@@ -178,7 +178,6 @@ function getEndTime(events: Event[]) {
 }
 
 function addRelatedTarget(
-  rootTargetRefId: number,
   relations: Relations,
   target: Target,
   relation: 'sources' | 'destinations',
@@ -187,7 +186,7 @@ function addRelatedTarget(
   const targets = relations.targets;
   if (targets[target.id] === undefined) {
     targets[target.id] = {
-      ...(refs.create(target, rootTargetRefId) as TargetRef),
+      ...(refs.create(target) as TargetRef),
       startTime:
         target.type === 'subscriber'
           ? getStartTime(target.events)
@@ -238,7 +237,6 @@ function addRelatedEvent(relations: Relations, event: Event) {
 }
 
 function collectRelatedTargets(
-  rootTargetRefId: number,
   targets: Set<number>,
   relations: Relations,
   target: Target,
@@ -250,19 +248,12 @@ function collectRelatedTargets(
   }
   targets.add(target.id);
   const relatedTargets = getRelatedTargets(target);
-  addRelatedTarget(
-    rootTargetRefId,
-    relations,
-    target,
-    relation,
-    relatedTargets
-  );
+  addRelatedTarget(relations, target, relation, relatedTargets);
   for (const event of target.events) {
     addRelatedEvent(relations, event);
   }
   for (let relatedTarget of relatedTargets) {
     collectRelatedTargets(
-      rootTargetRefId,
       targets,
       relations,
       relatedTarget,
@@ -292,7 +283,6 @@ function getTargetState(target: Subscriber | Observable): TargetState {
   };
   relations.targets[rootTarget.id] = rootTarget;
   collectRelatedTargets(
-    rootTarget.refId!,
     new Set(),
     relations,
     target,
@@ -301,7 +291,6 @@ function getTargetState(target: Subscriber | Observable): TargetState {
   );
 
   collectRelatedTargets(
-    rootTarget.refId!,
     new Set(),
     relations,
     target,
@@ -338,7 +327,7 @@ function inspect(maybeTarget: ObservableLike | SubscriberLike) {
   if (target) {
     targets[target.id] = target;
     void targetsNotificationsClient.notifyTarget(
-      refs.create(target, undefined, false) as TargetRef
+      refs.create(target) as TargetRef
     );
   }
 }
