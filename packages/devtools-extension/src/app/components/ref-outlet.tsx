@@ -662,7 +662,6 @@ const vmSelector = (
     [refStateSelector(stateKey), refUiStateSelector(stateKey)],
     ([state, uiState]) => {
       const entries = getRefOutletEntries(ref, state, uiState, type, label);
-      console.log(stateKey);
       return { entries };
     }
   );

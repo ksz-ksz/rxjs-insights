@@ -47,7 +47,11 @@ export const refsReducer = createReducer('refs', {
         expandedObjects: {},
       };
     }
-    state.states[stateKey].expandedObjects = refs;
+    for (let refsKey in refs) {
+      if (!state.states[stateKey].expandedObjects[refsKey]) {
+        state.states[stateKey].expandedObjects[refsKey] = refs[refsKey];
+      }
+    }
   })
   .add(refsActions.RefForInvokedGetterLoaded, (state, action) => {
     const { stateKey, objectId, keyId, ref } = action.payload;
