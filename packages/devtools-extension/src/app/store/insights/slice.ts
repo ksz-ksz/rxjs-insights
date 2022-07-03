@@ -7,7 +7,7 @@ import { rebaseKeys } from '@app/store/insights/rebase-keys';
 
 let nextKeyId = 0;
 
-export interface SubscriberUiState {
+export interface TargetUiState {
   expandedKeys: Set<string>;
   keysMapping: Record<string, number>;
 }
@@ -15,7 +15,7 @@ export interface SubscriberUiState {
 export interface InsightsState {
   time: number;
   playing: boolean;
-  targetsUi: Record<number, SubscriberUiState>;
+  targetsUi: Record<number, TargetUiState>;
   targets: Record<number, TargetState>;
 }
 
