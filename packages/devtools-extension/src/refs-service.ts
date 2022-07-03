@@ -116,6 +116,7 @@ export class RefsService implements Refs {
   private readonly objects = new ObjectsRegistry();
   private readonly keys = new KeysRegistry();
   private readonly strongRefs = new StrongRefsRegistry();
+  private nextShallowObjectId = 0;
 
   getObject(objectId: number): unknown | undefined {
     return this.objects.getObject(objectId);
@@ -250,7 +251,8 @@ export class RefsService implements Refs {
   private createEntries(target: object, key: string, size: number): EntriesRef {
     return {
       type: 'entries',
-      objectId: this.objects.getObjectId(target),
+      objectId: this.nextShallowObjectId++,
+      targetObjectId: this.objects.getObjectId(target),
       key,
       size,
     };
@@ -286,7 +288,7 @@ export class RefsService implements Refs {
   private createGetter(target: object, getter: () => unknown): GetterRef {
     return {
       type: 'getter',
-      objectId: this.objects.getObjectId(target),
+      targetObjectId: this.objects.getObjectId(target),
       getterObjectId: this.objects.getObjectId(getter),
     };
   }
@@ -383,7 +385,10 @@ export class RefsService implements Refs {
     return [
       this.property('Id', this.create(id)),
       this.property('Name', this.create(declaration.name)),
-      this.property('Tags', this.createEntries(target, 'tags', tags.length)),
+      this.property(
+        'Tags',
+        this.createEntries(subscriber, 'tags', tags.length)
+      ),
       ...(declaration.internal
         ? [this.property('Internal', this.create(declaration.internal))]
         : []),
@@ -413,11 +418,11 @@ export class RefsService implements Refs {
         : []),
       this.property(
         'Sources',
-        this.createEntries(target, 'sources', sources.length)
+        this.createEntries(subscriber, 'sources', sources.length)
       ),
       this.property(
         'Events',
-        this.createEntries(target, 'events', events.length)
+        this.createEntries(subscriber, 'events', events.length)
       ),
       ...(target.length !== 0
         ? [
@@ -535,7 +540,8 @@ export class RefsService implements Refs {
         type: 'entries',
         size: set.size,
         key: 'entries',
-        objectId: this.objects.getObjectId(set),
+        objectId: this.nextShallowObjectId++,
+        targetObjectId: this.objects.getObjectId(set),
       },
       type: 'special',
     };
@@ -549,7 +555,8 @@ export class RefsService implements Refs {
         type: 'entries',
         size: map.size,
         key: 'entries',
-        objectId: this.objects.getObjectId(map),
+        objectId: this.nextShallowObjectId++,
+        targetObjectId: this.objects.getObjectId(map),
       },
       type: 'special',
     };
@@ -586,7 +593,7 @@ export class RefsService implements Refs {
   }
 
   private expandEntries(ref: EntriesRef): PropertyRef[] {
-    const target = this.objects.getObject(ref.objectId);
+    const target = this.objects.getObject(ref.targetObjectId);
     if (target) {
       if (target instanceof Set) {
         return this.expandSetEntries(target);
@@ -621,6 +628,7 @@ export class RefsService implements Refs {
         type: 'map-entry',
         key: this.create(key),
         val: this.create(val),
+        objectId: this.nextShallowObjectId++,
       },
       type: 'enumerable',
     }));
@@ -636,7 +644,7 @@ export class RefsService implements Refs {
   }
 
   invokeGetter(ref: GetterRef): Ref {
-    const target = this.objects.getObject<object>(ref.objectId);
+    const target = this.objects.getObject<object>(ref.targetObjectId);
     const getter = this.objects.getObject<() => unknown>(ref.getterObjectId);
     if (target && getter) {
       try {

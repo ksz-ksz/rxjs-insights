@@ -55,7 +55,7 @@ export const refsReaction = combineReactions()
               map((resolvedRef) =>
                 refsActions.RefForInvokedGetterLoaded({
                   stateKey,
-                  objectId: ref.objectId,
+                  objectId: ref.targetObjectId,
                   keyId: path.split('.').pop()!,
                   ref: resolvedRef!,
                 })

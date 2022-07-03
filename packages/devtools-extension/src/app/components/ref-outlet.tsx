@@ -563,7 +563,7 @@ function GetterRefOutletRenderer(props: RefOutletRendererProps<GetterRef>) {
         path: props.path,
       })
     );
-  }, [props.reference.objectId]);
+  }, [props.reference.targetObjectId]);
 
   return (
     <RefOutletLabelDiv>

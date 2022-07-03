@@ -49,6 +49,7 @@ export interface MapEntryRef {
   type: 'map-entry';
   key: Ref;
   val: Ref;
+  objectId: number;
 }
 
 export interface EntriesRef {
@@ -56,11 +57,12 @@ export interface EntriesRef {
   key: string;
   size: number;
   objectId: number;
+  targetObjectId: number;
 }
 
 export interface GetterRef {
   type: 'getter';
-  objectId: number;
+  targetObjectId: number;
   getterObjectId: number;
 }
 
