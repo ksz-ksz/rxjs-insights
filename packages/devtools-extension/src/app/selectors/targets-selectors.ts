@@ -18,3 +18,10 @@ export const activeTargetIdSelector = createSelector(
     return undefined;
   }
 );
+
+export const activeTargetSelector = createSelector(
+  [activeTargetIdSelector, targetsSelector],
+  ([activeTargetId, targets]) => {
+    return targets.targets.find((target) => target.id === activeTargetId);
+  }
+);

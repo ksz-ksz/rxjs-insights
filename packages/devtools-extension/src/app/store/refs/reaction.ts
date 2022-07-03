@@ -5,7 +5,7 @@ import {
   Store,
 } from '@lib/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
-import { catchError, concatMap, from, map, Observable, of } from 'rxjs';
+import { concatMap, from, map } from 'rxjs';
 import { refsClient } from '@app/clients/refs';
 import { refsActions } from '@app/actions/refs-actions';
 import { RefsSlice, RefState, RefUiState } from '@app/store/refs/slice';
