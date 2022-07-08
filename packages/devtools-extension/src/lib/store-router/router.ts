@@ -122,8 +122,8 @@ export function createRouterSlice<SLICE extends string, DATA, METADATA>(
               router.actions.InterceptEnterRedirect,
             ]),
             concatMap((action) => {
-              const prevUrl = store.get(router.selectors.url);
-              const prevRoutes = store.get(router.selectors.routes);
+              const prevUrl = store.select(router.selectors.url).get();
+              const prevRoutes = store.select(router.selectors.routes).get();
               const dispatchOnLeave: Action[] = [];
 
               for (const route of prevRoutes) {

@@ -5,7 +5,7 @@ import {
   RouterConfig,
 } from '@lib/store-router';
 import { JSXElementConstructor } from 'react';
-import { select, Store } from '@lib/store';
+import { Store } from '@lib/store';
 import { statusSelector, StatusSlice } from '@app/store/status';
 import { targetStateSelector } from '@app/selectors/insights-selectors';
 
@@ -27,10 +27,16 @@ export const routerConfig: RouterConfig<
       token: statusRouteToken,
       path: ['status'],
       interceptEnter(store: Store<StatusSlice>) {
-        return store.get(statusSelector).instrumentationStatus !== 'installed';
+        return (
+          store.select(statusSelector).get().instrumentationStatus !==
+          'installed'
+        );
       },
       interceptLeave(store: Store<StatusSlice>) {
-        return store.get(statusSelector).instrumentationStatus === 'installed';
+        return (
+          store.select(statusSelector).get().instrumentationStatus ===
+          'installed'
+        );
       },
     },
     {
@@ -45,8 +51,8 @@ export const routerConfig: RouterConfig<
           token: targetRouteToken,
           path: ['target', ':targetId'],
           await(store, url, route) {
-            return store.pipe(
-              select(targetStateSelector(Number(route.params!.targetId)))
+            return store.select(
+              targetStateSelector(Number(route.params!.targetId))
             );
           },
         },

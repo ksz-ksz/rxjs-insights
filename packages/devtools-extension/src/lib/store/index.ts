@@ -5,7 +5,7 @@ export * from './provider';
 export * from './reaction';
 export * from './reducer';
 export * from './store';
+export * from './store-view';
 export * from './super';
 export * from './intersection';
 export * from './selector';
-export * from './selection-observer';

@@ -3,7 +3,6 @@ import {
   createReaction,
   effect,
   filterActions,
-  select,
   Store,
 } from '@lib/store';
 import { fromServer } from '@lib/operators';
@@ -91,7 +90,7 @@ export const targetReaction = combineReactions()
           })
         ),
       (store: Store<RouterSlice>) => ({
-        activeTargetId$: store.pipe(select(activeTargetIdSelector)),
+        activeTargetId$: store.select(activeTargetIdSelector),
       })
     )
   );

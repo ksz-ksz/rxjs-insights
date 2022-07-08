@@ -14,6 +14,7 @@ import { Reaction } from './reaction';
 import { Super } from './super';
 import { inspect } from '@rxjs-insights/console';
 import { Selector } from './selector';
+import { StoreView } from './store-view';
 
 export const ReducerAdded = createAction<{ slice: string }>(
   '<store>',
@@ -43,9 +44,10 @@ export type State<STORE extends Store<any>> = STORE extends Store<infer STATE>
   ? STATE
   : never;
 
-export class Store<
-  STATE extends Record<string, any> = {}
-> extends Observable<STATE> {
+export class Store<STATE extends Record<string, any> = {}>
+  extends Observable<STATE>
+  implements StoreView<STATE>
+{
   private readonly actionSubject = new Subject<Action>();
   private readonly stateSubject = new BehaviorSubject<STATE>({} as STATE);
   private readonly actionObserver: PartialObserver<Action> = {
@@ -81,14 +83,16 @@ export class Store<
     inspect(this.stateSubject);
   }
 
-  get(): STATE;
-  get<RESULT>(selector: Selector<STATE, RESULT>): RESULT;
-  get(selector?: Selector<STATE, any>): any {
-    if (selector) {
-      return selector.select(this.stateSubject.getValue());
-    } else {
-      return this.stateSubject.getValue();
-    }
+  get(): STATE {
+    return this.stateSubject.getValue();
+  }
+
+  select<RESULT>(selector: Selector<STATE, RESULT>): StoreView<RESULT> {
+    return selector.select(this);
+  }
+
+  getSources(): Observable<unknown>[] {
+    return [this.stateSubject];
   }
 
   dispatch(action: Action) {

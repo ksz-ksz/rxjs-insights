@@ -37,7 +37,8 @@ export const targetRefsReaction = combineReactions()
       (store: Store<RefsSlice>) => ({
         isExpanded(stateKey: string) {
           return store
-            .get(refUiStateSelector(stateKey))
+            .select(refUiStateSelector(stateKey))
+            .get()
             .expandedPaths.has('root');
         },
       })
@@ -69,7 +70,8 @@ export const targetRefsReaction = combineReactions()
       (store: Store<RefsSlice>) => ({
         isExpanded(stateKey: string) {
           return store
-            .get(refUiStateSelector(stateKey))
+            .select(refUiStateSelector(stateKey))
+            .get()
             .expandedPaths.has('root');
         },
       })

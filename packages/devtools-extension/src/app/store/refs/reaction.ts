@@ -36,10 +36,10 @@ export const refsReaction = combineReactions()
         ),
       (store: Store<RefsSlice>) => ({
         getState(stateKey: string) {
-          return store.get(refStateSelector(stateKey));
+          return store.select(refStateSelector(stateKey)).get();
         },
         getUiState(stateKey: string) {
-          return store.get(refUiStateSelector(stateKey));
+          return store.select(refUiStateSelector(stateKey)).get();
         },
       })
     )

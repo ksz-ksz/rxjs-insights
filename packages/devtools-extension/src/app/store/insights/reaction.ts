@@ -3,7 +3,6 @@ import {
   createReaction,
   effect,
   filterActions,
-  select,
   Store,
 } from '@lib/store';
 import { createUrl, filterRoute } from '@lib/store-router';
@@ -121,7 +120,7 @@ export const insightsReaction = combineReactions()
           )
         ),
       (store: Store<TargetsSlice>) => ({
-        targets$: store.pipe(select(targetsSelector)),
+        targets$: store.select(targetsSelector),
       })
     )
   );

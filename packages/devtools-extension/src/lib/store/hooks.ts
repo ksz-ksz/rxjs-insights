@@ -4,6 +4,7 @@ import { Action } from './action';
 import { StoreContext } from './context';
 import { Selector } from './selector';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
+import { StoreView } from './store-view';
 
 export function useStore<STATE>(): Store<STATE> {
   return useContext(StoreContext);
@@ -27,26 +28,26 @@ export function useDispatchCallback<T extends any[]>(
   }, deps);
 }
 
-function useSelection<STATE, RESULT>(selector: Selector<STATE, RESULT>) {
-  return useMemo(() => selector.selection(), [selector]);
+function useSelection<STATE, RESULT>(
+  store: StoreView<STATE>,
+  selector: Selector<STATE, RESULT>
+) {
+  return useMemo(() => selector.select(store), [store, selector]);
 }
 
 export function useSelector<STATE, RESULT>(
   selector: Selector<STATE, RESULT>
 ): RESULT {
   const store = useStore<STATE>();
-  const selection = useSelection(selector);
+  const selection = useSelection(store, selector);
   const subscribe = useCallback(
     (callback: () => void) => {
-      const subscription = store.subscribe(callback);
+      const subscription = selection.subscribe(callback);
       return () => subscription.unsubscribe();
     },
     [store]
   );
-  const getSnapshot = useCallback(
-    () => selection.get(store.get()),
-    [store, selection]
-  );
+  const getSnapshot = useCallback(() => selection.get(), [store, selection]);
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 

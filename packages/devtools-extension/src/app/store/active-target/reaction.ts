@@ -1,4 +1,4 @@
-import { createReaction, select, Store } from '@lib/store';
+import { createReaction, Store } from '@lib/store';
 import { distinctUntilChanged, map } from 'rxjs';
 import { RouterSlice } from '@app/store/router';
 import { activeTargetSelector } from '@app/selectors/targets-selectors';
@@ -13,6 +13,6 @@ export const activeTargetReaction = createReaction(
       map((target) => activeTargetActions.ActiveTargetChanged({ target }))
     ),
   (store: Store<RouterSlice & TargetsSlice & RefsSlice>) => ({
-    activeTarget$: store.pipe(select(activeTargetSelector)),
+    activeTarget$: store.select(activeTargetSelector),
   })
 );
