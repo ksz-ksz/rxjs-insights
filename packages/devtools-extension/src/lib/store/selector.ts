@@ -1,6 +1,6 @@
 import { Intersection } from './intersection';
 import { StoreView } from './store-view';
-import { Observable, Observer, Unsubscribable } from 'rxjs';
+import { merge, Observable, Observer, Unsubscribable } from "rxjs";
 
 export interface Selector<STATE, RESULT> {
   select(store: StoreView<STATE>): StoreView<RESULT>;
@@ -171,7 +171,9 @@ class TupleSelection<STATE>
     private readonly equals: Equals<STATE>
   ) {
     super((observer: Partial<Observer<STATE>>) => {
-      return this.deps[0].subscribe(new StoreViewObserver(this, observer));
+      return merge(...this.getSources()).subscribe(
+        new StoreViewObserver(this, observer)
+      );
     });
   }
 
@@ -252,7 +254,9 @@ class RecordSelection<STATE>
     private readonly equals: Equals<STATE>
   ) {
     super((observer: Partial<Observer<STATE>>) => {
-      return this.deps[0].subscribe(new StoreViewObserver(this, observer));
+      return merge(...this.getSources()).subscribe(
+        new StoreViewObserver(this, observer)
+      );
     });
   }
 
