@@ -28,6 +28,7 @@ import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { RefState, RefUiState } from '@app/store/refs';
 import { createSelector } from '@lib/store';
 import { Indent } from '@app/components/indent';
+import { useLastDefinedValue } from '@app/utils';
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
@@ -597,7 +598,7 @@ function getRefOutletEntriesVisitor(
   type?: 'enumerable' | 'nonenumerable' | 'special',
   label?: string,
   parentRef?: Ref
-) {
+): boolean {
   const expandable = 'objectId' in ref && ref.objectId !== undefined;
   const expanded = expandedPaths.has(path);
 
@@ -613,21 +614,30 @@ function getRefOutletEntriesVisitor(
   });
 
   const objectId = (ref as { objectId: number }).objectId;
-  if (expandable && expanded && expandedObjects[objectId]) {
-    for (const prop of expandedObjects[objectId]) {
-      getRefOutletEntriesVisitor(
-        entries,
-        prop.val,
-        indent + 1,
-        `${path}.${prop.keyId}`,
-        expandedObjects,
-        expandedPaths,
-        prop.type,
-        prop.key,
-        ref
-      );
+  if (expandable && expanded) {
+    if (expandedObjects[objectId] === undefined) {
+      return false;
+    } else {
+      for (const prop of expandedObjects[objectId]) {
+        if (
+          !getRefOutletEntriesVisitor(
+            entries,
+            prop.val,
+            indent + 1,
+            `${path}.${prop.keyId}`,
+            expandedObjects,
+            expandedPaths,
+            prop.type,
+            prop.key,
+            ref
+          )
+        ) {
+          return false;
+        }
+      }
     }
   }
+  return true;
 }
 
 function getRefOutletEntries(
@@ -639,17 +649,22 @@ function getRefOutletEntries(
 ) {
   const entries: RefOutletEntry[] = [];
 
-  getRefOutletEntriesVisitor(
-    entries,
-    rootRef,
-    0,
-    'root',
-    state.expandedObjects,
-    uiState.expandedPaths,
-    type,
-    label
-  );
-  return entries;
+  if (
+    getRefOutletEntriesVisitor(
+      entries,
+      rootRef,
+      0,
+      'root',
+      state.expandedObjects,
+      uiState.expandedPaths,
+      type,
+      label
+    )
+  ) {
+    return entries;
+  } else {
+    return undefined;
+  }
 }
 
 const vmSelector = (
@@ -662,7 +677,7 @@ const vmSelector = (
     [refStateSelector(stateKey), refUiStateSelector(stateKey)],
     ([state, uiState]) => {
       const entries = getRefOutletEntries(ref, state, uiState, type, label);
-      return { entries };
+      return entries ? { entries } : undefined;
     }
   );
 
@@ -745,7 +760,10 @@ export function RefOutlet({
   reference,
   stateKey,
 }: RefOutletProps) {
-  const vm = useSelectorFunction(vmSelector, stateKey, reference, type, label);
+  const vm = useLastDefinedValue(
+    useSelectorFunction(vmSelector, stateKey, reference, type, label),
+    { entries: [] }
+  );
   return (
     <>
       {vm.entries.map((entry) => (
