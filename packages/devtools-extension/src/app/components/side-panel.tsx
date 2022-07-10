@@ -93,7 +93,7 @@ export function SidePanel(props: SidePanelProps) {
   }, []);
   return (
     <SidePanelDiv>
-      <SidePanelContentDiv ref={contentDivRef}>
+      <SidePanelContentDiv ref={contentDivRef} id="side-panel-content">
         {props.children}
       </SidePanelContentDiv>
       <SidePanelResizerDiv ref={resizerDivRef} />

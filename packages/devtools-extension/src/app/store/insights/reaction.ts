@@ -30,6 +30,31 @@ import { targetsClient } from '@app/clients/targets';
 import { targetsSelector } from '@app/selectors/targets-selectors';
 import { TargetsSlice } from '@app/store/targets';
 
+function scrollIntoView(element: HTMLElement) {
+  const containerElement = document.getElementById('side-panel-content')!;
+  const elementBB = element.getBoundingClientRect();
+  const containerElementBB = containerElement.getBoundingClientRect();
+
+  const offset = 96;
+
+  if (
+    elementBB.top >= containerElementBB.top + offset &&
+    elementBB.bottom <= containerElementBB.bottom - offset
+  ) {
+    return;
+  } else if (elementBB.top < containerElementBB.top + offset) {
+    containerElement.scrollBy({
+      behavior: 'smooth',
+      top: elementBB.top - containerElementBB.top - offset,
+    });
+  } else {
+    containerElement.scrollBy({
+      behavior: 'smooth',
+      top: elementBB.bottom - containerElementBB.bottom + offset,
+    });
+  }
+}
+
 export const insightsReaction = combineReactions()
   .add(
     createReaction((action$) =>
@@ -58,11 +83,7 @@ export const insightsReaction = combineReactions()
             getEventElementId(action.payload.event.time)
           );
           if (element) {
-            element.scrollIntoView({
-              behavior: 'smooth',
-              block: 'nearest',
-              inline: 'nearest',
-            });
+            scrollIntoView(element);
           }
         })
       )
