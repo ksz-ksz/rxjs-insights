@@ -10,6 +10,7 @@ import { LinkControl } from '@app/components/graph/link-control';
 import { LinkRendererProps } from '@app/components/graph/link-renderer';
 import { GraphLink } from '@app/components/graph/graph-link';
 import { NodeControl } from './node-control';
+import { initPanAndZoom } from '@app/components/graph/transform';
 
 function getBounds(nodes: NodeData<unknown>[], focus: (number | string)[]) {
   let minX = Infinity;
@@ -75,6 +76,7 @@ export function Graph<T>({
   getLinkKey,
 }: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const gRef = useRef<SVGGElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
   const initRef = useRef(false);
   const viewBoxCoordsRef = useRef({
@@ -92,6 +94,7 @@ export function Graph<T>({
       'viewBox',
       `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`
     );
+    initPanAndZoom(svgRef.current!, gRef.current!);
   }, []);
 
   useEffect(
@@ -132,25 +135,27 @@ export function Graph<T>({
         height: '100%',
       }}
     >
-      <TransitionGroup component="g">
-        {links.map((link) => (
-          <GraphLink
-            key={getLinkKey(link)}
-            link={link}
-            linkRenderer={linkRenderer}
-          />
-        ))}
-      </TransitionGroup>
+      <g ref={gRef}>
+        <TransitionGroup component="g">
+          {links.map((link) => (
+            <GraphLink
+              key={getLinkKey(link)}
+              link={link}
+              linkRenderer={linkRenderer}
+            />
+          ))}
+        </TransitionGroup>
 
-      <TransitionGroup component="g">
-        {nodes.map((node) => (
-          <GraphNode
-            key={getNodeKey(node)}
-            node={node}
-            nodeRenderer={nodeRenderer}
-          />
-        ))}
-      </TransitionGroup>
+        <TransitionGroup component="g">
+          {nodes.map((node) => (
+            <GraphNode
+              key={getNodeKey(node)}
+              node={node}
+              nodeRenderer={nodeRenderer}
+            />
+          ))}
+        </TransitionGroup>
+      </g>
     </svg>
   );
 }
