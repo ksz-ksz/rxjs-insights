@@ -76,35 +76,30 @@ export function Graph<T>({
   getLinkKey,
 }: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const gRef = useRef<SVGGElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
   const initRef = useRef(false);
 
   useEffect(function onInit() {
     initRef.current = true;
-    const viewBox = getViewBox(getBounds(nodes, focus ?? []), viewBoxPadding);
+    const vb = getViewBox(getBounds(nodes, focus ?? []), viewBoxPadding);
     const svg = svgRef.current!;
-    svg.setAttribute(
-      'viewBox',
-      `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`
-    );
-    initPanAndZoom(svgRef.current!, gRef.current!);
+    svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+    const subscription = initPanAndZoom(svg);
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(
     function onUpdate() {
       if (initRef.current) {
-        const viewBox = getViewBox(
-          getBounds(nodes, focus ?? []),
-          viewBoxPadding
-        );
+        const vb = getViewBox(getBounds(nodes, focus ?? []), viewBoxPadding);
         const svg = svgRef.current!;
         tweenRef.current?.kill();
         tweenRef.current = gsap.to(svg.viewBox.baseVal, {
-          x: viewBox.x,
-          y: viewBox.y,
-          width: viewBox.w,
-          height: viewBox.h,
+          x: vb.x,
+          y: vb.y,
+          width: vb.w,
+          height: vb.h,
           delay: duration,
           duration,
         });
@@ -122,27 +117,25 @@ export function Graph<T>({
         height: '100%',
       }}
     >
-      <g ref={gRef}>
-        <TransitionGroup component="g">
-          {links.map((link) => (
-            <GraphLink
-              key={getLinkKey(link)}
-              link={link}
-              linkRenderer={linkRenderer}
-            />
-          ))}
-        </TransitionGroup>
+      <TransitionGroup component="g">
+        {links.map((link) => (
+          <GraphLink
+            key={getLinkKey(link)}
+            link={link}
+            linkRenderer={linkRenderer}
+          />
+        ))}
+      </TransitionGroup>
 
-        <TransitionGroup component="g">
-          {nodes.map((node) => (
-            <GraphNode
-              key={getNodeKey(node)}
-              node={node}
-              nodeRenderer={nodeRenderer}
-            />
-          ))}
-        </TransitionGroup>
-      </g>
+      <TransitionGroup component="g">
+        {nodes.map((node) => (
+          <GraphNode
+            key={getNodeKey(node)}
+            node={node}
+            nodeRenderer={nodeRenderer}
+          />
+        ))}
+      </TransitionGroup>
     </svg>
   );
 }
