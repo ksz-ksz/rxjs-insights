@@ -79,12 +79,6 @@ export function Graph<T>({
   const gRef = useRef<SVGGElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);
   const initRef = useRef(false);
-  const viewBoxCoordsRef = useRef({
-    x: 0,
-    y: 0,
-    w: 0,
-    h: 0,
-  });
 
   useEffect(function onInit() {
     initRef.current = true;
@@ -106,20 +100,13 @@ export function Graph<T>({
         );
         const svg = svgRef.current!;
         tweenRef.current?.kill();
-        tweenRef.current = gsap.to(viewBoxCoordsRef.current, {
+        tweenRef.current = gsap.to(svg.viewBox.baseVal, {
           x: viewBox.x,
           y: viewBox.y,
-          w: viewBox.w,
-          h: viewBox.h,
+          width: viewBox.w,
+          height: viewBox.h,
           delay: duration,
           duration,
-          onUpdate() {
-            const [target] = this.targets();
-            svg.setAttribute(
-              'viewBox',
-              `${target.x} ${target.y} ${target.w} ${target.h}`
-            );
-          },
         });
       }
     },
