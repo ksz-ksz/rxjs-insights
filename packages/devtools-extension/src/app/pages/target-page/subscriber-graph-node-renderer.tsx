@@ -12,7 +12,7 @@ import {
   NodeControl,
   NodeRendererProps,
 } from '@app/components/graph';
-import { Menu, MenuItem, Theme, useTheme } from '@mui/material';
+import { Menu, MenuItem, MenuList, Theme, useTheme } from '@mui/material';
 import { useSelectorFunction } from '@app/store';
 import {
   targetStateSelector,
@@ -39,7 +39,7 @@ function getLocationStrings(locations: Locations) {
     const { file, line, column } = location;
     const short = `${file.split('/').at(-1)}:${line}`;
     const long = `${file}:${line}:${column}`;
-    return { short, long };
+    return { raw: location, short, long };
   } else {
     return undefined;
   }
@@ -97,6 +97,7 @@ interface MenuState {
   focusOptionVisible?: boolean;
   expandOptionVisible?: boolean;
   collapseOptionVisible?: boolean;
+  goToSourceOptionVisible?: boolean;
 }
 
 export const SubscriberGraphNodeRenderer = React.forwardRef<
@@ -124,6 +125,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
         focusOptionVisible: !vm.isRoot,
         expandOptionVisible: !vm.isExpanded,
         collapseOptionVisible: vm.isExpanded,
+        goToSourceOptionVisible: vm.location !== undefined,
       });
       event.preventDefault();
       event.stopPropagation();
@@ -196,6 +198,17 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     [onContextMenuClose, vm.rootTarget.id, vm.targetKey]
   );
 
+  const onGoToSource = useCallback(
+    (event: MouseEvent) => {
+      onContextMenuClose(event);
+      if (vm.location) {
+        const { file, line } = vm.location.raw;
+        chrome.devtools.panels.openResource(file, line - 1, () => {});
+      }
+    },
+    [onContextMenuClose, vm.location]
+  );
+
   const onClick = useDispatchCallback(
     (event: MouseEvent) =>
       event.ctrlKey
@@ -259,17 +272,22 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
         anchorReference="anchorPosition"
         anchorPosition={menu.position}
       >
-        {menu.focusOptionVisible && (
-          <MenuItem onClick={onFocus}>Focus</MenuItem>
-        )}
-        {menu.expandOptionVisible && (
-          <MenuItem onClick={onExpand}>Expand</MenuItem>
-        )}
-        {menu.collapseOptionVisible && (
-          <MenuItem onClick={onCollapse}>Collapse</MenuItem>
-        )}
-        <MenuItem onClick={onExpandAll}>Expand all</MenuItem>
-        <MenuItem onClick={onCollapseAll}>Collapse all</MenuItem>
+        <MenuList dense>
+          {menu.focusOptionVisible && (
+            <MenuItem onClick={onFocus}>Focus</MenuItem>
+          )}
+          {menu.expandOptionVisible && (
+            <MenuItem onClick={onExpand}>Expand</MenuItem>
+          )}
+          {menu.collapseOptionVisible && (
+            <MenuItem onClick={onCollapse}>Collapse</MenuItem>
+          )}
+          <MenuItem onClick={onExpandAll}>Expand all </MenuItem>
+          <MenuItem onClick={onCollapseAll}>Collapse all</MenuItem>
+          {menu.goToSourceOptionVisible && (
+            <MenuItem onClick={onGoToSource}>Go to source</MenuItem>
+          )}
+        </MenuList>
       </Menu>
       <g
         opacity={vm.isExpanded || vm.isRoot ? 1 : 0.5}
