@@ -35,7 +35,8 @@ function createEventElement(event: {
 }) {
   const eventEl = document.createElement('span');
   eventEl.classList.add('event', event.type);
-  eventEl.textContent = `${event.name} #${event.id}`;
+  eventEl.textContent = event.name;
+  eventEl.dataset.time = String(event.id);
   return eventEl;
 }
 
@@ -47,7 +48,9 @@ function createTargetElement(target: {
 }) {
   const targetEl = document.createElement('span');
   targetEl.classList.add('target', target.type);
-  targetEl.textContent = `${target.name} #${target.id}`;
+  targetEl.textContent = target.name;
+  targetEl.dataset.id = String(target.id);
+  // targetEl.dataset.tags = target.tags;
   return targetEl;
 }
 
@@ -63,8 +66,8 @@ function createFrameElement(frame: TraceFrame) {
   const frameEl = document.createElement('div');
   frameEl.classList.add('frame');
   frameEl.append(
-    createTargetElement(frame.target),
-    createEventElement(frame.event)
+    createEventElement(frame.event),
+    createTargetElement(frame.target)
   );
   const location = getLocation(frame.target.locations);
   if (location) {

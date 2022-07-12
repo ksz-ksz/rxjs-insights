@@ -10,6 +10,23 @@ body.theme-dark {
     --text-secondary: rgba(255, 255, 255, 0.7);
     --background: #121212;
     --divider: rgba(255, 255, 255, 0.12);
+
+    --theme-insights-event-subscription-secondary: #f57c00;
+    --theme-insights-event-subscription-primary: #f57c00;
+    --theme-insights-event-next-secondary: #66bb6a;
+    --theme-insights-event-next-primary: #388e3c;
+    --theme-insights-event-error-secondary: #ef5350;
+    --theme-insights-event-error-primary: #d32f2f;
+    --theme-insights-event-complete-secondary: #29b6f6;
+    --theme-insights-event-complete-primary: #0288d1;
+
+    --theme-insights-subscriber-secondary: #ce93d8;
+    --theme-insights-subscriber-primary: #ab47bc;
+    --theme-insights-observable-secondary: #90caf9;
+    --theme-insights-observable-primary: #42a5f5;
+
+    --theme-inspector-secondary: rgba(255, 255, 255, 0.7);
+
     color-scheme: dark;
 }
 
@@ -20,6 +37,9 @@ body {
     flex-direction: column;
     color: var(--text-primary);
     background-color: var(--background);
+    font-family: Monospace monospace;
+    font-style: oblique;
+    font-size: 12px;
 }
 
 .frame {
@@ -30,7 +50,63 @@ body {
     cursor: default;
 }
 
-.target, .event {
+.event.subscribe {
+    color: var(--theme-insights-event-subscription-secondary);
+}
+
+.event.subscribe:before {
+    content: "⤽ ";
+    color: var(--theme-insights-event-subscription-primary);
+}
+
+.event.unsubscribe {
+    color: var(--theme-insights-event-subscription-secondary);
+}
+
+.event.unsubscribe:before {
+    content: '"⤼ "';
+    color: var(--theme-insights-event-subscription-primary);
+}
+
+.event.next {
+    color: var(--theme-insights-event-next-secondary);
+}
+
+.event.next:before {
+    content: "↷ ";
+    color: var(--theme-insights-event-next-primary);
+}
+
+.event.error {
+    color: var(--theme-insights-event-error-secondary),
+}
+
+.event.error:before {
+    content: "↷ ";
+    color: var(--theme-insights-event-error-primary);
+}
+
+.event.complete {
+    color: var(--theme-insights-event-complete-secondary);
+}
+
+.event.complete:before {
+    content: "↷ ";
+    color: var(--theme-insights-event-complete-primary);
+}
+
+.event:before {
+    display: inline;
+    font-weight: 900;
+}
+
+.event:after {
+    display: inline;
+    content: " @" attr(data-time);
+    color: var(--theme-inspector-secondary);
+}
+
+.targetx {
     font-weight: bold;
     color: rgba(0, 0, 0, 0.87);
     padding: 2px 4px;
@@ -39,27 +115,37 @@ body {
 }
 
 .target.subscriber {
-    background-color: #ce93d8;
+    color: var(--theme-insights-subscriber-secondary);
+}
+
+.target.subscriber:before {
+    display: inline;
+    content: "⊙ ";
+    font-weight: 900;
+    color: var(--theme-insights-subscriber-primary);
+}
+
+.target.subscriber:after {
+    display: inline;
+    content: " " attr(data-tags) "#" attr(data-id);
+    color: var(--theme-inspector-secondary);
 }
 
 .target.observable {
-    background-color: #90caf9;
+    color: var(--theme-insights-observable-secondary);
 }
 
-.event.next {
-    background-color: #66bb6a;
+.target.observable:before {
+    display: inline;
+    content: "⊚ ";
+    font-weight: 900;
+    color: var(--theme-insights-observable-primary);
 }
 
-.event.error {
-    background-color: #f44336;
-}
-
-.event.complete {
-    background-color: #29b6f6;
-}
-
-.event.subscribe, .event.unsubscribe {
-    background-color: #ffa726;
+.target.observable:after {
+    display: inline;
+    content: " " attr(data-tags) "#" attr(data-id);
+    color: var(--theme-inspector-secondary);
 }
 
 .location {
@@ -70,7 +156,6 @@ body {
 .label {
     color: var(--text-secondary);
     grid-column: 1/-1;
-    font-style: italic;
     text-align: center;
     padding: 4px 2px;
 }
