@@ -17,7 +17,6 @@ const SidePanelContentDiv = styled('div')({
 const SidePanelResizerDiv = styled('div')(({ theme }) => ({
   width: '5px',
   position: 'relative',
-  left: '-2px',
   cursor: 'col-resize',
   transition: 'background .24s .24s',
   zIndex: 2,
@@ -28,11 +27,17 @@ const SidePanelResizerDiv = styled('div')(({ theme }) => ({
     background: theme.palette.divider,
     height: '100%',
   },
-  '&[data-side=left]:before': {
-    marginLeft: '2px',
+  '&[data-side=left]': {
+    left: '-2px',
+    '&:before': {
+      marginLeft: '2px',
+    },
   },
-  '&[data-side=right]:before': {
-    marginRight: '2px',
+  '&[data-side=right]': {
+    right: '-3px',
+    '&:before': {
+      marginRight: '2px',
+    },
   },
   '&:hover': {
     background: theme.palette.primary.main,
