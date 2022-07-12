@@ -32,7 +32,7 @@ export function playground() {
   const subject = new Subject();
   const obs = merge(obs1, obs1, subject, NEVER);
   const sub = obs.pipe(delay(0), take(10)).subscribe(subject);
-  obs.subscribe();
+  obs.subscribe(subscriber('a'));
 
   subject.next('woohoo');
 

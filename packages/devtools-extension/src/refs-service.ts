@@ -447,7 +447,7 @@ export class RefsService implements Refs {
     const succeedingEvents = getSucceedingEvents(event);
     return [
       this.property('Time', this.create(time)),
-      this.property('Name', this.create(declaration.name)),
+      // this.property('Name', this.create(declaration.name)),
       this.property('Type', this.create(type)),
       this.property('Task', {
         type: 'text',
