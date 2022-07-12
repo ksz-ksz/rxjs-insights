@@ -16,13 +16,7 @@ export function TargetPage() {
         flexDirection: 'row',
       }}
     >
-      <SidePanel>
-        <SidePanelSection title="SCOPE">
-          <ContextPanel />
-        </SidePanelSection>
-        <SidePanelSection title="TARGETS">
-          <TargetsPanel />
-        </SidePanelSection>
+      <SidePanel side="left" id="events-side-panel">
         <SidePanelSection title="EVENTS">
           <EventsPanel />
         </SidePanelSection>
@@ -30,6 +24,14 @@ export function TargetPage() {
       <Box sx={{ flexGrow: 1, flexShrink: 1 }}>
         <SubscribersGraph />
       </Box>
+      <SidePanel side="right">
+        <SidePanelSection title="SCOPE">
+          <ContextPanel />
+        </SidePanelSection>
+        <SidePanelSection title="TARGETS">
+          <TargetsPanel />
+        </SidePanelSection>
+      </SidePanel>
     </Box>
   );
 }

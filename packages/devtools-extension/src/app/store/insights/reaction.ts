@@ -31,7 +31,7 @@ import { targetsSelector } from '@app/selectors/targets-selectors';
 import { TargetsSlice } from '@app/store/targets';
 
 function scrollIntoView(element: HTMLElement) {
-  const containerElement = document.getElementById('side-panel-content')!;
+  const containerElement = document.getElementById('events-side-panel')!;
   const elementBB = element.getBoundingClientRect();
   const containerElementBB = containerElement.getBoundingClientRect();
 

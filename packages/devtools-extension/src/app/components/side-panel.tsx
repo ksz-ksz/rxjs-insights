@@ -6,11 +6,12 @@ import { fromEvent, map, switchMap, takeUntil } from 'rxjs';
 const SidePanelDiv = styled('div')({
   display: 'flex',
   flexDirection: 'row',
+  maxWidth: '30%',
 });
 const SidePanelContentDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
-  minWidth: '400px',
+  minWidth: '200px',
   overflow: 'auto',
 });
 const SidePanelResizerDiv = styled('div')(({ theme }) => ({
@@ -25,8 +26,13 @@ const SidePanelResizerDiv = styled('div')(({ theme }) => ({
     content: '""',
     width: '1px',
     background: theme.palette.divider,
-    marginLeft: '2px',
     height: '100%',
+  },
+  '&[data-side=left]:before': {
+    marginLeft: '2px',
+  },
+  '&[data-side=right]:before': {
+    marginRight: '2px',
   },
   '&:hover': {
     background: theme.palette.primary.main,
@@ -55,12 +61,15 @@ const SidePanelSectionBodyDiv = styled('div')({});
 
 export interface SidePanelProps {
   children: ReactNode | ReactNode[];
+  side: 'left' | 'right';
+  id?: string;
 }
 
 export function SidePanel(props: SidePanelProps) {
   const contentDivRef = useRef<HTMLDivElement | null>(null);
   const resizerDivRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
+    const c = props.side === 'left' ? 1 : -1;
     if (contentDivRef.current && resizerDivRef.current) {
       const contentDiv = contentDivRef.current;
       const resizerDiv = resizerDivRef.current;
@@ -77,7 +86,10 @@ export function SidePanel(props: SidePanelProps) {
               event.preventDefault();
               return event.clientX;
             }).pipe(
-              map((mouseX) => initialContentDivWidth + mouseX - initialMouseX),
+              map(
+                (mouseX) =>
+                  initialContentDivWidth + c * mouseX - c * initialMouseX
+              ),
               takeUntil(fromEvent(document, 'mouseup'))
             );
           })
@@ -93,10 +105,19 @@ export function SidePanel(props: SidePanelProps) {
   }, []);
   return (
     <SidePanelDiv>
-      <SidePanelContentDiv ref={contentDivRef} id="side-panel-content">
+      {props.side === 'right' && (
+        <SidePanelResizerDiv data-side="right" ref={resizerDivRef} />
+      )}
+      <SidePanelContentDiv
+        id={props.id}
+        ref={contentDivRef}
+        style={{ width: '400px' }}
+      >
         {props.children}
       </SidePanelContentDiv>
-      <SidePanelResizerDiv ref={resizerDivRef} />
+      {props.side === 'left' && (
+        <SidePanelResizerDiv data-side="left" ref={resizerDivRef} />
+      )}
     </SidePanelDiv>
   );
 }
