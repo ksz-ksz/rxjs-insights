@@ -1,4 +1,4 @@
-import { Location, Locator, Locations } from '@rxjs-insights/core';
+import { Location, Locations, Locator } from '@rxjs-insights/core';
 import {
   getSourceMapConsumer,
   GREATEST_LOWER_BOUND,
@@ -6,29 +6,39 @@ import {
   LEAST_UPPER_BOUND,
 } from './source-map';
 import ErrorStackParser from 'error-stack-parser';
+import { PromiseOrValue } from '@rxjs-insights/core/src/lib/locator';
+
+function isPromise<T>(x: PromiseOrValue<T>): x is Promise<T> {
+  return 'then' in x && 'catch' in x;
+}
 
 export class StacktraceLocator implements Locator {
   private readonly originalLocationsCache: Record<
     string,
-    Promise<Location | undefined>
+    Location | undefined
   > = {};
 
   constructor() {
     initSourceMapConsumer();
   }
 
-  locate(stackOffset: number = 0): Promise<Locations> {
+  locate(stackOffset: number = 0): PromiseOrValue<Locations> {
     const generatedLocation = this.getGeneratedLocation(stackOffset + 1);
-    return this.getOriginalLocation(generatedLocation)
-      .then((originalLocation) => {
+    const originalLocationPromiseOrValue =
+      this.getOriginalLocation(generatedLocation);
+    if (isPromise(originalLocationPromiseOrValue)) {
+      return originalLocationPromiseOrValue.then((originalLocation) => {
         return {
           generatedLocation,
           originalLocation,
         };
-      })
-      .catch(() => {
-        return { generatedLocation };
       });
+    } else {
+      return {
+        generatedLocation,
+        originalLocation: originalLocationPromiseOrValue,
+      };
+    }
   }
 
   private getGeneratedLocation(stackOffset: number): Location | undefined {
@@ -48,21 +58,23 @@ export class StacktraceLocator implements Locator {
 
   private getOriginalLocation(
     generatedLocation: Location | undefined
-  ): Promise<Location | undefined> {
+  ): PromiseOrValue<Location | undefined> {
     const cacheKey = `${generatedLocation?.file}:${generatedLocation?.line}:${generatedLocation?.column}`;
     try {
       if (generatedLocation === undefined) {
-        return Promise.resolve(undefined);
+        return undefined;
       } else if (this.originalLocationsCache.hasOwnProperty(cacheKey)) {
         return this.originalLocationsCache[cacheKey];
       } else {
-        const originalLocationPromise =
-          this.resolveOriginalLocation(generatedLocation);
-        this.originalLocationsCache[cacheKey] = originalLocationPromise;
-        return originalLocationPromise;
+        return this.resolveOriginalLocation(generatedLocation)
+          .then((originalLocation) => {
+            this.originalLocationsCache[cacheKey] = originalLocation;
+            return originalLocation;
+          })
+          .catch(() => undefined);
       }
     } catch (e) {
-      return Promise.reject();
+      return undefined;
     }
   }
 

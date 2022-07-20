@@ -18,11 +18,11 @@ export function getLocationString(location: Location) {
 
 function getLocation(locations: Locations | undefined): Location | undefined {
   if (locations !== undefined) {
-    if (locations.generatedLocation !== undefined) {
-      return locations.generatedLocation;
-    }
     if (locations.originalLocation !== undefined) {
       return locations.originalLocation;
+    }
+    if (locations.generatedLocation !== undefined) {
+      return locations.generatedLocation;
     }
   }
   return undefined;
@@ -62,6 +62,14 @@ function createLocationElement(location: Location) {
   return locationEl;
 }
 
+function createLocationUnavailableElement() {
+  const locationEl = document.createElement('span');
+  locationEl.className = 'location';
+  locationEl.textContent = 'N/A';
+  locationEl.title = 'Target location is currently unavailable';
+  return locationEl;
+}
+
 function createFrameElement(frame: TraceFrame) {
   const frameEl = document.createElement('div');
   frameEl.classList.add('frame');
@@ -79,6 +87,8 @@ function createFrameElement(frame: TraceFrame) {
         () => {}
       );
     });
+  } else {
+    frameEl.append(createLocationUnavailableElement());
   }
 
   return frameEl;

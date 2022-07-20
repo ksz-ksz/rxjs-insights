@@ -1,5 +1,7 @@
 import { InstrumentationContext } from './env';
 
+export type PromiseOrValue<T> = Promise<T> | T;
+
 export interface Location {
   file: string;
   line: number;
@@ -14,5 +16,5 @@ export interface Locations {
 export interface Locator {
   init?(context: InstrumentationContext): void;
 
-  locate(stackOffset: number): Promise<Locations>;
+  locate(stackOffset: number): PromiseOrValue<Locations>;
 }

@@ -1,6 +1,6 @@
-import { Locations } from './locator';
+import { Locations, PromiseOrValue } from './locator';
 import { InstrumentationContext } from './env';
-import { ObservableLike, SubscriberLike } from './types';
+import { ObservableLike } from './types';
 
 declare const ref: unique symbol;
 export type DeclarationRef = { readonly [ref]: 'ObservableDeclarationRef' };
@@ -26,7 +26,7 @@ export interface Recorder {
     name: string,
     func?: Function,
     args?: any[],
-    locations?: Promise<Locations>,
+    locations?: PromiseOrValue<Locations>,
     internal?: boolean
   ): DeclarationRef;
 

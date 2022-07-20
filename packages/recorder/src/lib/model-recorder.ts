@@ -22,6 +22,11 @@ import {
   Task,
 } from './model';
 import { queueCleanup } from './queue-cleanup';
+import { PromiseOrValue } from '@rxjs-insights/core/src/lib/locator';
+
+function isPromise<T>(x: PromiseOrValue<T>): x is Promise<T> {
+  return 'then' in x && 'catch' in x;
+}
 
 function incStats(stats: Record<string, number>, name: string) {
   if (stats[name] === undefined) {
@@ -47,13 +52,18 @@ export class ModelRecorder implements Recorder {
     name: string,
     func?: Function,
     args?: any[],
-    locations?: Promise<Locations>,
+    locations: PromiseOrValue<Locations> = {},
     internal = false
   ): DeclarationRef {
     const declaration = new Declaration(name, internal, func, args);
-    locations?.then((locations) => {
+    if (isPromise(locations)) {
+      locations?.then((locations) => {
+        declaration.locations = locations;
+      });
+    } else {
       declaration.locations = locations;
-    });
+    }
+
     return ref(declaration);
   }
 
