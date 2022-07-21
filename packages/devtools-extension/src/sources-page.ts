@@ -8,6 +8,8 @@ import {
   ToSourcesPaneChannel,
 } from '@app/protocols/sources-panel';
 
+let isHandlingOpenResource = false;
+
 function getShortLocationString(location: Location): string {
   return `${location.file.split('/').pop()}:${location.line}`;
 }
@@ -80,16 +82,24 @@ function createFrameElement(frame: TraceFrame) {
   const location = getLocation(frame.target.locations);
   if (location) {
     frameEl.append(createLocationElement(location));
-    frameEl.addEventListener('click', () => {
-      chrome.devtools.panels.openResource(
-        location.file,
-        location.line - 1,
-        () => {}
-      );
-    });
   } else {
     frameEl.append(createLocationUnavailableElement());
   }
+  frameEl.addEventListener('click', () => {
+    if (location) {
+      isHandlingOpenResource = true;
+      chrome.devtools.panels.openResource(
+        location.file,
+        location.line - 1,
+        () => {
+          setTimeout(() => {
+            isHandlingOpenResource = false;
+          }, 200);
+        }
+      );
+    }
+    void fromSourcesPaneClient.setScope(frame.ref);
+  });
 
   return frameEl;
 }
@@ -105,8 +115,7 @@ function createTaskElement(task: { name: string; id: number }) {
   return createLabelElement(`${task.name} #${task.id}`);
 }
 
-async function update() {
-  const trace = await tracesClient.getTrace();
+function render(trace: TraceFrame[] | undefined) {
   document.body.textContent = '';
   if (trace !== undefined && trace.length > 0) {
     for (let i = 0; i < trace.length; i++) {
@@ -125,6 +134,14 @@ async function update() {
   }
   const { height } = document.body.getBoundingClientRect();
   void fromSourcesPaneClient.setHeight(height);
+}
+
+async function update() {
+  const trace = await tracesClient.getTrace();
+  render(trace);
+  if (!isHandlingOpenResource) {
+    void fromSourcesPaneClient.setScope(trace?.at(0)?.ref);
+  }
 }
 
 startServer<ToSourcesPane>(

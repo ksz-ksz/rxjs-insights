@@ -64,6 +64,7 @@ function getTrace(event: Event | undefined): Trace {
     return [];
   } else {
     const frame: TraceFrame = {
+      ref: refs.create(event) as EventRef,
       task: {
         id: event.task.id,
         name: event.task.name,

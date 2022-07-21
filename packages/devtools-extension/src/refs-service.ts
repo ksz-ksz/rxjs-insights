@@ -76,6 +76,26 @@ class ObjectsRegistry {
   }
 }
 
+class SymbolsRegistry {
+  private nextSymbolId = 0;
+  private readonly symbols = new Map<number, symbol>();
+  private readonly ids = new Map<symbol, number>();
+
+  getSymbolId(symbol: symbol) {
+    let symbolId = this.ids.get(symbol);
+    if (symbolId === undefined) {
+      symbolId = this.nextSymbolId++;
+      this.symbols.set(symbolId, symbol);
+      this.ids.set(symbol, symbolId);
+    }
+    return symbolId;
+  }
+
+  getSymbol(id: number): symbol | undefined {
+    return this.symbols.get(id);
+  }
+}
+
 class KeysRegistry {
   private nextKeyId = 0;
   private readonly keys = new Map<string, string | number | symbol>();
@@ -114,12 +134,17 @@ class StrongRefsRegistry {
 
 export class RefsService implements Refs {
   private readonly objects = new ObjectsRegistry();
+  private readonly symbols = new SymbolsRegistry();
   private readonly keys = new KeysRegistry();
   private readonly strongRefs = new StrongRefsRegistry();
   private nextShallowObjectId = 0;
 
   getObject(objectId: number): unknown | undefined {
     return this.objects.getObject(objectId);
+  }
+
+  getSymbol(symbolId: number): symbol | undefined {
+    return this.symbols.getSymbol(symbolId);
   }
 
   create(target: unknown): Ref {
@@ -239,6 +264,7 @@ export class RefsService implements Refs {
         return {
           type: 'symbol',
           name: target.toString(),
+          symbolId: this.symbols.getSymbolId(target),
         };
       case 'bigint':
         return {

@@ -74,6 +74,7 @@ export interface ValueRef {
 export interface SymbolRef {
   type: 'symbol';
   name: string;
+  symbolId: number;
 }
 
 export interface UndefinedRef {
