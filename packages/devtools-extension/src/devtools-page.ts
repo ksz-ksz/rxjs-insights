@@ -23,6 +23,7 @@ startServer<FromSourcesPane>(
       console.log('setScope', ref);
       if (ref) {
         scopePane.setExpression(
+          // language=js
           `
           (()=>{
             const event = REFS.getObject(${ref.objectId});
