@@ -127,6 +127,8 @@ export interface TextRef {
   suffix?: string;
 }
 
+// TODO: create TaskRef
+
 export type Ref =
   | ObjectRef
   | ArrayRef

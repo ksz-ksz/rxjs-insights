@@ -17,7 +17,11 @@ export const targetsReducer = createReducer('targets', {
     state.targets = action.payload.targets;
   })
   .add(targetsActions.TargetNotificationReceived, (state, action) => {
-    state.targets.push(action.payload.target);
+    if (
+      !state.targets.find((target) => target.id === action.payload.target.id)
+    ) {
+      state.targets.push(action.payload.target);
+    }
   })
   .add(appBarActions.CloseTarget, (state, action) => {
     state.targets = state.targets.filter(

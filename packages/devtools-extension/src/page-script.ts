@@ -64,22 +64,13 @@ function getTrace(event: Event | undefined): Trace {
     return [];
   } else {
     const frame: TraceFrame = {
-      ref: refs.create(event) as EventRef,
       task: {
         id: event.task.id,
         name: event.task.name,
       },
-      event: {
-        id: event.time,
-        type: event.declaration.name as any,
-        name: event.declaration.name,
-      },
-      target: {
-        id: event.target.id,
-        type: event.target.type,
-        name: event.target.declaration.name,
-        locations: event.target.declaration.locations,
-      },
+      event: refs.create(event) as EventRef,
+      target: refs.create(event.target) as TargetRef,
+      locations: event.target.declaration.locations,
     };
     return [frame, ...getTrace(event.precedingEvent)];
   }
@@ -132,7 +123,7 @@ const targets: Record<number, Observable | Subscriber> = {};
 startServer<Targets>(createInspectedWindowEvalServerAdapter(TargetsChannel), {
   addTarget(objectId: number) {
     const target = refs.getObject(objectId)! as Observable | Subscriber;
-    targets[target.id] = target;
+      targets[target.id] = target;
   },
   releaseTarget(targetId) {
     delete targets[targetId];
