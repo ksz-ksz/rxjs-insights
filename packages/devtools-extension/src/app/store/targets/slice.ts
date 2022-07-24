@@ -27,11 +27,4 @@ export const targetsReducer = createReducer('targets', {
     state.targets = state.targets.filter(
       (target) => !(target.id === action.payload.targetId)
     );
-  })
-  .add(subscribersGraphActions.FocusTarget, (state, action) => {
-    if (
-      !state.targets.find((target) => target.id === action.payload.target.id)
-    ) {
-      state.targets.push(action.payload.target);
-    }
   });

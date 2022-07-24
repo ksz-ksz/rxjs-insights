@@ -15,7 +15,7 @@ import {
   SetRef,
   SubscriberRef,
 } from '@app/protocols/refs';
-import { Event, Observable, Subscriber } from '@rxjs-insights/recorder';
+import { Event, Observable, Subscriber, Target } from '@rxjs-insights/recorder';
 import {
   getObservable,
   getPrecedingEvent,
@@ -73,6 +73,20 @@ class ObjectsRegistry {
 
   getObject<T = object>(id: number): T | undefined {
     return this.objects.get(id)?.deref() as T | undefined;
+  }
+}
+
+class TargetsRegistry {
+  private readonly targets = new Map<number, WeakRef<Target>>();
+
+  addTarget(target: Target) {
+    if (!this.targets.has(target.id)) {
+      this.targets.set(target.id, new WeakRef<Target>(target));
+    }
+  }
+
+  getTarget<T = object>(id: number): T | undefined {
+    return this.targets.get(id)?.deref() as T | undefined;
   }
 }
 
@@ -135,6 +149,7 @@ class StrongRefsRegistry {
 export class RefsService implements Refs {
   private readonly objects = new ObjectsRegistry();
   private readonly symbols = new SymbolsRegistry();
+  private readonly targets = new TargetsRegistry();
   private readonly keys = new KeysRegistry();
   private readonly strongRefs = new StrongRefsRegistry();
   private nextShallowObjectId = 0;
@@ -147,10 +162,15 @@ export class RefsService implements Refs {
     return this.symbols.getSymbol(symbolId);
   }
 
+  getTarget(targetId: number): Target | undefined {
+    return this.targets.getTarget(targetId);
+  }
+
   create(target: unknown): Ref {
     if (typeof target === 'object' && target !== null) {
       if (isObservableTarget(target)) {
         const observable = getObservable(target);
+        this.targets.addTarget(observable);
         return {
           type: 'observable',
           id: observable.id,
@@ -159,6 +179,7 @@ export class RefsService implements Refs {
           objectId: this.objects.getObjectId(observable),
         };
       } else if (isObservable(target)) {
+        this.targets.addTarget(target);
         return {
           type: 'observable',
           id: target.id,
@@ -168,6 +189,7 @@ export class RefsService implements Refs {
         };
       } else if (isSubscriberTarget(target)) {
         const subscriber = getSubscriber(target);
+        this.targets.addTarget(subscriber);
         return {
           type: 'subscriber',
           id: subscriber.id,
@@ -176,6 +198,7 @@ export class RefsService implements Refs {
           objectId: this.objects.getObjectId(subscriber),
         };
       } else if (isSubscriber(target)) {
+        this.targets.addTarget(target);
         return {
           type: 'subscriber',
           id: target.id,

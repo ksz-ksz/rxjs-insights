@@ -120,28 +120,14 @@ export const insightsReaction = combineReactions()
     )
   )
   .add(
-    createReaction(
-      (action$, { targets$ }) =>
-        action$.pipe(
-          filterActions(subscribersGraphActions.FocusTarget),
-          withLatestFrom(targets$),
-          concatMap(([action, targets]) =>
-            !targets.targets.find(
-              (target) => target.id === action.payload.target.id
-            )
-              ? of(action.payload.target.id)
-              : from(
-                  targetsClient.addTarget(action.payload.target.objectId)
-                ).pipe(map(() => action.payload.target.id))
-          ),
-          map((targetId) =>
-            router.actions.Navigate({
-              url: createUrl(['target', String(targetId)]),
-            })
-          )
-        ),
-      (store: Store<TargetsSlice>) => ({
-        targets$: store.select(targetsSelector),
-      })
+    createReaction((action$) =>
+      action$.pipe(
+        filterActions(subscribersGraphActions.FocusTarget),
+        map((action) =>
+          router.actions.Navigate({
+            url: createUrl(['target', String(action.payload.target.id)]),
+          })
+        )
+      )
     )
   );

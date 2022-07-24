@@ -123,7 +123,7 @@ const targets: Record<number, Observable | Subscriber> = {};
 startServer<Targets>(createInspectedWindowEvalServerAdapter(TargetsChannel), {
   addTarget(objectId: number) {
     const target = refs.getObject(objectId)! as Observable | Subscriber;
-      targets[target.id] = target;
+    targets[target.id] = target;
   },
   releaseTarget(targetId) {
     delete targets[targetId];
@@ -255,7 +255,7 @@ function collectRelatedTargets(
   }
 }
 
-function getTargetState(target: Subscriber | Observable): TargetState {
+function getTargetState(target: Target): TargetState {
   const rootTarget: RelatedTarget = {
     ...(refs.create(target) as TargetRef),
     startTime:
@@ -295,11 +295,11 @@ function getTargetState(target: Subscriber | Observable): TargetState {
 
 startServer<Insights>(createInspectedWindowEvalServerAdapter(InsightsChannel), {
   getTargetState(targetId: number): TargetState | undefined {
-    const observable = targets[targetId];
-    if (!observable) {
+    const target = refs.getTarget(targetId);
+    if (!target) {
       return undefined;
     } else {
-      return getTargetState(observable);
+      return getTargetState(target);
     }
   },
 });
