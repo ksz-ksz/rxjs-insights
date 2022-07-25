@@ -9,3 +9,4 @@ export * from './store-view';
 export * from './super';
 export * from './intersection';
 export * from './selector';
+export * from './select-options';

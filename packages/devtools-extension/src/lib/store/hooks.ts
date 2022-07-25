@@ -32,7 +32,10 @@ function useSelection<STATE, RESULT>(
   store: StoreView<STATE>,
   selector: Selector<STATE, RESULT>
 ) {
-  return useMemo(() => selector.select(store), [store, selector]);
+  return useMemo(
+    () => selector.select(store, { mode: 'pull' }),
+    [store, selector]
+  );
 }
 
 export function useSelector<STATE, RESULT>(
@@ -45,9 +48,9 @@ export function useSelector<STATE, RESULT>(
       const subscription = selection.subscribe(callback);
       return () => subscription.unsubscribe();
     },
-    [store]
+    [selection]
   );
-  const getSnapshot = useCallback(() => selection.get(), [store, selection]);
+  const getSnapshot = useCallback(() => selection.get(), [selection]);
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
