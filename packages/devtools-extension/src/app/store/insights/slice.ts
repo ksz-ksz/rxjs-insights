@@ -4,6 +4,7 @@ import { RelatedTarget, Relations, TargetState } from '@app/protocols/insights';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { rebaseKeys } from '@app/store/insights/rebase-keys';
+import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 
 let nextKeyId = 0;
 
@@ -136,6 +137,9 @@ export const insightsReducer = createReducer('insights', {
     }
   })
   .add(eventsLogActions.EventSelected, (state, action) => {
+    state.time = action.payload.event.time;
+  })
+  .add(refOutletContextActions.FocusEvent, (state, action) => {
     state.time = action.payload.event.time;
   })
   .add(insightsActions.PlayNextEvent, (state, action) => {

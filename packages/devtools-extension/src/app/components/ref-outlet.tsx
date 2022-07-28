@@ -26,9 +26,10 @@ import {
 import { useDispatch, useSelectorFunction } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { RefState, RefUiState } from '@app/store/refs';
-import { createSelector } from '@lib/store';
+import { Action, createSelector, useDispatchCallback } from '@lib/store';
 import { Indent } from '@app/components/indent';
 import { useLastDefinedValue } from '@app/utils';
+import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
@@ -583,13 +584,42 @@ interface RefOutletEntry {
   ref: Ref;
   type?: 'enumerable' | 'nonenumerable' | 'special';
   label?: string;
-  parentRef?: Ref;
+  parentRef?: Ref; // TODO: remove?
   expandable: boolean;
   expanded: boolean;
 }
 
+interface ActionOutletEntry {
+  indent: number;
+  action: () => Action;
+  label: string;
+}
+
+type Entry = RefOutletEntry | ActionOutletEntry;
+
+function addActions(entries: Entry[], indent: number, ref: Ref) {
+  switch (ref.type) {
+    case 'observable':
+    case 'subscriber':
+      entries.push({
+        action: () => refOutletContextActions.FocusTarget({ target: ref }),
+        indent,
+        label: `Focus ${ref.type}`,
+      });
+      break;
+    case 'event': {
+      entries.push({
+        action: () => refOutletContextActions.FocusEvent({ event: ref }),
+        indent,
+        label: `Focus event`,
+      });
+      break;
+    }
+  }
+}
+
 function getRefOutletEntriesVisitor(
-  entries: RefOutletEntry[],
+  entries: Entry[],
   ref: Ref,
   indent: number,
   path: string,
@@ -618,6 +648,7 @@ function getRefOutletEntriesVisitor(
     if (expandedObjects[objectId] === undefined) {
       return false;
     } else {
+      addActions(entries, indent + 1, ref);
       for (const prop of expandedObjects[objectId]) {
         if (
           !getRefOutletEntriesVisitor(
@@ -647,7 +678,7 @@ function getRefOutletEntries(
   type?: 'enumerable' | 'nonenumerable' | 'special',
   label?: string
 ) {
-  const entries: RefOutletEntry[] = [];
+  const entries: Entry[] = [];
 
   if (
     getRefOutletEntriesVisitor(
@@ -702,6 +733,35 @@ export interface RefOutletRendererProps<REF extends Ref = Ref> {
   reference: REF;
   expanded: boolean;
   expandable: boolean;
+}
+
+const ActionSpan = styled('span')(({ theme }) => ({
+  display: 'inline',
+  fontFamily: 'Monospace',
+  textDecoration: 'underline',
+  cursor: 'pointer',
+  color: theme.inspector.secondary,
+  '&:before': {
+    display: 'inline-block',
+    content: '"» "',
+    color: theme.inspector.secondary,
+    whiteSpace: 'pre',
+  },
+}));
+
+export function ActionOutletEntry({
+  label,
+  indent,
+  action,
+}: ActionOutletEntry) {
+  const onClick = useDispatchCallback(action, []);
+
+  return (
+    <span>
+      <Indent indent={indent} />
+      <ActionSpan onClick={onClick}>{label}</ActionSpan>
+    </span>
+  );
 }
 
 export function RefOutletEntry({
@@ -766,19 +826,23 @@ export function RefOutlet({
   );
   return (
     <>
-      {vm.entries.map((entry) => (
-        <RefOutletEntry
-          indent={entry.indent}
-          stateKey={stateKey}
-          path={entry.path}
-          reference={entry.ref}
-          expanded={entry.expanded}
-          expandable={entry.expandable}
-          label={entry.label}
-          type={entry.type}
-          summary={false}
-        />
-      ))}
+      {vm.entries.map((entry) =>
+        'action' in entry ? (
+          <ActionOutletEntry {...entry} />
+        ) : (
+          <RefOutletEntry
+            indent={entry.indent}
+            stateKey={stateKey}
+            path={entry.path}
+            reference={entry.ref}
+            expanded={entry.expanded}
+            expandable={entry.expandable}
+            label={entry.label}
+            type={entry.type}
+            summary={false}
+          />
+        )
+      )}
     </>
   );
 }

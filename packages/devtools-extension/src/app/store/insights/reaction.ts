@@ -3,13 +3,11 @@ import {
   createReaction,
   effect,
   filterActions,
-  Store,
 } from '@lib/store';
 import { createUrl, filterRoute } from '@lib/store-router';
 import { router, targetRouteToken } from '@app/router';
 import {
   concat,
-  concatMap,
   delay,
   EMPTY,
   endWith,
@@ -19,16 +17,13 @@ import {
   of,
   switchMap,
   takeUntil,
-  withLatestFrom,
 } from 'rxjs';
 import { insightsClient } from '@app/clients/insights';
 import { insightsActions } from '@app/actions/insights-actions';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { getEventElementId } from '@app/utils/get-event-element-id';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
-import { targetsClient } from '@app/clients/targets';
-import { targetsSelector } from '@app/selectors/targets-selectors';
-import { TargetsSlice } from '@app/store/targets';
+import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 
 function scrollIntoView(element: HTMLElement) {
   const containerElement = document.getElementById('events-side-panel')!;
@@ -77,6 +72,7 @@ export const insightsReaction = combineReactions()
         filterActions([
           eventsLogActions.EventSelected,
           insightsActions.PlayNextEvent,
+          refOutletContextActions.FocusEvent,
         ]),
         effect((action) => {
           const element = document.getElementById(
@@ -122,7 +118,10 @@ export const insightsReaction = combineReactions()
   .add(
     createReaction((action$) =>
       action$.pipe(
-        filterActions(subscribersGraphActions.FocusTarget),
+        filterActions([
+          subscribersGraphActions.FocusTarget,
+          refOutletContextActions.FocusTarget,
+        ]),
         map((action) =>
           router.actions.Navigate({
             url: createUrl(['target', String(action.payload.target.id)]),

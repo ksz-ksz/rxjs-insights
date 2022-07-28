@@ -9,7 +9,6 @@ import { concatMap, EMPTY, of } from 'rxjs';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { refUiStateSelector } from '@app/selectors/refs-selectors';
 import { RefsSlice } from '@app/store/refs';
-import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { insightsActions } from '@app/actions/insights-actions';
 
