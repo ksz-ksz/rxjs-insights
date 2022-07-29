@@ -7,7 +7,8 @@ import { router } from '@app/router';
 import { TargetsPanelDiv } from '@app/components/targets-panel-div';
 import { Close } from '@mui/icons-material';
 import { appBarActions } from '@app/actions/app-bar-actions';
-import { IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
+import { LocationOutlet } from '@app/components/location-outlet';
 
 export function PinnedTargetsPanel() {
   const vm = useSelector(targetsSelector);
@@ -31,20 +32,23 @@ export function PinnedTargetsPanel() {
           }}
         >
           <RefSummaryOutlet reference={target} />
-          <IconButton
-            size="small"
-            edge="start"
-            aria-label="close"
-            sx={{ ml: 1 }}
-          >
-            <Close
-              fontSize="inherit"
-              onClick={(e) => {
-                dispatch(appBarActions.CloseTarget({ targetId: target.id }));
-                e.stopPropagation();
-              }}
-            />
-          </IconButton>
+          <Box sx={{ marginLeft: 2 }}>
+            <LocationOutlet locations={target.locations} />
+            <IconButton
+              size="small"
+              edge="start"
+              aria-label="close"
+              sx={{ ml: 1 }}
+            >
+              <Close
+                fontSize="inherit"
+                onClick={(e) => {
+                  dispatch(appBarActions.CloseTarget({ targetId: target.id }));
+                  e.stopPropagation();
+                }}
+              />
+            </IconButton>
+          </Box>
         </RouterLink>
       ))}
     </TargetsPanelDiv>

@@ -187,7 +187,6 @@ function addRelatedTarget(
         target.type === 'subscriber'
           ? getEndTime(target.events)
           : OUT_OF_BOUNDS_MAX_TIME,
-      locations: target.declaration.locations,
       [relation]: relatedTargets.map(({ id }) => id),
     };
   } else if (targets[target.id][relation] === undefined) {

@@ -1,4 +1,3 @@
-import { Locations } from '@rxjs-insights/core';
 import React, {
   MouseEvent,
   useCallback,
@@ -29,21 +28,10 @@ import { createSelector, useDispatchCallback } from '@lib/store';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 import { getRootTargetId } from '@app/pages/target-page/get-root-target-id';
+import { getLocationStrings } from '@app/utils/get-location-strings';
 
 const circleRadius = 5;
 const circleCircumference = 2 * Math.PI * circleRadius;
-
-function getLocationStrings(locations: Locations) {
-  const location = locations.originalLocation ?? locations.generatedLocation;
-  if (location) {
-    const { file, line, column } = location;
-    const short = `${file.split('/').at(-1)}:${line}`;
-    const long = `${file}:${line}:${column}`;
-    return { raw: location, short, long };
-  } else {
-    return undefined;
-  }
-}
 
 const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(
@@ -202,7 +190,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     (event: MouseEvent) => {
       onContextMenuClose(event);
       if (vm.location) {
-        const { file, line } = vm.location.raw;
+        const { file, line } = vm.location.location;
         chrome.devtools.panels.openResource(file, line - 1, () => {});
       }
     },

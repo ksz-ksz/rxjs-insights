@@ -2,10 +2,12 @@ import {
   AppBar,
   Box,
   Button,
+  Divider,
   IconButton,
   styled,
   Toolbar,
   Typography,
+  useTheme,
 } from '@mui/material';
 import React from 'react';
 import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
@@ -17,6 +19,7 @@ import { TargetPage } from '@app/pages/target-page';
 import { DashboardPage } from '@app/pages/dashboard-page';
 import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
+import { LocationOutlet } from '@app/components/location-outlet';
 
 const HomeSpan = styled('span')(({ theme }) => ({
   fontWeight: 600,
@@ -24,6 +27,13 @@ const HomeSpan = styled('span')(({ theme }) => ({
   '-webkit-background-clip': 'text',
   '-webkit-text-fill-color': 'transparent',
 }));
+
+function Spacer({ space }: { space: number }) {
+  const theme = useTheme();
+  return (
+    <span style={{ width: theme.spacing(space), display: 'inline-block' }} />
+  );
+}
 
 export function AppBarWrapper() {
   const dispatch = useDispatch();
@@ -33,25 +43,42 @@ export function AppBarWrapper() {
     <Box display="flex" height="100%" flexDirection="column">
       <AppBar color="transparent" position="static" sx={{ flex: '0 0 0' }}>
         <Toolbar>
-          <Button
-            component={RouterLink}
-            router={router}
-            to={createUrl(['dashboard'])}
+          <Box
+            sx={{ width: '200px', display: 'flex', justifyContent: 'start' }}
           >
-            <HomeSpan>RxJS Insights</HomeSpan>
-          </Button>
-          <Typography variant="button" component="div" sx={{ flexGrow: 1 }}>
-            {target && <RefSummaryOutlet reference={target} />}
+            <Button
+              component={RouterLink}
+              router={router}
+              to={createUrl(['dashboard'])}
+            >
+              <HomeSpan>RxJS Insights</HomeSpan>
+            </Button>
+          </Box>
+          <Typography
+            variant="h6"
+            align="center"
+            component="div"
+            sx={{ flexGrow: 1 }}
+          >
+            {target && (
+              <>
+                <RefSummaryOutlet reference={target} />
+                <Spacer space={4} />
+                <LocationOutlet locations={target.locations} />
+              </>
+            )}
           </Typography>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="refresh"
-            onClick={() => dispatch(appBarActions.RefreshData())}
-          >
-            <Refresh />
-          </IconButton>
+          <Box sx={{ width: '200px', display: 'flex', justifyContent: 'end' }}>
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="refresh"
+              onClick={() => dispatch(appBarActions.RefreshData())}
+            >
+              <Refresh />
+            </IconButton>
+          </Box>
         </Toolbar>
       </AppBar>
       <Box flex="1 1 0" overflow="hidden">

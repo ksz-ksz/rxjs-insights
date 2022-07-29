@@ -177,6 +177,7 @@ export class RefsService implements Refs {
           name: observable.declaration.name,
           tags: observable.tags,
           objectId: this.objects.getObjectId(observable),
+          locations: observable.declaration.locations,
         };
       } else if (isObservable(target)) {
         this.targets.addTarget(target);
@@ -186,6 +187,7 @@ export class RefsService implements Refs {
           name: target.declaration.name,
           tags: target.tags,
           objectId: this.objects.getObjectId(target),
+          locations: target.declaration.locations,
         };
       } else if (isSubscriberTarget(target)) {
         const subscriber = getSubscriber(target);
@@ -196,6 +198,7 @@ export class RefsService implements Refs {
           name: subscriber.declaration.name,
           tags: subscriber.tags,
           objectId: this.objects.getObjectId(subscriber),
+          locations: subscriber.declaration.locations,
         };
       } else if (isSubscriber(target)) {
         this.targets.addTarget(target);
@@ -205,6 +208,7 @@ export class RefsService implements Refs {
           name: target.declaration.name,
           tags: target.tags,
           objectId: this.objects.getObjectId(target),
+          locations: target.declaration.locations,
         };
       } else if (isEvent(target)) {
         return {

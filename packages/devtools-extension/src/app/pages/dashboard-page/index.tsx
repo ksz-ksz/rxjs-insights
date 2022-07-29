@@ -118,9 +118,6 @@ export function DashboardPage() {
         <SidePanelSection title="PINNED TARGETS">
           <PinnedTargetsPanel />
         </SidePanelSection>
-        {/*<SidePanelSection title="RECENT TARGETS">*/}
-        {/*  <TargetsPanel />*/}
-        {/*</SidePanelSection>*/}
       </SidePanel>
     </Box>
   );

@@ -1,3 +1,5 @@
+import { Locations } from '@rxjs-insights/core';
+
 export const RefsChannel = 'RefsChannel';
 
 export interface PropertyRef {
@@ -91,6 +93,7 @@ export interface ObservableRef {
   name: string;
   tags: string[];
   objectId: number;
+  locations: Locations;
 }
 
 export interface SubscriberRef {
@@ -99,6 +102,7 @@ export interface SubscriberRef {
   name: string;
   tags: string[];
   objectId: number;
+  locations: Locations;
 }
 
 export type TargetRef = ObservableRef | SubscriberRef;
