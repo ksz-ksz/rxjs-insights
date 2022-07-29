@@ -12,7 +12,6 @@ import { targetsReducer } from '@app/store/targets/slice';
 import { insightsReaction, insightsReducer } from '@app/store/insights';
 import { refsReducer } from '@app/store/refs';
 import { refsReaction } from '@app/store/refs/reaction';
-import { activeTargetReaction } from '@app/store/active-target/reaction';
 import { targetRefsReaction } from '@app/store/target-refs/reaction';
 
 export const store = createStore()
@@ -30,7 +29,6 @@ export const store = createStore()
   .addReaction(insightsReaction)
   .addReducer(refsReducer)
   .addReaction(refsReaction)
-  .addReaction(activeTargetReaction)
   .addReaction(targetRefsReaction);
 export const { useStore, useDispatch, useSelector, useSelectorFunction } =
   createStoreHooks<typeof store>();
