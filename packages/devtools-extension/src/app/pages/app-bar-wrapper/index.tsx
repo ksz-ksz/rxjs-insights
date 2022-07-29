@@ -1,23 +1,22 @@
 import {
   AppBar,
   Box,
+  Button,
   IconButton,
   styled,
-  Tab,
-  Tabs,
   Toolbar,
+  Typography,
 } from '@mui/material';
 import React from 'react';
 import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
 import { dashboardRouteToken, router, targetRouteToken } from '@app/router';
-import { Close, Refresh } from '@mui/icons-material';
+import { Refresh } from '@mui/icons-material';
 import { useDispatch, useSelector } from '@app/store';
 import { appBarActions } from '@app/actions/app-bar-actions';
-import { targetsSelector } from '@app/store/targets';
 import { TargetPage } from '@app/pages/target-page';
 import { DashboardPage } from '@app/pages/dashboard-page';
-import { activeTargetIdSelector } from '@app/selectors/targets-selectors';
-import { RefOutlet, RefSummaryOutlet } from '@app/components/ref-outlet';
+import { RefSummaryOutlet } from '@app/components/ref-outlet';
+import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 
 const HomeSpan = styled('span')(({ theme }) => ({
   fontWeight: 600,
@@ -28,58 +27,22 @@ const HomeSpan = styled('span')(({ theme }) => ({
 
 export function AppBarWrapper() {
   const dispatch = useDispatch();
-
-  const targets = useSelector(targetsSelector).targets;
-  const activeTargetId = useSelector(activeTargetIdSelector);
+  const target = useSelector(activeTargetStateSelector)?.target;
 
   return (
     <Box display="flex" height="100%" flexDirection="column">
       <AppBar color="transparent" position="static" sx={{ flex: '0 0 0' }}>
         <Toolbar>
-          <Tabs
-            value={activeTargetId ?? 'dashboard'}
-            variant="scrollable"
-            scrollButtons="auto"
-            aria-label="scrollable auto tabs example"
-            sx={{ flexGrow: 1 }}
+          <Button
+            component={RouterLink}
+            router={router}
+            to={createUrl(['dashboard'])}
           >
-            <Tab
-              component={RouterLink}
-              router={router}
-              value="dashboard"
-              to={createUrl(['dashboard'])}
-              label={<HomeSpan>RxJS Insights</HomeSpan>}
-            />
-            {targets.map((target) => (
-              <Tab
-                component={RouterLink}
-                router={router}
-                value={target.id}
-                to={createUrl(['target', String(target.id)])}
-                label={
-                  <Box>
-                    <RefSummaryOutlet reference={target} />
-                    <IconButton
-                      size="small"
-                      edge="start"
-                      aria-label="close"
-                      sx={{ ml: 1 }}
-                    >
-                      <Close
-                        fontSize="inherit"
-                        onClick={(e) => {
-                          dispatch(
-                            appBarActions.CloseTarget({ targetId: target.id })
-                          );
-                          e.stopPropagation();
-                        }}
-                      />
-                    </IconButton>
-                  </Box>
-                }
-              />
-            ))}
-          </Tabs>
+            <HomeSpan>RxJS Insights</HomeSpan>
+          </Button>
+          <Typography variant="button" component="div" sx={{ flexGrow: 1 }}>
+            {target && <RefSummaryOutlet reference={target} />}
+          </Typography>
           <IconButton
             size="large"
             edge="start"

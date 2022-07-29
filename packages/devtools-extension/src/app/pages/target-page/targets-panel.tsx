@@ -1,18 +1,9 @@
 import React from 'react';
-import { styled } from '@mui/material';
 import { RefOutlet } from '@app/components/ref-outlet';
 import { createSelector } from '@lib/store';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { useSelector } from '@app/store';
-
-const TargetsPanelDiv = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-  whiteSpace: 'nowrap',
-  paddingRight: '1rem',
-  cursor: 'default',
-});
+import { TargetsPanelDiv } from '@app/components/targets-panel-div';
 
 const vmSelector = createSelector(
   [activeTargetStateSelector],

@@ -18,6 +18,11 @@ import {
 import { useSelector } from '@app/store';
 import { statisticsSelector } from '@app/store/statisctics';
 import { ExpandMore } from '@mui/icons-material';
+import { targetsSelector } from '@app/selectors/targets-selectors';
+import { SidePanel, SidePanelSection } from '@app/components';
+import { ContextPanel } from '@app/pages/target-page/context-panel';
+import { TargetsPanel } from '@app/pages/target-page/targets-panel';
+import { PinnedTargetsPanel } from '@app/pages/dashboard-page/pinned-targets-panel';
 
 export interface StatsLineProps {
   label: string;
@@ -87,35 +92,36 @@ export function DashboardPage() {
 
   return (
     <Box
-      height="100%"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      overflow="hidden"
+      sx={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+      }}
     >
-      <Box flex="1 1 0" display="flex" justifyContent="right" padding={2}>
+      <Box
+        sx={{
+          flexGrow: '1',
+          flexShrink: '1',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 2,
+        }}
+      >
         <TitleDiv>
           <Typography variant="h1">RxJS Insights</Typography>
           <Typography variant="h4">See through the observables</Typography>
         </TitleDiv>
       </Box>
-      <Divider orientation="vertical" variant="middle" />
-      <Box flex="1 1 0" maxHeight="100%" overflow="auto" padding={2}>
-        <Box maxWidth="600px" py={2}>
-          <StatsLine
-            label="Captured observables"
-            stats={statistics.stats?.observables ?? {}}
-          />
-          <StatsLine
-            label="Captured subscribers"
-            stats={statistics.stats?.subscribers ?? {}}
-          />
-          <StatsLine
-            label="Captured events"
-            stats={statistics.stats?.events ?? {}}
-          />
-        </Box>
-      </Box>
+      <SidePanel side="right">
+        <SidePanelSection title="PINNED TARGETS">
+          <PinnedTargetsPanel />
+        </SidePanelSection>
+        {/*<SidePanelSection title="RECENT TARGETS">*/}
+        {/*  <TargetsPanel />*/}
+        {/*</SidePanelSection>*/}
+      </SidePanel>
     </Box>
   );
 }

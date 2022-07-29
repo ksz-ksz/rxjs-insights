@@ -6,12 +6,10 @@ import { fromEvent, map, switchMap, takeUntil } from 'rxjs';
 const SidePanelDiv = styled('div')({
   display: 'flex',
   flexDirection: 'row',
-  maxWidth: '30%',
 });
 const SidePanelContentDiv = styled('div')({
   display: 'flex',
   flexDirection: 'column',
-  minWidth: '200px',
   overflow: 'auto',
 });
 const SidePanelResizerDiv = styled('div')(({ theme }) => ({
@@ -68,13 +66,21 @@ export interface SidePanelProps {
   children: ReactNode | ReactNode[];
   side: 'left' | 'right';
   id?: string;
+  minWidth?: string | number;
+  maxWidth?: string | number;
 }
 
-export function SidePanel(props: SidePanelProps) {
+export function SidePanel({
+  id,
+  side,
+  minWidth = '200px',
+  maxWidth = '50%',
+  children,
+}: SidePanelProps) {
   const contentDivRef = useRef<HTMLDivElement | null>(null);
   const resizerDivRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    const c = props.side === 'left' ? 1 : -1;
+    const c = side === 'left' ? 1 : -1;
     if (contentDivRef.current && resizerDivRef.current) {
       const contentDiv = contentDivRef.current;
       const resizerDiv = resizerDivRef.current;
@@ -109,18 +115,18 @@ export function SidePanel(props: SidePanelProps) {
     }
   }, []);
   return (
-    <SidePanelDiv>
-      {props.side === 'right' && (
+    <SidePanelDiv style={{ maxWidth }}>
+      {side === 'right' && (
         <SidePanelResizerDiv data-side="right" ref={resizerDivRef} />
       )}
       <SidePanelContentDiv
-        id={props.id}
+        id={id}
         ref={contentDivRef}
-        style={{ width: '400px' }}
+        style={{ width: '400px', minWidth }}
       >
-        {props.children}
+        {children}
       </SidePanelContentDiv>
-      {props.side === 'left' && (
+      {side === 'left' && (
         <SidePanelResizerDiv data-side="left" ref={resizerDivRef} />
       )}
     </SidePanelDiv>

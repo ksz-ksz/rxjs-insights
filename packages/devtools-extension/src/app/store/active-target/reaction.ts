@@ -6,6 +6,7 @@ import { activeTargetActions } from '@app/actions/active-target-actions';
 import { TargetsSlice } from '@app/store/targets';
 import { RefsSlice } from '@app/store/refs';
 
+// TODO: remove
 export const activeTargetReaction = createReaction(
   (action$, { activeTarget$ }) =>
     activeTarget$.pipe(
