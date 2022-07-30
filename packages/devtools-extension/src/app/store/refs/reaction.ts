@@ -14,13 +14,17 @@ import {
   refUiStateSelector,
 } from '@app/selectors/refs-selectors';
 import { PropertyRef, Ref } from '@app/protocols/refs';
+import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
 
 export const refsReaction = combineReactions()
   .add(
     createReaction(
       (action$, { getState, getUiState }) =>
         action$.pipe(
-          filterActions(refOutletActions.Expand),
+          filterActions([
+            refOutletActions.Expand,
+            refreshRefsActions.LoadExpanded,
+          ]),
           concatMap((action) => {
             const { ref, path, stateKey } = action.payload;
             const state = getState(stateKey);

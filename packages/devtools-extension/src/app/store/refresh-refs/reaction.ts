@@ -5,15 +5,11 @@ import {
   Store,
 } from '@lib/store';
 import { concatMap, distinctUntilChanged, EMPTY, of } from 'rxjs';
-import { refOutletActions } from '@app/actions/ref-outlet-actions';
-import { refUiStateSelector } from '@app/selectors/refs-selectors';
-import { RefsSlice } from '@app/store/refs';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { timeSelector } from '@app/selectors/insights-selectors';
 import { RouterSlice } from '@app/store/router';
 import { InsightsSlice } from '@app/store/insights';
-import { inspect } from '@rxjs-insights/console';
-import { RelatedEvent, RelatedTarget } from '@app/protocols/insights';
+import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
 
 const activeTargetSelector = createSelector(
   [activeTargetStateSelector],
@@ -37,15 +33,15 @@ const activeEventSelector = createSelector(
   }
 );
 
-export const targetRefsReaction = combineReactions()
+export const refreshRefsReaction = combineReactions()
   .add(
     createReaction(
-      (action$, { activeTarget$, isExpanded }) =>
+      (action$, { activeTarget$ }) =>
         activeTarget$.pipe(
-          concatMap((target: RelatedTarget) => {
-            if (target && isExpanded('context-target')) {
+          concatMap((target) => {
+            if (target) {
               return of(
-                refOutletActions.Expand({
+                refreshRefsActions.LoadExpanded({
                   stateKey: 'context-target',
                   ref: target,
                   path: 'root',
@@ -56,27 +52,21 @@ export const targetRefsReaction = combineReactions()
             }
           })
         ),
-      (store: Store<RouterSlice & InsightsSlice & RefsSlice>) => ({
+      (store: Store<RouterSlice & InsightsSlice>) => ({
         activeTarget$: store
           .select(activeTargetSelector)
           .pipe(distinctUntilChanged()),
-        isExpanded(stateKey: string) {
-          return store
-            .select(refUiStateSelector(stateKey))
-            .get()
-            .expandedPaths.has('root');
-        },
       })
     )
   )
   .add(
     createReaction(
-      (action$, { activeEvent$, isExpanded }) =>
+      (action$, { activeEvent$ }) =>
         activeEvent$.pipe(
-          concatMap((event: RelatedEvent) => {
-            if (event && isExpanded('context-event')) {
+          concatMap((event) => {
+            if (event) {
               return of(
-                refOutletActions.Expand({
+                refreshRefsActions.LoadExpanded({
                   stateKey: 'context-event',
                   ref: event,
                   path: 'root',
@@ -87,16 +77,10 @@ export const targetRefsReaction = combineReactions()
             }
           })
         ),
-      (store: Store<RouterSlice & InsightsSlice & RefsSlice>) => ({
+      (store: Store<RouterSlice & InsightsSlice>) => ({
         activeEvent$: store
           .select(activeEventSelector)
           .pipe(distinctUntilChanged()),
-        isExpanded(stateKey: string) {
-          return store
-            .select(refUiStateSelector(stateKey))
-            .get()
-            .expandedPaths.has('root');
-        },
       })
     )
   );
