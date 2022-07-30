@@ -51,9 +51,19 @@ export const targetReaction = combineReactions()
   .add(
     createReaction((action$) =>
       action$.pipe(
-        filterActions(appBarActions.CloseTarget),
+        filterActions(targetsActions.PinTarget),
         effect((action) => {
-          void targetsClient.releaseTarget(action.payload.targetId);
+          void targetsClient.pinTarget(action.payload.target.objectId);
+        })
+      )
+    )
+  )
+  .add(
+    createReaction((action$) =>
+      action$.pipe(
+        filterActions(targetsActions.UnpinTarget),
+        effect((action) => {
+          void targetsClient.unpinTarget(action.payload.target.objectId);
         })
       )
     )

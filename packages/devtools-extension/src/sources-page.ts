@@ -84,7 +84,7 @@ function createOpenElement(target: TargetRef) {
   openEl.title = 'Inspect target in devtools panel';
   openEl.addEventListener('click', async (e) => {
     e.stopPropagation();
-    await targetsClient.addTarget(target.objectId);
+    await targetsClient.pinTarget(target.objectId);
     await targetsNotificationsClient.notifyTarget(target);
   });
   return openEl;

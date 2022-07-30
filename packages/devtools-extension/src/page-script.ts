@@ -118,18 +118,28 @@ startServer<Instrumentation>(
   }
 );
 
-const targets: Record<number, Observable | Subscriber> = {};
+const pinnedTargets: Record<number, Observable | Subscriber> = {};
+const lockedTargets: Record<number, Observable | Subscriber> = {};
 
 startServer<Targets>(createInspectedWindowEvalServerAdapter(TargetsChannel), {
-  addTarget(objectId: number) {
+  lockTarget(objectId: number) {
     const target = refs.getObject(objectId)! as Observable | Subscriber;
-    targets[target.id] = target;
+    lockedTargets[target.id] = target;
   },
-  releaseTarget(targetId) {
-    delete targets[targetId];
+  unlockTarget(objectId: number) {
+    const target = refs.getObject(objectId)! as Observable | Subscriber;
+    delete lockedTargets[target.id];
+  },
+  pinTarget(objectId: number) {
+    const target = refs.getObject(objectId)! as Observable | Subscriber;
+    pinnedTargets[target.id] = target;
+  },
+  unpinTarget(objectId) {
+    const target = refs.getObject(objectId)! as Observable | Subscriber;
+    delete pinnedTargets[target.id];
   },
   getTargets() {
-    return Object.values(targets).map(
+    return Object.values(pinnedTargets).map(
       (target) => refs.create(target) as TargetRef
     );
   },
@@ -316,7 +326,7 @@ function getTarget(maybeTarget: ObservableLike | SubscriberLike) {
 function inspect(maybeTarget: ObservableLike | SubscriberLike) {
   const target = getTarget(maybeTarget);
   if (target) {
-    targets[target.id] = target;
+    pinnedTargets[target.id] = target;
     void targetsNotificationsClient.notifyTarget(
       refs.create(target) as TargetRef
     );

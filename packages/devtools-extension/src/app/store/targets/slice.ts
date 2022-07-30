@@ -23,8 +23,11 @@ export const targetsReducer = createReducer('targets', {
       state.targets.push(action.payload.target);
     }
   })
-  .add(appBarActions.CloseTarget, (state, action) => {
+  .add(targetsActions.PinTarget, (state, action) => {
+    state.targets.push(action.payload.target);
+  })
+  .add(targetsActions.UnpinTarget, (state, action) => {
     state.targets = state.targets.filter(
-      (target) => !(target.id === action.payload.targetId)
+      (target) => !(target.id === action.payload.target.id)
     );
   });

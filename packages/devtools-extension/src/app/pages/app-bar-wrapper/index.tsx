@@ -12,7 +12,7 @@ import {
 import React from 'react';
 import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
 import { dashboardRouteToken, router, targetRouteToken } from '@app/router';
-import { Refresh } from '@mui/icons-material';
+import { Bookmark, BookmarkAdded, Refresh } from '@mui/icons-material';
 import { useDispatch, useSelector } from '@app/store';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { TargetPage } from '@app/pages/target-page';
@@ -20,6 +20,9 @@ import { DashboardPage } from '@app/pages/dashboard-page';
 import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { LocationOutlet } from '@app/components/location-outlet';
+import { targetsSelector } from '@app/selectors/targets-selectors';
+import { createSelector } from '@lib/store';
+import { targetsActions } from '@app/actions/targets-actions';
 
 const HomeSpan = styled('span')(({ theme }) => ({
   fontWeight: 600,
@@ -35,9 +38,23 @@ function Spacer({ space }: { space: number }) {
   );
 }
 
+const vm = createSelector(
+  [activeTargetStateSelector, targetsSelector],
+  ([activeTargetState, targets]) => {
+    const target = activeTargetState?.target;
+    const isTargetPinned =
+      target && targets.targets.find((x) => x.id === target.id) !== undefined;
+
+    return {
+      target,
+      isTargetPinned,
+    };
+  }
+);
+
 export function AppBarWrapper() {
   const dispatch = useDispatch();
-  const target = useSelector(activeTargetStateSelector)?.target;
+  const { target, isTargetPinned } = useSelector(vm);
 
   return (
     <Box display="flex" height="100%" flexDirection="column">
@@ -69,14 +86,33 @@ export function AppBarWrapper() {
             )}
           </Typography>
           <Box sx={{ width: '200px', display: 'flex', justifyContent: 'end' }}>
+            {target && (
+              <IconButton
+                size="large"
+                edge="start"
+                color="inherit"
+                onClick={() =>
+                  dispatch(
+                    isTargetPinned
+                      ? targetsActions.UnpinTarget({ target })
+                      : targetsActions.PinTarget({ target })
+                  )
+                }
+              >
+                {isTargetPinned ? (
+                  <BookmarkAdded titleAccess="Pin target" />
+                ) : (
+                  <Bookmark titleAccess="Unpin target" />
+                )}
+              </IconButton>
+            )}
             <IconButton
               size="large"
               edge="start"
               color="inherit"
-              aria-label="refresh"
               onClick={() => dispatch(appBarActions.RefreshData())}
             >
-              <Refresh />
+              <Refresh titleAccess="Refresh data" />
             </IconButton>
           </Box>
         </Toolbar>

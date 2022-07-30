@@ -9,6 +9,7 @@ import { Close } from '@mui/icons-material';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { Box, IconButton, Typography } from '@mui/material';
 import { LocationOutlet } from '@app/components/location-outlet';
+import { targetsActions } from '@app/actions/targets-actions';
 
 export function PinnedTargetsPanel() {
   const vm = useSelector(targetsSelector);
@@ -43,7 +44,7 @@ export function PinnedTargetsPanel() {
               <Close
                 fontSize="inherit"
                 onClick={(e) => {
-                  dispatch(appBarActions.CloseTarget({ targetId: target.id }));
+                  dispatch(targetsActions.UnpinTarget({ target }));
                   e.stopPropagation();
                 }}
               />
