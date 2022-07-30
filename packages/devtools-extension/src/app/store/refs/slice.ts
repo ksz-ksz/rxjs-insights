@@ -2,6 +2,7 @@ import { createReducer, Slice } from '@lib/store';
 import { PropertyRef } from '@app/protocols/refs';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { refsActions } from '@app/actions/refs-actions';
+import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
 
 export interface RefState {
   expandedObjects: Record<number, PropertyRef[]>;
@@ -67,4 +68,10 @@ export const refsReducer = createReducer('refs', {
         break;
       }
     }
+  })
+  .add(refreshRefsActions.Refresh, (state, action) => {
+    const { stateKey } = action.payload;
+    state.states[stateKey] = {
+      expandedObjects: {},
+    };
   });

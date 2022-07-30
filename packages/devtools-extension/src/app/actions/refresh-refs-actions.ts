@@ -7,6 +7,12 @@ export interface RefreshRefsActions {
     stateKey: string;
     path: string;
   };
+
+  Refresh: {
+    ref: Ref;
+    stateKey: string;
+    path: string;
+  };
 }
 
 export const refreshRefsActions =

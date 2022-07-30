@@ -24,6 +24,7 @@ export const refsReaction = combineReactions()
           filterActions([
             refOutletActions.Expand,
             refreshRefsActions.LoadExpanded,
+            refreshRefsActions.Refresh,
           ]),
           concatMap((action) => {
             const { ref, path, stateKey } = action.payload;
