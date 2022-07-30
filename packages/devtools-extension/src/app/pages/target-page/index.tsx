@@ -28,7 +28,7 @@ export function TargetPage() {
         <SidePanelSection title="SCOPE">
           <ContextPanel />
         </SidePanelSection>
-        <SidePanelSection title="TARGETS">
+        <SidePanelSection title="RELATED TARGETS">
           <TargetsPanel />
         </SidePanelSection>
       </SidePanel>
