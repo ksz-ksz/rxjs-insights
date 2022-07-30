@@ -4,7 +4,7 @@ import {
   effect,
   filterActions,
 } from '@lib/store';
-import { createUrl, filterRoute } from '@lib/store-router';
+import { createUrl, filterRoute, RouteToken } from '@lib/store-router';
 import { router, targetRouteToken } from '@app/router';
 import {
   concat,
@@ -15,6 +15,8 @@ import {
   map,
   merge,
   of,
+  pipe,
+  startWith,
   switchMap,
   takeUntil,
 } from 'rxjs';
@@ -24,6 +26,7 @@ import { eventsLogActions } from '@app/actions/events-log-actions';
 import { getEventElementId } from '@app/utils/get-event-element-id';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
+import { appBarActions } from '@app/actions/app-bar-actions';
 
 function scrollIntoView(element: HTMLElement) {
   const containerElement = document.getElementById('events-side-panel')!;
@@ -50,16 +53,28 @@ function scrollIntoView(element: HTMLElement) {
   }
 }
 
+const routeEnter = (token: RouteToken) =>
+  pipe(filterActions(router.actions.RouteEnter), filterRoute(router, token));
+
+const routeLeave = (token: RouteToken) =>
+  pipe(filterActions(router.actions.RouteLeave), filterRoute(router, token));
+
 export const insightsReaction = combineReactions()
   .add(
     createReaction((action$) =>
       action$.pipe(
-        filterActions(router.actions.RouteEnter),
-        filterRoute(router, targetRouteToken),
+        routeEnter(targetRouteToken),
         switchMap((route) => {
           const targetId = route.params?.targetId;
           return targetId !== undefined
-            ? from(insightsClient.getTargetState(parseInt(targetId, 10)))
+            ? action$.pipe(
+                filterActions(appBarActions.RefreshData),
+                startWith(undefined),
+                takeUntil(action$.pipe(routeLeave(targetRouteToken))),
+                switchMap(() =>
+                  from(insightsClient.getTargetState(parseInt(targetId, 10)))
+                )
+              )
             : EMPTY;
         }),
         map((state) => insightsActions.TargetStateLoaded({ state }))
