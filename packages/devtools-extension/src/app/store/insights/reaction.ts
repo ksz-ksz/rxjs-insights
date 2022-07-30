@@ -4,7 +4,7 @@ import {
   effect,
   filterActions,
 } from '@lib/store';
-import { createUrl, filterRoute, RouteToken } from '@lib/store-router';
+import { createUrl, filterRoute } from '@lib/store-router';
 import { router, targetRouteToken } from '@app/router';
 import {
   concat,
@@ -15,7 +15,6 @@ import {
   map,
   merge,
   of,
-  pipe,
   startWith,
   switchMap,
   takeUntil,
@@ -27,6 +26,7 @@ import { getEventElementId } from '@app/utils/get-event-element-id';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
+import { routeEnter, routeLeave } from '@app/utils';
 
 function scrollIntoView(element: HTMLElement) {
   const containerElement = document.getElementById('events-side-panel')!;
@@ -52,12 +52,6 @@ function scrollIntoView(element: HTMLElement) {
     });
   }
 }
-
-const routeEnter = (token: RouteToken) =>
-  pipe(filterActions(router.actions.RouteEnter), filterRoute(router, token));
-
-const routeLeave = (token: RouteToken) =>
-  pipe(filterActions(router.actions.RouteLeave), filterRoute(router, token));
 
 export const insightsReaction = combineReactions()
   .add(

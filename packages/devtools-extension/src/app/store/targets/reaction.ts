@@ -1,8 +1,11 @@
 import {
+  Action,
   combineReactions,
   createReaction,
+  createSelector,
   effect,
   filterActions,
+  Store,
 } from '@lib/store';
 import { fromServer } from '@lib/operators';
 import { createChromeRuntimeServerAdapter, startServer } from '@lib/rpc';
@@ -11,11 +14,34 @@ import {
   TargetsNotificationsChannel,
 } from '@app/protocols/targets-notifications';
 import { targetsActions } from '@app/actions/targets-actions';
-import { filter, from, map, startWith, switchMap } from 'rxjs';
+import {
+  concatMap,
+  distinctUntilChanged,
+  filter,
+  from,
+  map,
+  pairwise,
+  startWith,
+  switchMap,
+} from 'rxjs';
 import { targetsClient } from '@app/clients/targets';
-import { appBarActions } from '@app/actions/app-bar-actions';
 import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
 import { TargetRef } from '@app/protocols/refs';
+import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
+import { RouterSlice } from '@app/store/router';
+import { InsightsSlice } from '@app/store/insights';
+
+const activeTargetSelector = createSelector(
+  [activeTargetStateSelector],
+  ([activeTargetState]) => {
+    if (activeTargetState) {
+      const { target } = activeTargetState;
+      return target;
+    } else {
+      return undefined;
+    }
+  }
+);
 
 export const targetReaction = combineReactions()
   .add(
@@ -66,5 +92,29 @@ export const targetReaction = combineReactions()
           void targetsClient.unpinTarget(action.payload.target.objectId);
         })
       )
+    )
+  )
+  .add(
+    createReaction(
+      (action$, { activeTarget$ }) =>
+        activeTarget$.pipe(
+          startWith(undefined),
+          pairwise(),
+          concatMap(([prevTarget, nextTarget]) => {
+            const actions: Action[] = [];
+            if (prevTarget) {
+              void targetsClient.unlockTarget(prevTarget.objectId);
+            }
+            if (nextTarget) {
+              void targetsClient.lockTarget(nextTarget.objectId);
+            }
+            return actions;
+          })
+        ),
+      (store: Store<RouterSlice & InsightsSlice>) => ({
+        activeTarget$: store
+          .select(activeTargetSelector)
+          .pipe(distinctUntilChanged()),
+      })
     )
   );

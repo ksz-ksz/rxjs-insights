@@ -13,7 +13,6 @@ import { InsightsSlice } from '@app/store/insights';
 import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { Ref } from '@app/protocols/refs';
-import { ref } from '@rxjs-insights/recorder';
 
 const activeTargetSelector = createSelector(
   [activeTargetStateSelector],
