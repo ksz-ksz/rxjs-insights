@@ -15,7 +15,7 @@ import {
   SetRef,
   SubscriberRef,
 } from '@app/protocols/refs';
-import { Event, Observable, Subscriber, Target } from '@rxjs-insights/recorder';
+import { Event, Observable, Subscriber, Target } from 'packages/recorder';
 import {
   getObservable,
   getPrecedingEvent,
@@ -25,7 +25,7 @@ import {
   isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
 import { formatTimestamp } from '@app/utils/format-timestamp';
-import { Location, Locations } from '@rxjs-insights/core';
+import { Location, Locations } from 'packages/core';
 
 function getPropertyDescriptors(
   target: any
