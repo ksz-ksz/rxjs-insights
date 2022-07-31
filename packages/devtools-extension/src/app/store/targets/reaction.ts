@@ -15,8 +15,10 @@ import {
 } from '@app/protocols/targets-notifications';
 import { targetsActions } from '@app/actions/targets-actions';
 import {
+  catchError,
   concatMap,
   distinctUntilChanged,
+  EMPTY,
   filter,
   from,
   map,
@@ -32,6 +34,9 @@ import { RouterSlice } from '@app/store/router';
 import { InsightsSlice } from '@app/store/insights';
 import { dashboardActions } from '@app/actions/dashboad-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
+import { dashboardRouteToken, router } from '@app/router';
+import { filterRoute } from '@lib/store-router';
+import { routeEnter } from '@app/utils';
 
 const activeTargetSelector = createSelector(
   [activeTargetStateSelector],
@@ -49,12 +54,12 @@ export const targetReaction = combineReactions()
   .add(
     createReaction((actions$) =>
       actions$.pipe(
-        filterActions(inspectedWindowActions.InspectedWindowReloaded),
-        startWith(undefined),
+        routeEnter(dashboardRouteToken),
         switchMap(() =>
           from(targetsClient.getTargets()).pipe(
             filter(Boolean),
-            map((targets) => targetsActions.TargetsLoaded({ targets }))
+            map((targets) => targetsActions.TargetsLoaded({ targets })),
+            catchError(() => EMPTY)
           )
         )
       )

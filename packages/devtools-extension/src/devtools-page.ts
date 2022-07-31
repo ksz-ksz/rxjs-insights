@@ -26,7 +26,7 @@ startServer<FromSourcesPane>(
           // language=js
           `
           (()=>{
-            const event = REFS.getObject(${ref.objectId});
+            const event = window.RXJS_INSIGHTS_REFS.getObject(${ref.objectId});
             
             const scope = Object.create(null);
             scope.$event = event;

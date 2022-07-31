@@ -30,6 +30,7 @@ export function startServer<T>(
         ),
       };
     } catch (e) {
+      console.error(e);
       return {
         failure: e instanceof Error ? `${e.name}: ${e.message}` : String(e),
       };

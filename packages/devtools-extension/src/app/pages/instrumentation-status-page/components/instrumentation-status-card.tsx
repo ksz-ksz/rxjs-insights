@@ -22,7 +22,7 @@ export function InstrumentationStatusCard() {
           <CircularProgress />
         </Box>
       );
-    case 'not-installed':
+    case 'not-enabled':
       return (
         <Box
           display="flex"
@@ -31,7 +31,7 @@ export function InstrumentationStatusCard() {
           padding={2}
         >
           <Typography variant="body1" gutterBottom align="center">
-            Instrumentation is not installed. Reload the page to install the
+            Instrumentation is not enabled. Reload the page to enable the
             instrumentation.
           </Typography>
           <Button
@@ -45,7 +45,7 @@ export function InstrumentationStatusCard() {
           </Button>
         </Box>
       );
-    case 'not-available':
+    case 'not-installed':
       return (
         <Box
           display="flex"
@@ -54,8 +54,39 @@ export function InstrumentationStatusCard() {
           padding={2}
         >
           <Typography variant="body1" gutterBottom align="center">
-            Instrumentation seems to be unavailable. Make sure that you set up
-            the instrumentation properly or wait a bit longer.
+            It seems that the instrumentation was not installed. Make sure to
+            set it up properly or wait a bit longer.
+          </Typography>
+          <Box>
+            <Button
+              target="_blank"
+              href="https://github.com/ksz-ksz/rxjs-insights/blob/master/docs/instrumentation/index.md"
+            >
+              See documentation
+            </Button>
+            <Button
+              onClick={() =>
+                dispatch(
+                  instrumentationStatusPageActions.WaitForInstrumentationButtonClicked()
+                )
+              }
+            >
+              Wait
+            </Button>
+          </Box>
+        </Box>
+      );
+    case 'not-connected':
+      return (
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          padding={2}
+        >
+          <Typography variant="body1" gutterBottom align="center">
+            It seems that the inspected window did not connect to the devtools.
+            Make sure to connect properly or wait a bit longer.
           </Typography>
           <Box>
             <Button

@@ -3,7 +3,7 @@ import { InstrumentationStatus } from '@app/protocols/instrumentation-status';
 import { statusActions } from '@app/actions/status-actions';
 
 export interface StatusState {
-  instrumentationStatus: InstrumentationStatus | undefined;
+  instrumentationStatus: InstrumentationStatus | 'not-connected' | undefined;
 }
 
 export type StatusSlice = Slice<'status', StatusState>;

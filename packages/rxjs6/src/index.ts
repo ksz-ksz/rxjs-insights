@@ -12,23 +12,16 @@ import { getRecorder } from '@rxjs-insights/recorder';
 import { getLocator } from '@rxjs-insights/locator';
 import { getTracer } from '@rxjs-insights/tracer';
 
-declare const RXJS_INSIGHTS_INSTALL: boolean | undefined;
-
-if (typeof RXJS_INSIGHTS_INSTALL !== 'undefined' && RXJS_INSIGHTS_INSTALL) {
-  install({
-    Observable,
-    Subject,
-    Subscriber,
-    recorder: getRecorder(),
-    locator: getLocator(),
-    tracer: getTracer({
-      asyncScheduler,
-      asapScheduler,
-      queueScheduler,
-      animationFrameScheduler,
-    }),
-  });
-  (window as any).RXJS_INSIGHTS_INSTALLED = true;
-} else {
-  (window as any).RXJS_INSIGHTS_INSTALLED = false;
-}
+install({
+  Observable,
+  Subject,
+  Subscriber,
+  recorder: getRecorder(),
+  locator: getLocator(),
+  tracer: getTracer({
+    asyncScheduler,
+    asapScheduler,
+    queueScheduler,
+    animationFrameScheduler,
+  }),
+});

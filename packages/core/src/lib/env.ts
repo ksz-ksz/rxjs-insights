@@ -29,7 +29,7 @@ export interface Env {
   addTag: (observable: ObservableLike, tag: string) => void;
 }
 
-export function setGlobalEnv(env: Env) {
+export function setGlobalEnv(env: Env | null) {
   // @ts-ignore
   globalThis[ENV] = env;
 }

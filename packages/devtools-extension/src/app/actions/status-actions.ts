@@ -3,7 +3,7 @@ import { createActions } from '@lib/store';
 
 export interface StatusActions {
   InstrumentationStatusResolved: {
-    instrumentationStatus: InstrumentationStatus | undefined;
+    instrumentationStatus: InstrumentationStatus | 'not-connected' | undefined;
   };
 }
 

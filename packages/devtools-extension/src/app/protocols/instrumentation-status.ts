@@ -7,5 +7,5 @@ export interface Instrumentation {
 
 export type InstrumentationStatus =
   | 'installed'
-  | 'not-installed'
-  | 'not-available';
+  | 'not-enabled'
+  | 'not-installed';
