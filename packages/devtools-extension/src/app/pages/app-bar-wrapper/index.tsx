@@ -2,7 +2,6 @@ import {
   AppBar,
   Box,
   Button,
-  Divider,
   IconButton,
   styled,
   Toolbar,
@@ -22,7 +21,6 @@ import { activeTargetStateSelector } from '@app/selectors/active-target-state-se
 import { LocationOutlet } from '@app/components/location-outlet';
 import { targetsSelector } from '@app/selectors/targets-selectors';
 import { createSelector } from '@lib/store';
-import { targetsActions } from '@app/actions/targets-actions';
 
 const HomeSpan = styled('span')(({ theme }) => ({
   fontWeight: 600,
@@ -94,8 +92,8 @@ export function AppBarWrapper() {
                 onClick={() =>
                   dispatch(
                     isTargetPinned
-                      ? targetsActions.UnpinTarget({ target })
-                      : targetsActions.PinTarget({ target })
+                      ? appBarActions.UnpinTarget({ target })
+                      : appBarActions.PinTarget({ target })
                   )
                 }
               >

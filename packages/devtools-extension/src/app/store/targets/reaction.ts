@@ -30,6 +30,8 @@ import { TargetRef } from '@app/protocols/refs';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { RouterSlice } from '@app/store/router';
 import { InsightsSlice } from '@app/store/insights';
+import { dashboardActions } from '@app/actions/dashboad-actions';
+import { appBarActions } from '@app/actions/app-bar-actions';
 
 const activeTargetSelector = createSelector(
   [activeTargetStateSelector],
@@ -77,7 +79,7 @@ export const targetReaction = combineReactions()
   .add(
     createReaction((action$) =>
       action$.pipe(
-        filterActions(targetsActions.PinTarget),
+        filterActions(appBarActions.PinTarget),
         effect((action) => {
           void targetsClient.pinTarget(action.payload.target.objectId);
         })
@@ -87,7 +89,10 @@ export const targetReaction = combineReactions()
   .add(
     createReaction((action$) =>
       action$.pipe(
-        filterActions(targetsActions.UnpinTarget),
+        filterActions([
+          appBarActions.UnpinTarget,
+          dashboardActions.UnpinTarget,
+        ]),
         effect((action) => {
           void targetsClient.unpinTarget(action.payload.target.objectId);
         })

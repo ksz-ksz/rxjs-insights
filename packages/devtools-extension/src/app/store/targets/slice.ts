@@ -3,6 +3,7 @@ import { targetsActions } from '@app/actions/targets-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { TargetRef } from '@app/protocols/refs';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
+import { dashboardActions } from '@app/actions/dashboad-actions';
 
 export interface TargetsState {
   targets: TargetRef[];
@@ -23,10 +24,15 @@ export const targetsReducer = createReducer('targets', {
       state.targets.push(action.payload.target);
     }
   })
-  .add(targetsActions.PinTarget, (state, action) => {
+  .add(appBarActions.PinTarget, (state, action) => {
     state.targets.push(action.payload.target);
   })
-  .add(targetsActions.UnpinTarget, (state, action) => {
+  .add(appBarActions.UnpinTarget, (state, action) => {
+    state.targets = state.targets.filter(
+      (target) => !(target.id === action.payload.target.id)
+    );
+  })
+  .add(dashboardActions.UnpinTarget, (state, action) => {
     state.targets = state.targets.filter(
       (target) => !(target.id === action.payload.target.id)
     );
