@@ -1,5 +1,12 @@
 import { styled } from '@mui/material';
-import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import React, {
+  ReactElement,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { ChevronRight } from '@mui/icons-material';
 import { fromEvent, map, switchMap, takeUntil } from 'rxjs';
 
@@ -44,10 +51,7 @@ const SidePanelResizerDiv = styled('div')(({ theme }) => ({
     background: theme.palette.primary.dark,
   },
 }));
-const SidePanelSectionDiv = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-});
+
 const SidePanelSectionHeaderDiv = styled('div')(({ theme }) => ({
   paddingRight: '1rem',
   backgroundColor: theme.custom.sidePanelHeaderBackground,
@@ -60,25 +64,30 @@ const SidePanelSectionHeaderDiv = styled('div')(({ theme }) => ({
   top: 0,
   zIndex: 1,
 }));
-const SidePanelSectionBodyDiv = styled('div')({});
 
-export interface SidePanelProps {
-  children: ReactNode | ReactNode[];
-  side: 'left' | 'right';
-  id?: string;
-  minWidth?: string | number;
-  maxWidth?: string | number;
+export interface SidePanelEntry {
+  key: string;
+  getHeight(): number;
+  render(): ReactElement;
 }
 
-export function SidePanel({
-  id,
-  side,
-  minWidth = '200px',
-  maxWidth = '50%',
-  children,
-}: SidePanelProps) {
-  const contentDivRef = useRef<HTMLDivElement | null>(null);
-  const resizerDivRef = useRef<HTMLDivElement | null>(null);
+export interface SidePanelSection {
+  label: string;
+  entries: SidePanelEntry[];
+}
+
+export interface SidePanelProps {
+  side: 'left' | 'right';
+  minWidth?: string | number;
+  maxWidth?: string | number;
+  sections: SidePanelSection[];
+}
+
+function useResizer(
+  side: 'left' | 'right',
+  contentDivRef: React.MutableRefObject<HTMLDivElement | null>,
+  resizerDivRef: React.MutableRefObject<HTMLDivElement | null>
+) {
   useEffect(() => {
     const c = side === 'left' ? 1 : -1;
     if (contentDivRef.current && resizerDivRef.current) {
@@ -114,17 +123,85 @@ export function SidePanel({
       };
     }
   }, []);
+}
+
+export function useEntries(sections: SidePanelSection[]) {
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(sections.map(({ label }) => label))
+  );
+
+  const setSectionExpanded = useCallback(
+    (section: string, expanded: boolean) => {
+      setExpandedSections((expandedSections) => {
+        const newExpandedSection = new Set(expandedSections);
+        if (expanded) {
+          newExpandedSection.add(section);
+        } else {
+          newExpandedSection.delete(section);
+        }
+        return newExpandedSection;
+      });
+    },
+    [setExpandedSections]
+  );
+
+  const entries: SidePanelEntry[] = [];
+
+  for (const section of sections) {
+    const expanded = expandedSections.has(section.label);
+    const setExpanded = (expanded: boolean) => {
+      setSectionExpanded(section.label, expanded);
+    };
+
+    entries.push({
+      key: `section:${section.label}`,
+      getHeight(): number {
+        return 30;
+      },
+      render() {
+        return (
+          <SidePanelSectionRenderer
+            label={section.label}
+            expanded={expanded}
+            setExpanded={setExpanded}
+          />
+        );
+      },
+    });
+
+    if (expanded) {
+      entries.push(...section.entries);
+    }
+  }
+
+  return entries;
+}
+
+export function SidePanel({
+  side,
+  minWidth = '200px',
+  maxWidth = '50%',
+  sections,
+}: SidePanelProps) {
+  const contentDivRef = useRef<HTMLDivElement | null>(null);
+  const resizerDivRef = useRef<HTMLDivElement | null>(null);
+  useResizer(side, contentDivRef, resizerDivRef);
+  const entries = useEntries(sections);
+
   return (
     <SidePanelDiv style={{ maxWidth }}>
       {side === 'right' && (
         <SidePanelResizerDiv data-side="right" ref={resizerDivRef} />
       )}
       <SidePanelContentDiv
-        id={id}
         ref={contentDivRef}
         style={{ width: '400px', minWidth }}
       >
-        {children}
+        {entries.map(({ key, render: Render }) => (
+          <span key={key}>
+            <Render />
+          </span>
+        ))}
       </SidePanelContentDiv>
       {side === 'left' && (
         <SidePanelResizerDiv data-side="left" ref={resizerDivRef} />
@@ -133,25 +210,23 @@ export function SidePanel({
   );
 }
 
-export interface SidePanelSectionProps {
-  title: string;
-  children: ReactNode | ReactNode[];
+interface SidePanelSectionRendererProps {
+  label: string;
+  expanded: boolean;
+  setExpanded(expanded: boolean): void;
 }
 
-export function SidePanelSection(props: SidePanelSectionProps) {
-  const [expanded, setExpanded] = useState(true);
-
+function SidePanelSectionRenderer({
+  label,
+  expanded,
+  setExpanded,
+}: SidePanelSectionRendererProps) {
   return (
-    <SidePanelSectionDiv>
-      <SidePanelSectionHeaderDiv onClick={() => setExpanded(!expanded)}>
-        <ChevronRight
-          style={{ transform: expanded ? 'rotate(90deg)' : 'none' }}
-        />
-        {props.title}
-      </SidePanelSectionHeaderDiv>
-      {expanded && (
-        <SidePanelSectionBodyDiv>{props.children}</SidePanelSectionBodyDiv>
-      )}
-    </SidePanelSectionDiv>
+    <SidePanelSectionHeaderDiv onClick={() => setExpanded(!expanded)}>
+      <ChevronRight
+        style={{ transform: expanded ? 'rotate(90deg)' : 'none' }}
+      />
+      {label}
+    </SidePanelSectionHeaderDiv>
   );
 }

@@ -4,7 +4,6 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
-  Divider,
   Paper,
   styled,
   Table,
@@ -15,14 +14,10 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { useSelector } from '@app/store';
-import { statisticsSelector } from '@app/store/statisctics';
 import { ExpandMore } from '@mui/icons-material';
-import { targetsSelector } from '@app/selectors/targets-selectors';
-import { SidePanel, SidePanelSection } from '@app/components';
-import { ContextPanel } from '@app/pages/target-page/context-panel';
-import { TargetsPanel } from '@app/pages/target-page/targets-panel';
-import { PinnedTargetsPanel } from '@app/pages/dashboard-page/pinned-targets-panel';
+import { SidePanel } from '@app/components';
+import { usePinnedTargetsSection } from '@app/pages/dashboard-page/pinned-targets-panel';
+import { SidePanelSection } from '@app/components/side-panel';
 
 export interface StatsLineProps {
   label: string;
@@ -88,7 +83,14 @@ const TitleDiv = styled('div')(({ theme }) => ({
 }));
 
 export function DashboardPage() {
-  const statistics = useSelector(statisticsSelector);
+  const pinnedTargetsSection = usePinnedTargetsSection();
+
+  const panelSections = useMemo(
+    (): SidePanelSection[] => [
+      { label: 'PINNED TARGETS', entries: pinnedTargetsSection },
+    ],
+    [pinnedTargetsSection]
+  );
 
   return (
     <Box
@@ -114,11 +116,7 @@ export function DashboardPage() {
           <Typography variant="h4">See through the observables</Typography>
         </TitleDiv>
       </Box>
-      <SidePanel side="right">
-        <SidePanelSection title="PINNED TARGETS">
-          <PinnedTargetsPanel />
-        </SidePanelSection>
-      </SidePanel>
+      <SidePanel side="right" sections={panelSections} />
     </Box>
   );
 }

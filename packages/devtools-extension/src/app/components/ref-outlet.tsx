@@ -17,19 +17,32 @@ import {
   TextRef,
   ValueRef,
 } from '@app/protocols/refs';
-import React, { JSXElementConstructor, MouseEvent, useCallback } from 'react';
+import React, {
+  JSXElementConstructor,
+  MouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { styled } from '@mui/material';
 import {
   refStateSelector,
   refUiStateSelector,
 } from '@app/selectors/refs-selectors';
-import { useDispatch, useSelectorFunction } from '@app/store';
+import { useDispatch, useSelectorFunction, useStore } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { RefState, RefUiState } from '@app/store/refs';
-import { Action, createSelector, useDispatchCallback } from '@lib/store';
+import {
+  Action,
+  createSelector,
+  StoreView,
+  useDispatchCallback,
+} from '@lib/store';
 import { Indent } from '@app/components/indent';
 import { useLastDefinedValue } from '@app/utils';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
+import { SidePanelEntry } from '@app/components/side-panel';
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
@@ -493,14 +506,11 @@ const RefOutletDiv = styled('div')({
   alignItems: 'start',
 });
 
-const RefOutletLabelDiv = styled('div')({
+const EntryDiv = styled('div')({
   display: 'inline-block',
   textAlign: 'left',
-});
-styled('div')({
-  display: 'inline-flex',
-  flexDirection: 'column',
-  marginLeft: '2ch',
+  cursor: 'default',
+  whiteSpace: 'nowrap',
 });
 
 function ObjectRefOutletRenderer(
@@ -529,29 +539,27 @@ function ObjectRefOutletRenderer(
   const TagRenderer = getTagRenderer(props.reference.type);
 
   return (
-    <RefOutletDiv>
-      <RefOutletLabelDiv onClick={onToggle}>
-        <Indent indent={props.indent} />
-        <LabelSpan
-          data-state={props.expanded ? 'expanded' : 'collapsed'}
-          data-type={props.type}
-        >
-          {props.label}
-        </LabelSpan>
-        <TagRenderer reference={props.reference} />
-      </RefOutletLabelDiv>
-    </RefOutletDiv>
+    <EntryDiv onClick={onToggle}>
+      <Indent indent={props.indent} />
+      <LabelSpan
+        data-state={props.expanded ? 'expanded' : 'collapsed'}
+        data-type={props.type}
+      >
+        {props.label}
+      </LabelSpan>
+      <TagRenderer reference={props.reference} />
+    </EntryDiv>
   );
 }
 function ValueRefOutletRenderer(props: RefOutletRendererProps) {
   const TagRenderer = getTagRenderer(props.reference.type);
 
   return (
-    <RefOutletLabelDiv>
+    <EntryDiv>
       <Indent indent={props.indent} />
       <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
       <TagRenderer reference={props.reference} />
-    </RefOutletLabelDiv>
+    </EntryDiv>
   );
 }
 
@@ -568,13 +576,13 @@ function GetterRefOutletRenderer(props: RefOutletRendererProps<GetterRef>) {
   }, [props.reference.targetObjectId]);
 
   return (
-    <RefOutletLabelDiv>
+    <EntryDiv>
       <Indent indent={props.indent} />
       <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
       <a onClick={onInvoke}>
         <MonospaceSpan sx={{ title: 'Invoke getter' }}>(...)</MonospaceSpan>
       </a>
-    </RefOutletLabelDiv>
+    </EntryDiv>
   );
 }
 
@@ -598,12 +606,18 @@ interface ActionOutletEntry {
 
 type Entry = RefOutletEntry | ActionOutletEntry;
 
-function addActions(entries: Entry[], indent: number, ref: Ref) {
+function addActions(
+  entries: Entry[],
+  indent: number,
+  ref: Ref,
+  stateKey: string,
+  path: string
+) {
   switch (ref.type) {
     case 'observable':
     case 'subscriber':
       entries.push({
-        id: `${ref.objectId}-action-focus`,
+        id: `${stateKey}:${path}:action:focus`,
         action: () => refOutletContextActions.FocusTarget({ target: ref }),
         indent,
         label: `Focus ${ref.type}`,
@@ -611,7 +625,7 @@ function addActions(entries: Entry[], indent: number, ref: Ref) {
       break;
     case 'event': {
       entries.push({
-        id: `${ref.objectId}-action-focus`,
+        id: `${stateKey}:${path}:action:focus`,
         action: () => refOutletContextActions.FocusEvent({ event: ref }),
         indent,
         label: `Focus event`,
@@ -651,7 +665,7 @@ function getRefOutletEntriesVisitor(
     if (expandedObjects[objectId] === undefined) {
       return false;
     } else {
-      addActions(entries, indent + 1, ref);
+      addActions(entries, indent + 1, ref, stateKey, path);
       for (const prop of expandedObjects[objectId]) {
         if (
           !getRefOutletEntriesVisitor(
@@ -724,6 +738,51 @@ const vmSelector = (
     }
   );
 
+const vmSelector2 = (
+  stateKey: string,
+  ref: Ref,
+  type?: 'enumerable' | 'nonenumerable' | 'special',
+  label?: string
+) =>
+  createSelector(
+    [refStateSelector(stateKey), refUiStateSelector(stateKey)],
+    ([state, uiState]) => {
+      return getRefOutletEntries(
+        ref,
+        stateKey,
+        state,
+        uiState,
+        type,
+        label
+      )?.map(
+        (entry): SidePanelEntry => ({
+          key: entry.id,
+          getHeight(): number {
+            return 24;
+          },
+          render() {
+            return 'action' in entry ? (
+              <ActionOutletEntry key={entry.id} {...entry} />
+            ) : (
+              <RefOutletEntry
+                key={entry.id}
+                indent={entry.indent}
+                stateKey={stateKey}
+                path={entry.path}
+                reference={entry.ref}
+                expanded={entry.expanded}
+                expandable={entry.expandable}
+                label={entry.label}
+                type={entry.type}
+                summary={false}
+              />
+            );
+          },
+        })
+      );
+    }
+  );
+
 export interface RefOutletEntryProps {
   type?: 'enumerable' | 'nonenumerable' | 'special';
   label?: string | number;
@@ -769,10 +828,10 @@ export function ActionOutletEntry({
   const onClick = useDispatchCallback(action, []);
 
   return (
-    <span>
+    <EntryDiv>
       <Indent indent={indent} />
       <ActionSpan onClick={onClick}>{label}</ActionSpan>
-    </span>
+    </EntryDiv>
   );
 }
 
@@ -824,6 +883,91 @@ export interface RefOutletProps {
   label?: string;
   reference: Ref;
   stateKey: string;
+}
+
+export interface RefEntryDef {
+  key: string;
+  ref: Ref;
+  type?: 'enumerable' | 'nonenumerable' | 'special';
+  label?: string;
+}
+
+class RefEntriesManager {
+  private selections = new Map<
+    string,
+    StoreView<SidePanelEntry[] | undefined, void>
+  >();
+  private entries = new Map<string, SidePanelEntry[]>();
+
+  constructor(
+    private readonly store: ReturnType<typeof useStore>,
+    private defs: RefEntryDef[]
+  ) {
+    for (const def of defs) {
+      const selection = vmSelector2(
+        def.key,
+        def.ref,
+        def.type,
+        def.label
+      ).select(store, {
+        mode: 'pull',
+      });
+      this.selections.set(def.key, selection);
+      this.entries.set(def.key, selection.get() ?? []);
+    }
+  }
+
+  update(defs: RefEntryDef[]) {
+    const newSelections = new Map<
+      string,
+      StoreView<SidePanelEntry[] | undefined, void>
+    >();
+    const newEntries = new Map<string, SidePanelEntry[]>();
+
+    for (const def of defs) {
+      const selection =
+        this.selections.get(def.key) ??
+        vmSelector2(def.key, def.ref, def.type, def.label).select(this.store, {
+          mode: 'pull',
+        });
+      const entries = selection.get() ?? this.entries.get(def.key) ?? [];
+
+      newSelections.set(def.key, selection);
+      newEntries.set(def.key, entries);
+    }
+
+    this.defs = defs;
+    this.selections = newSelections;
+    this.entries = newEntries;
+  }
+
+  get(): SidePanelEntry[] {
+    return this.defs.flatMap((def) => this.entries.get(def.key) ?? []);
+  }
+}
+
+export function useRefsSection(defs: RefEntryDef[]): SidePanelEntry[] {
+  const store = useStore();
+  const manager = useRef(new RefEntriesManager(store, defs));
+  const [entries, setEntries] = useState<SidePanelEntry[]>(() =>
+    manager.current.get()
+  );
+  useEffect(
+    function updateEntries() {
+      const subscription = store.subscribe(() => {
+        console.time('updateEntries');
+        manager.current.update(defs);
+        const entries = manager.current.get();
+        setEntries(entries);
+        console.timeEnd('updateEntries');
+      });
+
+      return () => subscription.unsubscribe();
+    },
+    [defs]
+  );
+
+  return entries;
 }
 
 export function RefOutlet({

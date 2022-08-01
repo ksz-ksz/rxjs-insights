@@ -4,6 +4,7 @@ import { isExcluded } from '@app/pages/target-page/is-excluded';
 import { Timeframe } from '@app/pages/target-page/get-target-timeframes';
 
 export interface EventEntry {
+  id: string;
   type: 'event';
   indent: number;
   event: RelatedEvent;
@@ -11,6 +12,7 @@ export interface EventEntry {
 }
 
 export interface EventAsyncEntry {
+  id: string;
   type: 'event-async';
   indent: number;
   task: RelatedTask;
@@ -19,6 +21,7 @@ export interface EventAsyncEntry {
 }
 
 export interface TaskEntry {
+  id: string;
   type: 'task';
   task: RelatedTask;
 }
@@ -146,6 +149,7 @@ function visitEventNodes(
         parentEvent !== undefined ? indents[parentEvent.event.time] + 1 : 0;
       indents[childEvent.event.time] = indent;
       entries.push({
+        id: `event-${childEvent.event.time}`,
         type: 'event',
         event: childEvent.event,
         excluded: childEvent.nodeExcluded,
@@ -161,6 +165,7 @@ function visitEventNodes(
     } else {
       const indent = indents[parentEvent.event.time] + 1;
       entries.push({
+        id: `event-async-${childEvent.event.time}`,
         type: 'event-async',
         event: childEvent.event,
         task: relations.tasks[childEvent.event.task],
@@ -185,6 +190,7 @@ export function getEventLogEntries(
   for (const taskNode of taskNodes) {
     if (taskNode.rootEventNodes.length !== 0) {
       entries.push({
+        id: `task-${taskNode.task.id}`,
         type: 'task',
         task: taskNode.task,
       });

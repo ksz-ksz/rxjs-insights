@@ -84,12 +84,12 @@ export const insightsReaction = combineReactions()
           refOutletContextActions.FocusEvent,
         ]),
         effect((action) => {
-          const element = document.getElementById(
-            getEventElementId(action.payload.event.time)
-          );
-          if (element) {
-            scrollIntoView(element);
-          }
+          // const element = document.getElementById(
+          //   getEventElementId(action.payload.event.time)
+          // );
+          // if (element) {
+          //   scrollIntoView(element);
+          // }
         })
       )
     )

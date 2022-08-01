@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { Tooltip, useTheme } from '@mui/material';
+import { styled, Tooltip, useTheme } from '@mui/material';
 import {
   getOffsetTimestamp,
   getTimeline,
@@ -115,6 +115,12 @@ export interface EventsTimelineProps {
   onTimestampSelected: (timestamp: number) => void;
 }
 
+const TimelineDiv = styled('div')(({ theme }) => ({
+  display: 'flex',
+  borderTop: `solid thin ${theme.palette.divider}`,
+  borderBottom: `solid thin ${theme.palette.divider}`,
+}));
+
 export function EventsTimeline({
   events,
   event,
@@ -163,16 +169,7 @@ export function EventsTimeline({
 
   return (
     <Tooltip followCursor title={formatTimestamp(timestamp)}>
-      <div
-        ref={elementRef}
-        onClick={onClick}
-        onMouseMove={onMouseMove}
-        style={{
-          width: '100%',
-          display: 'flex',
-          borderBottom: `thin solid ${theme.palette.background.default}`,
-        }}
-      >
+      <TimelineDiv ref={elementRef} onClick={onClick} onMouseMove={onMouseMove}>
         <svg viewBox={`0 0 ${width} ${height}`}>
           {timeline.slices.map((slice, offset) => (
             <EventsTimelineSlice
@@ -194,7 +191,7 @@ export function EventsTimeline({
             cy={height}
           />
         </svg>
-      </div>
+      </TimelineDiv>
     </Tooltip>
   );
 }

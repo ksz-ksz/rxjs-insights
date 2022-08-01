@@ -11,118 +11,13 @@ import {
   activeTargetUiStateSelector,
 } from '@app/selectors/active-target-state-selector';
 import { eventsLogActions } from '@app/actions/events-log-actions';
-import { getEventElementId } from '@app/utils/get-event-element-id';
-import { RefOutlet, RefSummaryOutlet } from '@app/components/ref-outlet';
-import {
-  EventLogEntry,
-  getEventLogEntries,
-} from '@app/pages/target-page/get-event-log-entries';
+import { getEventLogEntries } from '@app/pages/target-page/get-event-log-entries';
 import { createSelector, useDispatchCallback } from '@lib/store';
 import { getTargetTimeframes } from '@app/pages/target-page/get-target-timeframes';
 import { getEvents } from '@app/pages/target-page/get-events';
 import { getIncludedEvents } from '@app/pages/target-page/get-included-events';
 import { EventsTimeline } from '@app/pages/target-page/events-timeline';
 import { EventsControls } from '@app/pages/target-page/events-controls';
-import { Indent } from '@app/components/indent';
-
-const TaskSpan = styled('span')(({ theme }) => ({
-  display: 'inline-flex',
-  fontFamily: 'Monospace',
-  fontStyle: 'oblique',
-  color: theme.palette.text.secondary,
-  marginLeft: '1rem',
-  marginRight: '1rem',
-  '&:after': {
-    borderTop: `thin solid ${theme.palette.divider}`,
-    content: '""',
-    flexGrow: 1,
-    alignSelf: 'center',
-    marginLeft: '1rem',
-  },
-}));
-
-const EventsLogDiv = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  whiteSpace: 'nowrap',
-  height: '100%',
-  cursor: 'default',
-});
-
-const EventSpan = styled('span')(({ theme }) => ({
-  paddingRight: '1rem',
-  '&[data-selected=true]': {
-    backgroundColor: theme.palette.action.selected,
-  },
-}));
-
-interface EventLogProps {
-  time: number;
-  entries: EventLogEntry[];
-  onEventSelected(event: RelatedEvent): void;
-}
-
-const RefOutletSpan = styled('span')({
-  fontFamily: 'Monospace',
-  cursor: 'default',
-  '&[data-dim=true]': {
-    opacity: 0.5,
-  },
-});
-
-function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
-  return (
-    <EventsLogDiv>
-      {entries.map((entry) => {
-        switch (entry.type) {
-          case 'task':
-            return (
-              <TaskSpan key={`task-${entry.task.id}`}>
-                {entry.task.name} #{entry.task.id}
-              </TaskSpan>
-            );
-          case 'event':
-            return (
-              <EventSpan
-                key={`event-${entry.event.time}`}
-                id={getEventElementId(entry.event.time)}
-                data-type={entry.event.eventType}
-                data-selected={entry.event.time === time}
-                onClick={() => onEventSelected(entry.event)}
-              >
-                <Indent indent={entry.indent} />
-                <RefOutletSpan data-dim={entry.excluded}>
-                  <RefSummaryOutlet reference={entry.event} />
-                </RefOutletSpan>
-              </EventSpan>
-            );
-          case 'event-async':
-            return (
-              <EventSpan
-                key={`event-async-${entry.event.time}`}
-                title={`${entry.task.name} #${entry.task.id}`}
-                data-type={entry.event.eventType}
-                data-selected={entry.event.time === time}
-                onClick={() => onEventSelected(entry.event)}
-              >
-                <Indent indent={entry.indent} />
-                <RefOutletSpan data-dim={entry.excluded}>
-                  <RefSummaryOutlet reference={entry.event} />
-                  {' ↴'}
-                </RefOutletSpan>
-              </EventSpan>
-            );
-        }
-      })}
-    </EventsLogDiv>
-  );
-}
-
-const EventsPanelDiv = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-});
 
 function findLastIndex<T>(items: T[], predicate: (item: T) => boolean): number {
   for (let i = items.length - 1; i >= 0; i--) {
@@ -209,19 +104,14 @@ function getClosestEvent(
 }
 
 const ControlsDiv = styled('div')(({ theme }) => ({
-  position: 'sticky',
-  bottom: 0,
-  zIndex: 1,
-  backgroundColor: theme.custom.sidePanelHeaderBackground,
+  // position: 'sticky',
+  // bottom: 0,
+  // zIndex: 1,
+  // backgroundColor: theme.custom.sidePanelHeaderBackground,
 }));
 
-export function EventsPanel() {
+export function ControlsPanel() {
   const vm = useSelector(vmSelector);
-
-  const onEventSelected = useDispatchCallback(
-    (event: RelatedEvent) => eventsLogActions.EventSelected({ event }),
-    []
-  );
 
   const onGoToFirst = useDispatchCallback(() => {
     const first = vm.events.at(0)!;
@@ -283,28 +173,21 @@ export function EventsPanel() {
   );
 
   return (
-    <EventsPanelDiv>
-      <EventsLog
-        time={vm.time}
-        entries={vm.entries}
-        onEventSelected={onEventSelected}
+    <ControlsDiv>
+      <EventsTimeline
+        events={vm.events}
+        event={vm.event}
+        onTimestampSelected={onTimestampSelected}
       />
-      <ControlsDiv>
-        <EventsTimeline
-          events={vm.events}
-          event={vm.event}
-          onTimestampSelected={onTimestampSelected}
-        />
-        <EventsControls
-          playing={vm.playing}
-          onGoToFirst={onGoToFirst}
-          onGoToPrev={onGoToPrev}
-          onPlay={onPlay}
-          onPause={onPause}
-          onGoToNext={onGoToNext}
-          onGoToLast={onGoToLast}
-        />
-      </ControlsDiv>
-    </EventsPanelDiv>
+      <EventsControls
+        playing={vm.playing}
+        onGoToFirst={onGoToFirst}
+        onGoToPrev={onGoToPrev}
+        onPlay={onPlay}
+        onPause={onPause}
+        onGoToNext={onGoToNext}
+        onGoToLast={onGoToLast}
+      />
+    </ControlsDiv>
   );
 }
