@@ -579,17 +579,18 @@ function GetterRefOutletRenderer(props: RefOutletRendererProps<GetterRef>) {
 }
 
 interface RefOutletEntry {
+  id: string;
   indent: number;
   path: string;
   ref: Ref;
   type?: 'enumerable' | 'nonenumerable' | 'special';
   label?: string;
-  parentRef?: Ref; // TODO: remove?
   expandable: boolean;
   expanded: boolean;
 }
 
 interface ActionOutletEntry {
+  id: string;
   indent: number;
   action: () => Action;
   label: string;
@@ -602,6 +603,7 @@ function addActions(entries: Entry[], indent: number, ref: Ref) {
     case 'observable':
     case 'subscriber':
       entries.push({
+        id: `${ref.objectId}-action-focus`,
         action: () => refOutletContextActions.FocusTarget({ target: ref }),
         indent,
         label: `Focus ${ref.type}`,
@@ -609,6 +611,7 @@ function addActions(entries: Entry[], indent: number, ref: Ref) {
       break;
     case 'event': {
       entries.push({
+        id: `${ref.objectId}-action-focus`,
         action: () => refOutletContextActions.FocusEvent({ event: ref }),
         indent,
         label: `Focus event`,
@@ -620,25 +623,25 @@ function addActions(entries: Entry[], indent: number, ref: Ref) {
 
 function getRefOutletEntriesVisitor(
   entries: Entry[],
+  stateKey: string,
   ref: Ref,
   indent: number,
   path: string,
   expandedObjects: Record<number, PropertyRef[]>,
   expandedPaths: Set<string>,
   type?: 'enumerable' | 'nonenumerable' | 'special',
-  label?: string,
-  parentRef?: Ref
+  label?: string
 ): boolean {
   const expandable = 'objectId' in ref && ref.objectId !== undefined;
   const expanded = expandedPaths.has(path);
 
   entries.push({
+    id: `${stateKey}:${path}`,
     ref,
     indent,
     label,
     type,
     path,
-    parentRef,
     expanded,
     expandable,
   });
@@ -653,14 +656,14 @@ function getRefOutletEntriesVisitor(
         if (
           !getRefOutletEntriesVisitor(
             entries,
+            stateKey,
             prop.val,
             indent + 1,
             `${path}.${prop.keyId}`,
             expandedObjects,
             expandedPaths,
             prop.type,
-            prop.key,
-            ref
+            prop.key
           )
         ) {
           return false;
@@ -673,6 +676,7 @@ function getRefOutletEntriesVisitor(
 
 function getRefOutletEntries(
   rootRef: Ref,
+  stateKey: string,
   state: RefState,
   uiState: RefUiState,
   type?: 'enumerable' | 'nonenumerable' | 'special',
@@ -683,6 +687,7 @@ function getRefOutletEntries(
   if (
     getRefOutletEntriesVisitor(
       entries,
+      stateKey,
       rootRef,
       0,
       'root',
@@ -707,7 +712,14 @@ const vmSelector = (
   createSelector(
     [refStateSelector(stateKey), refUiStateSelector(stateKey)],
     ([state, uiState]) => {
-      const entries = getRefOutletEntries(ref, state, uiState, type, label);
+      const entries = getRefOutletEntries(
+        ref,
+        stateKey,
+        state,
+        uiState,
+        type,
+        label
+      );
       return entries ? { entries } : undefined;
     }
   );
@@ -828,9 +840,10 @@ export function RefOutlet({
     <>
       {vm.entries.map((entry) =>
         'action' in entry ? (
-          <ActionOutletEntry {...entry} />
+          <ActionOutletEntry key={entry.id} {...entry} />
         ) : (
           <RefOutletEntry
+            key={entry.id}
             indent={entry.indent}
             stateKey={stateKey}
             path={entry.path}

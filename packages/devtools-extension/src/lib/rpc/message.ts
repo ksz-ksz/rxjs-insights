@@ -9,6 +9,7 @@ export interface ResponseMessage {
 }
 
 export interface ClientAdapter {
+  name: string;
   send(message: RequestMessage): Promise<ResponseMessage>;
 }
 
@@ -19,6 +20,7 @@ export interface RequestHandlerAsync {
 }
 
 export interface ServerAdapterAsync {
+  name: string;
   startAsync(requestHandler: RequestHandlerAsync): { stop(): void };
 }
 
@@ -27,5 +29,6 @@ export interface RequestHandlerSync {
 }
 
 export interface ServerAdapterSync {
+  name: string;
   startSync(requestHandler: RequestHandlerSync): { stop(): void };
 }

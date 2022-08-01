@@ -34,6 +34,7 @@ export function createDocumentEventClientAdapter(
   let nextId = 0;
 
   return {
+    name: `ClientAdapter[${channel}]`,
     send(message: RequestMessage) {
       // mitigates https://github.com/angular/angular/issues/44446
       const addEventListener = getOriginalDelegate(document.addEventListener);
@@ -69,6 +70,7 @@ export function createDocumentEventServerAdapter(
   channel: string
 ): ServerAdapterAsync {
   return {
+    name: `ServerAdapterAsync[${channel}]`,
     startAsync(requestHandler) {
       // mitigates https://github.com/angular/angular/issues/44446
       const addEventListener = getOriginalDelegate(document.addEventListener);

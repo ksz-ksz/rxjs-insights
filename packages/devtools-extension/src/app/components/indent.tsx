@@ -17,7 +17,7 @@ export function Indent({ indent }: IndentProps) {
   const children = useMemo(() => {
     const children: ReactNode[] = [];
     for (let i = 0; i < indent; i++) {
-      children.push(<IndentSpan />);
+      children.push(<IndentSpan key={i} />);
     }
     return children;
   }, [indent]);

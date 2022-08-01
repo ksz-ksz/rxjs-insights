@@ -9,6 +9,7 @@ export function createInspectedWindowEvalClientAdapter(
   channel: string
 ): ClientAdapter {
   return {
+    name: `ClientAdapter[${channel}]`,
     send(message: RequestMessage) {
       return new Promise((resolve) => {
         chrome.devtools.inspectedWindow.eval(
@@ -32,6 +33,7 @@ export function createInspectedWindowEvalServerAdapter(
   channel: string
 ): ServerAdapterSync {
   return {
+    name: `ServerAdapterAsync[${channel}]`,
     startSync(requestHandler) {
       (window as any)['__eval__' + channel] = (message: RequestMessage) => {
         return requestHandler(message);

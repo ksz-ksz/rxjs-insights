@@ -175,7 +175,11 @@ export function EventsTimeline({
       >
         <svg viewBox={`0 0 ${width} ${height}`}>
           {timeline.slices.map((slice, offset) => (
-            <EventsTimelineSlice slice={slice} offset={offset * 2 + paddingX} />
+            <EventsTimelineSlice
+              key={offset}
+              slice={slice}
+              offset={offset * 2 + paddingX}
+            />
           ))}
           <circle
             fill={theme.palette.text.primary}

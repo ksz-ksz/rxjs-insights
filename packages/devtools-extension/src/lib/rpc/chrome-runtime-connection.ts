@@ -9,6 +9,7 @@ export function createChromeRuntimeClientAdapter(
   channel: string
 ): ClientAdapter {
   return {
+    name: `ClientAdapter[${channel}]`,
     send(message: RequestMessage) {
       return new Promise((resolve) => {
         chrome.runtime.sendMessage(
@@ -24,6 +25,7 @@ export function createChromeRuntimeServerAdapter(
   channel: string
 ): ServerAdapterAsync {
   return {
+    name: `ServerAdapterAsync[${channel}]`,
     startAsync(requestHandler) {
       const listener = (
         message: ChanneledMessage,

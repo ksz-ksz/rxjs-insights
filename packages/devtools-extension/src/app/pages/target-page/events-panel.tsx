@@ -77,13 +77,14 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
         switch (entry.type) {
           case 'task':
             return (
-              <TaskSpan>
+              <TaskSpan key={`task-${entry.task.id}`}>
                 {entry.task.name} #{entry.task.id}
               </TaskSpan>
             );
           case 'event':
             return (
               <EventSpan
+                key={`event-${entry.event.time}`}
                 id={getEventElementId(entry.event.time)}
                 data-type={entry.event.eventType}
                 data-selected={entry.event.time === time}
@@ -98,6 +99,7 @@ function EventsLog({ time, entries, onEventSelected }: EventLogProps) {
           case 'event-async':
             return (
               <EventSpan
+                key={`event-async-${entry.event.time}`}
                 title={`${entry.task.name} #${entry.task.id}`}
                 data-type={entry.event.eventType}
                 data-selected={entry.event.time === time}

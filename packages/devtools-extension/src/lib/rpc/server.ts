@@ -17,12 +17,16 @@ function start(adapter: ServerAdapter, requestHandler: RequestHandlerSync) {
   }
 }
 
+// let nextId = 0;
+
 export function startServer<T>(
   adapter: ServerAdapter,
   implementation: T
 ): Server {
   return start(adapter, (message) => {
+    // const id = nextId++;
     try {
+      // console.time(`${adapter.name}{${id}}`);
       return {
         success: (implementation as any)[message.func].apply(
           implementation,
@@ -34,6 +38,8 @@ export function startServer<T>(
       return {
         failure: e instanceof Error ? `${e.name}: ${e.message}` : String(e),
       };
+    } finally {
+      // console.timeEnd(`${adapter.name}{${id}}`);
     }
   });
 }

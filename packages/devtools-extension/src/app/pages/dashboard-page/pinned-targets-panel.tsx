@@ -39,14 +39,12 @@ export function PinnedTargetsPanel() {
               edge="start"
               aria-label="close"
               sx={{ ml: 1 }}
+              onClick={(e) => {
+                dispatch(dashboardActions.UnpinTarget({ target }));
+                e.stopPropagation();
+              }}
             >
-              <Close
-                fontSize="inherit"
-                onClick={(e) => {
-                  dispatch(dashboardActions.UnpinTarget({ target }));
-                  e.stopPropagation();
-                }}
-              />
+              <Close fontSize="inherit" />
             </IconButton>
           </Box>
         </RouterLink>
