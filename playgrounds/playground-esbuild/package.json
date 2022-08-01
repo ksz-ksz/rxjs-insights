@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@rxjs-insights/console": "^0.2.0",
+    "@rxjs-insights/devtools": "^0.2.0",
     "@rxjs-insights/core": "^0.2.0",
     "@rxjs-insights/plugin-esbuild": "^0.2.0",
     "@rxjs-insights/rxjs7": "^0.2.0",

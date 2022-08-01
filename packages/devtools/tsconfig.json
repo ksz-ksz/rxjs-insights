@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@rxjs-insights/core": ["./packages/core/src/index.ts"]
+    }
+  },
+  "references": [
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "files": [
+    "src/index.ts",
+    "src/connect.ts"
+  ],
+  "exclude": [
+    "**/*"
+  ]
+}

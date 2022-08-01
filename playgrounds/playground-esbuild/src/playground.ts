@@ -12,21 +12,16 @@ import {
   switchMap,
   take,
 } from 'rxjs';
-import { inspect } from '@rxjs-insights/console';
+import { inspect } from '@rxjs-insights/devtools';
+import { connect } from '@rxjs-insights/devtools/connect';
 
-const inspectDevtools: typeof inspect =
-  (window as any).RXJS_ISNIGHTS_DEVTOOLS_INSPECT ?? inspect;
+connect();
 
 export function playground() {
   const obs1 = scheduled([of('a', 'b'), of(1, 2)], asapScheduler).pipe(
     map((x) => x),
     switchMap((x) => x),
-    (source) =>
-      new Observable((observer) => {
-        const subscription = source.subscribe(observer);
-        inspectDevtools(subscription);
-        return subscription;
-      }),
+    inspect,
     share()
   );
   const subject = new Subject();
@@ -39,8 +34,6 @@ export function playground() {
   setTimeout(() => {
     inspect(obs);
     inspect(sub);
-    inspectDevtools(obs);
-    inspectDevtools(sub);
   }, 1000);
 
   setTimeout(() => {

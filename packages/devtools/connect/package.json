@@ -1,0 +1,14 @@
+{
+  "name": "@rxjs-insights/devtools-connect",
+  "module": "../dist/esm/connect.js",
+  "main": "../dist/cjs/connect.js",
+  "types": "../dist/types/connect.d.ts",
+  "exports": {
+    ".": {
+      "browser": "../dist/esm/connect.js",
+      "node": "../dist/cjs/connect.js",
+      "types": "../dist/types/connect.d.ts"
+    }
+  },
+  "sideEffects": false
+}

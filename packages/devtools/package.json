@@ -1,7 +1,7 @@
 {
-  "name": "@rxjs-insights/console",
+  "name": "@rxjs-insights/devtools",
   "version": "0.2.0",
-  "description": "See the data gathered by RxJS Insights right in the console.",
+  "description": "Connector for the RxJS Insights devtools extension.",
   "keywords": [
     "rxjs",
     "debug",
@@ -35,6 +35,11 @@
       "browser": "./dist/esm/index.js",
       "node": "./dist/cjs/index.js",
       "types": "./dist/types/index.d.js"
+    },
+    "./connect": {
+      "browser": "./dist/esm/connect.js",
+      "node": "./dist/cjs/connect.js",
+      "types": "./dist/types/connect.d.js"
     }
   },
   "sideEffects": false,
@@ -45,8 +50,6 @@
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types"
   },
   "dependencies": {
-    "@rxjs-insights/core": "^0.2.0",
-    "@rxjs-insights/recorder": "^0.2.0",
-    "@rxjs-insights/recorder-utils": "^0.2.0"
+    "@rxjs-insights/core": "^0.2.0"
   }
 }
