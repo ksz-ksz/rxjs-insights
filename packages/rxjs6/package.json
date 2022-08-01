@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/rxjs6",
-  "version": "0.2.0",
+  "version": "0.3.0-alpha.0",
   "description": "See through the observables.",
   "keywords": [
     "rxjs",
@@ -60,10 +60,10 @@
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types"
   },
   "dependencies": {
-    "@rxjs-insights/core": "^0.2.0",
-    "@rxjs-insights/locator": "^0.2.0",
-    "@rxjs-insights/recorder": "^0.2.0",
-    "@rxjs-insights/tracer": "^0.2.0"
+    "@rxjs-insights/core": "^0.3.0-alpha.0",
+    "@rxjs-insights/locator": "^0.3.0-alpha.0",
+    "@rxjs-insights/recorder": "^0.3.0-alpha.0",
+    "@rxjs-insights/tracer": "^0.3.0-alpha.0"
   },
   "devDependencies": {
     "rxjs": "^6"
