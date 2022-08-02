@@ -1,10 +1,12 @@
 import { PropertyRef, Ref } from '@app/protocols/refs';
-import { RefState, RefUiState } from '@app/store/refs';
+import { RefsState, RefState, RefUiState } from '@app/store/refs';
 import { Action } from '@lib/store';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
+import { getRefState, getRefsUiState } from '@app/selectors/refs-selectors';
 
-export interface RefOutletEntry {
+export interface RefOutletItemEntry {
   id: string;
+  stateKey: string;
   indent: number;
   path: string;
   ref: Ref;
@@ -14,17 +16,17 @@ export interface RefOutletEntry {
   expanded: boolean;
 }
 
-export interface ActionOutletEntry {
+export interface RefOutletActionEntry {
   id: string;
   indent: number;
   action: () => Action;
   label: string;
 }
 
-type Entry = RefOutletEntry | ActionOutletEntry;
+export type RefOutletEntry = RefOutletItemEntry | RefOutletActionEntry;
 
 function addActions(
-  entries: Entry[],
+  entries: RefOutletEntry[],
   indent: number,
   ref: Ref,
   stateKey: string,
@@ -53,7 +55,7 @@ function addActions(
 }
 
 function getRefOutletEntriesVisitor(
-  entries: Entry[],
+  entries: RefOutletEntry[],
   stateKey: string,
   ref: Ref,
   indent: number,
@@ -68,6 +70,7 @@ function getRefOutletEntriesVisitor(
 
   entries.push({
     id: `${stateKey}:${path}`,
+    stateKey,
     ref,
     indent,
     label,
@@ -105,6 +108,23 @@ function getRefOutletEntriesVisitor(
   return true;
 }
 
+export function getRefOutletEntries2(
+  ref: Ref,
+  refs: RefsState,
+  stateKey: string,
+  type?: 'enumerable' | 'nonenumerable' | 'special',
+  label?: string
+) {
+  return getRefOutletEntries(
+    ref,
+    stateKey,
+    getRefState(refs, stateKey),
+    getRefsUiState(refs, stateKey),
+    type,
+    label
+  );
+}
+
 export function getRefOutletEntries(
   rootRef: Ref,
   stateKey: string,
@@ -113,7 +133,7 @@ export function getRefOutletEntries(
   type?: 'enumerable' | 'nonenumerable' | 'special',
   label?: string
 ) {
-  const entries: Entry[] = [];
+  const entries: RefOutletEntry[] = [];
 
   if (
     getRefOutletEntriesVisitor(

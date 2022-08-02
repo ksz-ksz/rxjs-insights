@@ -28,9 +28,9 @@ import { createSelector, useDispatchCallback } from '@lib/store';
 import { Indent } from '@app/components/indent';
 import { useLastDefinedValue } from '@app/utils';
 import {
-  ActionOutletEntry,
+  RefOutletActionEntry,
   getRefOutletEntries,
-  RefOutletEntry,
+  RefOutletItemEntry,
 } from '@app/components/get-ref-outlet-entries';
 
 interface TagRendererProps<REF extends Ref> {
@@ -633,11 +633,11 @@ const ActionSpan = styled('span')(({ theme }) => ({
   },
 }));
 
-export function ActionOutletEntry({
+export function RefOutletActionEntryRenderer({
   label,
   indent,
   action,
-}: ActionOutletEntry) {
+}: RefOutletActionEntry) {
   const onClick = useDispatchCallback(action, []);
 
   return (
@@ -648,7 +648,7 @@ export function ActionOutletEntry({
   );
 }
 
-export function RefOutletEntry({
+export function RefOutletItemEntryRenderer({
   reference,
   summary,
   ...props
@@ -712,9 +712,9 @@ export function RefOutlet({
     <>
       {vm.entries.map((entry) =>
         'action' in entry ? (
-          <ActionOutletEntry key={entry.id} {...entry} />
+          <RefOutletActionEntryRenderer key={entry.id} {...entry} />
         ) : (
-          <RefOutletEntry
+          <RefOutletItemEntryRenderer
             key={entry.id}
             indent={entry.indent}
             stateKey={stateKey}

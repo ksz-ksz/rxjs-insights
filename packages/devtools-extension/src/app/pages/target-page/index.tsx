@@ -60,18 +60,12 @@ function onRender(
   id: string,
   phase: 'mount' | 'update',
   actualDuration: number,
-  baseDuration: number,
-  startTime: number,
-  commitTime: number,
-  interactions: Set<any>
+  baseDuration: number
 ) {
   console.log({
     id,
     phase,
     actualDuration,
     baseDuration,
-    startTime,
-    commitTime,
-    interactions,
   });
 }
