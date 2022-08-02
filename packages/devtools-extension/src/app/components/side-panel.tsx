@@ -177,7 +177,7 @@ export function useEntries(sections: SidePanelSection[]) {
   return entries;
 }
 
-export function SidePanel({
+export const SidePanel = React.memo(function SidePanel({
   side,
   minWidth = '200px',
   maxWidth = '50%',
@@ -198,9 +198,7 @@ export function SidePanel({
         style={{ width: '400px', minWidth }}
       >
         {entries.map(({ key, render: Render }) => (
-          <span key={key}>
-            <Render />
-          </span>
+          <Render key={key} />
         ))}
       </SidePanelContentDiv>
       {side === 'left' && (
@@ -208,7 +206,7 @@ export function SidePanel({
       )}
     </SidePanelDiv>
   );
-}
+});
 
 interface SidePanelSectionRendererProps {
   label: string;

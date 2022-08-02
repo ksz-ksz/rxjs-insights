@@ -1,8 +1,8 @@
 import { useSelector } from '@app/store';
-import { useRefsSection } from '@app/components/ref-outlet';
 import { useMemo } from 'react';
 import { createSelector } from '@lib/store';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
+import { useRefsSection } from '@app/components/use-refs-section';
 
 const vmSelector = createSelector(
   [activeTargetStateSelector],

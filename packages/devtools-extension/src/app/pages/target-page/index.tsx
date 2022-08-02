@@ -35,7 +35,9 @@ export function TargetPage() {
         flexDirection: 'row',
       }}
     >
-      <SidePanel side="left" sections={leftPanelSections} maxWidth="33%" />
+      <React.Profiler id={'left-panel'} onRender={onRender}>
+        <SidePanel side="left" sections={leftPanelSections} maxWidth="33%" />
+      </React.Profiler>
       <Box
         sx={{
           flexGrow: 1,
@@ -47,15 +49,29 @@ export function TargetPage() {
         <SubscribersGraph />
         <ControlsPanel />
       </Box>
-      <SidePanel side="right" sections={rightPanelSections} maxWidth="33%" />
-      {/*<SidePanel side="right">*/}
-      {/*  <SidePanelSection title="SCOPE">*/}
-      {/*    <ContextPanel />*/}
-      {/*  </SidePanelSection>*/}
-      {/*  <SidePanelSection title="RELATED TARGETS">*/}
-      {/*    <TargetsPanel />*/}
-      {/*  </SidePanelSection>*/}
-      {/*</SidePanel>*/}
+      <React.Profiler id={'right-panel'} onRender={onRender}>
+        <SidePanel side="right" sections={rightPanelSections} maxWidth="33%" />
+      </React.Profiler>
     </Box>
   );
+}
+
+function onRender(
+  id: string,
+  phase: 'mount' | 'update',
+  actualDuration: number,
+  baseDuration: number,
+  startTime: number,
+  commitTime: number,
+  interactions: Set<any>
+) {
+  console.log({
+    id,
+    phase,
+    actualDuration,
+    baseDuration,
+    startTime,
+    commitTime,
+    interactions,
+  });
 }
