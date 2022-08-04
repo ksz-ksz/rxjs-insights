@@ -1,22 +1,21 @@
 import { styled } from '@mui/material';
 import React, {
   ReactElement,
-  ReactNode,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
 import { ChevronRight } from '@mui/icons-material';
 import { fromEvent, map, switchMap, takeUntil } from 'rxjs';
+import { useVirtual } from 'react-virtual';
 
 const SidePanelDiv = styled('div')({
   display: 'flex',
   flexDirection: 'row',
 });
 const SidePanelContentDiv = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
   overflow: 'auto',
 });
 const SidePanelResizerDiv = styled('div')(({ theme }) => ({
@@ -125,26 +124,11 @@ function useResizer(
   }, []);
 }
 
-export function useEntries(sections: SidePanelSection[]) {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(sections.map(({ label }) => label))
-  );
-
-  const setSectionExpanded = useCallback(
-    (section: string, expanded: boolean) => {
-      setExpandedSections((expandedSections) => {
-        const newExpandedSection = new Set(expandedSections);
-        if (expanded) {
-          newExpandedSection.add(section);
-        } else {
-          newExpandedSection.delete(section);
-        }
-        return newExpandedSection;
-      });
-    },
-    [setExpandedSections]
-  );
-
+function getEntries(
+  sections: SidePanelSection[],
+  expandedSections: Set<string>,
+  setSectionExpanded: (section: string, expanded: boolean) => void
+) {
   const entries: SidePanelEntry[] = [];
 
   for (const section of sections) {
@@ -173,8 +157,33 @@ export function useEntries(sections: SidePanelSection[]) {
       entries.push(...section.entries);
     }
   }
-
   return entries;
+}
+
+export function useEntries(sections: SidePanelSection[]) {
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(sections.map(({ label }) => label))
+  );
+
+  const setSectionExpanded = useCallback(
+    (section: string, expanded: boolean) => {
+      setExpandedSections((expandedSections) => {
+        const newExpandedSection = new Set(expandedSections);
+        if (expanded) {
+          newExpandedSection.add(section);
+        } else {
+          newExpandedSection.delete(section);
+        }
+        return newExpandedSection;
+      });
+    },
+    [setExpandedSections]
+  );
+
+  return useMemo(
+    () => getEntries(sections, expandedSections, setSectionExpanded),
+    [sections, expandedSections, setSectionExpanded]
+  );
 }
 
 export const SidePanel = React.memo(function SidePanel({
@@ -188,6 +197,13 @@ export const SidePanel = React.memo(function SidePanel({
   useResizer(side, contentDivRef, resizerDivRef);
   const entries = useEntries(sections);
 
+  const virtualizer = useVirtual({
+    size: entries.length,
+    parentRef: contentDivRef,
+    estimateSize: useCallback((i) => entries[i].getHeight(), [entries]),
+    overscan: 5,
+  });
+
   return (
     <SidePanelDiv style={{ maxWidth }}>
       {side === 'right' && (
@@ -197,9 +213,33 @@ export const SidePanel = React.memo(function SidePanel({
         ref={contentDivRef}
         style={{ width: '400px', minWidth }}
       >
-        {entries.map(({ key, render: Render }) => (
-          <Render key={key} />
-        ))}
+        <div
+          style={{
+            height: `${virtualizer.totalSize}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {virtualizer.virtualItems.map((virtualRow) => {
+            const entry = entries[virtualRow.index];
+            const Render = entry.render;
+            return (
+              <div
+                key={virtualRow.index}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${entry.getHeight()}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <Render />
+              </div>
+            );
+          })}
+        </div>
       </SidePanelContentDiv>
       {side === 'left' && (
         <SidePanelResizerDiv data-side="left" ref={resizerDivRef} />

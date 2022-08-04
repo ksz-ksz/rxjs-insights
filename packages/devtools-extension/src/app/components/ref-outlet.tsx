@@ -18,20 +18,11 @@ import {
 } from '@app/protocols/refs';
 import React, { JSXElementConstructor, MouseEvent, useCallback } from 'react';
 import { styled } from '@mui/material';
-import {
-  refStateSelector,
-  refUiStateSelector,
-} from '@app/selectors/refs-selectors';
-import { useDispatch, useSelectorFunction } from '@app/store';
+import { useDispatch } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
-import { createSelector, useDispatchCallback } from '@lib/store';
+import { useDispatchCallback } from '@lib/store';
 import { Indent } from '@app/components/indent';
-import { useLastDefinedValue } from '@app/utils';
-import {
-  RefOutletActionEntry,
-  getRefOutletEntries,
-  RefOutletItemEntry,
-} from '@app/components/get-ref-outlet-entries';
+import { RefOutletActionEntry } from '@app/components/get-ref-outlet-entries';
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
@@ -454,10 +445,10 @@ function getTagRenderer(type: string) {
   }
 }
 
-const MonospaceSpan = styled('span')(({ theme }) => ({
+const MonospaceSpan = styled('span')({
   display: 'inline',
   fontFamily: 'Monospace',
-}));
+});
 
 const LabelSpan = styled('span')(({ theme }) => ({
   display: 'inline',
@@ -489,11 +480,6 @@ const LabelSpan = styled('span')(({ theme }) => ({
     color: theme.inspector.secondary,
   },
 }));
-const RefOutletDiv = styled('div')({
-  display: 'inline-flex',
-  flexDirection: 'column',
-  alignItems: 'start',
-});
 
 const EntryDiv = styled('div')({
   display: 'inline-block',
@@ -574,27 +560,6 @@ function GetterRefOutletRenderer(props: RefOutletRendererProps<GetterRef>) {
     </EntryDiv>
   );
 }
-
-const vmSelector = (
-  stateKey: string,
-  ref: Ref,
-  type?: 'enumerable' | 'nonenumerable' | 'special',
-  label?: string
-) =>
-  createSelector(
-    [refStateSelector(stateKey), refUiStateSelector(stateKey)],
-    ([state, uiState]) => {
-      const entries = getRefOutletEntries(
-        ref,
-        stateKey,
-        state,
-        uiState,
-        type,
-        label
-      );
-      return entries ? { entries } : undefined;
-    }
-  );
 
 export interface RefOutletEntryProps {
   type?: 'enumerable' | 'nonenumerable' | 'special';
@@ -688,46 +653,5 @@ export function RefSummaryOutlet({
       expanded={false}
       expandable={false}
     />
-  );
-}
-
-export interface RefOutletProps {
-  type?: 'enumerable' | 'nonenumerable' | 'special';
-  label?: string;
-  reference: Ref;
-  stateKey: string;
-}
-
-export function RefOutlet({
-  type = 'enumerable',
-  label,
-  reference,
-  stateKey,
-}: RefOutletProps) {
-  const vm = useLastDefinedValue(
-    useSelectorFunction(vmSelector, stateKey, reference, type, label),
-    { entries: [] }
-  );
-  return (
-    <>
-      {vm.entries.map((entry) =>
-        'action' in entry ? (
-          <RefOutletActionEntryRenderer key={entry.id} {...entry} />
-        ) : (
-          <RefOutletItemEntryRenderer
-            key={entry.id}
-            indent={entry.indent}
-            stateKey={stateKey}
-            path={entry.path}
-            reference={entry.ref}
-            expanded={entry.expanded}
-            expandable={entry.expandable}
-            label={entry.label}
-            type={entry.type}
-            summary={false}
-          />
-        )
-      )}
-    </>
   );
 }

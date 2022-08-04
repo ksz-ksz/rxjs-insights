@@ -9,10 +9,7 @@ import { concatMap, from, map } from 'rxjs';
 import { refsClient } from '@app/clients/refs';
 import { refsActions } from '@app/actions/refs-actions';
 import { RefsSlice, RefState, RefUiState } from '@app/store/refs/slice';
-import {
-  refStateSelector,
-  refUiStateSelector,
-} from '@app/selectors/refs-selectors';
+import { getRefState, getRefUiState } from '@app/selectors/refs-selectors';
 import { PropertyRef, Ref } from '@app/protocols/refs';
 import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
 
@@ -41,10 +38,10 @@ export const refsReaction = combineReactions()
         ),
       (store: Store<RefsSlice>) => ({
         getState(stateKey: string) {
-          return store.select(refStateSelector(stateKey)).get();
+          return getRefState(store.get().refs, stateKey);
         },
         getUiState(stateKey: string) {
-          return store.select(refUiStateSelector(stateKey)).get();
+          return getRefUiState(store.get().refs, stateKey);
         },
       })
     )

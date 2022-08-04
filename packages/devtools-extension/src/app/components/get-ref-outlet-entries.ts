@@ -2,7 +2,7 @@ import { PropertyRef, Ref } from '@app/protocols/refs';
 import { RefsState, RefState, RefUiState } from '@app/store/refs';
 import { Action } from '@lib/store';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
-import { getRefState, getRefsUiState } from '@app/selectors/refs-selectors';
+import { getRefState, getRefUiState } from '@app/selectors/refs-selectors';
 
 export interface RefOutletItemEntry {
   id: string;
@@ -108,28 +108,10 @@ function getRefOutletEntriesVisitor(
   return true;
 }
 
-export function getRefOutletEntries2(
+export function getRefOutletEntries(
   ref: Ref,
   refs: RefsState,
   stateKey: string,
-  type?: 'enumerable' | 'nonenumerable' | 'special',
-  label?: string
-) {
-  return getRefOutletEntries(
-    ref,
-    stateKey,
-    getRefState(refs, stateKey),
-    getRefsUiState(refs, stateKey),
-    type,
-    label
-  );
-}
-
-export function getRefOutletEntries(
-  rootRef: Ref,
-  stateKey: string,
-  state: RefState,
-  uiState: RefUiState,
   type?: 'enumerable' | 'nonenumerable' | 'special',
   label?: string
 ) {
@@ -139,11 +121,11 @@ export function getRefOutletEntries(
     getRefOutletEntriesVisitor(
       entries,
       stateKey,
-      rootRef,
+      ref,
       0,
       'root',
-      state.expandedObjects,
-      uiState.expandedPaths,
+      getRefState(refs, stateKey).expandedObjects,
+      getRefUiState(refs, stateKey).expandedPaths,
       type,
       label
     )

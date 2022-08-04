@@ -4,11 +4,11 @@ import { activeTargetStateSelector } from '@app/selectors/active-target-state-se
 import { timeSelector } from '@app/selectors/insights-selectors';
 import { refsSelector } from '@app/selectors/refs-selectors';
 import {
-  getRefOutletEntries2,
+  getRefOutletEntries,
   RefOutletEntry,
 } from '@app/components/get-ref-outlet-entries';
 import { useLastDefinedValue } from '@app/utils';
-import { getRefOutletSidePanelEntries } from "@app/components/get-ref-outlet-side-panel-entries";
+import { getRefOutletSidePanelEntries } from '@app/components/get-ref-outlet-side-panel-entries';
 
 export const vmSelector = createSelector(
   [activeTargetStateSelector, refsSelector, timeSelector],
@@ -19,7 +19,9 @@ export const vmSelector = createSelector(
     const refOutletEntries = [
       { ref: target, key: 'context-target' },
       { ref: event, key: 'context-event' },
-    ].flatMap(({ ref, key }) => getRefOutletEntries2(ref, refs, key));
+    ].flatMap(({ ref, key }) =>
+      ref ? getRefOutletEntries(ref, refs, key) : []
+    );
 
     if (refOutletEntries.find((entry) => entry === undefined)) {
       return undefined;

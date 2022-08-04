@@ -22,8 +22,8 @@ import { useSelector } from '@app/store';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { timeSelector } from '@app/selectors/insights-selectors';
 
-const TaskSpan = styled('span')(({ theme }) => ({
-  display: 'inline-flex',
+const TaskDiv = styled('div')(({ theme }) => ({
+  display: 'flex',
   fontFamily: 'Monospace',
   fontStyle: 'oblique',
   color: theme.palette.text.secondary,
@@ -38,7 +38,8 @@ const TaskSpan = styled('span')(({ theme }) => ({
     marginLeft: '1rem',
   },
 }));
-const EventSpan = styled('span')(({ theme }) => ({
+const EventDiv = styled('div')(({ theme }) => ({
+  display: 'block',
   whiteSpace: 'nowrap',
   paddingRight: '1rem',
   '&[data-selected=true]': {
@@ -117,9 +118,9 @@ export function useEventsSection() {
 
 export function TaskEntryRenderer({ entry }: { entry: TaskEntry }) {
   return (
-    <TaskSpan key={`task-${entry.task.id}`}>
+    <TaskDiv key={`task-${entry.task.id}`}>
       {entry.task.name} #{entry.task.id}
-    </TaskSpan>
+    </TaskDiv>
   );
 }
 
@@ -133,7 +134,7 @@ export function EventEntryRenderer({
   onEventSelected: (event: RelatedEvent) => void;
 }) {
   return (
-    <EventSpan
+    <EventDiv
       key={`event-${entry.event.time}`}
       id={getEventElementId(entry.event.time)}
       data-type={entry.event.eventType}
@@ -144,7 +145,7 @@ export function EventEntryRenderer({
       <RefOutletSpan data-dim={entry.excluded}>
         <RefSummaryOutlet reference={entry.event} />
       </RefOutletSpan>
-    </EventSpan>
+    </EventDiv>
   );
 }
 
@@ -158,7 +159,7 @@ export function EventAsyncEntryRenderer({
   onEventSelected: (event: RelatedEvent) => void;
 }) {
   return (
-    <EventSpan
+    <EventDiv
       key={`event-async-${entry.event.time}`}
       title={`${entry.task.name} #${entry.task.id}`}
       data-type={entry.event.eventType}
@@ -170,6 +171,6 @@ export function EventAsyncEntryRenderer({
         <RefSummaryOutlet reference={entry.event} />
         {' ↴'}
       </RefOutletSpan>
-    </EventSpan>
+    </EventDiv>
   );
 }
