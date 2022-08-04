@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import { ChevronRight } from '@mui/icons-material';
 import { fromEvent, map, switchMap, takeUntil } from 'rxjs';
-import { useVirtual } from 'react-virtual';
+import { defaultRangeExtractor, Range, useVirtual } from 'react-virtual';
 
 const SidePanelDiv = styled('div')({
   display: 'flex',
@@ -68,6 +68,7 @@ export interface SidePanelEntry {
   key: string;
   getHeight(): number;
   render(): ReactElement;
+  sticky?: boolean;
 }
 
 export interface SidePanelSection {
@@ -138,9 +139,10 @@ function getEntries(
     };
 
     entries.push({
+      sticky: true,
       key: `section:${section.label}`,
       getHeight(): number {
-        return 30;
+        return 25;
       },
       render() {
         return (
@@ -186,6 +188,18 @@ export function useEntries(sections: SidePanelSection[]) {
   );
 }
 
+function getStickyIndices(entries: SidePanelEntry[]) {
+  const stickyIndices: number[] = [];
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    if (entry.sticky) {
+      stickyIndices.push(i);
+    }
+  }
+
+  return stickyIndices;
+}
+
 export const SidePanel = React.memo(function SidePanel({
   side,
   minWidth = '200px',
@@ -196,12 +210,31 @@ export const SidePanel = React.memo(function SidePanel({
   const resizerDivRef = useRef<HTMLDivElement | null>(null);
   useResizer(side, contentDivRef, resizerDivRef);
   const entries = useEntries(sections);
+  const stickyIndices = useMemo(() => getStickyIndices(entries), [entries]);
+  const activeStickyIndexRef = useRef(-1);
+  const isActiveSticky = (index: number) =>
+    activeStickyIndexRef.current === index;
 
   const virtualizer = useVirtual({
     size: entries.length,
+    overscan: 5,
     parentRef: contentDivRef,
     estimateSize: useCallback((i) => entries[i].getHeight(), [entries]),
-    overscan: 5,
+    rangeExtractor: useCallback(
+      (range: Range) => {
+        activeStickyIndexRef.current =
+          [...stickyIndices].reverse().find((index) => range.start >= index) ??
+          -1;
+
+        const next = new Set([
+          activeStickyIndexRef.current,
+          ...defaultRangeExtractor(range),
+        ]);
+
+        return [...next].sort((a, b) => a - b);
+      },
+      [stickyIndices]
+    ),
   });
 
   return (
@@ -227,12 +260,23 @@ export const SidePanel = React.memo(function SidePanel({
               <div
                 key={virtualRow.index}
                 style={{
-                  position: 'absolute',
+                  ...(entry.sticky
+                    ? {
+                        zIndex: 1,
+                      }
+                    : {}),
+                  ...(isActiveSticky(virtualRow.index)
+                    ? {
+                        position: 'sticky',
+                      }
+                    : {
+                        position: 'absolute',
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }),
                   top: 0,
                   left: 0,
                   width: '100%',
                   height: `${entry.getHeight()}px`,
-                  transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
                 <Render />
