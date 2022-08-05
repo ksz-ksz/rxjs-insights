@@ -26,16 +26,18 @@ export function GraphNode<T>({
     function onUpdate() {
       positionTweenRef.current?.kill();
       positionTweenRef.current = gsap.to(
-        { ...nodeRef.current!.position },
+        { ...(nodeRef.current?.position ?? { x: 0, y: 0 }) },
         {
           x: node.x,
           y: node.y,
           onUpdate() {
             const [target] = this.targets();
-            nodeRef.current!.position = {
-              x: target.x,
-              y: target.y,
-            };
+            if (nodeRef.current) {
+              nodeRef.current.position = {
+                x: target.x,
+                y: target.y,
+              };
+            }
           },
           duration: duration,
           delay: duration,
@@ -46,7 +48,7 @@ export function GraphNode<T>({
   );
 
   const onEnter = useCallback(() => {
-    opacityTweenRef.current = gsap.to(nodeRef.current!, {
+    opacityTweenRef.current = gsap.to(nodeRef.current, {
       opacity: 1,
       delay: 2 * duration,
       duration,
@@ -55,7 +57,7 @@ export function GraphNode<T>({
 
   const onExit = useCallback(() => {
     opacityTweenRef.current?.kill();
-    opacityTweenRef.current = gsap.to(nodeRef.current!, {
+    opacityTweenRef.current = gsap.to(nodeRef.current, {
       opacity: 0,
       delay: 0,
       duration,

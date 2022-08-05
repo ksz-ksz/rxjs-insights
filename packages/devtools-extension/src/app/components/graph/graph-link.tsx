@@ -26,7 +26,14 @@ export function GraphLink<T>({
     function onUpdate() {
       positionTweenRef.current?.kill();
       positionTweenRef.current = gsap.to(
-        { ...linkRef.current!.position },
+        {
+          ...(linkRef.current?.position ?? {
+            sourceX: 0,
+            sourceY: 0,
+            targetX: 0,
+            targetY: 0,
+          }),
+        },
         {
           sourceX: link.source.x,
           sourceY: link.source.y,
@@ -34,12 +41,14 @@ export function GraphLink<T>({
           targetY: link.target.y,
           onUpdate() {
             const [target] = this.targets();
-            linkRef.current!.position = {
-              sourceX: target.sourceX,
-              sourceY: target.sourceY,
-              targetX: target.targetX,
-              targetY: target.targetY,
-            };
+            if (linkRef.current) {
+              linkRef.current.position = {
+                sourceX: target.sourceX,
+                sourceY: target.sourceY,
+                targetX: target.targetX,
+                targetY: target.targetY,
+              };
+            }
           },
           duration: duration,
           delay: duration,
@@ -50,7 +59,7 @@ export function GraphLink<T>({
   );
 
   const onEnter = useCallback(() => {
-    opacityTweenRef.current = gsap.to(linkRef.current!, {
+    opacityTweenRef.current = gsap.to(linkRef.current, {
       opacity: 1,
       duration,
       delay: 2 * duration,
@@ -59,7 +68,7 @@ export function GraphLink<T>({
 
   const onExit = useCallback(() => {
     opacityTweenRef.current?.kill();
-    opacityTweenRef.current = gsap.to(linkRef.current!, {
+    opacityTweenRef.current = gsap.to(linkRef.current, {
       opacity: 0,
       duration,
       delay: 0,

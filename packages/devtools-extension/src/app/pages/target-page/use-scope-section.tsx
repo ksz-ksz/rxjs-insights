@@ -23,7 +23,7 @@ export const vmSelector = createSelector(
       ref ? getRefOutletEntries(ref, refs, key) : []
     );
 
-    if (refOutletEntries.find((entry) => entry === undefined)) {
+    if (refOutletEntries.some((entry) => entry === undefined)) {
       return undefined;
     }
 

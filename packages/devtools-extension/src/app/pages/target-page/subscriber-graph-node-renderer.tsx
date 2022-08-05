@@ -41,8 +41,8 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       timeSelector,
     ],
     ([targetState, targetUiState, time]) => {
-      const { target: rootTarget, relations } = targetState!;
-      const { expandedKeys } = targetUiState!;
+      const { target: rootTarget, relations } = targetState;
+      const { expandedKeys } = targetUiState;
       const rootTargetKey = String(rootTarget.id);
       const target = relations.targets[node.target.id];
       const targetKey = node.key;
@@ -232,7 +232,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     if (vm.isSelected) {
       const direction = getDirection(vm.event.eventType);
       tweenRef.current = gsap.fromTo(
-        circleRef.current!,
+        circleRef.current,
         {
           strokeDasharray: circleCircumference / 12,
           strokeDashoffset: circleCircumference * direction,
@@ -245,7 +245,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
         }
       );
     } else {
-      gsap.set(elementRef.current!, {
+      gsap.set(elementRef.current, {
         strokeDasharray: 'none',
         strokeDashoffset: 0,
       });

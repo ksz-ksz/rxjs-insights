@@ -24,7 +24,7 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(
     [targetStateSelector(getRootTargetId(node.key)), timeSelector],
     ([targetState, time]) => {
-      const { relations } = targetState!;
+      const { relations } = targetState;
       const event = relations.events[time];
       const target = relations.targets[node.target.id];
       const isSelected = event && event.target === target.id;
@@ -61,7 +61,7 @@ export const SubscriberGraphLinkRenderer = React.forwardRef<
     if (vm.isSelected) {
       const direction = getDirection(vm.event.eventType);
       tweenRef.current = gsap.fromTo(
-        elementRef.current!,
+        elementRef.current,
         { strokeDasharray: 4, strokeDashoffset: 32 * direction },
         {
           strokeDashoffset: 0,
@@ -71,7 +71,7 @@ export const SubscriberGraphLinkRenderer = React.forwardRef<
         }
       );
     } else {
-      gsap.set(elementRef.current!, {
+      gsap.set(elementRef.current, {
         strokeDasharray: 'none',
         strokeDashoffset: 0,
       });
