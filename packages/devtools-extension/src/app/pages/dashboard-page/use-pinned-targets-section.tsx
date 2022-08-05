@@ -32,7 +32,7 @@ export function usePinnedTargetsSection() {
             }}
           >
             <RefSummaryOutlet reference={target} />
-            <Box sx={{ marginLeft: 2 }}>
+            <Box sx={{ marginLeft: 2, whiteSpace: 'nowrap' }}>
               <LocationOutlet locations={target.locations} />
               <IconButton
                 size="small"
