@@ -1,9 +1,4 @@
-import {
-  combineReactions,
-  createReaction,
-  effect,
-  filterActions,
-} from '@lib/store';
+import { combineReactions, createReaction, filterActions } from '@lib/store';
 import { createUrl, filterRoute } from '@lib/store-router';
 import { router, targetRouteToken } from '@app/router';
 import {
@@ -22,36 +17,10 @@ import {
 import { insightsClient } from '@app/clients/insights';
 import { insightsActions } from '@app/actions/insights-actions';
 import { eventsLogActions } from '@app/actions/events-log-actions';
-import { getEventElementId } from '@app/utils/get-event-element-id';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { routeEnter, routeLeave } from '@app/utils';
-
-function scrollIntoView(element: HTMLElement) {
-  const containerElement = document.getElementById('events-side-panel')!;
-  const elementBB = element.getBoundingClientRect();
-  const containerElementBB = containerElement.getBoundingClientRect();
-
-  const offset = 96;
-
-  if (
-    elementBB.top >= containerElementBB.top + offset &&
-    elementBB.bottom <= containerElementBB.bottom - offset
-  ) {
-    return;
-  } else if (elementBB.top < containerElementBB.top + offset) {
-    containerElement.scrollBy({
-      behavior: 'smooth',
-      top: elementBB.top - containerElementBB.top - offset,
-    });
-  } else {
-    containerElement.scrollBy({
-      behavior: 'smooth',
-      top: elementBB.bottom - containerElementBB.bottom + offset,
-    });
-  }
-}
 
 export const insightsReaction = combineReactions()
   .add(
@@ -72,25 +41,6 @@ export const insightsReaction = combineReactions()
             : EMPTY;
         }),
         map((state) => insightsActions.TargetStateLoaded({ state }))
-      )
-    )
-  )
-  .add(
-    createReaction((action$) =>
-      action$.pipe(
-        filterActions([
-          eventsLogActions.EventSelected,
-          insightsActions.PlayNextEvent,
-          refOutletContextActions.FocusEvent,
-        ]),
-        effect((action) => {
-          // const element = document.getElementById(
-          //   getEventElementId(action.payload.event.time)
-          // );
-          // if (element) {
-          //   scrollIntoView(element);
-          // }
-        })
       )
     )
   )

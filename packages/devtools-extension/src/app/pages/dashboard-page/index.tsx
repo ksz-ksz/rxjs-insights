@@ -16,8 +16,8 @@ import {
 } from '@mui/material';
 import { ExpandMore } from '@mui/icons-material';
 import { SidePanel } from '@app/components';
-import { usePinnedTargetsSection } from '@app/pages/dashboard-page/pinned-targets-panel';
 import { SidePanelSection } from '@app/components/side-panel';
+import { usePinnedTargetsSection } from '@app/pages/dashboard-page/use-pinned-targets-section';
 
 export interface StatsLineProps {
   label: string;

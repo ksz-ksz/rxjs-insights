@@ -1,8 +1,10 @@
 import { styled } from '@mui/material';
 import React, {
+  ForwardedRef,
   ReactElement,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -200,97 +202,150 @@ function getStickyIndices(entries: SidePanelEntry[]) {
   return stickyIndices;
 }
 
-export const SidePanel = React.memo(function SidePanel({
-  side,
-  minWidth = '200px',
-  maxWidth = '50%',
-  sections,
-}: SidePanelProps) {
-  const contentDivRef = useRef<HTMLDivElement | null>(null);
-  const resizerDivRef = useRef<HTMLDivElement | null>(null);
-  useResizer(side, contentDivRef, resizerDivRef);
-  const entries = useEntries(sections);
-  const stickyIndices = useMemo(() => getStickyIndices(entries), [entries]);
-  const activeStickyIndexRef = useRef(-1);
-  const isActiveSticky = (index: number) =>
-    activeStickyIndexRef.current === index;
+export interface SidePanelControl {
+  scrollToKey(key: string): void;
+}
 
-  const virtualizer = useVirtual({
-    size: entries.length,
-    overscan: 5,
-    parentRef: contentDivRef,
-    estimateSize: useCallback((i) => entries[i].getHeight(), [entries]),
-    rangeExtractor: useCallback(
-      (range: Range) => {
-        activeStickyIndexRef.current =
-          [...stickyIndices].reverse().find((index) => range.start >= index) ??
-          -1;
+function scrollBy(containerElement: HTMLDivElement, offset: number) {
+  const start = containerElement.scrollTop;
+  const end = start + containerElement.offsetHeight;
+  const to = containerElement.offsetHeight / 2 + offset;
 
-        const next = new Set([
-          activeStickyIndexRef.current,
-          ...defaultRangeExtractor(range),
-        ]);
+  const padding = 96;
 
-        return [...next].sort((a, b) => a - b);
-      },
-      [stickyIndices]
-    ),
-  });
+  if (to >= start + padding && to <= end - padding) {
+    return;
+  } else if (to < start + padding) {
+    containerElement.scrollBy({
+      behavior: 'smooth',
+      top: to - start - padding,
+    });
+  } else {
+    containerElement.scrollBy({
+      behavior: 'smooth',
+      top: to - end + padding,
+    });
+  }
+}
 
-  return (
-    <SidePanelDiv style={{ maxWidth }}>
-      {side === 'right' && (
-        <SidePanelResizerDiv data-side="right" ref={resizerDivRef} />
-      )}
-      <SidePanelContentDiv
-        ref={contentDivRef}
-        style={{ width: '400px', minWidth }}
-      >
-        <div
-          style={{
-            height: `${virtualizer.totalSize}px`,
-            width: '100%',
-            position: 'relative',
-          }}
+export function useSmoothScrollToFn(
+  parentRef: React.MutableRefObject<HTMLDivElement | null>
+) {
+  return React.useCallback((offset) => {
+    if (parentRef.current) {
+      scrollBy(parentRef.current, offset);
+    }
+  }, []);
+}
+
+export const SidePanel = React.memo(
+  React.forwardRef(function SidePanel(
+    { side, minWidth = '200px', maxWidth = '50%', sections }: SidePanelProps,
+    forwardedRef: ForwardedRef<SidePanelControl>
+  ) {
+    const contentDivRef = useRef<HTMLDivElement | null>(null);
+    const resizerDivRef = useRef<HTMLDivElement | null>(null);
+    useResizer(side, contentDivRef, resizerDivRef);
+    const entries = useEntries(sections);
+    const stickyIndices = useMemo(() => getStickyIndices(entries), [entries]);
+    const activeStickyIndexRef = useRef(-1);
+    const isActiveSticky = (index: number) =>
+      activeStickyIndexRef.current === index;
+
+    const scrollToFn = useSmoothScrollToFn(contentDivRef);
+
+    const virtualizer = useVirtual({
+      size: entries.length,
+      overscan: 5,
+      parentRef: contentDivRef,
+      estimateSize: useCallback((i) => entries[i].getHeight(), [entries]),
+      rangeExtractor: useCallback(
+        (range: Range) => {
+          activeStickyIndexRef.current =
+            [...stickyIndices]
+              .reverse()
+              .find((index) => range.start >= index) ?? -1;
+
+          const next = new Set([
+            activeStickyIndexRef.current,
+            ...defaultRangeExtractor(range),
+          ]);
+
+          return [...next].sort((a, b) => a - b);
+        },
+        [stickyIndices]
+      ),
+      scrollToFn,
+    });
+
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        scrollToKey(key: string) {
+          const index = entries.findIndex((entry) => entry.key === key);
+          if (index !== -1) {
+            virtualizer.scrollToIndex(index, { align: 'center' });
+          }
+        },
+      }),
+      [entries, virtualizer]
+    );
+
+    return (
+      <SidePanelDiv style={{ maxWidth }}>
+        {side === 'right' && (
+          <SidePanelResizerDiv data-side="right" ref={resizerDivRef} />
+        )}
+        <SidePanelContentDiv
+          ref={contentDivRef}
+          style={{ width: '400px', minWidth }}
         >
-          {virtualizer.virtualItems.map((virtualRow) => {
-            const entry = entries[virtualRow.index];
-            const Render = entry.render;
-            return (
-              <div
-                key={virtualRow.index}
-                style={{
-                  ...(entry.sticky
-                    ? {
-                        zIndex: 1,
-                      }
-                    : {}),
-                  ...(isActiveSticky(virtualRow.index)
-                    ? {
-                        position: 'sticky',
-                      }
-                    : {
-                        position: 'absolute',
-                        transform: `translateY(${virtualRow.start}px)`,
-                      }),
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: `${entry.getHeight()}px`,
-                }}
-              >
-                <Render />
-              </div>
-            );
-          })}
-        </div>
-      </SidePanelContentDiv>
-      {side === 'left' && (
-        <SidePanelResizerDiv data-side="left" ref={resizerDivRef} />
-      )}
-    </SidePanelDiv>
-  );
-});
+          <div
+            style={{
+              height: `${virtualizer.totalSize}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
+            {virtualizer.virtualItems.map((virtualRow) => {
+              const entry = entries[virtualRow.index];
+              const Render = entry.render;
+              return (
+                <div
+                  key={virtualRow.index}
+                  style={{
+                    ...(entry.sticky
+                      ? {
+                          zIndex: 1,
+                        }
+                      : {}),
+                    ...(isActiveSticky(virtualRow.index)
+                      ? {
+                          position: 'sticky',
+                        }
+                      : {
+                          position: 'absolute',
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }),
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${entry.getHeight()}px`,
+                  }}
+                >
+                  <Render />
+                </div>
+              );
+            })}
+          </div>
+        </SidePanelContentDiv>
+        {side === 'left' && (
+          <SidePanelResizerDiv data-side="left" ref={resizerDivRef} />
+        )}
+      </SidePanelDiv>
+    );
+  })
+);
 
 interface SidePanelSectionRendererProps {
   label: string;

@@ -121,6 +121,15 @@ export class Store<STATE extends Record<string, any> = {}>
     this.dispatch(ReactionAdded());
     return this;
   }
+
+  subscribeReaction<REQUIRED_STATE extends Super<STATE>>(
+    reaction: Reaction<REQUIRED_STATE, any>
+  ) {
+    return reaction
+      .react(this.actionSubject.asObservable(), reaction.deps?.(this as any))
+      .pipe(subscribeOn(queueScheduler), observeOn(queueScheduler))
+      .subscribe(this.actionObserver);
+  }
 }
 
 export function createStore() {

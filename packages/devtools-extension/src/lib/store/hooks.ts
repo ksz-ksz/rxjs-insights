@@ -1,13 +1,27 @@
 import { State, Store } from './store';
-import { useCallback, useContext, useMemo } from 'react';
+import { useCallback, useContext, useEffect, useMemo } from 'react';
 import { Action } from './action';
 import { StoreContext } from './context';
 import { Selector } from './selector';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { StoreView } from './store-view';
+import { Observable } from 'rxjs';
+import { createReaction } from './reaction';
 
 export function useStore<STATE>(): Store<STATE> {
   return useContext(StoreContext);
+}
+
+export function useReaction(
+  react: (action$: Observable<Action>) => Observable<Action>,
+  deps: ReadonlyArray<any>
+) {
+  const store = useStore();
+  useEffect(() => {
+    const subscription = store.subscribeReaction(createReaction(react));
+
+    return () => subscription.unsubscribe();
+  }, deps);
 }
 
 export function useDispatch() {
@@ -74,6 +88,10 @@ export interface StoreHooks<STATE> {
     selectorFunction: (...args: [...ARGS]) => Selector<STATE, RESULT>,
     ...args: [...ARGS]
   ): RESULT;
+  useReaction(
+    react: (action$: Observable<Action>) => Observable<Action>,
+    deps: ReadonlyArray<any>
+  ): void;
 }
 
 export function createStoreHooks<STORE extends Store<any>>(): StoreHooks<
@@ -84,5 +102,6 @@ export function createStoreHooks<STORE extends Store<any>>(): StoreHooks<
     useDispatch,
     useSelector,
     useSelectorFunction,
+    useReaction,
   };
 }

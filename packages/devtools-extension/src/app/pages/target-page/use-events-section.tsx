@@ -17,7 +17,7 @@ import {
 } from '@app/selectors/active-target-state-selector';
 import { getTargetTimeframes } from '@app/pages/target-page/get-target-timeframes';
 import { getEvents } from '@app/pages/target-page/get-events';
-import { SidePanelEntry, SidePanelSection } from '@app/components/side-panel';
+import { SidePanelEntry } from '@app/components/side-panel';
 import { useSelector } from '@app/store';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { timeSelector } from '@app/selectors/insights-selectors';
@@ -53,7 +53,7 @@ const RefOutletSpan = styled('span')({
     opacity: 0.5,
   },
 });
-const eventsSelector2 = createSelector(
+const eventsSelector = createSelector(
   [activeTargetStateSelector, activeTargetUiStateSelector],
   ([activeTargetState, activeTargetUiState]) => {
     const { target, relations } = activeTargetState!;
@@ -65,8 +65,8 @@ const eventsSelector2 = createSelector(
     return { entries };
   }
 );
-const vmSelector2 = createSelector(
-  [eventsSelector2, timeSelector],
+const vmSelector = createSelector(
+  [eventsSelector, timeSelector],
   ([{ entries }, time]) => ({
     entries,
     time,
@@ -74,7 +74,7 @@ const vmSelector2 = createSelector(
 );
 
 export function useEventsSection() {
-  const vm = useSelector(vmSelector2);
+  const vm = useSelector(vmSelector);
   const onEventSelected = useDispatchCallback(
     (event: RelatedEvent) => eventsLogActions.EventSelected({ event }),
     []
