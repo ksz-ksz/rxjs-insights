@@ -121,6 +121,14 @@ const TimelineDiv = styled('div')(({ theme }) => ({
   borderBottom: `solid thin ${theme.palette.divider}`,
 }));
 
+function getOffset(event: React.MouseEvent) {
+  const targetOffset =
+    event.target instanceof Element
+      ? event.target.getBoundingClientRect().left
+      : 0;
+  return (event.clientX - paddingX - targetOffset) / 2;
+}
+
 export function EventsTimeline({
   events,
   event,
@@ -150,7 +158,7 @@ export function EventsTimeline({
 
   const onMouseMove = useCallback(
     (event: MouseEvent) => {
-      const offset = (event.clientX - paddingX) / 2;
+      const offset = getOffset(event);
       setTimestamp(
         getOffsetTimestamp(
           offset,
