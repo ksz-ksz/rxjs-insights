@@ -81,7 +81,7 @@ function createLocationUnavailableElement() {
 function createOpenElement(target: TargetRef) {
   const openEl = document.createElement('button');
   openEl.className = 'open';
-  openEl.title = 'Inspect target in devtools panel';
+  openEl.title = 'Pin target in the devtools panel';
   openEl.addEventListener('click', async (e) => {
     e.stopPropagation();
     await targetsClient.pinTarget(target.objectId);
