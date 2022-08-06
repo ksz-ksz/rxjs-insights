@@ -56,7 +56,11 @@ export function AppBarWrapper() {
 
   return (
     <Box display="flex" height="100%" flexDirection="column">
-      <AppBar color="transparent" position="static" sx={{ flex: '0 0 0' }}>
+      <AppBar
+        color="transparent"
+        position="static"
+        sx={{ flex: '0 0 0', zIndex: '2' }}
+      >
         <Toolbar>
           <Box
             sx={{ width: '200px', display: 'flex', justifyContent: 'start' }}

@@ -19,7 +19,7 @@ const vmSelector = createSelector(
       getRefOutletEntries(target, refs, `target-${target.id}`)
     );
 
-    if (refOutletEntries.find((entry) => entry === undefined)) {
+    if (refOutletEntries.some((entry) => entry === undefined)) {
       return undefined;
     }
 
