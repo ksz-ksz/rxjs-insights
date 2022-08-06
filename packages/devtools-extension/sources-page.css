@@ -4,6 +4,22 @@ body {
     --background: #fff;
     --background-hover: rgba(0, 0, 0, 0.04);
     --divider: rgba(0, 0, 0, 0.12);
+
+    --theme-insights-event-subscription-secondary: #e65100;
+    --theme-insights-event-subscription-primary: #e65100;
+    --theme-insights-event-next-secondary: #43a047;
+    --theme-insights-event-next-primary: #1b5e20;
+    --theme-insights-event-error-secondary: #e53935;
+    --theme-insights-event-error-primary: #b71c1c;
+    --theme-insights-event-complete-secondary: #039be5;
+    --theme-insights-event-complete-primary: #01579b;
+
+    --theme-insights-subscriber-secondary: #ab47bc;
+    --theme-insights-subscriber-primary: #8e24aa;
+    --theme-insights-observable-secondary: #42a5f5;
+    --theme-insights-observable-primary: #1e88e5;
+
+    --theme-inspector-secondary: rgba(255, 255, 255, 0.7);
 }
 
 body.theme-dark {
