@@ -1,50 +1,24 @@
-import {
-  asapScheduler,
-  delay,
-  map,
-  merge,
-  NEVER,
-  Observable,
-  of,
-  scheduled,
-  share,
-  Subject,
-  switchMap,
-  take,
-} from 'rxjs';
+import { of, Subject, tap } from 'rxjs';
 import { inspect } from '@rxjs-insights/devtools';
 import { connect } from '@rxjs-insights/devtools/connect';
 
 connect();
 
+function sideEffectInTapTriggersSubjectNext() {
+  const subject = new Subject<number>();
+  const sub = of(1, 2, 3)
+    .pipe(
+      tap((x) => {
+        subject.next(x);
+      })
+    )
+    .subscribe(subscriber('A'));
+
+  inspect(sub);
+}
+
 export function playground() {
-  const obs1 = scheduled([of('a', 'b'), of(1, 2)], asapScheduler).pipe(
-    map((x) => x),
-    switchMap((x) => x),
-    inspect,
-    share()
-  );
-  const subject = new Subject();
-  const obs = merge(obs1, obs1, subject, NEVER);
-  const sub = obs.pipe(delay(0), take(10)).subscribe(subject);
-  obs.subscribe(subscriber('a'));
-
-  subject.next('woohoo');
-
-  setTimeout(() => {
-    inspect(obs);
-    inspect(sub);
-  }, 1000);
-
-  setTimeout(() => {
-    const button = document.createElement('button');
-    button.textContent = 'run';
-    button.addEventListener('click', () => {
-      playground();
-    });
-
-    document.body.appendChild(button);
-  }, 0);
+  sideEffectInTapTriggersSubjectNext();
 }
 
 function subscriber(name: string) {
