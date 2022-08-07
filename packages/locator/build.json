@@ -11,10 +11,16 @@
       "alias": {
         "fs": "empty.js",
         "path": "empty.js"
+      },
+      "loader": {
+        ".wasm": "binary"
       }
     },
     {
-      "format": "cjs"
+      "format": "cjs",
+      "loader": {
+        ".wasm": "binary"
+      }
     }
   ]
 }

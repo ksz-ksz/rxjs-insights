@@ -24,7 +24,7 @@ function getAlias(cwd, alias) {
 
 async function buildTarget(
   cwd,
-  { format, bundle = false, include = 'src/**/*.ts', exclude, alias }
+  { format, bundle = false, include = 'src/**/*.ts', exclude, alias, loader }
 ) {
   const entryPoints = await getEntryPoints(cwd, include, exclude);
   await esbuild.build({
@@ -38,6 +38,7 @@ async function buildTarget(
     outdir: `dist/${format}`,
     outbase: 'src',
     plugins: alias ? [esbuildPluginAlias(getAlias(cwd, alias))] : [],
+    loader,
   });
 }
 
