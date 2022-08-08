@@ -1,7 +1,13 @@
 import { InstrumentationContext } from './env';
 import { getObservableRef } from './get-observable-ref';
-import { ObservableLike, ObserverLike, Subscribe } from './types';
-import { InstrumentedSubscriberConstructor } from './instrumented-subscriber';
+import {
+  Constructor,
+  ObservableLike,
+  ObserverLike,
+  Subscribe,
+  SubscriberLike,
+} from './types';
+import { instrumentSubscriber } from './instrumented-subscriber';
 
 function noop() {}
 
@@ -55,7 +61,7 @@ function getDestinationTargetRef(context: InstrumentationContext, args: any[]) {
 export function createInstrumentedSubscribe(
   context: InstrumentationContext,
   subscribe: Subscribe,
-  Subscriber: InstrumentedSubscriberConstructor
+  Subscriber: Constructor<SubscriberLike>
 ) {
   return function instrumentedSubscribe(this: ObservableLike, ...args: any[]) {
     const observable = this;
@@ -79,11 +85,14 @@ export function createInstrumentedSubscribe(
     );
 
     const observer = getObserver(...args);
-    const subscriber = new Subscriber(
+    const subscriber =
+      observer instanceof Subscriber ? observer : new Subscriber(observer);
+
+    instrumentSubscriber(
       context,
       subscriberRef,
       destinationTargetRef,
-      observer
+      subscriber
     );
 
     return context.tracer.run(

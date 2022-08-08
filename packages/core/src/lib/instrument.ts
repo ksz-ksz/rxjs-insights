@@ -1,6 +1,5 @@
 import { Env, InstrumentationContext, setGlobalEnv } from './env';
 import { createInstrumentedSubscribe } from './instrumented-subscribe';
-import { createInstrumentedSubscriberConstructor } from './instrumented-subscriber';
 import { Recorder } from './recorder';
 import { Locator } from './locator';
 import { Tracer } from './tracer';
@@ -48,7 +47,7 @@ export function instrument({
   Observable.prototype.subscribe = createInstrumentedSubscribe(
     context,
     Observable.prototype.subscribe,
-    createInstrumentedSubscriberConstructor(Subscriber)
+    Subscriber
   );
 
   Subject.prototype.next = createInstrumentedSubjectNext(

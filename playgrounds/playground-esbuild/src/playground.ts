@@ -1,4 +1,4 @@
-import { of, Subject, tap } from 'rxjs';
+import { interval, of, publish, refCount, Subject, take, tap } from 'rxjs';
 import { inspect } from '@rxjs-insights/devtools';
 import { connect } from '@rxjs-insights/devtools/connect';
 
@@ -17,8 +17,30 @@ function sideEffectInTapTriggersSubjectNext() {
   inspect(sub);
 }
 
+function publishWithRefCount() {
+  const obs = interval(500).pipe(publish(), refCount());
+  const subA = obs.subscribe(subscriber('A'));
+  const subB = obs.subscribe(subscriber('B'));
+
+  setTimeout(() => {
+    subA.unsubscribe();
+  }, 1000);
+
+  setTimeout(() => {
+    subB.unsubscribe();
+  }, 2000);
+
+  setTimeout(() => {
+    const subC = obs.pipe(take(4)).subscribe(subscriber('C'));
+  }, 3000);
+
+  inspect(subA);
+  inspect(subB);
+}
+
 export function playground() {
   sideEffectInTapTriggersSubjectNext();
+  publishWithRefCount();
 }
 
 function subscriber(name: string) {
