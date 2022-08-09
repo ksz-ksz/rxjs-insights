@@ -1,4 +1,4 @@
-import { Event, Target } from '@rxjs-insights/recorder';
+import { Target } from '@rxjs-insights/recorder';
 import {
   getDestinationNotifications,
   getSourceNotifications,
@@ -18,26 +18,26 @@ export function getSourceTargets(target: Target): Target[] {
 
 export function getRelatedDestinationTargets(target: Target): Target[] {
   const relatedEvents = target.events.flatMap(getDestinationNotifications);
-  const relatedTargets = new Set<Target>(
-    relatedEvents.map(({ target }) => target)
-  );
-  relatedTargets.delete(target);
-  if (relatedTargets.size === 0) {
-    getDestinationTargets(target).forEach(relatedTargets.add, relatedTargets);
-    relatedTargets.delete(target);
+  const relatedTargets = new Set<Target>();
+  for (const { target: relatedTarget } of relatedEvents) {
+    relatedTargets.add(relatedTarget);
   }
+  for (const relatedTarget of getDestinationTargets(target)) {
+    relatedTargets.add(relatedTarget);
+  }
+  relatedTargets.delete(target);
   return Array.from(relatedTargets);
 }
 
 export function getRelatedSourceTargets(target: Target): Target[] {
   const relatedEvents = target.events.flatMap(getSourceNotifications);
-  const relatedTargets = new Set<Target>(
-    relatedEvents.map(({ target }) => target)
-  );
-  relatedTargets.delete(target);
-  if (relatedTargets.size === 0) {
-    getSourceTargets(target).forEach(relatedTargets.add, relatedTargets);
-    relatedTargets.delete(target);
+  const relatedTargets = new Set<Target>();
+  for (const { target: relatedTarget } of relatedEvents) {
+    relatedTargets.add(relatedTarget);
   }
+  for (const relatedTarget of getSourceTargets(target)) {
+    relatedTargets.add(relatedTarget);
+  }
+  relatedTargets.delete(target);
   return Array.from(relatedTargets);
 }

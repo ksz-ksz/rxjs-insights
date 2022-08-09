@@ -1,4 +1,16 @@
-import { interval, of, publish, refCount, Subject, take, tap } from 'rxjs';
+import {
+  EMPTY,
+  expand,
+  from,
+  interval,
+  Observable,
+  of,
+  publish,
+  refCount,
+  Subject,
+  take,
+  tap,
+} from 'rxjs';
 import { inspect } from '@rxjs-insights/devtools';
 import { connect } from '@rxjs-insights/devtools/connect';
 
@@ -42,9 +54,20 @@ function publishWithRefCount() {
   inspect(subB);
 }
 
+function expandExample() {
+  const obs = from('hello').pipe(
+    expand((x) => (x.startsWith('expand ->') ? EMPTY : of(`expand -> ${x}`))),
+    take(42)
+  );
+  const subA = obs.subscribe(subscriber('A'));
+
+  inspect(subA);
+}
+
 export function playground() {
   sideEffectInTapTriggersSubjectNext();
   publishWithRefCount();
+  expandExample();
 }
 
 function subscriber(name: string) {
