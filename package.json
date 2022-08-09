@@ -8,7 +8,7 @@
     "version-packages": "npm run lerna version --force-publish --exact --no-push",
     "publish-packages": "npm run lerna publish from-package",
     "version-packages-next": "npm run lerna version --force-publish --exact --no-push --canary",
-    "publish-packages-next": "npm run lerna publish from-package --dist-tag next"
+    "publish-packages-next": "npm run lerna publish from-package --dist-tag=next"
   },
   "private": true,
   "devDependencies": {
