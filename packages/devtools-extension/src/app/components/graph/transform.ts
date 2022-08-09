@@ -1,4 +1,4 @@
-import { fromEvent, map, Subscription, switchMap, takeUntil } from 'rxjs';
+import { fromEvent, map, Subscription, switchMap, takeUntil } from "rxjs";
 
 /**
  * Applies the transformation matrix to the svg.viewBox.
@@ -52,7 +52,14 @@ export function initPanAndZoom(svg: SVGSVGElement) {
 
   subscription.add(
     fromEvent<WheelEvent>(svg, 'wheel').subscribe((e) => {
-      const scale = e.deltaY < 0 ? 1.25 : 0.8;
+      const d = e.deltaY / 25;
+      const scale =
+        d < 0
+          ? 1 + 0.25 * (1 - 1 / (1 - d))
+          : d > 0
+          ? 1 - 0.2 * (1 - 1 / (1 + d))
+          : 1;
+
       const bb = getBoundingBox(svg);
       const vb = getViewBox(svg, bb);
       const cx = vb.x + (vb.width * (e.clientX - bb.x)) / bb.width;
