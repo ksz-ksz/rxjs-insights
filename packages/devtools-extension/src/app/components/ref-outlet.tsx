@@ -99,7 +99,7 @@ const CallerSpan = styled('span')(({ theme }) => ({
   color: theme.insights.caller.secondary,
   '&:before': {
     display: 'inline',
-    content: '"⇥ "',
+    content: '"⦿ "',
     fontWeight: 900,
     color: theme.insights.caller.primary,
   },
@@ -488,16 +488,17 @@ const LabelSpan = styled('span')(({ theme }) => ({
     color: theme.inspector.special,
   },
   '&:before': {
-    display: 'inline',
-    content: '"  "',
+    display: 'inline-block',
+    width: '0.6rem',
+    content: '" "',
     color: theme.inspector.secondary,
     whiteSpace: 'pre',
   },
   '&[data-state=expanded]:before': {
-    content: '"▾ "',
+    content: '"▾"',
   },
   '&[data-state=collapsed]:before': {
-    content: '"▸ "',
+    content: '"▸"',
   },
   '&:not(:empty):after': {
     display: 'inline',
@@ -617,7 +618,8 @@ const ActionSpan = styled('span')(({ theme }) => ({
   color: theme.inspector.secondary,
   '&:before': {
     display: 'inline-block',
-    content: '"» "',
+    width: '0.6rem',
+    content: '"»"',
     color: theme.inspector.secondary,
     whiteSpace: 'pre',
   },

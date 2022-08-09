@@ -9,7 +9,7 @@ interface IndentProps {
 
 const IndentSpan = styled('span')(({ theme }) => ({
   display: 'inline-block',
-  width: '1rem',
+  width: '0.6rem',
   height: '1.5rem',
   borderRight: `thin solid ${theme.palette.divider}`,
   margin: '-0.25rem 0',
