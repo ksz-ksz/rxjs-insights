@@ -45,11 +45,13 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       const { expandedKeys } = targetUiState;
       const rootTargetKey = String(rootTarget.id);
       const target = relations.targets[node.target.id];
+      const isCaller = target.type === 'caller';
       const targetKey = node.key;
       const event = relations.events[time];
       const location = getLocationStrings(target.locations);
       const isRoot = !node.key.includes('.');
-      const isActive = target.startTime <= time && time <= target.endTime;
+      const isActive =
+        isCaller || (target.startTime <= time && time <= target.endTime);
       const isSelected = event && event.target === target.id;
       const isExpanded = expandedKeys.has(node.key);
       const targetColors = getTargetColors(theme, target);
@@ -67,6 +69,7 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
         event,
         location,
         isRoot,
+        isCaller,
         isSelected,
         isExpanded,
         textColor,
@@ -85,6 +88,8 @@ interface MenuState {
   focusOptionVisible?: boolean;
   expandOptionVisible?: boolean;
   collapseOptionVisible?: boolean;
+  expandAllOptionVisible?: boolean;
+  collapseAllOptionVisible?: boolean;
   goToSourceOptionVisible?: boolean;
 }
 
@@ -110,9 +115,11 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
       setMenu({
         open: true,
         position: { top: event.clientY, left: event.clientX },
-        focusOptionVisible: !vm.isRoot,
-        expandOptionVisible: !vm.isExpanded,
-        collapseOptionVisible: vm.isExpanded,
+        focusOptionVisible: !vm.isCaller && !vm.isRoot,
+        expandOptionVisible: !vm.isCaller && !vm.isExpanded,
+        collapseOptionVisible: !vm.isCaller && vm.isExpanded,
+        expandAllOptionVisible: !vm.isCaller,
+        collapseAllOptionVisible: !vm.isCaller,
         goToSourceOptionVisible: vm.location !== undefined,
       });
       event.preventDefault();
@@ -198,8 +205,11 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
   );
 
   const onClick = useDispatchCallback(
-    (event: MouseEvent) =>
-      event.ctrlKey
+    (event: MouseEvent) => {
+      if (vm.isCaller) {
+        return;
+      }
+      return event.ctrlKey
         ? subscribersGraphActions.FocusTarget({
             target: vm.target,
             fromKey: vm.rootTargetKey,
@@ -223,8 +233,9 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
         : subscribersGraphActions.Expand({
             target: vm.rootTarget.id,
             key: vm.targetKey,
-          }),
-    [vm.isExpanded, vm.rootTarget.id, vm.targetKey]
+          });
+    },
+    [vm.isCaller, vm.isExpanded, vm.rootTarget.id, vm.targetKey]
   );
 
   useEffect(() => {
@@ -253,7 +264,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
   }, [vm.isSelected && vm.event.eventType]);
 
   return (
-    <g ref={elementRef} onClick={onClick}>
+    <g ref={elementRef} onContextMenu={onContextMenuOpen} onClick={onClick}>
       <Menu
         open={menu.open}
         onClose={onContextMenuClose}
@@ -270,15 +281,19 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
           {menu.collapseOptionVisible && (
             <MenuItem onClick={onCollapse}>Collapse</MenuItem>
           )}
-          <MenuItem onClick={onExpandAll}>Expand all </MenuItem>
-          <MenuItem onClick={onCollapseAll}>Collapse all</MenuItem>
+          {menu.expandAllOptionVisible && (
+            <MenuItem onClick={onExpandAll}>Expand all </MenuItem>
+          )}
+          {menu.collapseAllOptionVisible && (
+            <MenuItem onClick={onCollapseAll}>Collapse all</MenuItem>
+          )}{' '}
           {menu.goToSourceOptionVisible && (
             <MenuItem onClick={onGoToSource}>Go to source</MenuItem>
           )}
         </MenuList>
       </Menu>
       <g
-        opacity={vm.isExpanded || vm.isRoot ? 1 : 0.5}
+        opacity={vm.isExpanded || vm.isRoot || vm.isCaller ? 1 : 0.5}
         style={{ transition: `opacity ${duration}s` }}
       >
         {vm.isSelected && (
@@ -290,10 +305,9 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
           />
         )}
         <circle
-          r={vm.isExpanded ? 4 : 3}
+          r={vm.isCaller ? 2 : vm.isExpanded ? 4 : 3}
           fill={vm.nodeColor}
           style={{ transition: `r ${duration}s` }}
-          onContextMenu={onContextMenuOpen}
         />
         <text
           fontFamily="Monospace"
