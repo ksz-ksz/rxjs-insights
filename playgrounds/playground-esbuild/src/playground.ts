@@ -7,6 +7,7 @@ import {
   of,
   publish,
   refCount,
+  share,
   Subject,
   take,
   tap,
@@ -16,7 +17,7 @@ import { connect } from '@rxjs-insights/devtools/connect';
 
 connect();
 
-function sideEffectInTapTriggersSubjectNext() {
+function sideEffectInTapTriggersSubjectNextExample() {
   const subject = new Subject<number>();
 
   subject.subscribe(subscriber('X'));
@@ -33,8 +34,29 @@ function sideEffectInTapTriggersSubjectNext() {
   inspect(sub);
 }
 
-function publishWithRefCount() {
+function publishWithRefCountExample() {
   const obs = interval(500).pipe(publish(), refCount());
+  const subA = obs.subscribe(subscriber('A'));
+  const subB = obs.subscribe(subscriber('B'));
+
+  setTimeout(() => {
+    subA.unsubscribe();
+  }, 1000);
+
+  setTimeout(() => {
+    subB.unsubscribe();
+  }, 2000);
+
+  setTimeout(() => {
+    const subC = obs.pipe(take(4)).subscribe(subscriber('C'));
+  }, 3000);
+
+  inspect(subA);
+  inspect(subB);
+}
+
+function shareExample() {
+  const obs = interval(500).pipe(share());
   const subA = obs.subscribe(subscriber('A'));
   const subB = obs.subscribe(subscriber('B'));
 
@@ -65,8 +87,9 @@ function expandExample() {
 }
 
 export function playground() {
-  sideEffectInTapTriggersSubjectNext();
-  publishWithRefCount();
+  sideEffectInTapTriggersSubjectNextExample();
+  publishWithRefCountExample();
+  shareExample();
   expandExample();
 }
 

@@ -22,6 +22,10 @@ export interface ObservableLike {
   subscribe(...args: any[]): SubscriptionLike;
 }
 
+export interface ConnectableObservableLike extends ObservableLike {
+  connect(): SubscriptionLike;
+}
+
 export interface ObserverLike {
   next(value: any): void;
   error(error: any): void;
