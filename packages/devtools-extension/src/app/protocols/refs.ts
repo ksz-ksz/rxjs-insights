@@ -105,7 +105,16 @@ export interface SubscriberRef {
   locations: Locations;
 }
 
-export type TargetRef = ObservableRef | SubscriberRef;
+export interface CallerRef {
+  type: 'caller';
+  id: number;
+  name: string;
+  tags: string[];
+  objectId: number;
+  locations: Locations;
+}
+
+export type TargetRef = ObservableRef | SubscriberRef | CallerRef;
 
 export interface EventRef {
   type: 'event';
@@ -148,6 +157,7 @@ export type Ref =
   | NullRef
   | ObservableRef
   | SubscriberRef
+  | CallerRef
   | EventRef
   | LocationRef
   | TextRef;

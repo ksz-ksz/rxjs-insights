@@ -1,5 +1,6 @@
 import {
   ArrayRef,
+  CallerRef,
   EntriesRef,
   EventRef,
   FunctionRef,
@@ -89,6 +90,29 @@ function SubscriberTag(props: TagRendererProps<SubscriberRef>) {
     >
       {props.reference.name}
     </SubscriberSpan>
+  );
+}
+
+const CallerSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  fontStyle: 'oblique',
+  color: theme.insights.caller.secondary,
+  '&:before': {
+    display: 'inline',
+    content: '"⇥ "',
+    fontWeight: 900,
+    color: theme.insights.caller.primary,
+  },
+  '&:after': {
+    display: 'inline',
+    content: '" #" attr(data-id)',
+    color: theme.inspector.secondary,
+  },
+}));
+
+function CallerTag(props: TagRendererProps<CallerRef>) {
+  return (
+    <CallerSpan data-id={props.reference.id}>{props.reference.name}</CallerSpan>
   );
 }
 
@@ -431,6 +455,7 @@ const tagRenderers: Record<
   null: NullTag,
   observable: ObservableTag,
   subscriber: SubscriberTag,
+  caller: CallerTag,
   event: EventTag,
   location: LocationTag,
   text: TextTag,

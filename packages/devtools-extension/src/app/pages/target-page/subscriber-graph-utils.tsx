@@ -3,10 +3,12 @@ import { RelatedEvent, RelatedTarget } from '@app/protocols/insights';
 
 export function getTargetColors(theme: Theme, target: RelatedTarget) {
   switch (target.type) {
-    case 'subscriber':
-      return theme.insights.subscriber;
     case 'observable':
       return theme.insights.observable;
+    case 'subscriber':
+      return theme.insights.subscriber;
+    case 'caller':
+      return theme.insights.caller;
   }
 }
 

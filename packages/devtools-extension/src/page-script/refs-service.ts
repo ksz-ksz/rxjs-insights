@@ -1,5 +1,6 @@
 import {
   ArrayRef,
+  CallerRef,
   EntriesRef,
   EventRef,
   FunctionRef,
@@ -26,6 +27,7 @@ import {
 } from '@rxjs-insights/recorder-utils';
 import { formatTimestamp } from '@app/utils/format-timestamp';
 import { Location, Locations } from 'packages/core';
+import { Caller } from '@rxjs-insights/recorder/src/lib/model';
 
 function getPropertyDescriptors(
   target: any
@@ -42,6 +44,10 @@ function isObservable(x: any): x is Observable {
 
 function isSubscriber(x: any): x is Subscriber {
   return 'target' in x && 'type' in x && x.type === 'subscriber';
+}
+
+function isCaller(x: any): x is Caller {
+  return 'declaration' in x && 'type' in x && x.type === 'caller';
 }
 
 function isEvent(x: any): x is Event {
@@ -210,6 +216,16 @@ export class RefsService implements Refs {
           objectId: this.objects.getObjectId(target),
           locations: target.declaration.locations,
         };
+      } else if (isCaller(target)) {
+        this.targets.addTarget(target);
+        return {
+          type: 'caller',
+          id: target.id,
+          name: target.declaration.name,
+          tags: target.tags,
+          objectId: this.objects.getObjectId(target),
+          locations: target.declaration.locations,
+        };
       } else if (isEvent(target)) {
         return {
           type: 'event',
@@ -329,6 +345,8 @@ export class RefsService implements Refs {
         return this.expandObservable(ref);
       case 'subscriber':
         return this.expandSubscriber(ref);
+      case 'caller':
+        return this.expandCaller(ref);
       case 'event':
         return this.expandEvent(ref);
       case 'location':
@@ -487,6 +505,42 @@ export class RefsService implements Refs {
             ),
           ]
         : []),
+    ];
+  }
+
+  private expandCaller(ref: CallerRef): PropertyRef[] {
+    const caller = this.objects.getObject<Caller>(ref.objectId);
+    if (!caller) {
+      return [];
+    }
+    const { id, sources, declaration } = caller;
+    return [
+      this.property('Id', this.create(id)),
+      this.property('Name', this.create(declaration.name)),
+      ...(declaration.func
+        ? [this.property('Function', this.create(declaration.func))]
+        : []),
+      ...(declaration.args
+        ? [
+            this.property(
+              'Arguments',
+              this.createEntries(declaration, 'args', declaration.args.length)
+            ),
+          ]
+        : []),
+      ...(declaration.locations?.generatedLocation !== undefined ||
+      declaration.locations.originalLocation !== undefined
+        ? [
+            this.property(
+              'Location',
+              this.createLocations(declaration.locations)
+            ),
+          ]
+        : []),
+      this.property(
+        'Sources',
+        this.createEntries(caller, 'sources', sources.length)
+      ),
     ];
   }
 

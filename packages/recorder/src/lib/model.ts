@@ -7,6 +7,7 @@ import {
   SubscriberEventRef,
   SubscriberRef,
 } from '@rxjs-insights/core';
+import { CallerRef } from '@rxjs-insights/core';
 
 export class Declaration {
   private static IDS = 0;
@@ -32,7 +33,7 @@ export abstract class Target<EVENT extends Event = Event> {
     readonly events: EVENT[] = []
   ) {}
 
-  abstract readonly type: 'observable' | 'subscriber';
+  abstract readonly type: 'observable' | 'subscriber' | 'caller';
   abstract readonly tags: string[];
   abstract readonly declaration: Declaration;
   abstract readonly destinations: Target[];
@@ -81,6 +82,26 @@ export class Subscriber extends Target<SubscriberEvent> {
 
   get tags(): string[] {
     return this.observable.tags;
+  }
+}
+
+export class Caller extends Target {
+  readonly type = 'caller';
+
+  constructor(
+    readonly declaration: Declaration,
+    sources: Subscriber[] = [],
+    events: ObservableEvent[] = []
+  ) {
+    super(sources, events);
+  }
+
+  get destinations(): Target[] {
+    return [];
+  }
+
+  get tags(): string[] {
+    return [];
   }
 }
 
@@ -142,6 +163,8 @@ export type Ref<T> = T extends Declaration
   ? ObservableRef
   : T extends Subscriber
   ? SubscriberRef
+  : T extends Caller
+  ? CallerRef
   : T extends ObservableEvent
   ? ObservableEventRef
   : T extends SubscriberEvent
@@ -155,6 +178,7 @@ export function ref<
     | Declaration
     | Observable
     | Subscriber
+    | Caller
     | ObservableEvent
     | SubscriberEvent
     | undefined
@@ -168,6 +192,8 @@ export type Deref<T> = T extends DeclarationRef
   ? Observable
   : T extends SubscriberRef
   ? Subscriber
+  : T extends CallerRef
+  ? Caller
   : T extends ObservableEventRef
   ? ObservableEvent
   : T extends SubscriberEventRef
@@ -181,6 +207,7 @@ export function deref<
     | DeclarationRef
     | ObservableRef
     | SubscriberRef
+    | CallerRef
     | ObservableEventRef
     | SubscriberEventRef
     | undefined

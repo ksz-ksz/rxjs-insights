@@ -1,19 +1,12 @@
-import { EventRef, ObservableRef, SubscriberRef } from '@app/protocols/refs';
+import {
+  CallerRef,
+  EventRef,
+  ObservableRef,
+  SubscriberRef,
+} from '@app/protocols/refs';
 import { Locations } from '@rxjs-insights/core';
 
 export const InsightsChannel = 'InsightsChannel';
-
-export interface RelatedSubscriber extends SubscriberRef {
-  id: number;
-  type: 'subscriber';
-  name: string;
-  tags: string[];
-  startTime: number;
-  endTime: number;
-  locations: Locations;
-  sources?: number[];
-  destinations?: number[];
-}
 
 export interface RelatedObservable extends ObservableRef {
   id: number;
@@ -27,7 +20,34 @@ export interface RelatedObservable extends ObservableRef {
   destinations?: number[];
 }
 
-export type RelatedTarget = RelatedSubscriber | RelatedObservable;
+export interface RelatedSubscriber extends SubscriberRef {
+  id: number;
+  type: 'subscriber';
+  name: string;
+  tags: string[];
+  startTime: number;
+  endTime: number;
+  locations: Locations;
+  sources?: number[];
+  destinations?: number[];
+}
+
+export interface RelatedCaller extends CallerRef {
+  id: number;
+  type: 'caller';
+  name: string;
+  tags: string[];
+  startTime: number;
+  endTime: number;
+  locations: Locations;
+  sources?: number[];
+  destinations?: number[];
+}
+
+export type RelatedTarget =
+  | RelatedObservable
+  | RelatedSubscriber
+  | RelatedCaller;
 
 export interface RelatedTask {
   id: number;

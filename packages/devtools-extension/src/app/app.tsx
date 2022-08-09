@@ -47,6 +47,10 @@ declare module '@mui/material/styles' {
         primary: React.CSSProperties['color'];
         secondary: React.CSSProperties['color'];
       };
+      caller: {
+        primary: React.CSSProperties['color'];
+        secondary: React.CSSProperties['color'];
+      };
       event: {
         next: {
           primary: React.CSSProperties['color'];
@@ -92,6 +96,10 @@ declare module '@mui/material/styles' {
         secondary: React.CSSProperties['color'];
       };
       subscriber: {
+        primary: React.CSSProperties['color'];
+        secondary: React.CSSProperties['color'];
+      };
+      caller: {
         primary: React.CSSProperties['color'];
         secondary: React.CSSProperties['color'];
       };
@@ -148,6 +156,10 @@ function creteDarkTheme() {
         primary: purple['400'],
         secondary: purple['200'],
       },
+      caller: {
+        primary: orange['700'],
+        secondary: orange['700'],
+      },
       event: {
         next: {
           primary: green['700'],
@@ -200,6 +212,10 @@ function creteLightTheme() {
       subscriber: {
         primary: purple['600'],
         secondary: purple['400'],
+      },
+      caller: {
+        primary: orange['900'],
+        secondary: orange['900'],
       },
       event: {
         next: {

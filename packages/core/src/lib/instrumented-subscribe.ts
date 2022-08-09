@@ -49,12 +49,27 @@ function getObserver(
   }
 }
 
-function getDestinationTargetRef(context: InstrumentationContext, args: any[]) {
+function getDestinationTargetRef(
+  context: InstrumentationContext,
+  subscribe: Subscribe,
+  args: any[]
+) {
   const [maybeObserver] = args;
   if (maybeObserver instanceof context.Subject) {
     return getObservableRef(context, maybeObserver);
   } else {
-    return context.tracer.getTrace()?.targetRef;
+    const targetRef = context.tracer.getTrace()?.targetRef;
+    if (targetRef) {
+      return targetRef;
+    } else {
+      const callerDeclarationRef = context.recorder.declarationRef(
+        'subscribe',
+        subscribe,
+        args,
+        context.locator.locate(2)
+      );
+      return context.recorder.callerRef(callerDeclarationRef);
+    }
   }
 }
 
@@ -66,7 +81,11 @@ export function createInstrumentedSubscribe(
   return function instrumentedSubscribe(this: ObservableLike, ...args: any[]) {
     const observable = this;
     const observableRef = getObservableRef(context, observable);
-    const destinationTargetRef = getDestinationTargetRef(context, args);
+    const destinationTargetRef = getDestinationTargetRef(
+      context,
+      subscribe,
+      args
+    );
     const subscriberRef = context.recorder.subscriberRef(
       args,
       observableRef,

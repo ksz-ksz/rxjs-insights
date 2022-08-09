@@ -12,6 +12,7 @@ import {
   TargetRef,
 } from '@rxjs-insights/core';
 import {
+  Caller,
   Declaration,
   deref,
   Observable,
@@ -22,7 +23,8 @@ import {
   Task,
 } from './model';
 import { queueCleanup } from './queue-cleanup';
-import { PromiseOrValue } from '@rxjs-insights/core/src/lib/locator';
+import { PromiseOrValue } from '@rxjs-insights/core';
+import { CallerRef } from '@rxjs-insights/core';
 
 function isPromise<T>(x: PromiseOrValue<T>): x is Promise<T> {
   return 'then' in x && 'catch' in x;
@@ -96,6 +98,13 @@ export class ModelRecorder implements Recorder {
     incStats(this.stats.subscribers, observable.declaration.name);
 
     return ref(subscriber);
+  }
+
+  callerRef(callerDeclarationRef: DeclarationRef): CallerRef {
+    const declaration = deref(callerDeclarationRef);
+    const caller = new Caller(declaration);
+
+    return ref(caller);
   }
 
   observableEventRef(

@@ -6,10 +6,11 @@ declare const ref: unique symbol;
 export type DeclarationRef = { readonly [ref]: 'ObservableDeclarationRef' };
 export type ObservableRef = { readonly [ref]: 'ObservableRef' };
 export type SubscriberRef = { readonly [ref]: 'SubscriberRef' };
+export type CallerRef = { readonly [ref]: 'CallerRef' };
 export type SubscriberEventRef = { readonly [ref]: 'SubscriberEventRef' };
 export type ObservableEventRef = { readonly [ref]: 'ObservableEventRef' };
 export type EventRef = SubscriberEventRef | ObservableEventRef;
-export type TargetRef = ObservableRef | SubscriberRef;
+export type TargetRef = ObservableRef | SubscriberRef | CallerRef;
 
 export interface RecorderStats {
   observables: Record<string, number>;
@@ -41,6 +42,8 @@ export interface Recorder {
     observableRef: ObservableRef,
     destinationTargetRef: TargetRef | undefined
   ): SubscriberRef;
+
+  callerRef(callerDeclarationRef: DeclarationRef): CallerRef;
 
   observableEventRef(
     eventDeclarationRef: DeclarationRef,

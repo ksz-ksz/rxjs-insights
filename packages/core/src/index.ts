@@ -3,7 +3,12 @@ export type { Env, Instrument, InstrumentationContext } from './lib/env';
 export { getGlobalEnv, setGlobalEnv } from './lib/env';
 export type { Config } from './lib/instrument';
 export { install, instrument } from './lib/instrument';
-export type { Locator, Location, Locations } from './lib/locator';
+export type {
+  Locator,
+  Location,
+  Locations,
+  PromiseOrValue,
+} from './lib/locator';
 export type {
   HasMeta,
   MetaOf,
@@ -12,6 +17,7 @@ export type {
 } from './lib/meta';
 export { getMeta, hasMeta } from './lib/meta';
 export type {
+  CallerRef,
   DeclarationRef,
   EventRef,
   ObservableEventRef,
