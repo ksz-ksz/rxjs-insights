@@ -1,6 +1,6 @@
 {
   "name": "playground-esbuild",
-  "version": "0.3.0-alpha.0",
+  "version": "0.4.0-alpha.0",
   "private": true,
   "scripts": {
     "build": "node build.js",
@@ -12,11 +12,11 @@
     "zone.js": "^0.11.5"
   },
   "devDependencies": {
-    "@rxjs-insights/console": "^0.3.0-alpha.0",
-    "@rxjs-insights/core": "^0.3.0-alpha.0",
-    "@rxjs-insights/devtools": "^0.3.0-alpha.0",
+    "@rxjs-insights/console": "^0.4.0-alpha.0",
+    "@rxjs-insights/core": "^0.4.0-alpha.0",
+    "@rxjs-insights/devtools": "^0.4.0-alpha.0",
     "@rxjs-insights/plugin-esbuild": "^0.3.0-alpha.0",
-    "@rxjs-insights/rxjs7": "^0.3.0-alpha.0",
+    "@rxjs-insights/rxjs7": "^0.4.0-alpha.0",
     "esbuild": "0.14.27"
   }
 }

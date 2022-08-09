@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/locator",
-  "version": "0.3.0-alpha.0",
+  "version": "0.4.0-alpha.0",
   "description": "The default implementation of the rxjs-insights' locator.",
   "keywords": [
     "rxjs",
@@ -51,9 +51,9 @@
     "source-map": "^0.7.4"
   },
   "peerDependencies": {
-    "@rxjs-insights/core": "0.3.0-alpha.0"
+    "@rxjs-insights/core": "0.4.0-alpha.0"
   },
   "devDependencies": {
-    "@rxjs-insights/core": "^0.3.0-alpha.0"
+    "@rxjs-insights/core": "^0.4.0-alpha.0"
   }
 }
