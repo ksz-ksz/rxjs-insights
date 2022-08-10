@@ -102,9 +102,9 @@ export function AppBarWrapper() {
                 }
               >
                 {isTargetPinned ? (
-                  <BookmarkAdded titleAccess="Pin target" />
+                  <BookmarkAdded titleAccess="Target is pinned. Click to unpin." />
                 ) : (
-                  <Bookmark titleAccess="Unpin target" />
+                  <Bookmark titleAccess="Target is not pinned. Click to pin." />
                 )}
               </IconButton>
             )}

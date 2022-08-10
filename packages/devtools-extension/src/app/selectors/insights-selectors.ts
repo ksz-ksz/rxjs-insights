@@ -26,3 +26,8 @@ export const playingSelector = createSelector(
   [insightsSelector],
   ([insights]) => insights.playing
 );
+
+export const followingSelector = createSelector(
+  [insightsSelector],
+  ([insights]) => insights.following
+);

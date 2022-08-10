@@ -16,6 +16,7 @@ export interface TargetUiState {
 export interface InsightsState {
   time: number;
   playing: boolean;
+  following: boolean;
   targetsUi: Record<number, TargetUiState>;
   targets: Record<number, TargetState>;
 }
@@ -118,6 +119,7 @@ function updateKeyMapping(state: InsightsState, targetId: number) {
 export const insightsReducer = createReducer('insights', {
   time: 0,
   playing: false,
+  following: false,
   targetsUi: {},
   targets: {},
 } as InsightsState)
@@ -192,4 +194,10 @@ export const insightsReducer = createReducer('insights', {
       expandedKeys: new Set([String(target.id)]),
     };
     state.targetsUi[target.id].keysMapping = rebasedKeysMapping;
+  })
+  .add(subscribersGraphActions.FollowEvent, (state) => {
+    state.following = true;
+  })
+  .add(subscribersGraphActions.UnfollowEvent, (state) => {
+    state.following = false;
   });

@@ -1,15 +1,18 @@
 import {
+  delay,
   EMPTY,
   expand,
   firstValueFrom,
   from,
   interval,
   lastValueFrom,
+  merge,
   Observable,
   of,
   publish,
   refCount,
   share,
+  startWith,
   Subject,
   take,
   tap,
@@ -120,6 +123,16 @@ function promiseExample() {
   inspect(obs);
 }
 
+function cycleExample() {
+  const subject = new Subject();
+  subject
+    .asObservable()
+    .pipe(startWith('woohoo'), delay(1000))
+    .subscribe(subject);
+
+  inspect(subject);
+}
+
 export function playground() {
   updateSubjectInTapExample();
   updateSubjectInSubscribeExample();
@@ -127,6 +140,7 @@ export function playground() {
   shareExample();
   expandExample();
   promiseExample();
+  cycleExample();
 }
 
 function subscriber(name: string) {

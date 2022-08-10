@@ -1,10 +1,17 @@
-import { RelatedTarget, Relations } from '@app/protocols/insights';
-import { createSelector } from '@lib/store';
+import {
+  RelatedEvent,
+  RelatedTarget,
+  Relations,
+} from '@app/protocols/insights';
+import { createSelector, useDispatchCallback } from '@lib/store';
 import {
   activeTargetStateSelector,
   activeTargetUiStateSelector,
 } from '@app/selectors/active-target-state-selector';
-import { timeSelector } from '@app/selectors/insights-selectors';
+import {
+  followingSelector,
+  timeSelector,
+} from '@app/selectors/insights-selectors';
 import { getDoubleTree, LinkData, NodeData } from '@app/components/tree';
 import { useSelector } from '@app/store';
 import { Graph } from '@app/components/graph';
@@ -12,6 +19,10 @@ import React from 'react';
 import { SubscriberGraphNodeRenderer } from '@app/pages/target-page/subscriber-graph-node-renderer';
 import { SubscriberGraphLinkRenderer } from '@app/pages/target-page/subscriber-graph-link-renderer';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
+import { Box, IconButton } from '@mui/material';
+import { dashboardActions } from '@app/actions/dashboad-actions';
+import { CenterFocusStrong, Close, CropFree } from '@mui/icons-material';
+import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 
 function isKeyVisible(visibleKeys: Set<string>, key: string) {
   return visibleKeys.has(key);
@@ -128,6 +139,19 @@ function getVisibleKeys(
   return visibleKeys;
 }
 
+function getFocus(
+  nodes: NodeData<RelatedTargetHierarchyNode>[],
+  event: RelatedEvent
+) {
+  return nodes
+    .filter((x) => x.data.target.id === event.target)
+    .map((x) => x.id);
+}
+
+function getViewBoxPadding(focus: (number | string)[]) {
+  return focus.length === 0 ? 40 : 100;
+}
+
 const hierarchyTreeSelector = createSelector(
   [activeTargetStateSelector, activeTargetUiStateSelector],
   ([activeTargetState, activeTargetUiState]) => {
@@ -154,15 +178,14 @@ const hierarchyTreeSelector = createSelector(
       `${keysMapping[link.source.data.key]}:${
         keysMapping[link.target.data.key]
       }`;
-
-    return { target, sources, destinations, getNodeKey, getLinkKey };
+    return { relations, target, sources, destinations, getNodeKey, getLinkKey };
   }
 );
 
 const vmSelector = createSelector(
-  [hierarchyTreeSelector, timeSelector],
-  ([hierarchyTree, time]) => {
-    const { target, sources, destinations, getNodeKey, getLinkKey } =
+  [hierarchyTreeSelector, timeSelector, followingSelector],
+  ([hierarchyTree, time, following]) => {
+    const { relations, target, sources, destinations, getNodeKey, getLinkKey } =
       hierarchyTree;
     const { nodes, links } = getDoubleTree(
       sources,
@@ -171,12 +194,19 @@ const vmSelector = createSelector(
       (node) => getActiveChildren(node, time)
     );
 
+    const event = relations.events[time];
+    const focus = following && event ? getFocus(nodes, event) : [];
+    const viewBoxPadding = getViewBoxPadding(focus);
+
     return {
       key: target.id,
       nodes,
       links,
       getNodeKey,
       getLinkKey,
+      following,
+      focus,
+      viewBoxPadding,
     };
   }
 );
@@ -189,15 +219,37 @@ function isTargetActive(time: number, target: RelatedTarget) {
 
 export function SubscribersGraph() {
   const vm = useSelector(vmSelector);
+  const onFollowChange = useDispatchCallback(
+    () =>
+      vm.following
+        ? subscribersGraphActions.UnfollowEvent()
+        : subscribersGraphActions.FollowEvent(),
+    [vm.following]
+  );
 
   return (
-    <Graph
-      nodes={vm.nodes}
-      links={vm.links}
-      nodeRenderer={SubscriberGraphNodeRenderer}
-      linkRenderer={SubscriberGraphLinkRenderer}
-      getNodeKey={vm.getNodeKey}
-      getLinkKey={vm.getLinkKey}
-    />
+    <Box sx={{ position: 'relative', flexGrow: 1, flexShrink: 1, height: 0 }}>
+      <Graph
+        nodes={vm.nodes}
+        links={vm.links}
+        focus={vm.focus}
+        nodeRenderer={SubscriberGraphNodeRenderer}
+        linkRenderer={SubscriberGraphLinkRenderer}
+        getNodeKey={vm.getNodeKey}
+        getLinkKey={vm.getLinkKey}
+        viewBoxPadding={vm.viewBoxPadding}
+      />
+      <IconButton
+        size="small"
+        sx={{ position: 'absolute', bottom: 2, right: 2 }}
+        onClick={onFollowChange}
+      >
+        {vm.following ? (
+          <CenterFocusStrong titleAccess="Following events is enabled. Click to disable." />
+        ) : (
+          <CropFree titleAccess="Following events is disabled. Click to enable." />
+        )}
+      </IconButton>
+    </Box>
   );
 }

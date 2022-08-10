@@ -62,9 +62,8 @@ export interface GraphProps<T> {
   linkRenderer: Renderer<LinkRendererProps<T>, LinkControl>;
   getNodeKey(node: NodeData<T>): number | string;
   getLinkKey(link: LinkData<T>): number | string;
+  viewBoxPadding?: number;
 }
-
-const viewBoxPadding = 40;
 
 export function Graph<T>({
   nodes,
@@ -74,6 +73,7 @@ export function Graph<T>({
   linkRenderer,
   getNodeKey,
   getLinkKey,
+  viewBoxPadding = 40,
 }: GraphProps<T>) {
   const svgRef = useRef<SVGSVGElement>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);

@@ -27,6 +27,10 @@ export interface SubscribersGraphActions {
     fromKey: string;
     toKey: string;
   };
+
+  FollowEvent: void;
+
+  UnfollowEvent: void;
 }
 
 export const subscribersGraphActions =
