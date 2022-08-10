@@ -20,7 +20,7 @@ connect();
 function sideEffectInTapTriggersSubjectNextExample() {
   const subject = new Subject<number>();
 
-  subject.subscribe(subscriber('X'));
+  subject.asObservable().subscribe(subscriber('X'));
   subject.subscribe(subscriber('Y'));
 
   const sub = of(1, 2, 3)

@@ -9,8 +9,8 @@ function instrumentOperatorFunction(
   declarationRef: DeclarationRef,
   operatorFunction: (source: ObservableLike) => ObservableLike
 ): (source: ObservableLike) => ObservableLike {
-  return function instrumentedOperatorFunction(source) {
-    const observable = operatorFunction(source);
+  return function instrumentedOperatorFunction(this: any, source) {
+    const observable = operatorFunction.call(this, source);
     const sourceObservableRef = getObservableRef(context, source);
     return instrumentObservable(
       context,
@@ -25,7 +25,7 @@ export function createInstrumentOperator(context: InstrumentationContext) {
   return function instrumentOperator<
     T extends (...args: any[]) => (source: any) => ObservableLike
   >(target: T, name = target.name): T {
-    return function instrumentedOperator(...args) {
+    return function instrumentedOperator(this: any, ...args) {
       const declarationRef = context.recorder.declarationRef(
         name,
         target,
@@ -35,7 +35,7 @@ export function createInstrumentOperator(context: InstrumentationContext) {
       return instrumentOperatorFunction(
         context,
         declarationRef,
-        target(...args)
+        target.call(this, ...args)
       );
     } as T;
   };

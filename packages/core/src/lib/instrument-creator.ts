@@ -6,8 +6,8 @@ export function createInstrumentCreator(context: InstrumentationContext) {
   return function instrumentCreator<
     T extends (...args: any[]) => ObservableLike
   >(target: T, name = target.name): T {
-    return function instrumentedCreator(...args) {
-      const observable = target(...args);
+    return function instrumentedCreator(this: any, ...args) {
+      const observable = target.call(this, ...args);
       const declarationRef = context.recorder.declarationRef(
         name,
         target,

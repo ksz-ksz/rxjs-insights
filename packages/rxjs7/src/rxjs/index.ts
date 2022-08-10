@@ -146,6 +146,15 @@ import {
   declareSingleton,
 } from '@rxjs-insights/core/declarations';
 
+function patchSubjectProto(target: typeof _Subject) {
+  target.prototype.asObservable = declareCreator(
+    target.prototype.asObservable,
+    'asObservable'
+  );
+
+  return target;
+}
+
 // export const lastValueFrom = ?
 // export const firstValueFrom = ?
 // export const partition = ?
@@ -163,7 +172,11 @@ export const ReplaySubject = declareConstructor(
   _ReplaySubject,
   'ReplaySubject'
 );
-export const Subject = declareConstructor(_Subject, 'Subject');
+
+export const Subject = declareConstructor(
+  patchSubjectProto(_Subject),
+  'Subject'
+);
 
 export type AsyncSubject<T> = _AsyncSubject<T>;
 export type BehaviorSubject<T> = _BehaviorSubject<T>;
