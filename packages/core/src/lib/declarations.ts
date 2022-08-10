@@ -28,3 +28,8 @@ export const declareSingleton: <T extends Observable<any>>(
   target: T,
   name?: string
 ) => T = env ? env.instrumentSingleton : identityDeclaration;
+
+export const declareCaller: <T extends (args: any[]) => any>(
+  target: T,
+  name?: string
+) => T = env ? env.instrumentCaller : identityDeclaration;

@@ -1,6 +1,6 @@
 import { InstrumentationContext } from './env';
 import { ConnectableObservableLike, ObservableLike } from './types';
-import { DeclarationRef, ObservableRef } from './recorder';
+import { DeclarationRef, EventRef, ObservableRef } from './recorder';
 import { setMeta } from './meta';
 
 function instrumentConnect(
@@ -11,17 +11,19 @@ function instrumentConnect(
   observable.connect = function instrumentedConnect(
     this: ConnectableObservableLike
   ) {
-    const callerDeclarationRef = context.recorder.declarationRef(
+    const declarationRef = context.recorder.declarationRef(
       'connect',
       connect,
       [],
       context.locator.locate(1)
     );
-    const callerRef = context.recorder.callerRef(callerDeclarationRef);
+    const callerRef = context.recorder.callerRef(declarationRef);
 
     return context.tracer.run(
-      // @ts-ignore
-      { eventRef: context.tracer.getTrace()?.eventRef, targetRef: callerRef },
+      {
+        eventRef: context.tracer.getTrace()?.eventRef as EventRef,
+        targetRef: callerRef,
+      },
       () => connect.call(this)
     );
   };

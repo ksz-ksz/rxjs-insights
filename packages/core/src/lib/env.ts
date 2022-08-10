@@ -26,6 +26,7 @@ export interface Env {
     (...args: any[]) => (source: any) => ObservableLike
   >;
   instrumentSingleton: Instrument<ObservableLike>;
+  instrumentCaller: Instrument<(...args: any[]) => any>;
   addTag: (observable: ObservableLike, tag: string) => void;
 }
 

@@ -21,7 +21,7 @@ function sideEffectInTapTriggersSubjectNextExample() {
   const subject = new Subject<number>();
 
   subject.asObservable().subscribe(subscriber('X'));
-  subject.subscribe(subscriber('Y'));
+  subject.toPromise();
 
   const sub = of(1, 2, 3)
     .pipe(

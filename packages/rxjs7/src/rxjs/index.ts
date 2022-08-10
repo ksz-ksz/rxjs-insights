@@ -140,11 +140,21 @@ import {
   zipWith as _zipWith,
 } from '@rxjs-insights/rxjs-module';
 import {
+  declareCaller,
   declareConstructor,
   declareCreator,
   declareOperator,
   declareSingleton,
 } from '@rxjs-insights/core/declarations';
+
+function patchObservableProto(target: typeof _Observable) {
+  target.prototype.toPromise = declareCaller(
+    target.prototype.toPromise,
+    'toPromise'
+  );
+
+  return target;
+}
 
 function patchSubjectProto(target: typeof _Subject) {
   target.prototype.asObservable = declareCreator(
@@ -154,6 +164,16 @@ function patchSubjectProto(target: typeof _Subject) {
 
   return target;
 }
+
+export const Observable = declareConstructor(
+  patchObservableProto(_Observable),
+  'Observable'
+);
+
+export const Subject = declareConstructor(
+  patchSubjectProto(_Subject),
+  'Subject'
+);
 
 // export const lastValueFrom = ?
 // export const firstValueFrom = ?
@@ -167,15 +187,9 @@ export const BehaviorSubject = declareConstructor(
   _BehaviorSubject,
   'BehaviorSubject'
 );
-export const Observable = declareConstructor(_Observable, 'Observable');
 export const ReplaySubject = declareConstructor(
   _ReplaySubject,
   'ReplaySubject'
-);
-
-export const Subject = declareConstructor(
-  patchSubjectProto(_Subject),
-  'Subject'
 );
 
 export type AsyncSubject<T> = _AsyncSubject<T>;

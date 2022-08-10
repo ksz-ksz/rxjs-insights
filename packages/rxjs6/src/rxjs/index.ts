@@ -32,10 +32,20 @@ import {
   zip as _zip,
 } from '@rxjs-insights/rxjs-module';
 import {
+  declareCaller,
   declareConstructor,
   declareCreator,
   declareSingleton,
 } from '@rxjs-insights/core/declarations';
+
+function patchObservableProto(target: typeof _Observable) {
+  target.prototype.toPromise = declareCaller(
+    target.prototype.toPromise,
+    'toPromise'
+  );
+
+  return target;
+}
 
 function patchSubjectProto(target: typeof _Subject) {
   target.prototype.asObservable = declareCreator(
@@ -46,6 +56,16 @@ function patchSubjectProto(target: typeof _Subject) {
   return target;
 }
 
+export const Observable = declareConstructor(
+  patchObservableProto(_Observable),
+  'Observable'
+);
+
+export const Subject = declareConstructor(
+  patchSubjectProto(_Subject),
+  'Subject'
+);
+
 // export const lastValueFrom = ?
 // export const firstValueFrom = ?
 // export const partition = ?
@@ -53,11 +73,6 @@ function patchSubjectProto(target: typeof _Subject) {
 export const EMPTY = declareSingleton(_EMPTY, 'EMPTY');
 export const NEVER = declareSingleton(_NEVER, 'NEVER');
 
-export const Observable = declareConstructor(_Observable, 'Observable');
-export const Subject = declareConstructor(
-  patchSubjectProto(_Subject),
-  'Subject'
-);
 export const AsyncSubject = declareConstructor(_AsyncSubject, 'AsyncSubject');
 export const BehaviorSubject = declareConstructor(
   _BehaviorSubject,
