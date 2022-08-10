@@ -138,6 +138,8 @@ import {
   zip as _zip,
   zipAll as _zipAll,
   zipWith as _zipWith,
+  firstValueFrom as _firstValueFrom,
+  lastValueFrom as _lastValueFrom,
 } from '@rxjs-insights/rxjs-module';
 import {
   declareCaller,
@@ -175,9 +177,8 @@ export const Subject = declareConstructor(
   'Subject'
 );
 
-// export const lastValueFrom = ?
-// export const firstValueFrom = ?
-// export const partition = ?
+export const firstValueFrom = declareCaller(_firstValueFrom, 'firstValueFrom');
+export const lastValueFrom = declareCaller(_lastValueFrom, 'lastValueFrom');
 
 export const EMPTY = declareSingleton(_EMPTY, 'EMPTY');
 export const NEVER = declareSingleton(_NEVER, 'NEVER');

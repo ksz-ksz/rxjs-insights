@@ -1,8 +1,10 @@
 import {
   EMPTY,
   expand,
+  firstValueFrom,
   from,
   interval,
+  lastValueFrom,
   Observable,
   of,
   publish,
@@ -109,12 +111,22 @@ function expandExample() {
   inspect(subA);
 }
 
+function promiseExample() {
+  const obs = interval(100).pipe(take(3));
+  obs.toPromise().then((x) => console.log('toPromise', x));
+  firstValueFrom(obs).then((x) => console.log('firstValueFrom', x));
+  lastValueFrom(obs).then((x) => console.log('lastValueFrom', x));
+
+  inspect(obs);
+}
+
 export function playground() {
   updateSubjectInTapExample();
   updateSubjectInSubscribeExample();
   publishWithRefCountExample();
   shareExample();
   expandExample();
+  promiseExample();
 }
 
 function subscriber(name: string) {

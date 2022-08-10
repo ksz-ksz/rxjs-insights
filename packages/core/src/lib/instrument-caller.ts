@@ -20,7 +20,7 @@ export function createInstrumentCaller(context: InstrumentationContext) {
           eventRef: context.tracer.getTrace()?.eventRef as EventRef,
           targetRef: callerRef,
         },
-        () => target.call(this)
+        () => target.call(this, ...args)
       );
     } as T;
   };

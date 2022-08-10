@@ -66,10 +66,6 @@ export const Subject = declareConstructor(
   'Subject'
 );
 
-// export const lastValueFrom = ?
-// export const firstValueFrom = ?
-// export const partition = ?
-
 export const EMPTY = declareSingleton(_EMPTY, 'EMPTY');
 export const NEVER = declareSingleton(_NEVER, 'NEVER');
 
