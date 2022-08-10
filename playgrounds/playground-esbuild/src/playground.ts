@@ -17,11 +17,34 @@ import { connect } from '@rxjs-insights/devtools/connect';
 
 connect();
 
-function sideEffectInTapTriggersSubjectNextExample() {
+function updateSubjectInSubscribeExample() {
+  const subject = new Subject<number>();
+
+  subject.asObservable().subscribe((x) => {
+    console.log('subject', x);
+  });
+
+  const sub = of(1, 2, 3)
+    .pipe(
+      tap((x) => {
+        subject.next(x);
+      })
+    )
+    .subscribe((x) => {
+      subject.next(x);
+    });
+
+  inspect(sub);
+}
+
+function updateSubjectInTapExample() {
   const subject = new Subject<number>();
 
   subject.asObservable().subscribe(subscriber('X'));
-  subject.toPromise();
+  subject
+    .pipe(take(3))
+    .toPromise()
+    .then((x) => console.log('promise', x));
 
   const sub = of(1, 2, 3)
     .pipe(
@@ -87,7 +110,8 @@ function expandExample() {
 }
 
 export function playground() {
-  sideEffectInTapTriggersSubjectNextExample();
+  updateSubjectInTapExample();
+  updateSubjectInSubscribeExample();
   publishWithRefCountExample();
   shareExample();
   expandExample();
