@@ -5,6 +5,7 @@ import { eventsLogActions } from '@app/actions/events-log-actions';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { rebaseKeys } from '@app/store/insights/rebase-keys';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
+import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
 
 let nextKeyId = 0;
 
@@ -116,13 +117,18 @@ function updateKeyMapping(state: InsightsState, targetId: number) {
   );
 }
 
-export const insightsReducer = createReducer('insights', {
+const initialState: InsightsState = {
   time: 0,
   playing: false,
   following: false,
   targetsUi: {},
   targets: {},
-} as InsightsState)
+};
+
+export const insightsReducer = createReducer('insights', initialState)
+  .add(inspectedWindowActions.InspectedWindowReloaded, () => {
+    return initialState;
+  })
   .add(insightsActions.TargetStateLoaded, (state, action) => {
     const { state: targetState } = action.payload;
     if (targetState !== undefined) {

@@ -3,6 +3,7 @@ import { PropertyRef } from '@app/protocols/refs';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { refsActions } from '@app/actions/refs-actions';
 import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
+import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
 
 export interface RefState {
   expandedObjects: Record<number, PropertyRef[]>;
@@ -19,10 +20,15 @@ export interface RefsState {
 
 export type RefsSlice = Slice<'refs', RefsState>;
 
-export const refsReducer = createReducer('refs', {
+const initialState: RefsState = {
   states: {},
   uiStates: {},
-} as RefsState)
+};
+
+export const refsReducer = createReducer('refs', initialState)
+  .add(inspectedWindowActions.InspectedWindowReloaded, () => {
+    return initialState;
+  })
   .add(refOutletActions.Expand, (state, action) => {
     const { stateKey, path } = action.payload;
     if (!state.uiStates[stateKey]) {

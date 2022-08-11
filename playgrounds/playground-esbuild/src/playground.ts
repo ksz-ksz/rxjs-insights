@@ -127,7 +127,7 @@ function cycleExample() {
   const subject = new Subject();
   subject
     .asObservable()
-    .pipe(startWith('woohoo'), delay(1000))
+    .pipe(startWith('woohoo'), delay(1000), take(42))
     .subscribe(subject);
 
   inspect(subject);

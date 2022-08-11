@@ -11,6 +11,8 @@ import { effect, filterActions, useReaction } from '@lib/store';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { insightsActions } from '@app/actions/insights-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
+import { useSelector } from '@app/store';
+import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 
 function useScrollToEventReaction(
   leftPanelRef: React.MutableRefObject<SidePanelControl | null>
@@ -35,17 +37,30 @@ function useScrollToEventReaction(
   );
 }
 
-export function TargetPage() {
+export function LeftPanel() {
   const eventsSection = useEventsSection();
-  const scopeSection = useScopeSection();
-  const targetsSection = useTargetSection();
-
-  const leftPanelSections = useMemo(
+  const sections = useMemo(
     (): SidePanelSection[] => [{ label: 'EVENTS', entries: eventsSection }],
     [eventsSection]
   );
+  const leftPanelRef = useRef<SidePanelControl | null>(null);
+  useScrollToEventReaction(leftPanelRef);
 
-  const rightPanelSections = useMemo(
+  return (
+    <SidePanel
+      side="left"
+      sections={sections}
+      maxWidth="33%"
+      ref={leftPanelRef}
+    />
+  );
+}
+
+export function RightPanel() {
+  const scopeSection = useScopeSection();
+  const targetsSection = useTargetSection();
+
+  const sections = useMemo(
     (): SidePanelSection[] => [
       { label: 'SCOPE', entries: scopeSection },
       { label: 'RELATED TARGETS', entries: targetsSection },
@@ -53,8 +68,15 @@ export function TargetPage() {
     [scopeSection, targetsSection]
   );
 
-  const leftPanelRef = useRef<SidePanelControl | null>(null);
-  useScrollToEventReaction(leftPanelRef);
+  return <SidePanel side="right" sections={sections} maxWidth="33%" />;
+}
+
+export function TargetPage() {
+  const activeTargetState = useSelector(activeTargetStateSelector);
+
+  if (!activeTargetState) {
+    return null;
+  }
 
   return (
     <Box
@@ -65,14 +87,7 @@ export function TargetPage() {
         flexDirection: 'row',
       }}
     >
-      <React.Profiler id={'left-panel'} onRender={onRender}>
-        <SidePanel
-          side="left"
-          sections={leftPanelSections}
-          maxWidth="33%"
-          ref={leftPanelRef}
-        />
-      </React.Profiler>
+      <LeftPanel />
       <Box
         sx={{
           flexGrow: 1,
@@ -84,9 +99,7 @@ export function TargetPage() {
         <SubscribersGraph />
         <ControlsPanel />
       </Box>
-      <React.Profiler id={'right-panel'} onRender={onRender}>
-        <SidePanel side="right" sections={rightPanelSections} maxWidth="33%" />
-      </React.Profiler>
+      <RightPanel />
     </Box>
   );
 }
