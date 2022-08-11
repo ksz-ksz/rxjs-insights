@@ -178,7 +178,10 @@ export function EventsTimeline({
   return (
     <Tooltip followCursor title={formatTimestamp(timestamp)}>
       <TimelineDiv ref={elementRef} onClick={onClick} onMouseMove={onMouseMove}>
-        <svg viewBox={`0 0 ${width} ${height}`}>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ pointerEvents: 'none' }}
+        >
           {timeline.slices.map((slice, offset) => (
             <EventsTimelineSlice
               key={offset}
