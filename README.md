@@ -57,6 +57,4 @@ RxJS Insights gathers the data about:
 ## Future work
 
 * 🧩 Create plugins for other bundlers (e.g. Rollup, Parcel, etc.), 
-* 🧩 Create a DevTools extension! 😎
-
-
+* 🧩 Allow for better customization.
