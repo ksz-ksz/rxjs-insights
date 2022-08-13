@@ -20,8 +20,7 @@ import { SubscriberGraphNodeRenderer } from '@app/pages/target-page/subscriber-g
 import { SubscriberGraphLinkRenderer } from '@app/pages/target-page/subscriber-graph-link-renderer';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 import { Box, IconButton } from '@mui/material';
-import { dashboardActions } from '@app/actions/dashboad-actions';
-import { CenterFocusStrong, Close, CropFree } from '@mui/icons-material';
+import { CenterFocusStrong, CropFree } from '@mui/icons-material';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 
 function isKeyVisible(visibleKeys: Set<string>, key: string) {
@@ -57,22 +56,6 @@ function getVisibleChildren(
     }
   }
   return visibleChildren;
-}
-
-function getNodeType(
-  root: boolean,
-  relation: 'sources' | 'destinations'
-): 'root' | 'source' | 'destination' {
-  if (root) {
-    return 'root';
-  } else {
-    switch (relation) {
-      case 'sources':
-        return 'source';
-      case 'destinations':
-        return 'destination';
-    }
-  }
 }
 
 function getRelatedHierarchyNode(

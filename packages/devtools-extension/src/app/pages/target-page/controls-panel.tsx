@@ -103,12 +103,7 @@ function getClosestEvent(
   }
 }
 
-const ControlsDiv = styled('div')(({ theme }) => ({
-  // position: 'sticky',
-  // bottom: 0,
-  // zIndex: 1,
-  // backgroundColor: theme.custom.sidePanelHeaderBackground,
-}));
+const ControlsDiv = styled('div')({});
 
 export function ControlsPanel() {
   const vm = useSelector(vmSelector);

@@ -18,18 +18,3 @@ export const filterRoute = declareOperator(function filterRoute<DATA>(
     map((action) => action.payload.route)
   );
 });
-
-export const filterRoutes = declareOperator(function filterRoutes<DATA>(
-  router: Router<any, DATA, any>,
-  routeToken: RouteToken
-): OperatorFunction<Action<{ routes: Route<DATA>[] }>, Route<DATA>> {
-  return pipe(
-    map((action) =>
-      action.payload.routes.find(
-        (route) =>
-          router.getRouteConfig(route.routeConfigId)?.token === routeToken
-      )
-    ),
-    filter(Boolean)
-  );
-});

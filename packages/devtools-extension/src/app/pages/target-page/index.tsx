@@ -103,17 +103,3 @@ export function TargetPage() {
     </Box>
   );
 }
-
-function onRender(
-  id: string,
-  phase: 'mount' | 'update',
-  actualDuration: number,
-  baseDuration: number
-) {
-  console.log({
-    id,
-    phase,
-    actualDuration,
-    baseDuration,
-  });
-}

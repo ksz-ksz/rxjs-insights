@@ -47,25 +47,23 @@ export const refsReaction = combineReactions()
     )
   )
   .add(
-    createReaction(
-      (action$, store) =>
-        action$.pipe(
-          filterActions(refOutletActions.InvokeGetter),
-          concatMap((action) => {
-            const { ref, stateKey, path } = action.payload;
-            return from(refsClient.invokeGetter(ref)).pipe(
-              map((resolvedRef) =>
-                refsActions.RefForInvokedGetterLoaded({
-                  stateKey,
-                  objectId: ref.targetObjectId,
-                  keyId: path.split('.').pop()!,
-                  ref: resolvedRef!,
-                })
-              )
-            );
-          })
-        ),
-      (store: Store<RefsSlice>) => store
+    createReaction((action$) =>
+      action$.pipe(
+        filterActions(refOutletActions.InvokeGetter),
+        concatMap((action) => {
+          const { ref, stateKey, path } = action.payload;
+          return from(refsClient.invokeGetter(ref)).pipe(
+            map((resolvedRef) =>
+              refsActions.RefForInvokedGetterLoaded({
+                stateKey,
+                objectId: ref.targetObjectId,
+                keyId: path.split('.').pop()!,
+                ref: resolvedRef!,
+              })
+            )
+          );
+        })
+      )
     )
   );
 

@@ -38,14 +38,3 @@ export interface RouterConfig<DATA = void, METADATA = void> {
   routes?: RouteConfig<DATA, METADATA>[];
   transitions?: RouteTransitionConfig<DATA, unknown>[];
 }
-
-export function transition<DATA, PAYLOAD>(
-  action: ActionFactory<PAYLOAD>,
-  transition: (
-    store: Store<any>,
-    route: Route<DATA>,
-    action: Action<PAYLOAD>
-  ) => Url | void
-): RouteTransitionConfig<DATA, PAYLOAD> {
-  return { action, transition };
-}

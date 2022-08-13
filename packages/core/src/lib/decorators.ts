@@ -2,7 +2,7 @@ import { getGlobalEnv } from './env';
 
 const env = getGlobalEnv();
 
-const IdentityDecorator = (name?: string) => () => {};
+const IdentityDecorator = () => () => {};
 
 export const ObservableCreator = env
   ? (name?: string) =>

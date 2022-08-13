@@ -26,13 +26,6 @@ export type Slice<SLICE extends string, STATE> = {
   [name in SLICE]: STATE;
 };
 
-export type SliceName<SLICE extends Slice<any, any>> = SLICE extends Slice<
-  infer NAME,
-  any
->
-  ? NAME
-  : never;
-
 export type SliceState<SLICE extends Slice<any, any>> = SLICE extends Slice<
   any,
   infer STATE

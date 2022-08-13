@@ -14,7 +14,6 @@ describe('rebaseKeys', () => {
     '13.14.15.25': 6,
   };
 
-  const fromKey = '13';
   const toKey = '13.14.15';
 
   // 18 -\
