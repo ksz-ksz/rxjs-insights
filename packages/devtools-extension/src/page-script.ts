@@ -4,8 +4,7 @@ import {
   InstrumentationChannel,
   InstrumentationStatus,
 } from '@app/protocols/instrumentation-status';
-import { Statistics, StatisticsChannel } from '@app/protocols/statistics';
-import { Env, getGlobalEnv } from '@rxjs-insights/core';
+import { Env } from '@rxjs-insights/core';
 import { Targets, TargetsChannel } from '@app/protocols/targets';
 import { Insights, InsightsChannel } from '@app/protocols/insights';
 import { Traces, TracesChannel } from '@app/protocols/traces';
@@ -74,15 +73,6 @@ function connect(env: Env | null | undefined) {
     startServer<Traces>(
       createInspectedWindowEvalServerAdapter(TracesChannel),
       traces
-    );
-
-    startServer<Statistics>(
-      createInspectedWindowEvalServerAdapter(StatisticsChannel),
-      {
-        getStats() {
-          return env.recorder.getStats();
-        },
-      }
     );
 
     // @ts-ignore

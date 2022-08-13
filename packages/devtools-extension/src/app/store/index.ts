@@ -6,7 +6,6 @@ import {
 } from '@app/store/router';
 import { statusReactions, statusReducer } from '@app/store/status';
 import { inspectedWindowReaction } from '@app/store/inspected-window';
-import { statisticsReaction, statisticsReducer } from '@app/store/statisctics';
 import { targetReaction } from '@app/store/targets/reaction';
 import { targetsReducer } from '@app/store/targets/slice';
 import { insightsReaction, insightsReducer } from '@app/store/insights';
@@ -17,8 +16,6 @@ import { refreshRefsReaction } from '@app/store/refresh-refs/reaction';
 export const store = createStore()
   .addReducer(statusReducer)
   .addReaction(statusReactions)
-  .addReducer(statisticsReducer)
-  .addReaction(statisticsReaction)
   .addReducer(routerReducer)
   .addReaction(routerReaction)
   .addReaction(routerTransitionsReaction)

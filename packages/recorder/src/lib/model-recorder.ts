@@ -1,12 +1,13 @@
 import {
+  CallerRef,
   DeclarationRef,
   EventRef,
   Locations,
   ObservableEventRef,
   ObservableLike,
   ObservableRef,
+  PromiseOrValue,
   Recorder,
-  RecorderStats,
   SubscriberEventRef,
   SubscriberRef,
   TargetRef,
@@ -23,32 +24,13 @@ import {
   Task,
 } from './model';
 import { queueCleanup } from './queue-cleanup';
-import { PromiseOrValue } from '@rxjs-insights/core';
-import { CallerRef } from '@rxjs-insights/core';
 
 function isPromise<T>(x: PromiseOrValue<T>): x is Promise<T> {
   return 'then' in x && 'catch' in x;
 }
 
-function incStats(stats: Record<string, number>, name: string) {
-  if (stats[name] === undefined) {
-    stats[name] = 1;
-  } else {
-    stats[name]++;
-  }
-}
-
 export class ModelRecorder implements Recorder {
   private currentTask: Task | undefined;
-  private stats: RecorderStats = {
-    observables: {},
-    subscribers: {},
-    events: {},
-  };
-
-  getStats(): RecorderStats {
-    return this.stats;
-  }
 
   declarationRef(
     name: string,
@@ -78,8 +60,6 @@ export class ModelRecorder implements Recorder {
     const sourceObservable = deref(sourceObservableRef);
     const observable = new Observable(target, declaration, sourceObservable);
 
-    incStats(this.stats.observables, declaration.name);
-
     return ref(observable);
   }
 
@@ -94,8 +74,6 @@ export class ModelRecorder implements Recorder {
 
     destination?.sources?.push(subscriber);
     observable.subscribers.push(subscriber);
-
-    incStats(this.stats.subscribers, observable.declaration.name);
 
     return ref(subscriber);
   }
@@ -126,8 +104,6 @@ export class ModelRecorder implements Recorder {
     observable.events.push(event);
     sourceEvent?.succeedingEvents?.push(event);
 
-    incStats(this.stats.events, declaration.name);
-
     return ref(event);
   }
 
@@ -149,7 +125,6 @@ export class ModelRecorder implements Recorder {
 
     subscriber.events.push(event);
     sourceEvent?.succeedingEvents?.push(event);
-    incStats(this.stats.events, declaration.name);
 
     return ref(event);
   }

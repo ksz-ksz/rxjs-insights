@@ -1,5 +1,5 @@
 import { Tracer } from './tracer';
-import { Recorder, RecorderStats } from './recorder';
+import { Recorder } from './recorder';
 import { Locator } from './locator';
 import { Constructor, ObservableLike, SubjectLike } from './types';
 

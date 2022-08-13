@@ -12,16 +12,8 @@ export type ObservableEventRef = { readonly [ref]: 'ObservableEventRef' };
 export type EventRef = SubscriberEventRef | ObservableEventRef;
 export type TargetRef = ObservableRef | SubscriberRef | CallerRef;
 
-export interface RecorderStats {
-  observables: Record<string, number>;
-  subscribers: Record<string, number>;
-  events: Record<string, number>;
-}
-
 export interface Recorder {
   init?(context: InstrumentationContext): void;
-
-  getStats(): RecorderStats;
 
   declarationRef(
     name: string,
