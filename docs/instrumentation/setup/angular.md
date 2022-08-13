@@ -50,8 +50,10 @@ module.exports = {
 
 > Note: If you installed e.g. `@rxjs-insights/plugin-webpack4` package, you'll need to adjust the `require` path accordingly.
 
+> Tip: If you want the instrumentation to kick in only when the RxJS Devtools browser extension is active, set the `installMode` configuration option to `'conditional'`.
+
 ## 5. Replace the default builders with custom builders in the `angular.json`
 
 * Set the `projects.<project>.architect.serve.builder` property value to `@angular-builders/custom-webpack:dev-server`.
-* Set the `projects.<project>.architect.build.builder` proeprty value to `@angular-builders/custom-webpack:browser`.
+* Set the `projects.<project>.architect.build.builder` property value to `@angular-builders/custom-webpack:browser`.
 * Set the `projects.<project>.architect.build.configurations.development.customWebpackConfig` property value to `{ "path": "development.config.js" }`.

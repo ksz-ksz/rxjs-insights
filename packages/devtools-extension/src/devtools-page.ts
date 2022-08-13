@@ -16,7 +16,7 @@ startServer<FromSourcesPane>(
   createChromeRuntimeServerAdapter(FromSourcesPaneChannel),
   {
     setHeight(height: number) {
-      callStackPane.setHeight(`${height}px`);
+      callStackPane.setHeight(`${Math.ceil(height)}px`);
     },
 
     setScope(ref: EventRef | undefined) {

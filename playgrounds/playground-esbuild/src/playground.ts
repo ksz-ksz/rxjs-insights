@@ -6,8 +6,6 @@ import {
   from,
   interval,
   lastValueFrom,
-  merge,
-  Observable,
   of,
   publish,
   refCount,
@@ -19,6 +17,7 @@ import {
 } from 'rxjs';
 import { inspect } from '@rxjs-insights/devtools';
 import { connect } from '@rxjs-insights/devtools/connect';
+import { fizzbuzz } from './fizzbuzz';
 
 connect();
 
@@ -134,13 +133,14 @@ function cycleExample() {
 }
 
 export function playground() {
-  updateSubjectInTapExample();
-  updateSubjectInSubscribeExample();
-  publishWithRefCountExample();
-  shareExample();
-  expandExample();
-  promiseExample();
-  cycleExample();
+  // updateSubjectInTapExample();
+  // updateSubjectInSubscribeExample();
+  // publishWithRefCountExample();
+  // shareExample();
+  // expandExample();
+  // promiseExample();
+  // cycleExample();
+  fizzbuzz();
 }
 
 function subscriber(name: string) {

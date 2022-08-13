@@ -1,11 +1,11 @@
 # Console setup
 
-> Note: It's not recommended to keep the `@rxjs-insights/console` module in the production bundle as it comes with a considerable bundle size addition.
-
 ## 1. Install the RxJS Insights Console package
 ```
 npm install --save-dev @rxjs-insights/console
 ```
+
+> Note: It's not recommended to keep the `@rxjs-insights/console` module in the production bundle as it comes with a considerable bundle size addition.
 
 ## 2. Expose the RxJS Insights Console in a global variable (optional)
 

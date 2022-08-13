@@ -5,7 +5,7 @@
 
 RxJS Insights is a toolset that helps you debug the RxJS Observables.
 
-**✨ Developer friendly**: Easy to setup. Easy to use.
+**✨ Developer friendly**: Easy to set up. Easy to use.
 
 **✨ Comprehensive**: Collects all types of events that happen inside RxJS.
 
@@ -26,7 +26,7 @@ RxJS Insights gathers the data about:
 
 **Try it out on [StackBlitz ⚡](https://stackblitz.com/edit/rxjs-insights-playground?file=src%2Findex.ts)**
 
-![Example console output](./docs/console/img/inspect-events-flow.png)
+![Example console output](./docs/devtools/img/devtools-panel-analysis.png)
 
 ## Documentation
 
@@ -42,6 +42,12 @@ RxJS Insights gathers the data about:
     * [Operators](./docs/instrumentation/customization.md#operators)
   * [Plugin configuration](./docs/instrumentation/plugin-configuration.md)
   * [Async actions tracking](./docs/instrumentation/async-actions-tracking.md)
+* [Devtools](./docs/devtools/index.md)
+  * [Setup](./docs/devtools/setup.md)
+  * [Usage](./docs/devtools/usage.md)
+    * [Inspecting observables and subscribers](./docs/devtools/usage.md#inspecting-observables-and-subscribers)
+    * [RxJS Insights Devtools Sources Panel Extension](./docs/devtools/usage.md#using-the-rxjs-insights-devtools-sources-panel-extension)
+    * [RxJS Insights Devtools Panel](./docs/devtools/usage.md#using-the-rxjs-insights-devtools-panel)
 * [Console](./docs/console/index.md)
   * [Setup](./docs/console/setup.md)
   * [Usage](./docs/console/usage.md)

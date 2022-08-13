@@ -33,3 +33,5 @@ esbuild.build({
   // (...)
 });
 ```
+
+> Tip: If you want the instrumentation to kick in only when the RxJS Devtools browser extension is active, set the `installMode` configuration option to `'conditional'`.
