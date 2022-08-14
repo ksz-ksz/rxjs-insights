@@ -7,11 +7,9 @@
   </a>
 </p>
 
+<p align="center"><img src="./resources/rxjs-insights.svg" width="256px" alt="RxJS Insights"/></p>
+
 <h1 align="center">RxJS Insights</h1>
-
-<p align="center"><img src="./resources/rxjs-insights.svg" width="80%" alt="RxJS Insights"/></p>
-
-<h2 align="center">See through the observables</h2>
 
 RxJS Insights is a toolset that helps you debug the RxJS Observables.
 
