@@ -1,7 +1,17 @@
-# RxJS Insights
+<p align="center">
+  <a href="https://badge.fury.io/js/@rxjs-insights%2Fcore">
+    <img src="https://badge.fury.io/js/@rxjs-insights%2Fcore.svg" alt="npm version">
+  </a>
+  <a href="https://github.com/ksz-ksz/rxjs-insights/blob/master/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license" />
+  </a>
+</p>
 
-[![npm version](https://badge.fury.io/js/@rxjs-insights%2Fcore.svg)](https://badge.fury.io/js/@rxjs-insights%2Fcore)
-[![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ksz-ksz/rxjs-insights/blob/master/LICENSE)
+<h1 align="center">RxJS Insights</h1>
+
+<p align="center"><img src="./resources/rxjs-insights.svg" width="80%" alt="RxJS Insights"/></p>
+
+<h2 align="center">See through the observables</h2>
 
 RxJS Insights is a toolset that helps you debug the RxJS Observables.
 
@@ -57,4 +67,5 @@ RxJS Insights gathers the data about:
 ## Future work
 
 * 🧩 Create plugins for other bundlers (e.g. Rollup, Parcel, etc.), 
+* 🧩 Add more visualization options (e.g. marble diagrams),
 * 🧩 Allow for better customization.
