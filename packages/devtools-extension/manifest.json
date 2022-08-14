@@ -3,9 +3,14 @@
   "version": "0.0.0",
   "name": "RxJS Insights",
   "description": "See through the observables.",
+  "icons": {
+    "16": "icons/rxjs-insights-16.png",
+    "32": "icons/rxjs-insights-32.png",
+    "48": "icons/rxjs-insights-48.png",
+    "128": "icons/rxjs-insights-256.png",
+    "256": "icons/rxjs-insights-128.png"
+  },
   "permissions": [
-    "tabs",
-    "activeTab",
     "webNavigation"
   ],
   "background": {

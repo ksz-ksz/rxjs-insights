@@ -4,13 +4,17 @@ import {
   FromSourcesPaneChannel,
 } from '@app/protocols/sources-panel';
 import { toSourcesPaneClient } from '@app/clients/sources-panel';
+import { EventRef } from '@app/protocols/refs';
 import ExtensionSidebarPane = chrome.devtools.panels.ExtensionSidebarPane;
-import { EventRef, Ref } from '@app/protocols/refs';
 
 let callStackPane: ExtensionSidebarPane;
 let scopePane: ExtensionSidebarPane;
 
-chrome.devtools.panels.create('RxJS Insights', '', '/index.html');
+chrome.devtools.panels.create(
+  'RxJS Insights',
+  'icons/rxjs-insights-128.png',
+  'index.html'
+);
 
 startServer<FromSourcesPane>(
   createChromeRuntimeServerAdapter(FromSourcesPaneChannel),
