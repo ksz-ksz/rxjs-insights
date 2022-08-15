@@ -5,7 +5,8 @@
   "scripts": {
     "build": "node build.js",
     "start": "node serve.js",
-    "typecheck": "tsc -p tsconfig.lib.json --noEmit"
+    "typecheck": "tsc -p tsconfig.lib.json --noEmit",
+    "pack-extension": "node pack-extension.js"
   },
   "dependencies": {
     "@emotion/react": "^11.9.0",
@@ -38,6 +39,7 @@
     "@types/react-dom": "^17.0.16",
     "@types/use-sync-external-store": "^0.0.3",
     "web-ext": "^6.8.0",
-    "zone.js": "^0.11.5"
+    "zone.js": "^0.11.5",
+    "archiver": "^5.3.1"
   }
 }
