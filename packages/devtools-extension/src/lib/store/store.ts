@@ -12,7 +12,6 @@ import { Action, createAction } from './action';
 import { Reducer } from './reducer';
 import { Reaction } from './reaction';
 import { Super } from './super';
-import { inspect } from '@rxjs-insights/console';
 import { Selector } from './selector';
 import { StoreView } from './store-view';
 
@@ -71,9 +70,6 @@ export class Store<STATE extends Record<string, any> = {}>
         }, {})
       )
       .subscribe(this.stateSubject);
-
-    inspect(this.actionSubject);
-    inspect(this.stateSubject);
   }
 
   get(): STATE {
