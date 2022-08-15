@@ -25,7 +25,7 @@ The data gathered by the RxJS Insights includes the information about:
 * **creation operator** calls, including the arguments passed to it, the name of the operator, and the source code location of the call,
 * **pipeable operator** calls, including the arguments passed to it, the name of the operator, and the source code location of the call,
 * **subscribers** (i.e. the instances of the running observables), including the relation to the parent observable, as well as relations to other subscribers that are either sources or destinations of the given subscriber,
-* **callers** (i.e. the connection with the world outside the RxJS, e.g. direct `subscribe` or `lastValueFrom` calls from the application), including the arguments passed to it, and the source code location of the call,
+* **callers** (i.e. the connection with the world outside the RxJS, e.g. direct `subscribe` calls from the application), including the arguments passed to it, and the source code location of the call,
 * **events**, including the **notification events** (i.e. `next`, `error`, and `complete`) and **subscription events** (i.e. `subscribe` and `unsubscribe`), as well as relations to other events that either caused or are caused by the given event,
 * **async tasks** within which the events happened (e.g. `setTimeout`, `setInterval`, DOM events, REST events, etc.).
 
