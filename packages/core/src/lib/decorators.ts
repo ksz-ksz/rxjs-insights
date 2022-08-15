@@ -9,7 +9,7 @@ export const ObservableCreator = env
       (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
         descriptor.value = env.instrumentCreator(
           descriptor.value,
-          propertyName ?? name
+          name ?? propertyName
         );
       }
   : IdentityDecorator;
@@ -19,7 +19,17 @@ export const ObservableOperator = env
       (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
         descriptor.value = env.instrumentOperator(
           descriptor.value,
-          propertyName ?? name
+          name ?? propertyName
+        );
+      }
+  : IdentityDecorator;
+
+export const ObservableCaller = env
+  ? (name?: string) =>
+      (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
+        descriptor.value = env.instrumentCaller(
+          descriptor.value,
+          name ?? propertyName
         );
       }
   : IdentityDecorator;

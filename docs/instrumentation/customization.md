@@ -1,13 +1,13 @@
 # Customization
 
-By default, RxJS Insights instruments built-in RxJS constructors, creators and operators.
+By default, RxJS Insights instruments built-in RxJS constructors, creators, operators, and callers.
 Instrumentation, while completely optional, has many advantages, including:
-* simplified Observable identification by assigning it a custom name and/or tag,
+* simplified observables identification (a custom name and/or tag can be assigned to the observable),
 * discovery of the source code locations pointing to the instrumented function usages,
 * discovery of the arguments passed to the instrumented function.
 
-The customization utilities can be divided into two categories:
-* **naming utilities** - setting the name of the observable (an observable can have only one name) and binding the source code location to the usage of the instrumented constructor, creator or operator,
+The customization utilities are divided into two categories:
+* **naming utilities** - setting the name of the observable (an observable can have only one name) and binding the source code location to the usage of the instrumented constructor or function,
 * **tagging utilities** - adding a tag to the observable (an observable can have multiple tags) without altering its name and source code location binding. They are useful if you want to keep track of an observable between function calls.
 
 > Note: It's safe to keep the customization utilities in the production code. They have only a minimal memory and performance footprint if the instrumentation is not enabled.
@@ -61,6 +61,21 @@ function _customOperator() {
 export const customOperator = declareOperator(_customOperator, "customOperator");
 ```
 
+### `declareCaller(caller: Function, name?: string)`
+
+Naming utility. Instruments a caller function, e.g.:
+
+```ts
+import { Observable } from "rxjs";
+import { declareCaller } from "@rxjs-insights/core/declarations";
+
+function _customSubscribe(observable: Observable) {
+  return observable.subscribe();
+}
+
+export const customSubscribe = declareCaller(_customSubscribe, "customSubscribe");
+```
+
 ### `declareSingleton(observable: Observable<any>, name?: string)`
 
 Naming utility. Instruments an observable, e.g.:
@@ -104,6 +119,22 @@ export class MyClass {
   @ObservableOperator("customOperator")
   customOperator() {
     return (source: Observable<any>) => new Observable((observer) => source.subscribe(observer));
+  }
+}
+```
+
+### `ObservableCaller(name? string)`
+
+Naming utility. Instruments a caller method, e.g.:
+
+```ts
+import { Observable } from "rxjs";
+import { ObservableCaller } from "@rxjs-insights/core/decorators";
+
+export class MyClass {
+  @ObservableCaller("customSubscribe")
+  customSubscribe(observable: Observable) {
+    return observable.subscribe();
   }
 }
 ```

@@ -11,26 +11,23 @@
 
 <h1 align="center">RxJS Insights</h1>
 
-RxJS Insights is a toolset that helps you debug the RxJS Observables.
+RxJS Insights is a toolset that helps you debug and visualize the observables in your app.
 
 **✨ Developer friendly**: Easy to set up. Easy to use.
 
-**✨ Comprehensive**: Collects all types of events that happen inside RxJS.
+**✨ Unobtrusive**: Does not require source code changes in order to identify observables.
 
-**✨ Unobtrusive**: Does not require source code modification to be useful.
+**✨ Comprehensive**: Tracks all types of observable events and relations.
 
-RxJS Insights gathers the data about:
+The data gathered by the RxJS Insights includes the information about:
 
-* **constructors** (e.g. `Observable`, `Subject`, etc.),
-* **creators** (e.g. `of`, `interval`, etc.),
-* **operators** (e.g. `map`, `delay`, etc.),
-* **subscribers**,
-* **subscriber chains** (i.e. subscribers created by other subscribers),
-* **events**:
-  * **notification events** (i.e. `next`, `error` and `complete`),
-  * **subscription events** (i.e. `subscribe` and `unsubscribe`),
-* **event relations** (i.e. events caused by other events),
-* **async tasks**: (e.g. `setTimeout`, `setInterval`, DOM events, REST events, etc.).
+* **constructor** calls, including the arguments passed to it, the name of the Observable (sub)class, and the source code location of the call,
+* **creation operator** calls, including the arguments passed to it, the name of the operator, and the source code location of the call,
+* **pipeable operator** calls, including the arguments passed to it, the name of the operator, and the source code location of the call,
+* **subscribers** (i.e. the instances of the running observables), including the relation to the parent observable, as well as relations to other subscribers that are either sources or destinations of the given subscriber,
+* **callers** (i.e. the connection with the world outside the RxJS, e.g. direct `subscribe` or `lastValueFrom` calls from the application), including the arguments passed to it, and the source code location of the call,
+* **events**, including the **notification events** (i.e. `next`, `error`, and `complete`) and **subscription events** (i.e. `subscribe` and `unsubscribe`), as well as relations to other events that either caused or are caused by the given event,
+* **async tasks** within which the events happened (e.g. `setTimeout`, `setInterval`, DOM events, REST events, etc.).
 
 **Try it out on [StackBlitz ⚡](https://stackblitz.com/edit/rxjs-insights-playground?file=src%2Findex.ts)**
 
