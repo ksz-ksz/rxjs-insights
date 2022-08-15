@@ -11,5 +11,6 @@ esbuild.build({
   ],
   outdir: 'dist',
   bundle: true,
+  loader: { '.svg': 'dataurl' },
   tsconfig: 'tsconfig.json',
 });

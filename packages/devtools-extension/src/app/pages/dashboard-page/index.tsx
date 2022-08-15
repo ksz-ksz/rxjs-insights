@@ -3,10 +3,12 @@ import { Box, styled, Typography } from '@mui/material';
 import { SidePanel } from '@app/components';
 import { SidePanelSection } from '@app/components/side-panel';
 import { usePinnedTargetsSection } from '@app/pages/dashboard-page/use-pinned-targets-section';
+import { Logo } from '@app/components/logo/logo';
 
 const TitleDiv = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
+  alignItems: 'center',
   maxWidth: '600px',
   background: `linear-gradient(to right, ${theme.insights.observable.secondary} 0%, ${theme.insights.subscriber.secondary} 100%)`,
   '-webkit-background-clip': 'text',
@@ -43,8 +45,10 @@ export function DashboardPage() {
         }}
       >
         <TitleDiv>
-          <Typography variant="h1">RxJS Insights</Typography>
-          <Typography variant="h4">See through the observables</Typography>
+          <Logo />
+          <Typography align="center" variant="h1">
+            RxJS Insights
+          </Typography>
         </TitleDiv>
       </Box>
       <SidePanel side="right" sections={panelSections} />

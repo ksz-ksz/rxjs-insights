@@ -14,6 +14,7 @@ esbuild.build({
   ],
   outdir: 'dist',
   bundle: true,
+  loader: { '.svg': 'dataurl' },
   watch: true,
   sourcemap: 'linked',
   tsconfig: 'tsconfig.json',
