@@ -31,7 +31,7 @@ The data gathered by the RxJS Insights includes the information about:
 
 **Try it out on [StackBlitz ⚡](https://stackblitz.com/edit/rxjs-insights-playground?file=src%2Findex.ts)**
 
-![Example console output](./docs/devtools/img/devtools-panel-analysis.png)
+![Example console output](./resources/rxjs-insights.gif)
 
 ## Documentation
 
