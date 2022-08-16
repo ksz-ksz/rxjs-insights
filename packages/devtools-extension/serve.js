@@ -10,7 +10,6 @@ esbuild.build({
     './src/sources-page.ts',
     './src/content-script.ts',
     './src/page-script.js',
-    './src/background.js',
   ],
   outdir: 'dist',
   bundle: true,

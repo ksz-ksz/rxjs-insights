@@ -14,9 +14,6 @@
   "permissions": [
     "webNavigation"
   ],
-  "background": {
-    "service_worker": "dist/background.js"
-  },
   "devtools_page": "devtools-page.html",
   "content_scripts": [
     {
