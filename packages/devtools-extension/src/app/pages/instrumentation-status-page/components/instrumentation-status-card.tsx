@@ -60,7 +60,7 @@ export function InstrumentationStatusCard() {
           <Box>
             <Button
               target="_blank"
-              href="https://github.com/ksz-ksz/rxjs-insights/blob/master/docs/instrumentation/index.md"
+              href="https://github.com/ksz-ksz/rxjs-insights/blob/master/docs/devtools/setup.md"
             >
               See documentation
             </Button>
@@ -91,7 +91,7 @@ export function InstrumentationStatusCard() {
           <Box>
             <Button
               target="_blank"
-              href="https://github.com/ksz-ksz/rxjs-insights/blob/master/docs/instrumentation/index.md"
+              href="https://github.com/ksz-ksz/rxjs-insights/blob/master/docs/devtools/setup.md"
             >
               See documentation
             </Button>

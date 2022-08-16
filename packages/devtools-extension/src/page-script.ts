@@ -94,3 +94,4 @@ function connect(env: Env | null | undefined) {
 
 // @ts-ignore
 window[CONNECT] = connect;
+document.dispatchEvent(new Event('@rxjs-insights/devtools-ready'));

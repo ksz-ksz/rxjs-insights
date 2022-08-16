@@ -1,4 +1,4 @@
-type InspectFunction = typeof inspect;
+export type InspectFunction = typeof inspect;
 
 let inspectFunction: InspectFunction = function inspectNoop<T>(target: T) {
   return target;
