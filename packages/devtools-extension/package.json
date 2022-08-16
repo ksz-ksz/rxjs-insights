@@ -3,7 +3,7 @@
   "version": "0.4.0",
   "private": true,
   "scripts": {
-    "build": "node build.js",
+    "build": "rimraf dist && node build.js",
     "start": "node serve.js",
     "typecheck": "tsc -p tsconfig.lib.json --noEmit",
     "pack-extension": "node pack-extension.js"
