@@ -22,29 +22,6 @@ export function InstrumentationStatusCard() {
           <CircularProgress />
         </Box>
       );
-    case 'not-enabled':
-      return (
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          padding={2}
-        >
-          <Typography variant="body1" gutterBottom align="center">
-            Instrumentation is not enabled. Reload the page to enable the
-            instrumentation.
-          </Typography>
-          <Button
-            onClick={() =>
-              dispatch(
-                instrumentationStatusPageActions.ReloadPageButtonClicked()
-              )
-            }
-          >
-            Reload page
-          </Button>
-        </Box>
-      );
     case 'not-installed':
       return (
         <Box

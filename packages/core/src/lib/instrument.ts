@@ -89,12 +89,6 @@ export function instrument({
   };
 }
 
-declare const RXJS_INSIGHTS_INSTALL: boolean | undefined;
-
 export function install(config: Config) {
-  if (typeof RXJS_INSIGHTS_INSTALL !== 'undefined' && RXJS_INSIGHTS_INSTALL) {
-    setGlobalEnv(instrument(config));
-  } else {
-    setGlobalEnv(null);
-  }
+  setGlobalEnv(instrument(config));
 }

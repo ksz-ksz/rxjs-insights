@@ -11,20 +11,15 @@ function setupAliases(aliases: Record<string, string>, build: PluginBuild) {
   );
 }
 
-function setupDefines(defines: Record<string, string>, build: PluginBuild) {
-  build.initialOptions.define = { ...build.initialOptions.define, ...defines };
-}
-
 export function rxjsInsightsPlugin(
   options: RxjsInsightsPluginOptions = {}
 ): Plugin {
-  const { name, aliases, defines } = getConfig(options);
+  const { name, aliases } = getConfig(options);
 
   return {
     name,
     setup(build) {
       setupAliases(aliases, build);
-      setupDefines(defines, build);
     },
   };
 }

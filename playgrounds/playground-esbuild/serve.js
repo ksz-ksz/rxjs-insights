@@ -10,6 +10,6 @@ esbuild.serve(
     sourcemap: 'linked',
     keepNames: true,
     tsconfig: 'tsconfig.json',
-    plugins: [rxjsInsightsPlugin({ installMode: 'conditional' })],
+    plugins: [rxjsInsightsPlugin()],
   }
 );

@@ -45,12 +45,6 @@ function getRxjsInsightsPackagePath(rxjsMajorVersion: string) {
 
 export interface RxjsInsightsPluginOptions {
   /**
-   * If true, sets the RXJS_INSIGHTS_INSTALL global variable that instructs the installModule to install the instrumentation.
-   * Defaults to `automatic`.
-   */
-  installMode?: 'automatic' | 'conditional';
-
-  /**
    * Module that would be used to install the instrumentation.
    * Defaults to `@rxjs-insights/rxjs<rxjs-major-version>`.
    */
@@ -60,7 +54,6 @@ export interface RxjsInsightsPluginOptions {
 export interface RxjsInsightsPluginConfig {
   name: string;
   aliases: Record<string, string>;
-  defines: Record<string, string>;
 }
 
 function getAliases(installModule?: string): Record<string, string> {
@@ -80,24 +73,10 @@ function getAliases(installModule?: string): Record<string, string> {
   };
 }
 
-function getDefines(
-  installMode: 'automatic' | 'conditional' = 'automatic'
-): Record<string, string> {
-  switch (installMode) {
-    case 'automatic':
-      return {
-        RXJS_INSIGHTS_INSTALL: 'true',
-      };
-    case 'conditional':
-      return {};
-  }
-}
-
 export function getConfig(
   options: RxjsInsightsPluginOptions
 ): RxjsInsightsPluginConfig {
   const aliases = getAliases(options.installModule);
-  const defines = getDefines(options.installMode);
 
-  return { name: PLUGIN_NAME, aliases, defines };
+  return { name: PLUGIN_NAME, aliases };
 }

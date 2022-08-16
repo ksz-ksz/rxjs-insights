@@ -1,4 +1,4 @@
-import { Compiler, DefinePlugin, ResolveOptions } from 'webpack';
+import { Compiler, ResolveOptions } from 'webpack';
 import {
   getConfig,
   RxjsInsightsPluginOptions,
@@ -51,16 +51,11 @@ function applyAliases(
   });
 }
 
-function applyDefines(defines: Record<string, string>, compiler: Compiler) {
-  new DefinePlugin(defines).apply(compiler);
-}
-
 export class RxjsInsightsPlugin {
   constructor(private readonly options: RxjsInsightsPluginOptions = {}) {}
 
   apply(compiler: Compiler) {
-    const { name, aliases, defines } = getConfig(this.options);
+    const { name, aliases } = getConfig(this.options);
     applyAliases(name, aliases, compiler);
-    applyDefines(defines, compiler);
   }
 }

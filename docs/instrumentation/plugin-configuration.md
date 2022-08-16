@@ -11,12 +11,3 @@ It can be done directly, by importing the `install` function and calling it (whi
 The secondary job of the `installModule` is to set up the environment for the RxJS Insights, e.g. to install the Zone.js for better tracking of asynchronous actions.
 
 By default, the `installMoule` resolves to the `@rxjs-insights/rxjs<version>` module, e.g. for RxJS 7 it will be resolved to `@rxjs-insights/rxjs7`.
-
-## `installMode: 'automatic' | 'conditional' = 'automatic'`
-
-A property that will be used to determine whether the instrumentation should be installed automatically or conditionally.
-
-If set to `automatic`, the instrumentation will be installed unconditionally (i.e. whenever the `installModule` runs).
-
-If set to `conditional`, the instrumentation will be installed only if the `RXJS_INSIGHTS_INSTALL` global variable is set.
-This is useful if you do not want to always enable the instrumentation (which comes with a performance and memory cost), but do it only when needed (e.g. when the devtools window is active).

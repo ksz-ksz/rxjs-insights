@@ -15,24 +15,21 @@ import { TargetsService } from './page-script/targets-service';
 import { TracesService } from './page-script/traces-service';
 import { createInspectFunction } from './page-script/inspect-function';
 
-const REFS = 'RXJS_INSIGHTS_REFS';
-const INSTALL = 'RXJS_INSIGHTS_INSTALL';
-const CONNECT = 'RXJS_INSIGHTS_CONNECT';
-
-// @ts-ignore
-window[INSTALL] = sessionStorage.getItem(INSTALL) === 'true';
-
-function getStatus(env: Env | null | undefined): InstrumentationStatus {
-  if (env === undefined) {
-    return 'not-installed';
-  } else if (env === null) {
-    return 'not-enabled';
-  } else {
-    return 'installed';
+declare global {
+  interface Window {
+    RXJS_INSIGHTS_REFS: RefsService;
+    RXJS_INSIGHTS_CONNECT: typeof connect;
   }
 }
 
-function connect(env: Env | null | undefined) {
+const REFS = 'RXJS_INSIGHTS_REFS';
+const CONNECT = 'RXJS_INSIGHTS_CONNECT';
+
+function getStatus(env: Env | undefined): InstrumentationStatus {
+  return env ? 'installed' : 'not-installed';
+}
+
+function connect(env: Env | undefined) {
   const status = getStatus(env);
 
   startServer<Instrumentation>(
@@ -40,11 +37,6 @@ function connect(env: Env | null | undefined) {
     {
       getStatus() {
         return status;
-      },
-
-      install() {
-        sessionStorage.setItem(INSTALL, 'true');
-        location.reload();
       },
     }
   );
@@ -75,23 +67,14 @@ function connect(env: Env | null | undefined) {
       traces
     );
 
-    // @ts-ignore
     window[REFS] = refs;
 
     return createInspectFunction(refs, targets);
   } else {
-    switch (status) {
-      case 'not-enabled':
-        console.warn('RxJS Insights: Instrumentation in not installed.');
-        break;
-      case 'not-installed':
-        console.warn('RxJS Insights: Instrumentation in not enabled.');
-        break;
-    }
+    console.warn('RxJS Insights: instrumentation in not enabled.');
     return undefined;
   }
 }
 
-// @ts-ignore
 window[CONNECT] = connect;
 document.dispatchEvent(new Event('@rxjs-insights/devtools-ready'));

@@ -16,10 +16,7 @@ import {
   tap,
 } from 'rxjs';
 import { inspect } from '@rxjs-insights/devtools';
-import { connect } from '@rxjs-insights/devtools/connect';
 import { fizzbuzz } from './fizzbuzz';
-
-connect();
 
 function updateSubjectInSubscribeExample() {
   const subject = new Subject<number>();

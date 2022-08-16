@@ -12,7 +12,6 @@ import {
 } from 'rxjs';
 import { statusActions } from '@app/actions/status-actions';
 import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
-import { tapAsync } from '@lib/operators';
 import { instrumentationStatusPageActions } from '@app/actions/instrumentation-status-page-actions';
 import { instrumentationClient } from '@app/clients/instrumentation';
 
@@ -76,16 +75,6 @@ export const statusReactions = combineReactions()
             )
           )
         )
-      )
-    )
-  )
-  .add(
-    createReaction((action$) =>
-      action$.pipe(
-        filterActions(instrumentationStatusPageActions.ReloadPageButtonClicked),
-        tapAsync(async () => {
-          await instrumentationClient.install();
-        })
       )
     )
   );
