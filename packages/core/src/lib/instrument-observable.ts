@@ -3,6 +3,17 @@ import { ConnectableObservableLike, ObservableLike } from './types';
 import { DeclarationRef, EventRef, ObservableRef } from './recorder';
 import { setMeta } from './meta';
 
+let connectableObservablesWarningPrinted = false;
+
+function printConnectableObservablesWarning() {
+  if (!connectableObservablesWarningPrinted) {
+    connectableObservablesWarningPrinted = true;
+    console.warn(
+      `RxJS Insights: could not instrument the 'connect' method. The data about the connectable observable might be incomplete.`
+    );
+  }
+}
+
 function instrumentConnect(
   observable: ConnectableObservableLike,
   context: InstrumentationContext
@@ -45,10 +56,14 @@ export function instrumentObservable<T extends ObservableLike>(
   });
 
   if ('connect' in observable) {
-    instrumentConnect(
-      observable as unknown as ConnectableObservableLike,
-      context
-    );
+    try {
+      instrumentConnect(
+        observable as unknown as ConnectableObservableLike,
+        context
+      );
+    } catch (e) {
+      printConnectableObservablesWarning();
+    }
   }
 
   return observable;
