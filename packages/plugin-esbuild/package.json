@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/plugin-esbuild",
-  "version": "0.3.0-alpha.0",
+  "version": "0.4.0",
   "description": "Setup RxJS Insights easily in esbuild.",
   "keywords": [
     "rxjs",
@@ -43,7 +43,7 @@
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types"
   },
   "dependencies": {
-    "@rxjs-insights/plugin-base": "^0.3.0-alpha.0"
+    "@rxjs-insights/plugin-base": "^0.4.0"
   },
   "peerDependencies": {
     "esbuild": ">=0.0.0"

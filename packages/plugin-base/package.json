@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/plugin-base",
-  "version": "0.3.0-alpha.0",
+  "version": "0.4.0",
   "description": "RxJS Insights plugin base.",
   "keywords": [
     "rxjs",

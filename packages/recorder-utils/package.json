@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/recorder-utils",
-  "version": "0.4.0-alpha.0",
+  "version": "0.4.0",
   "description": "Helper functions for the rxjs-insights' recorder.",
   "keywords": [
     "rxjs",
@@ -45,7 +45,7 @@
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types"
   },
   "dependencies": {
-    "@rxjs-insights/core": "^0.4.0-alpha.0",
-    "@rxjs-insights/recorder": "^0.4.0-alpha.0"
+    "@rxjs-insights/core": "^0.4.0",
+    "@rxjs-insights/recorder": "^0.4.0"
   }
 }
