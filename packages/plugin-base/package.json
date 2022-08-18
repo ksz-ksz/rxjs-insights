@@ -40,7 +40,9 @@
     "build": "npm run build:clean && npm run build:js && npm run build:ts",
     "build:clean": "rimraf dist",
     "build:js": "node ../../scripts/build-lib.js",
-    "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types"
+    "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types",
+    "prepublishOnly": "node ../../scripts/sanitize-package.js",
+    "postpublish": "node ../../scripts/restore-package.js"
   },
   "dependencies": {
     "resolve-cwd": "3.0.0"

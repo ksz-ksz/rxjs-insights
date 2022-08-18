@@ -43,7 +43,9 @@
     "build:clean": "rimraf dist",
     "build:js": "node ../../scripts/build-lib.js",
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types",
-    "version": "node ../../scripts/update-peer-dependencies.js"
+    "version": "node ../../scripts/update-peer-dependencies.js",
+    "prepublishOnly": "node ../../scripts/sanitize-package.js",
+    "postpublish": "node ../../scripts/restore-package.js"
   },
   "peerDependencies": {
     "@rxjs-insights/core": "0.4.1"

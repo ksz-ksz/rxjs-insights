@@ -44,7 +44,9 @@
     "build:js": "node ../../scripts/build-lib.js",
     "build:ts": "tsc -p tsconfig.lib.json --declaration --emitDeclarationOnly --declarationDir dist/types",
     "version": "node ../../scripts/update-peer-dependencies.js",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "prepublishOnly": "node ../../scripts/sanitize-package.js",
+    "postpublish": "node ../../scripts/restore-package.js"
   },
   "dependencies": {
     "error-stack-parser": "^2.0.6",
