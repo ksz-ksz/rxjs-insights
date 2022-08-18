@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/recorder-utils",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Helper functions for the rxjs-insights' recorder.",
   "keywords": [
     "rxjs",
@@ -47,7 +47,7 @@
     "postpublish": "node ../../scripts/restore-package.js"
   },
   "dependencies": {
-    "@rxjs-insights/core": "^0.4.1",
-    "@rxjs-insights/recorder": "^0.4.1"
+    "@rxjs-insights/core": "^0.4.2",
+    "@rxjs-insights/recorder": "^0.4.2"
   }
 }

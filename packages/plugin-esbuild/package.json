@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/plugin-esbuild",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "description": "Setup RxJS Insights easily in esbuild.",
   "keywords": [
     "rxjs",
@@ -45,7 +45,7 @@
     "postpublish": "node ../../scripts/restore-package.js"
   },
   "dependencies": {
-    "@rxjs-insights/plugin-base": "^0.4.0"
+    "@rxjs-insights/plugin-base": "^0.4.2"
   },
   "peerDependencies": {
     "esbuild": ">=0.0.0"

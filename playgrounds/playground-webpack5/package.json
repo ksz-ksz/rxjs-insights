@@ -1,6 +1,6 @@
 {
   "name": "playground-webpack5",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "scripts": {
     "build": "webpack",
     "typecheck": "tsc --noEmit"
@@ -11,9 +11,9 @@
     "zone.js": "^0.11.5"
   },
   "devDependencies": {
-    "@rxjs-insights/console": "^0.4.1",
-    "@rxjs-insights/plugin-webpack5": "^0.4.0",
-    "@rxjs-insights/rxjs7": "^0.4.1",
+    "@rxjs-insights/console": "^0.4.2",
+    "@rxjs-insights/plugin-webpack5": "^0.4.2",
+    "@rxjs-insights/rxjs7": "^0.4.2",
     "ts-loader": "9.2.8",
     "webpack": "5.70.0",
     "webpack-cli": "4.9.2"
