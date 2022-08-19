@@ -20,10 +20,7 @@ function instrumentConnect(
   context: InstrumentationContext
 ) {
   const { connect } = observable;
-  Object.defineProperty(observable, 'connect', {
-    value: createInstrumentedConnect(context, connect),
-    configurable: true,
-  });
+  observable.connect = createInstrumentedConnect(context, connect);
 }
 
 export function instrumentObservable<T extends ObservableLike>(

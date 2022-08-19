@@ -11,6 +11,9 @@ import { install } from '@rxjs-insights/core';
 import { getRecorder } from '@rxjs-insights/recorder';
 import { getLocator } from '@rxjs-insights/locator';
 import { getTracer } from '@rxjs-insights/tracer';
+import { patchObjectCreate } from './patch-object-create';
+
+patchObjectCreate();
 
 install({
   Observable,
