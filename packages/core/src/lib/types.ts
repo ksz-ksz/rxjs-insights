@@ -18,25 +18,29 @@ export interface Complete {
   (): void;
 }
 
+export interface Connect {
+  (): SubscriptionLike;
+}
+
 export interface ObservableLike {
-  subscribe(...args: any[]): SubscriptionLike;
+  subscribe: Subscribe;
 }
 
 export interface ConnectableObservableLike extends ObservableLike {
-  connect(): SubscriptionLike;
+  connect: Connect;
 }
 
 export interface ObserverLike {
-  next(value: any): void;
-  error(error: any): void;
-  complete(): void;
+  next: Next;
+  error: Error;
+  complete: Complete;
 }
 
 export interface SubjectLike extends ObservableLike, SubscriberLike {}
 
 export interface SubscriptionLike {
   closed: boolean;
-  unsubscribe(): void;
+  unsubscribe: Unsubscribe;
 }
 
 export interface SubscriberLike extends SubscriptionLike, ObserverLike {}
