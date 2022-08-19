@@ -1,6 +1,6 @@
 {
   "name": "playground-webpack4",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "scripts": {
     "build": "webpack",
     "typecheck": "tsc --noEmit"
@@ -11,9 +11,9 @@
     "zone.js": "^0.11.5"
   },
   "devDependencies": {
-    "@rxjs-insights/console": "^0.4.2",
+    "@rxjs-insights/console": "^0.4.3",
     "@rxjs-insights/plugin-webpack4": "^0.4.2",
-    "@rxjs-insights/rxjs7": "^0.4.2",
+    "@rxjs-insights/rxjs7": "^0.4.3",
     "ts-loader": "8.3.0",
     "webpack": "4.46.0",
     "webpack-cli": "4.9.2"

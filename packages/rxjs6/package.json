@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/rxjs6",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "See through the observables.",
   "keywords": [
     "rxjs",
@@ -62,10 +62,10 @@
     "postpublish": "node ../../scripts/restore-package.js"
   },
   "dependencies": {
-    "@rxjs-insights/core": "^0.4.2",
-    "@rxjs-insights/locator": "^0.4.2",
-    "@rxjs-insights/recorder": "^0.4.2",
-    "@rxjs-insights/tracer": "^0.4.2"
+    "@rxjs-insights/core": "^0.4.3",
+    "@rxjs-insights/locator": "^0.4.3",
+    "@rxjs-insights/recorder": "^0.4.3",
+    "@rxjs-insights/tracer": "^0.4.3"
   },
   "devDependencies": {
     "rxjs": "^6"

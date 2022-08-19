@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/devtools",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Connector for the RxJS Insights devtools extension.",
   "keywords": [
     "rxjs",
@@ -53,6 +53,6 @@
     "postpublish": "node ../../scripts/restore-package.js"
   },
   "dependencies": {
-    "@rxjs-insights/core": "^0.4.2"
+    "@rxjs-insights/core": "^0.4.3"
   }
 }
