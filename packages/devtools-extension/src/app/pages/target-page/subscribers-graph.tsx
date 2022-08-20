@@ -33,22 +33,40 @@ function getActiveChildren(node: RelatedTargetHierarchyNode, time: number) {
     : [];
 }
 
+function getSourceChildren(target: RelatedTarget) {
+  return target.sources ?? [];
+}
+
+function getSourceChildKey(childId: number, parentKey: string) {
+  return `${parentKey}.${childId}`;
+}
+
+function getDestinationChildren(target: RelatedTarget) {
+  return target.destinations ?? [];
+}
+
+function getDestinationChildKey(childId: number, parentKey: string) {
+  return `${parentKey}.${childId}`;
+}
+
 function getVisibleChildren(
   target: RelatedTarget,
-  relation: 'sources' | 'destinations',
+  getChildren: (target: RelatedTarget) => number[],
+  getChildKey: (childId: number, parentKey: string) => string,
   key: string,
   visibleKeys: Set<string>,
   relations: Relations
 ) {
   const visibleChildren: RelatedTargetHierarchyNode[] = [];
-  for (const childTarget of target[relation]!) {
-    const childKey = `${key}.${childTarget}`;
+  for (const childId of getChildren(target)) {
+    const childKey = getChildKey(childId, key);
     if (isKeyVisible(visibleKeys, childKey)) {
       visibleChildren.push(
         getRelatedHierarchyNode(
           relations,
-          relation,
-          relations.targets[childTarget],
+          getChildren,
+          getChildKey,
+          relations.targets[childId],
           childKey,
           visibleKeys
         )
@@ -60,7 +78,8 @@ function getVisibleChildren(
 
 function getRelatedHierarchyNode(
   relations: Relations,
-  relation: 'sources' | 'destinations',
+  getChildren: (target: RelatedTarget) => number[],
+  getChildKey: (childId: number, parentKey: string) => string,
   target: RelatedTarget,
   key: string,
   visibleKeys: Set<string>
@@ -68,7 +87,14 @@ function getRelatedHierarchyNode(
   return {
     key,
     target,
-    children: getVisibleChildren(target, relation, key, visibleKeys, relations),
+    children: getVisibleChildren(
+      target,
+      getChildren,
+      getChildKey,
+      key,
+      visibleKeys,
+      relations
+    ),
   };
 }
 
@@ -76,20 +102,22 @@ function getVisibleKeysVisitor(
   target: RelatedTarget,
   targetKey: string,
   relations: Relations,
-  relation: 'sources' | 'destinations',
+  getChildren: (target: RelatedTarget) => number[],
+  getChildKey: (childId: number, parentKey: string) => string,
   expandedKeys: Set<string>,
   visibleKeys: Set<string>
 ) {
   visibleKeys.add(targetKey);
   if (expandedKeys.has(targetKey)) {
-    for (const childId of target[relation]!) {
+    for (const childId of getChildren(target)) {
       const childTarget = relations.targets[childId];
-      const childTargetKey = `${targetKey}.${childId}`;
+      const childTargetKey = getChildKey(childId, targetKey);
       getVisibleKeysVisitor(
         childTarget,
         childTargetKey,
         relations,
-        relation,
+        getChildren,
+        getChildKey,
         expandedKeys,
         visibleKeys
       );
@@ -105,17 +133,19 @@ function getVisibleKeys(
   const visibleKeys = new Set<string>();
   getVisibleKeysVisitor(
     root,
-    String(root.id),
+    `${root.id}`,
     relations,
-    'sources',
+    getSourceChildren,
+    getSourceChildKey,
     expandedKeys,
     visibleKeys
   );
   getVisibleKeysVisitor(
     root,
-    String(root.id),
+    `${root.id}`,
     relations,
-    'destinations',
+    getDestinationChildren,
+    getDestinationChildKey,
     expandedKeys,
     visibleKeys
   );
@@ -143,16 +173,18 @@ const hierarchyTreeSelector = createSelector(
     const visibleKeys = getVisibleKeys(target, relations, expandedKeys);
     const sources = getRelatedHierarchyNode(
       relations,
-      'sources',
+      getSourceChildren,
+      getSourceChildKey,
       target,
-      String(target.id),
+      `${target.id}`,
       visibleKeys
     );
     const destinations = getRelatedHierarchyNode(
       relations,
-      'destinations',
+      getDestinationChildren,
+      getDestinationChildKey,
       target,
-      String(target.id),
+      `${target.id}`,
       visibleKeys
     );
     const getNodeKey = (node: NodeData<RelatedTargetHierarchyNode>) =>
