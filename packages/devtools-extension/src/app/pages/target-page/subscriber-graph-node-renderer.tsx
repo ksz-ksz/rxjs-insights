@@ -238,6 +238,16 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     [vm.isCaller, vm.isExpanded, vm.rootTarget.id, vm.targetKey]
   );
 
+  const onMouseEnter = useDispatchCallback(
+    () => subscribersGraphActions.TargetHovered({ target: vm.target }),
+    [vm.target]
+  );
+
+  const onMouseLeave = useDispatchCallback(
+    () => subscribersGraphActions.TargetUnhovered({ target: vm.target }),
+    [vm.target]
+  );
+
   useEffect(() => {
     tweenRef.current?.kill();
     if (vm.isSelected) {
@@ -264,7 +274,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
   }, [vm.isSelected && vm.event.eventType]);
 
   return (
-    <g ref={elementRef} onContextMenu={onContextMenuOpen} onClick={onClick}>
+    <g ref={elementRef}>
       <Menu
         open={menu.open}
         onClose={onContextMenuClose}
@@ -292,9 +302,20 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
           )}
         </MenuList>
       </Menu>
+      <circle
+        onContextMenu={onContextMenuOpen}
+        onClick={onClick}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        data-target={vm.target.id}
+        r={8}
+        opacity={0}
+        fill={vm.nodeColor}
+        style={{ transition: `opacity ${duration}s` }}
+      />
       <g
         opacity={vm.isExpanded || vm.isRoot || vm.isCaller ? 1 : 0.5}
-        style={{ transition: `opacity ${duration}s` }}
+        style={{ transition: `opacity ${duration}s`, pointerEvents: 'none' }}
       >
         {vm.isSelected && (
           <circle
@@ -324,7 +345,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
           <text
             fontFamily="Monospace"
             fontStyle="oblique"
-            fontSize="4"
+            fontSize="3"
             textAnchor="middle"
             fill={theme.palette.text.secondary}
             y="18"

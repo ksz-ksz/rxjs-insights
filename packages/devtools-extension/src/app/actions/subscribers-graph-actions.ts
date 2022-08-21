@@ -31,6 +31,10 @@ export interface SubscribersGraphActions {
   FollowEvent: void;
 
   UnfollowEvent: void;
+
+  TargetHovered: { target: RelatedTarget };
+
+  TargetUnhovered: { target: RelatedTarget };
 }
 
 export const subscribersGraphActions =
