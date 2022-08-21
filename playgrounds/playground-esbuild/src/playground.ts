@@ -129,6 +129,19 @@ function cycleExample() {
   inspect(subject);
 }
 
+function subjects() {
+  const subject = new Subject<number>();
+
+  subject.subscribe((value) => {
+    if (value > 0) {
+      subject.next(-value);
+    }
+  });
+
+  subject.next(1);
+  inspect(subject);
+}
+
 export function playground() {
   // updateSubjectInTapExample();
   // updateSubjectInSubscribeExample();
@@ -138,6 +151,7 @@ export function playground() {
   // promiseExample();
   // cycleExample();
   fizzbuzz();
+  subjects();
 }
 
 function subscriber(name: string) {

@@ -18,11 +18,11 @@ import {
 import gsap from 'gsap';
 import { createSelector } from '@lib/store';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
-import { getRootTargetId } from '@app/pages/target-page/get-root-target-id';
+import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
 
 const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(
-    [targetStateSelector(getRootTargetId(node.key)), timeSelector],
+    [targetStateSelector(getRootTargetIdFromKey(node.key)), timeSelector],
     ([targetState, time]) => {
       const { relations } = targetState;
       const event = relations.events[time];

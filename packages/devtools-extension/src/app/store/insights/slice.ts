@@ -6,6 +6,16 @@ import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions'
 import { rebaseKeys } from '@app/store/insights/rebase-keys';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
+import {
+  getDestinationChildKey,
+  getDestinationChildren,
+  getSourceChildKey,
+  getSourceChildren,
+} from '@app/utils/related-children';
+import {
+  getRootTargetIdFromKey,
+  getTargetIdFromKey,
+} from '@app/pages/target-page/get-root-target-id';
 
 let nextKeyId = 0;
 
@@ -27,26 +37,28 @@ export type InsightsSlice = Slice<'insights', InsightsState>;
 function expandVisitor(
   visitedTargets: Set<number>,
   relations: Relations,
-  relation: 'sources' | 'destinations',
+  getChildren: (target: RelatedTarget) => number[],
+  getChildKey: (childId: number, parentKey: string) => string,
   expandedKeys: Set<string>,
   key: string
 ) {
-  const targetId = Number(key.split('.').pop());
+  const targetId = getTargetIdFromKey(key);
   if (visitedTargets.has(targetId)) {
     return;
   }
   expandedKeys.add(key);
   const target = relations.targets[targetId];
-  const relatedTargets = target[relation];
-  if (relatedTargets) {
+  const relatedTargets = getChildren(target);
+  if (relatedTargets.length !== 0) {
     visitedTargets.add(targetId);
-    for (const id of relatedTargets) {
+    for (const relatedTarget of relatedTargets) {
       expandVisitor(
         visitedTargets,
         relations,
-        relation,
+        getChildren,
+        getChildKey,
         expandedKeys,
-        `${key}.${id}`
+        getChildKey(relatedTarget, key)
       );
     }
     visitedTargets.delete(targetId);
@@ -60,13 +72,14 @@ function getKeysMappingVisitor(
   target: RelatedTarget,
   targetKey: string,
   relations: Relations,
-  relation: 'sources' | 'destinations'
+  getChildren: (target: RelatedTarget) => number[],
+  getChildKey: (childId: number, parentKey: string) => string
 ) {
   keyMapping[targetKey] = existingKeyMapping[targetKey] ?? nextKeyId++;
   if (expandedKeys.has(targetKey)) {
-    for (const childTargetId of target[relation]!) {
+    for (const childTargetId of getChildren(target)) {
       const childTarget = relations.targets[childTargetId];
-      const childTargetKey = `${targetKey}.${childTargetId}`;
+      const childTargetKey = getChildKey(childTargetId, targetKey);
       getKeysMappingVisitor(
         expandedKeys,
         keyMapping,
@@ -74,7 +87,8 @@ function getKeysMappingVisitor(
         childTarget,
         childTargetKey,
         relations,
-        relation
+        getChildren,
+        getChildKey
       );
     }
   }
@@ -91,18 +105,20 @@ function getKeysMapping(
     keyMapping,
     existingKeyMapping,
     target,
-    String(target.id),
+    `<${target.id}>`,
     relations,
-    'sources'
+    getSourceChildren,
+    getSourceChildKey
   );
   getKeysMappingVisitor(
     expandedKeys,
     keyMapping,
     existingKeyMapping,
     target,
-    String(target.id),
+    `<${target.id}>`,
     relations,
-    'destinations'
+    getDestinationChildren,
+    getDestinationChildKey
   );
   return keyMapping;
 }
@@ -134,7 +150,7 @@ export const insightsReducer = createReducer('insights', initialState)
     if (targetState !== undefined) {
       state.targets[targetState.target.id] = targetState;
       if (!state.targetsUi[targetState.target.id]) {
-        const expandedKeys = new Set([String(targetState.target.id)]);
+        const expandedKeys = new Set([`<${targetState.target.id}>`]);
         state.targetsUi[targetState.target.id] = {
           expandedKeys: expandedKeys,
           keysMapping: getKeysMapping(targetState, expandedKeys),
@@ -178,15 +194,29 @@ export const insightsReducer = createReducer('insights', initialState)
     const { target, key } = action.payload;
     const { relations } = state.targets[target];
     const { expandedKeys } = state.targetsUi[target];
-    expandVisitor(new Set(), relations, 'sources', expandedKeys, key);
-    expandVisitor(new Set(), relations, 'destinations', expandedKeys, key);
+    expandVisitor(
+      new Set(),
+      relations,
+      getSourceChildren,
+      getSourceChildKey,
+      expandedKeys,
+      key
+    );
+    expandVisitor(
+      new Set(),
+      relations,
+      getDestinationChildren,
+      getDestinationChildKey,
+      expandedKeys,
+      key
+    );
     updateKeyMapping(state, target);
   })
   .add(subscribersGraphActions.CollapseAll, (state, action) => {
     const { target, key } = action.payload;
     const { expandedKeys } = state.targetsUi[target];
     for (const expandedKey of Array.from(expandedKeys.values())) {
-      if (expandedKey.startsWith(key)) {
+      if (expandedKey.startsWith(key) || expandedKey.endsWith(key)) {
         expandedKeys.delete(expandedKey);
       }
     }

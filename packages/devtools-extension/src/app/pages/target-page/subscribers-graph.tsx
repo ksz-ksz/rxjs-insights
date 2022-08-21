@@ -22,6 +22,12 @@ import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-targe
 import { Box, IconButton } from '@mui/material';
 import { CenterFocusStrong, CropFree } from '@mui/icons-material';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
+import {
+  getDestinationChildKey,
+  getDestinationChildren,
+  getSourceChildKey,
+  getSourceChildren,
+} from '@app/utils/related-children';
 
 function isKeyVisible(visibleKeys: Set<string>, key: string) {
   return visibleKeys.has(key);
@@ -31,22 +37,6 @@ function getActiveChildren(node: RelatedTargetHierarchyNode, time: number) {
   return isTargetActive(time, node.target)
     ? node.children.filter((child) => isTargetActive(time, child.target))
     : [];
-}
-
-function getSourceChildren(target: RelatedTarget) {
-  return target.sources ?? [];
-}
-
-function getSourceChildKey(childId: number, parentKey: string) {
-  return `${parentKey}.${childId}`;
-}
-
-function getDestinationChildren(target: RelatedTarget) {
-  return target.destinations ?? [];
-}
-
-function getDestinationChildKey(childId: number, parentKey: string) {
-  return `${parentKey}.${childId}`;
 }
 
 function getVisibleChildren(
@@ -133,7 +123,7 @@ function getVisibleKeys(
   const visibleKeys = new Set<string>();
   getVisibleKeysVisitor(
     root,
-    `${root.id}`,
+    `<${root.id}>`,
     relations,
     getSourceChildren,
     getSourceChildKey,
@@ -142,7 +132,7 @@ function getVisibleKeys(
   );
   getVisibleKeysVisitor(
     root,
-    `${root.id}`,
+    `<${root.id}>`,
     relations,
     getDestinationChildren,
     getDestinationChildKey,
@@ -176,7 +166,7 @@ const hierarchyTreeSelector = createSelector(
       getSourceChildren,
       getSourceChildKey,
       target,
-      `${target.id}`,
+      `<${target.id}>`,
       visibleKeys
     );
     const destinations = getRelatedHierarchyNode(
@@ -184,7 +174,7 @@ const hierarchyTreeSelector = createSelector(
       getDestinationChildren,
       getDestinationChildKey,
       target,
-      `${target.id}`,
+      `<${target.id}>`,
       visibleKeys
     );
     const getNodeKey = (node: NodeData<RelatedTargetHierarchyNode>) =>

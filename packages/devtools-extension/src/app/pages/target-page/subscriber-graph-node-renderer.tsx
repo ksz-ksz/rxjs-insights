@@ -27,7 +27,7 @@ import gsap from 'gsap';
 import { createSelector, useDispatchCallback } from '@lib/store';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
-import { getRootTargetId } from '@app/pages/target-page/get-root-target-id';
+import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
 import { getLocationStrings } from '@app/utils/get-location-strings';
 
 const circleRadius = 5;
@@ -36,8 +36,8 @@ const circleCircumference = 2 * Math.PI * circleRadius;
 const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(
     [
-      targetStateSelector(getRootTargetId(node.key)),
-      targetUiStateSelector(getRootTargetId(node.key)),
+      targetStateSelector(getRootTargetIdFromKey(node.key)),
+      targetUiStateSelector(getRootTargetIdFromKey(node.key)),
       timeSelector,
     ],
     ([targetState, targetUiState, time]) => {
@@ -49,7 +49,7 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       const targetKey = node.key;
       const event = relations.events[time];
       const location = getLocationStrings(target.locations);
-      const isRoot = !node.key.includes('.');
+      const isRoot = node.key.startsWith('<') && node.key.endsWith('>');
       const isActive =
         isCaller || (target.startTime <= time && time <= target.endTime);
       const isSelected = event && event.target === target.id;

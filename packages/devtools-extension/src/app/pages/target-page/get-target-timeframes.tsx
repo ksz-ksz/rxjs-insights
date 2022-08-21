@@ -3,6 +3,12 @@ import {
   OUT_OF_BOUNDS_MIN_TIME,
 } from '@app/constants/timeframe';
 import { RelatedTarget, Relations } from '@app/protocols/insights';
+import {
+  getDestinationChildKey,
+  getDestinationChildren,
+  getSourceChildKey,
+  getSourceChildren,
+} from '@app/utils/related-children';
 
 export interface Timeframe {
   startTime: number;
@@ -13,7 +19,8 @@ function getTargetTimeframesVisitor(
   target: RelatedTarget,
   targetKey: string,
   relations: Relations,
-  relation: 'sources' | 'destinations',
+  getChildren: (target: RelatedTarget) => number[],
+  getChildKey: (childId: number, parentKey: string) => string,
   expandedKeys: Set<string>,
   parentTimeframe: Timeframe,
   timeframes: Record<number, Timeframe>
@@ -32,14 +39,15 @@ function getTargetTimeframesVisitor(
     };
   }
   if (expandedKeys.has(targetKey)) {
-    for (const childId of target[relation]!) {
+    for (const childId of getChildren(target)) {
       const childTarget = relations.targets[childId];
-      const childTargetKey = `${targetKey}.${childId}`;
+      const childTargetKey = getChildKey(childId, targetKey);
       getTargetTimeframesVisitor(
         childTarget,
         childTargetKey,
         relations,
-        relation,
+        getChildren,
+        getChildKey,
         expandedKeys,
         timeframe,
         timeframes
@@ -63,7 +71,8 @@ export function getTargetTimeframes(
     target,
     String(target.id),
     relations,
-    'sources',
+    getSourceChildren,
+    getSourceChildKey,
     expandedKeys,
     maxTimeframe,
     timeframes
@@ -72,7 +81,8 @@ export function getTargetTimeframes(
     target,
     String(target.id),
     relations,
-    'destinations',
+    getDestinationChildren,
+    getDestinationChildKey,
     expandedKeys,
     maxTimeframe,
     timeframes
