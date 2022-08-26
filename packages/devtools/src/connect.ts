@@ -12,30 +12,37 @@ function connectWithDevtools() {
   if (inspect) {
     console.info('RxJS Insights: connected with the devtools.');
     setInspectFunction(inspect);
+    return true;
+  } else {
+    return false;
   }
 }
 
-export function connect(): Promise<void> {
+/**
+ * Connects with the RxJS Insights Devtools (https://chrome.google.com/webstore/detail/rxjs-insights/nndeaiihppbmgiejbpbpkohdhilffdgj).
+ *
+ * @param timeout  the time (in milliseconds) that the devtools will be awaited.
+ * @return Promise<boolean>  a Promise that resolves to `true` if the connection was established and the setup is correct, or `false` otherwise.
+ */
+export function connect(timeout = 1000): Promise<boolean> {
   return new Promise((resolve) => {
     if (window.RXJS_INSIGHTS_CONNECT) {
-      connectWithDevtools();
-      resolve();
+      resolve(connectWithDevtools());
     } else {
-      let timeout = -1;
+      let timeoutId = -1;
       function devtoolsReadyListener() {
-        clearTimeout(timeout);
-        connectWithDevtools();
-        resolve();
+        clearTimeout(timeoutId);
+        resolve(connectWithDevtools());
       }
       const type = '@rxjs-insights/devtools-ready';
       document.addEventListener(type, devtoolsReadyListener);
-      timeout = window.setTimeout(() => {
+      timeoutId = window.setTimeout(() => {
         document.removeEventListener(type, devtoolsReadyListener);
         console.warn(
           'RxJS Insights: could not connect with the devtools. Make sure that the RxJS Devtools extension is installed and enabled.'
         );
-        resolve();
-      }, 4000);
+        resolve(false);
+      }, timeout);
     }
   });
 }
