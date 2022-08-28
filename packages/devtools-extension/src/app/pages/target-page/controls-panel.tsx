@@ -11,7 +11,6 @@ import {
   activeTargetUiStateSelector,
 } from '@app/selectors/active-target-state-selector';
 import { eventsLogActions } from '@app/actions/events-log-actions';
-import { getEventLogEntries } from '@app/pages/target-page/get-event-log-entries';
 import { createSelector, useDispatchCallback } from '@lib/store';
 import { getTargetTimeframes } from '@app/pages/target-page/get-target-timeframes';
 import { getEvents } from '@app/pages/target-page/get-events';
@@ -48,17 +47,15 @@ const eventsSelector = createSelector(
     const timeframes = getTargetTimeframes(target, relations, expandedKeys);
     const allEvents = getEvents(relations);
     const events = getIncludedEvents(relations, allEvents, timeframes);
-    const entries = getEventLogEntries(relations, allEvents, timeframes);
 
-    return { events, entries, relations };
+    return { events, relations };
   }
 );
 
 const vmSelector = createSelector(
   [eventsSelector, timeSelector, playingSelector],
-  ([{ events, entries, relations }, time, playing]) => ({
+  ([{ events, relations }, time, playing]) => ({
     events,
-    entries,
     time,
     playing,
     event: relations.events[time],
