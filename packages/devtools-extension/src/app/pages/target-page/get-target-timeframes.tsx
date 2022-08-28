@@ -69,7 +69,7 @@ export function getTargetTimeframes(
   const timeframes: Record<number, Timeframe> = {};
   getTargetTimeframesVisitor(
     target,
-    String(target.id),
+    `<${target.id}>`,
     relations,
     getSourceChildren,
     getSourceChildKey,
@@ -79,7 +79,7 @@ export function getTargetTimeframes(
   );
   getTargetTimeframesVisitor(
     target,
-    String(target.id),
+    `<${target.id}>`,
     relations,
     getDestinationChildren,
     getDestinationChildKey,
