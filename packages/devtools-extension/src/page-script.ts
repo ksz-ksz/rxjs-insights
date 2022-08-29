@@ -71,7 +71,7 @@ function connect(env: Env | undefined) {
 
     return createInspectFunction(refs, targets);
   } else {
-    console.warn('RxJS Insights: instrumentation in not enabled.');
+    console.warn('RxJS Insights: instrumentation is not enabled.');
     return undefined;
   }
 }
