@@ -28,6 +28,7 @@ export interface InsightsState {
   time: number;
   playing: boolean;
   following: boolean;
+  showExcludedEvents: boolean;
   targetsUi: Record<number, TargetUiState>;
   targets: Record<number, TargetState>;
 }
@@ -137,6 +138,7 @@ const initialState: InsightsState = {
   time: 0,
   playing: false,
   following: false,
+  showExcludedEvents: false,
   targetsUi: {},
   targets: {},
 };
@@ -236,4 +238,10 @@ export const insightsReducer = createReducer('insights', initialState)
   })
   .add(subscribersGraphActions.UnfollowEvent, (state) => {
     state.following = false;
+  })
+  .add(subscribersGraphActions.ShowExcludedEvents, (state) => {
+    state.showExcludedEvents = true;
+  })
+  .add(subscribersGraphActions.HideExcludedEvents, (state) => {
+    state.showExcludedEvents = false;
   });

@@ -31,3 +31,8 @@ export const followingSelector = createSelector(
   [insightsSelector],
   ([insights]) => insights.following
 );
+
+export const showExcludedEventsSelector = createSelector(
+  [insightsSelector],
+  ([insights]) => insights.showExcludedEvents
+);

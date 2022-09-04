@@ -259,10 +259,61 @@ function getIndent(event: EventItem, indents: Map<number, number>): number {
   }
 }
 
+function addEventEntries(
+  events: EventItem[],
+  entries: EventLogEntry[],
+  indents: Map<number, number>
+) {
+  for (const event of events) {
+    if (event.async) {
+      entries.push({
+        type: 'event-async',
+        event: event.event,
+        task: event.task,
+        indent: getIndent(event, indents),
+        id: event.id,
+        excluded: event.excluded,
+      });
+    } else {
+      entries.push({
+        type: 'event',
+        event: event.event,
+        indent: getIndent(event, indents),
+        id: event.id,
+        excluded: event.excluded,
+      });
+    }
+  }
+}
+
+function addEventEntriesHideExcluded(
+  events1: EventItem[],
+  entries: EventLogEntry[],
+  indents: Map<number, number>
+) {
+  const groups = partition(events1, (a, b) => a.excluded !== b.excluded);
+  for (const group of groups) {
+    const firstEvent = group[0];
+    if (firstEvent.excluded) {
+      entries.push({
+        type: 'excluded',
+        id: `excluded-${firstEvent.async ? 'async' : ''}-${
+          firstEvent.event.time
+        }`,
+        events: group.map((x) => x.event),
+        indent: getIndent(firstEvent, indents),
+      });
+    } else {
+      addEventEntries(group, entries, indents);
+    }
+  }
+}
+
 export function getEventLogEntries(
   relations: Relations,
   events: RelatedEvent[],
-  timeframes: Record<number, Timeframe>
+  timeframes: Record<number, Timeframe>,
+  showExcludedEvents: boolean
 ) {
   const tasks = getTasks(relations, events, timeframes);
   const entries: EventLogEntry[] = [];
@@ -273,40 +324,10 @@ export function getEventLogEntries(
       id: task.id,
       task: task.task,
     });
-    const groups = partition(task.events, (a, b) => a.excluded !== b.excluded);
-    for (const group of groups) {
-      const firstEvent = group[0];
-      if (firstEvent.excluded) {
-        entries.push({
-          type: 'excluded',
-          id: `excluded-${firstEvent.async ? 'async' : ''}-${
-            firstEvent.event.time
-          }`,
-          events: group.map((x) => x.event),
-          indent: getIndent(firstEvent, indents),
-        });
-      } else {
-        for (const event of group) {
-          if (event.async) {
-            entries.push({
-              type: 'event-async',
-              event: event.event,
-              task: event.task,
-              indent: getIndent(event, indents),
-              id: event.id,
-              excluded: event.excluded,
-            });
-          } else {
-            entries.push({
-              type: 'event',
-              event: event.event,
-              indent: getIndent(event, indents),
-              id: event.id,
-              excluded: event.excluded,
-            });
-          }
-        }
-      }
+    if (showExcludedEvents) {
+      addEventEntries(task.events, entries, indents);
+    } else {
+      addEventEntriesHideExcluded(task.events, entries, indents);
     }
   }
   return entries;

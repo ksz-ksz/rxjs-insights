@@ -32,6 +32,10 @@ export interface SubscribersGraphActions {
 
   UnfollowEvent: void;
 
+  HideExcludedEvents: void;
+
+  ShowExcludedEvents: void;
+
   TargetHovered: { target: RelatedTarget };
 
   TargetUnhovered: { target: RelatedTarget };

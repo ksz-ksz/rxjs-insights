@@ -10,6 +10,7 @@ import {
 } from '@app/selectors/active-target-state-selector';
 import {
   followingSelector,
+  showExcludedEventsSelector,
   timeSelector,
 } from '@app/selectors/insights-selectors';
 import { getDoubleTree, LinkData, NodeData } from '@app/components/tree';
@@ -20,7 +21,12 @@ import { SubscriberGraphNodeRenderer } from '@app/pages/target-page/subscriber-g
 import { SubscriberGraphLinkRenderer } from '@app/pages/target-page/subscriber-graph-link-renderer';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 import { Box, IconButton } from '@mui/material';
-import { CenterFocusStrong, CropFree } from '@mui/icons-material';
+import {
+  CenterFocusStrong,
+  CropFree,
+  Visibility,
+  VisibilityOff,
+} from '@mui/icons-material';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import {
   getDestinationChildKey,
@@ -188,8 +194,13 @@ const hierarchyTreeSelector = createSelector(
 );
 
 const vmSelector = createSelector(
-  [hierarchyTreeSelector, timeSelector, followingSelector],
-  ([hierarchyTree, time, following]) => {
+  [
+    hierarchyTreeSelector,
+    timeSelector,
+    followingSelector,
+    showExcludedEventsSelector,
+  ],
+  ([hierarchyTree, time, following, showExcludedEvents]) => {
     const { relations, target, sources, destinations, getNodeKey, getLinkKey } =
       hierarchyTree;
     const { nodes, links } = getDoubleTree(
@@ -210,6 +221,7 @@ const vmSelector = createSelector(
       getNodeKey,
       getLinkKey,
       following,
+      showExcludedEvents,
       focus,
       viewBoxPadding,
     };
@@ -231,6 +243,13 @@ export function SubscribersGraph() {
         : subscribersGraphActions.FollowEvent(),
     [vm.following]
   );
+  const onShowExcludedChange = useDispatchCallback(
+    () =>
+      vm.showExcludedEvents
+        ? subscribersGraphActions.HideExcludedEvents()
+        : subscribersGraphActions.ShowExcludedEvents(),
+    [vm.showExcludedEvents]
+  );
 
   return (
     <Box sx={{ position: 'relative', flexGrow: 1, flexShrink: 1, height: 0 }}>
@@ -244,6 +263,18 @@ export function SubscribersGraph() {
         getLinkKey={vm.getLinkKey}
         viewBoxPadding={vm.viewBoxPadding}
       />
+      <IconButton
+        size="small"
+        sx={{ position: 'absolute', bottom: 2, left: 2 }}
+        onClick={onShowExcludedChange}
+      >
+        {vm.showExcludedEvents ? (
+          <Visibility titleAccess="Excluded entries are visible. Click to hide them." />
+        ) : (
+          <VisibilityOff titleAccess="Excluded entries are not visible. Click to show them." />
+        )}
+      </IconButton>
+
       <IconButton
         size="small"
         sx={{ position: 'absolute', bottom: 2, right: 2 }}

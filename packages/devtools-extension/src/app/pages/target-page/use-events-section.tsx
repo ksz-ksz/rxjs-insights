@@ -21,7 +21,10 @@ import { getEvents } from '@app/pages/target-page/get-events';
 import { SidePanelEntry } from '@app/components/side-panel';
 import { useSelector } from '@app/store';
 import { eventsLogActions } from '@app/actions/events-log-actions';
-import { timeSelector } from '@app/selectors/insights-selectors';
+import {
+  showExcludedEventsSelector,
+  timeSelector,
+} from '@app/selectors/insights-selectors';
 
 const ExcludedDiv = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -69,13 +72,22 @@ const RefOutletSpan = styled('span')({
   },
 });
 const eventsSelector = createSelector(
-  [activeTargetStateSelector, activeTargetUiStateSelector],
-  ([activeTargetState, activeTargetUiState]) => {
+  [
+    activeTargetStateSelector,
+    activeTargetUiStateSelector,
+    showExcludedEventsSelector,
+  ],
+  ([activeTargetState, activeTargetUiState, showExcludedEvents]) => {
     const { target, relations } = activeTargetState!;
     const { expandedKeys } = activeTargetUiState!;
     const timeframes = getTargetTimeframes(target, relations, expandedKeys);
     const allEvents = getEvents(relations);
-    const entries = getEventLogEntries(relations, allEvents, timeframes);
+    const entries = getEventLogEntries(
+      relations,
+      allEvents,
+      timeframes,
+      showExcludedEvents
+    );
 
     return { entries };
   }
