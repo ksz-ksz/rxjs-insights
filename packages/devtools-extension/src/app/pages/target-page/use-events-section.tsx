@@ -1,6 +1,7 @@
 import {
   EventAsyncEntry,
   EventEntry,
+  ExcludedEntry,
   getEventLogEntries,
   TaskEntry,
 } from '@app/pages/target-page/get-event-log-entries';
@@ -9,7 +10,7 @@ import { getEventElementId } from '@app/utils/get-event-element-id';
 import { Indent } from '@app/components/indent';
 import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import React, { useMemo } from 'react';
-import { styled } from '@mui/material';
+import { styled, Typography } from '@mui/material';
 import { createSelector, useDispatchCallback } from '@lib/store';
 import {
   activeTargetStateSelector,
@@ -22,26 +23,40 @@ import { useSelector } from '@app/store';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { timeSelector } from '@app/selectors/insights-selectors';
 
+const ExcludedDiv = styled('div')(({ theme }) => ({
+  display: 'flex',
+  whiteSpace: 'nowrap',
+  fontFamily: 'Monospace',
+  fontStyle: 'oblique',
+  height: '24px',
+  alignItems: 'center',
+  flexWrap: 'nowrap',
+  color: theme.palette.text.disabled,
+}));
 const TaskDiv = styled('div')(({ theme }) => ({
   display: 'flex',
+  height: '24px',
   fontFamily: 'Monospace',
   fontStyle: 'oblique',
   color: theme.palette.text.secondary,
-  marginLeft: '1rem',
-  marginRight: '1rem',
+  marginLeft: '0.6rem',
+  marginRight: '0.6rem',
   whiteSpace: 'nowrap',
   '&:after': {
     borderTop: `thin solid ${theme.palette.divider}`,
     content: '""',
     flexGrow: 1,
     alignSelf: 'center',
-    marginLeft: '1rem',
+    marginLeft: '0.6rem',
   },
 }));
 const EventDiv = styled('div')(({ theme }) => ({
-  display: 'block',
+  display: 'flex',
+  flexWrap: 'nowrap',
+  alignItems: 'center',
+  height: '24px',
   whiteSpace: 'nowrap',
-  paddingRight: '1rem',
+  paddingRight: '0.6rem',
   '&[data-selected=true]': {
     backgroundColor: theme.palette.action.selected,
   },
@@ -108,6 +123,8 @@ export function useEventsSection() {
                     onEventSelected={onEventSelected}
                   />
                 );
+              case 'excluded':
+                return <ExcludedEntryRenderer entry={entry} />;
             }
           },
         })
@@ -121,6 +138,17 @@ export function TaskEntryRenderer({ entry }: { entry: TaskEntry }) {
     <TaskDiv key={`task-${entry.task.id}`}>
       {entry.task.name} #{entry.task.id}
     </TaskDiv>
+  );
+}
+
+export function ExcludedEntryRenderer({ entry }: { entry: ExcludedEntry }) {
+  return (
+    <ExcludedDiv key={`excluded-${entry.id}`}>
+      <Indent indent={entry.indent} />
+      <Typography sx={{ px: '0.6rem' }} variant="body2">
+        {entry.events.length} entries excluded
+      </Typography>
+    </ExcludedDiv>
   );
 }
 

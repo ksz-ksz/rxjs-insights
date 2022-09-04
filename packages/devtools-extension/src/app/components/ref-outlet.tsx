@@ -490,7 +490,7 @@ const LabelSpan = styled('span')(({ theme }) => ({
   '&:before': {
     display: 'inline-block',
     width: '0.6rem',
-    content: '" "',
+    content: '"\\00a0"',
     color: theme.inspector.secondary,
     whiteSpace: 'pre',
   },
@@ -502,16 +502,17 @@ const LabelSpan = styled('span')(({ theme }) => ({
   },
   '&:not(:empty):after': {
     display: 'inline',
-    content: '": "',
+    content: '":\\00a0"',
     color: theme.inspector.secondary,
   },
 }));
 
 const EntryDiv = styled('div')({
-  display: 'inline-block',
+  display: 'inline-flex',
+  height: '100%',
   textAlign: 'left',
   cursor: 'default',
-  whiteSpace: 'nowrap',
+  flexWrap: 'nowrap',
 });
 
 function ObjectRefOutletRenderer(

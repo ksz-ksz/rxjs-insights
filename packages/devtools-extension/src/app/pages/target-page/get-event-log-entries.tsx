@@ -3,21 +3,36 @@ import { partition } from '@app/utils/partition';
 import { isExcluded } from '@app/pages/target-page/is-excluded';
 import { Timeframe } from '@app/pages/target-page/get-target-timeframes';
 
+export interface EventItem {
+  id: string;
+  event: RelatedEvent;
+  parentEvent?: EventItem;
+  task: RelatedTask;
+  excluded: boolean;
+  async: boolean;
+}
+
+export interface TaskItem {
+  id: string;
+  task: RelatedTask;
+  events: EventItem[];
+}
+
 export interface EventEntry {
   id: string;
   type: 'event';
-  indent: number;
   event: RelatedEvent;
   excluded: boolean;
+  indent: number;
 }
 
 export interface EventAsyncEntry {
   id: string;
   type: 'event-async';
-  indent: number;
   task: RelatedTask;
   event: RelatedEvent;
   excluded: boolean;
+  indent: number;
 }
 
 export interface TaskEntry {
@@ -26,13 +41,25 @@ export interface TaskEntry {
   task: RelatedTask;
 }
 
-export type EventLogEntry = EventEntry | EventAsyncEntry | TaskEntry;
+export interface ExcludedEntry {
+  id: string;
+  type: 'excluded';
+  events: RelatedEvent[];
+  indent: number;
+}
+
+export type EventLogEntry =
+  | EventEntry
+  | EventAsyncEntry
+  | TaskEntry
+  | ExcludedEntry;
 
 interface EventNode {
   event: RelatedEvent;
   nodeExcluded: boolean;
   treeExcluded: boolean;
   childEventNodes: EventNode[];
+  parentEventNode: EventNode | undefined;
 }
 
 interface TaskNode {
@@ -44,13 +71,20 @@ function getChildEventNodes(
   relations: Relations,
   event: RelatedEvent,
   timeframes: Record<number, Timeframe>,
-  eventNodes: Record<number, EventNode>
+  eventNodes: Record<number, EventNode>,
+  parentEventNode: EventNode | undefined
 ) {
   const childEvents: EventNode[] = [];
   for (const childEventId of event.succeedingEvents) {
     const childEvent = relations.events[childEventId];
     childEvents.push(
-      getEventNode(relations, childEvent, timeframes, eventNodes)
+      getEventNode(
+        relations,
+        childEvent,
+        timeframes,
+        eventNodes,
+        parentEventNode
+      )
     );
   }
   return childEvents;
@@ -69,23 +103,28 @@ function getEventNode(
   relations: Relations,
   event: RelatedEvent,
   timeframes: Record<number, Timeframe>,
-  eventNodes: Record<number, EventNode>
+  eventNodes: Record<number, EventNode>,
+  parentEventNode: EventNode | undefined
 ): EventNode {
   let eventNode = eventNodes[event.time];
   if (eventNode === undefined) {
+    eventNode = {
+      event,
+      parentEventNode,
+    } as EventNode;
     const excluded = isExcluded(relations, event, timeframes);
     const childEventNodes = getChildEventNodes(
       relations,
       event,
       timeframes,
-      eventNodes
+      eventNodes,
+      eventNode
     );
-    eventNode = {
-      event,
-      childEventNodes,
-      nodeExcluded: excluded,
-      treeExcluded: excluded && getChildEventNodesExcluded(childEventNodes),
-    };
+    eventNode.childEventNodes = childEventNodes;
+    eventNode.nodeExcluded = excluded;
+    eventNode.treeExcluded =
+      excluded && getChildEventNodesExcluded(childEventNodes);
+
     eventNodes[event.time] = eventNode;
   }
 
@@ -109,7 +148,13 @@ function getRootEventNodes(
   const rootEventNodes: EventNode[] = [];
   for (let event of events) {
     if (isRootEvent(relations, event)) {
-      const eventNode = getEventNode(relations, event, timeframes, eventNodes);
+      const eventNode = getEventNode(
+        relations,
+        event,
+        timeframes,
+        eventNodes,
+        undefined
+      );
       if (!eventNode.treeExcluded) {
         rootEventNodes.push(eventNode);
       }
@@ -135,48 +180,44 @@ function getTaskNodes(
 
 function visitEventNodes(
   relations: Relations,
-  entries: EventLogEntry[],
-  indents: Record<number, number>,
+  entries: EventItem[],
   childEvents: EventNode[],
-  parentEvent?: EventNode
+  parentEvent: EventItem | undefined
 ) {
   for (const childEvent of childEvents) {
     if (
       parentEvent === undefined ||
       childEvent.event.task === parentEvent.event.task
     ) {
-      const indent =
-        parentEvent !== undefined ? indents[parentEvent.event.time] + 1 : 0;
-      indents[childEvent.event.time] = indent;
-      entries.push({
+      const eventItem: EventItem = {
         id: `event-${childEvent.event.time}`,
-        type: 'event',
         event: childEvent.event,
+        task: relations.tasks[childEvent.event.task],
         excluded: childEvent.nodeExcluded,
-        indent,
-      });
+        async: false,
+        parentEvent: parentEvent,
+      };
+      entries.push(eventItem);
       visitEventNodes(
         relations,
         entries,
-        indents,
         childEvent.childEventNodes,
-        childEvent
+        eventItem
       );
     } else {
-      const indent = indents[parentEvent.event.time] + 1;
       entries.push({
         id: `event-async-${childEvent.event.time}`,
-        type: 'event-async',
         event: childEvent.event,
         task: relations.tasks[childEvent.event.task],
-        indent,
         excluded: childEvent.nodeExcluded,
+        async: true,
+        parentEvent: parentEvent,
       });
     }
   }
 }
 
-export function getEventLogEntries(
+function getTasks(
   relations: Relations,
   events: RelatedEvent[],
   timeframes: Record<number, Timeframe>
@@ -185,18 +226,88 @@ export function getEventLogEntries(
     return [];
   }
   const taskNodes = getTaskNodes(events, relations, timeframes);
-  const entries: EventLogEntry[] = [];
-  const indents: Record<number, number> = {};
+  const tasks: TaskItem[] = [];
   for (const taskNode of taskNodes) {
+    const events: EventItem[] = [];
     if (taskNode.rootEventNodes.length !== 0) {
-      entries.push({
-        id: `task-${taskNode.task.id}`,
-        type: 'task',
-        task: taskNode.task,
-      });
-      visitEventNodes(relations, entries, indents, taskNode.rootEventNodes);
+      visitEventNodes(relations, events, taskNode.rootEventNodes, undefined);
     }
+    tasks.push({
+      id: `task-${taskNode.task.id}`,
+      task: taskNode.task,
+      events,
+    });
   }
 
+  return tasks;
+}
+
+function getIndent(event: EventItem, indents: Map<number, number>): number {
+  if (indents.has(event.event.time)) {
+    return indents.get(event.event.time)!;
+  } else if (event.parentEvent === undefined) {
+    const indent = 0;
+    indents.set(event.event.time, indent);
+    return indent;
+  } else {
+    const indent =
+      getIndent(event.parentEvent, indents) + (event.excluded ? 0 : 1);
+    if (!event.async) {
+      indents.set(event.event.time, indent);
+    }
+    return indent;
+  }
+}
+
+export function getEventLogEntries(
+  relations: Relations,
+  events: RelatedEvent[],
+  timeframes: Record<number, Timeframe>
+) {
+  const tasks = getTasks(relations, events, timeframes);
+  const entries: EventLogEntry[] = [];
+  const indents = new Map<number, number>();
+  for (const task of tasks) {
+    entries.push({
+      type: 'task',
+      id: task.id,
+      task: task.task,
+    });
+    const groups = partition(task.events, (a, b) => a.excluded !== b.excluded);
+    for (const group of groups) {
+      const firstEvent = group[0];
+      if (firstEvent.excluded) {
+        entries.push({
+          type: 'excluded',
+          id: `excluded-${firstEvent.async ? 'async' : ''}-${
+            firstEvent.event.time
+          }`,
+          events: group.map((x) => x.event),
+          indent: getIndent(firstEvent, indents),
+        });
+      } else {
+        for (const event of group) {
+          if (event.async) {
+            entries.push({
+              type: 'event-async',
+              event: event.event,
+              task: event.task,
+              indent: getIndent(event, indents),
+              id: event.id,
+              excluded: event.excluded,
+            });
+          } else {
+            entries.push({
+              type: 'event',
+              event: event.event,
+              indent: getIndent(event, indents),
+              id: event.id,
+              excluded: event.excluded,
+            });
+          }
+        }
+      }
+    }
+  }
   return entries;
 }
