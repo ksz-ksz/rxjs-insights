@@ -10,4 +10,4 @@ It can be done directly, by importing the `install` function and calling it (whi
 
 The secondary job of the `installModule` is to set up the environment for the RxJS Insights, e.g. to install the Zone.js for better tracking of asynchronous actions.
 
-By default, the `installMoule` resolves to the `@rxjs-insights/rxjs<version>` module, e.g. for RxJS 7 it will be resolved to `@rxjs-insights/rxjs7`.
+By default, the `installModule` resolves to the `@rxjs-insights/rxjs<version>` module, e.g. for RxJS 7 it will be resolved to `@rxjs-insights/rxjs7`.
