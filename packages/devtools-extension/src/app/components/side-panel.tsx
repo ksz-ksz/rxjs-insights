@@ -303,8 +303,10 @@ export const SidePanel = React.memo(
           <div
             style={{
               height: `${virtualizer.totalSize}px`,
-              width: '100%',
               position: 'relative',
+              display: 'inline-block',
+              overflowY: 'hidden',
+              minWidth: '100%',
             }}
           >
             {virtualizer.virtualItems.map((virtualRow) => {
@@ -322,14 +324,16 @@ export const SidePanel = React.memo(
                     ...(isActiveSticky(virtualRow.index)
                       ? {
                           position: 'sticky',
+                          top: 0,
+                          left: 0,
                         }
                       : {
-                          position: 'absolute',
+                          position: 'sticky',
+                          bottom: '250vh',
+                          left: 0,
                           transform: `translateY(${virtualRow.start}px)`,
                         }),
-                    top: 0,
-                    left: 0,
-                    width: '100%',
+
                     height: `${entry.getHeight()}px`,
                   }}
                 >
