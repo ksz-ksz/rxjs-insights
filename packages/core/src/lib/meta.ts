@@ -22,16 +22,15 @@ export interface SubscriberMeta {
 }
 
 export function getMeta<M>(target: HasMeta<M>): M {
-  const meta = target[META];
-  if (meta !== undefined) {
-    return meta;
+  if (hasMeta(target)) {
+    return target[META];
   } else {
     throw new Error('meta not found on target');
   }
 }
 
 export function hasMeta<T>(target: T): target is T & HasMeta<MetaOf<T>> {
-  return (target as any)[META] !== undefined;
+  return (target as any).hasOwnProperty(META);
 }
 
 export function setMeta<T>(target: T, meta: MetaOf<T>): MetaOf<T> {
