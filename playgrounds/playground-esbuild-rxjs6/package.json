@@ -1,0 +1,22 @@
+{
+  "name": "playground-esbuild-rxjs6",
+  "version": "0.4.3",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "start": "node serve.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "rxjs": "^6.6.7",
+    "zone.js": "^0.11.5"
+  },
+  "devDependencies": {
+    "@rxjs-insights/console": "^0.4.3",
+    "@rxjs-insights/core": "^0.4.3",
+    "@rxjs-insights/devtools": "^0.4.3",
+    "@rxjs-insights/plugin-esbuild": "^0.4.2",
+    "@rxjs-insights/rxjs6": "^0.4.3",
+    "esbuild": "0.14.27"
+  }
+}
