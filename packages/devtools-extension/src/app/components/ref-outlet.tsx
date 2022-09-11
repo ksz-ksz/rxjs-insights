@@ -347,8 +347,20 @@ const StringSpan = styled('span')(({ theme }) => ({
   },
 }));
 
+const StringValueSpan = styled('span')({
+  display: 'inline-block',
+  maxWidth: '400px',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  verticalAlign: 'bottom',
+});
+
 function StringTag(props: TagRendererProps<ValueRef>) {
-  return <StringSpan>{props.reference.value}</StringSpan>;
+  return (
+    <StringSpan>
+      <StringValueSpan>{props.reference.value}</StringValueSpan>
+    </StringSpan>
+  );
 }
 
 const NumberSpan = styled('span')(({ theme }) => ({
@@ -513,6 +525,7 @@ const EntryDiv = styled('div')({
   textAlign: 'left',
   cursor: 'default',
   flexWrap: 'nowrap',
+  whiteSpace: 'nowrap',
 });
 
 function ObjectRefOutletRenderer(
