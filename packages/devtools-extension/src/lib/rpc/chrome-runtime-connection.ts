@@ -22,17 +22,21 @@ export function createChromeRuntimeClientAdapter(
 }
 
 export function createChromeRuntimeServerAdapter(
-  channel: string
+  channel: string,
+  tabId?: number
 ): ServerAdapterAsync {
   return {
     name: `ServerAdapterAsync[${channel}]`,
     startAsync(requestHandler) {
       const listener = (
         message: ChanneledMessage,
-        sender: any,
+        sender: chrome.runtime.MessageSender,
         sendResponse: (message: any) => void
       ) => {
-        if (message.channel === channel) {
+        if (
+          (tabId === undefined || sender.tab?.id === tabId) &&
+          message.channel === channel
+        ) {
           const result = requestHandler(message.message);
           if (result instanceof Promise) {
             result.then(sendResponse);

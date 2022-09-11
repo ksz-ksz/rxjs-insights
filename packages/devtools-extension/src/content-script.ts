@@ -1,9 +1,16 @@
 import {
   createChromeRuntimeClientAdapter,
+  createClient,
   createDocumentEventServerAdapter,
   startProxyServer,
 } from '@lib/rpc';
 import { TargetsNotificationsChannel } from '@app/protocols/targets-notifications';
+import {
+  ReloadNotification,
+  ReloadNotificationChannel,
+} from '@app/protocols/reload-notification';
+
+sendReloadNotification();
 
 injectPageScript();
 
@@ -22,4 +29,11 @@ function injectPageScript() {
     parent.removeChild(script);
   };
   parent.appendChild(script);
+}
+
+function sendReloadNotification() {
+  const reloadNotificationClient = createClient<ReloadNotification>(
+    createChromeRuntimeClientAdapter(ReloadNotificationChannel)
+  );
+  void reloadNotificationClient.notifyReload();
 }

@@ -22,7 +22,9 @@ import {
 let isHandlingOpenResource = false;
 
 const targetsNotificationsClient = createClient<TargetsNotifications>(
-  createChromeRuntimeClientAdapter(TargetsNotificationsChannel)
+  createChromeRuntimeClientAdapter(
+    TargetsNotificationsChannel + chrome.devtools.inspectedWindow.tabId
+  )
 );
 
 function getShortLocationString(location: Location): string {

@@ -69,7 +69,16 @@ export const targetReaction = combineReactions()
     createReaction(() =>
       fromServer((observer) =>
         startServer<TargetsNotifications>(
-          createChromeRuntimeServerAdapter(TargetsNotificationsChannel),
+          [
+            createChromeRuntimeServerAdapter(
+              TargetsNotificationsChannel +
+                chrome.devtools.inspectedWindow.tabId
+            ),
+            createChromeRuntimeServerAdapter(
+              TargetsNotificationsChannel,
+              chrome.devtools.inspectedWindow.tabId
+            ),
+          ],
           {
             notifyTarget(target: TargetRef) {
               observer.next(

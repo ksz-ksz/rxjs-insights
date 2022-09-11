@@ -9,7 +9,10 @@ export interface Server {
   stop(): void;
 }
 
-function start(adapter: ServerAdapter, requestHandler: RequestHandlerSync) {
+function startSingle(
+  adapter: ServerAdapter,
+  requestHandler: RequestHandlerSync
+) {
   if ('startSync' in adapter) {
     return adapter.startSync(requestHandler);
   } else {
@@ -17,16 +20,33 @@ function start(adapter: ServerAdapter, requestHandler: RequestHandlerSync) {
   }
 }
 
-// let nextId = 0;
+function start(
+  adapterOrAdapters: ServerAdapter | ServerAdapter[],
+  requestHandler: RequestHandlerSync
+): Server {
+  if (Array.isArray(adapterOrAdapters)) {
+    const servers: Server[] = [];
+    for (const adapter of adapterOrAdapters) {
+      servers.push(startSingle(adapter, requestHandler));
+    }
+    return {
+      stop() {
+        for (const server of servers) {
+          server.stop();
+        }
+      },
+    };
+  } else {
+    return startSingle(adapterOrAdapters, requestHandler);
+  }
+}
 
 export function startServer<T>(
-  adapter: ServerAdapter,
+  adapterOrAdapters: ServerAdapter | ServerAdapter[],
   implementation: T
 ): Server {
-  return start(adapter, (message) => {
-    // const id = nextId++;
+  return start(adapterOrAdapters, (message) => {
     try {
-      // console.time(`${adapter.name}{${id}}`);
       return {
         success: (implementation as any)[message.func].apply(
           implementation,
@@ -38,8 +58,6 @@ export function startServer<T>(
       return {
         failure: e instanceof Error ? `${e.name}: ${e.message}` : String(e),
       };
-    } finally {
-      // console.timeEnd(`${adapter.name}{${id}}`);
     }
   });
 }

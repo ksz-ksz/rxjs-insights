@@ -11,9 +11,7 @@
     "256": "icons/rxjs-insights-128.png"
   },
   "homepage_url": "https://github.com/ksz-ksz/rxjs-insights",
-  "permissions": [
-    "webNavigation"
-  ],
+  "permissions": [],
   "devtools_page": "devtools-page.html",
   "content_scripts": [
     {

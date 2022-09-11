@@ -10,7 +10,7 @@ declare global {
 function connectWithDevtools() {
   const inspect = window.RXJS_INSIGHTS_CONNECT!(getGlobalEnv());
   if (inspect) {
-    console.info('RxJS Insights: connected with the devtools.');
+    console.info('RxJS Insights: devtools connection established.');
     setInspectFunction(inspect);
     return true;
   } else {
@@ -39,7 +39,7 @@ export function connect(timeout = 1000): Promise<boolean> {
       timeoutId = window.setTimeout(() => {
         document.removeEventListener(type, devtoolsReadyListener);
         console.warn(
-          'RxJS Insights: could not connect with the devtools. Make sure that the RxJS Devtools extension is installed and enabled.'
+          'RxJS Insights: could not establish devtools connection. Make sure that the RxJS Insights Devtools Extension is installed and enabled.'
         );
         resolve(false);
       }, timeout);
