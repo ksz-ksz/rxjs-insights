@@ -1,2 +1,5 @@
 chromium-profile/
-extension.zip
+firefox-profile/
+manifest.json
+extension-chromium.zip
+extension-firefox.zip

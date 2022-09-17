@@ -1,5 +1,5 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "version": "0.0.1",
   "name": "RxJS Insights",
   "description": "See through the observables",
@@ -7,8 +7,8 @@
     "16": "icons/rxjs-insights-16.png",
     "32": "icons/rxjs-insights-32.png",
     "48": "icons/rxjs-insights-48.png",
-    "128": "icons/rxjs-insights-256.png",
-    "256": "icons/rxjs-insights-128.png"
+    "128": "icons/rxjs-insights-128.png",
+    "256": "icons/rxjs-insights-256.png"
   },
   "homepage_url": "https://github.com/ksz-ksz/rxjs-insights",
   "permissions": [],
@@ -25,9 +25,6 @@
     }
   ],
   "web_accessible_resources": [
-    {
-      "resources": [ "dist/page-script.js" ],
-      "matches": [ "<all_urls>" ]
-    }
+    "dist/page-script.js"
   ]
 }
