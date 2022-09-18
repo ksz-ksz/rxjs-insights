@@ -21,7 +21,9 @@ import {
 } from '@app/protocols/targets-notifications';
 
 const fromSourcesPaneClient = createClient<FromSourcesPane>(
-  createChromeRuntimeClientAdapter(FromSourcesPaneChannel)
+  createChromeRuntimeClientAdapter(
+    FromSourcesPaneChannel + chrome.devtools.inspectedWindow.tabId
+  )
 );
 
 let isHandlingOpenResource = false;
@@ -171,7 +173,9 @@ async function update() {
 }
 
 startServer<ToSourcesPane>(
-  createChromeRuntimeServerAdapter(ToSourcesPaneChannel),
+  createChromeRuntimeServerAdapter(
+    ToSourcesPaneChannel + chrome.devtools.inspectedWindow.tabId
+  ),
   {
     onShown() {
       void update();

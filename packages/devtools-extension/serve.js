@@ -22,6 +22,7 @@ async function serve(target) {
       './src/devtools-page.ts',
       './src/sources-page.ts',
       './src/content-script.ts',
+      './src/background-script.ts',
       './src/page-script.js',
     ],
     outdir: 'dist',

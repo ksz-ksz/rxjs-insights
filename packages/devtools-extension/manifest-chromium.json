@@ -13,6 +13,9 @@
   "homepage_url": "https://github.com/ksz-ksz/rxjs-insights",
   "permissions": [],
   "devtools_page": "devtools-page.html",
+  "background": {
+    "service_worker": "dist/background-script.js"
+  },
   "content_scripts": [
     {
       "matches": [

@@ -24,11 +24,15 @@ if (typeof chrome.devtools.panels.sources.createSidebarPane === 'function') {
   let scopePane: ExtensionSidebarPane;
 
   const toSourcesPaneClient = createClient<ToSourcesPane>(
-    createChromeRuntimeClientAdapter(ToSourcesPaneChannel)
+    createChromeRuntimeClientAdapter(
+      ToSourcesPaneChannel + chrome.devtools.inspectedWindow.tabId
+    )
   );
 
   startServer<FromSourcesPane>(
-    createChromeRuntimeServerAdapter(FromSourcesPaneChannel),
+    createChromeRuntimeServerAdapter(
+      FromSourcesPaneChannel + chrome.devtools.inspectedWindow.tabId
+    ),
     {
       setHeight(height: number) {
         callStackPane.setHeight(`${Math.ceil(height)}px`);

@@ -11,8 +11,7 @@ export const inspectedWindowReaction = createReaction(() =>
   fromServer((observer) =>
     startServer<ReloadNotification>(
       createChromeRuntimeServerAdapter(
-        ReloadNotificationChannel,
-        chrome.devtools.inspectedWindow.tabId
+        ReloadNotificationChannel + chrome.devtools.inspectedWindow.tabId
       ),
       {
         notifyReload() {
