@@ -1,14 +1,17 @@
-import { createChromeRuntimeServerAdapter, startServer } from '@lib/rpc';
+import {
+  createChromeRuntimeClientAdapter,
+  createChromeRuntimeServerAdapter,
+  createClient,
+  startServer,
+} from '@lib/rpc';
 import {
   FromSourcesPane,
   FromSourcesPaneChannel,
+  ToSourcesPane,
+  ToSourcesPaneChannel,
 } from '@app/protocols/sources-panel';
-import { toSourcesPaneClient } from '@app/clients/sources-panel';
 import { EventRef } from '@app/protocols/refs';
 import ExtensionSidebarPane = chrome.devtools.panels.ExtensionSidebarPane;
-
-let callStackPane: ExtensionSidebarPane;
-let scopePane: ExtensionSidebarPane;
 
 chrome.devtools.panels.create(
   'RxJS Insights',
@@ -16,19 +19,27 @@ chrome.devtools.panels.create(
   'index.html'
 );
 
-startServer<FromSourcesPane>(
-  createChromeRuntimeServerAdapter(FromSourcesPaneChannel),
-  {
-    setHeight(height: number) {
-      callStackPane.setHeight(`${Math.ceil(height)}px`);
-    },
+if (typeof chrome.devtools.panels.sources.createSidebarPane === 'function') {
+  let callStackPane: ExtensionSidebarPane;
+  let scopePane: ExtensionSidebarPane;
 
-    setScope(ref: EventRef | undefined) {
-      console.log('setScope', ref);
-      if (ref) {
-        scopePane.setExpression(
-          // language=js
-          `
+  const toSourcesPaneClient = createClient<ToSourcesPane>(
+    createChromeRuntimeClientAdapter(ToSourcesPaneChannel)
+  );
+
+  startServer<FromSourcesPane>(
+    createChromeRuntimeServerAdapter(FromSourcesPaneChannel),
+    {
+      setHeight(height: number) {
+        callStackPane.setHeight(`${Math.ceil(height)}px`);
+      },
+
+      setScope(ref: EventRef | undefined) {
+        console.log('setScope', ref);
+        if (ref) {
+          scopePane.setExpression(
+            // language=js
+            `
           (()=>{
             const event = window.RXJS_INSIGHTS_REFS.getObject(${ref.objectId});
             
@@ -54,28 +65,29 @@ startServer<FromSourcesPane>(
             return scope;
           })()
           `
-        );
-      } else {
-        scopePane.setExpression('null');
-      }
-    },
-  }
-);
+          );
+        } else {
+          scopePane.setExpression('null');
+        }
+      },
+    }
+  );
 
-chrome.devtools.panels.sources.createSidebarPane(
-  'RxJS Insights - Scope',
-  (pane) => {
-    scopePane = pane;
-  }
-);
+  chrome.devtools.panels.sources.createSidebarPane(
+    'RxJS Insights - Scope',
+    (pane) => {
+      scopePane = pane;
+    }
+  );
 
-chrome.devtools.panels.sources.createSidebarPane(
-  'RxJS Insights - Call Stack',
-  (pane) => {
-    callStackPane = pane;
-    pane.setPage('/sources-page.html');
-    pane.onShown.addListener(() => {
-      void toSourcesPaneClient.onShown();
-    });
-  }
-);
+  chrome.devtools.panels.sources.createSidebarPane(
+    'RxJS Insights - Call Stack',
+    (pane) => {
+      callStackPane = pane;
+      pane.setPage('/sources-page.html');
+      pane.onShown.addListener(() => {
+        void toSourcesPaneClient.onShown();
+      });
+    }
+  );
+}

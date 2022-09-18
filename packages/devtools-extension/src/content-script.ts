@@ -1,7 +1,7 @@
 import {
   createChromeRuntimeClientAdapter,
   createClient,
-  createDocumentEventServerAdapter,
+  createPostMessageServerAdapter,
   startProxyServer,
 } from '@lib/rpc';
 import { TargetsNotificationsChannel } from '@app/protocols/targets-notifications';
@@ -15,7 +15,7 @@ sendReloadNotification();
 injectPageScript();
 
 startProxyServer(
-  createDocumentEventServerAdapter(TargetsNotificationsChannel),
+  createPostMessageServerAdapter(TargetsNotificationsChannel),
   createChromeRuntimeClientAdapter(TargetsNotificationsChannel)
 );
 

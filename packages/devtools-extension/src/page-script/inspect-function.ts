@@ -1,5 +1,5 @@
 import { RefsService } from './refs-service';
-import { createClient, createDocumentEventClientAdapter } from '@lib/rpc';
+import { createClient, createPostMessageClientAdapter } from '@lib/rpc';
 import {
   TargetsNotifications,
   TargetsNotificationsChannel,
@@ -29,7 +29,7 @@ export function createInspectFunction(
   targets: TargetsService
 ) {
   const targetsNotificationsClient = createClient<TargetsNotifications>(
-    createDocumentEventClientAdapter(TargetsNotificationsChannel)
+    createPostMessageClientAdapter(TargetsNotificationsChannel)
   );
 
   function inspect(maybeTarget: ObservableLike | SubscriberLike) {

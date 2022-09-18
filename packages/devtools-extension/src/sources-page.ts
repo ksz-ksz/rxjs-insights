@@ -1,7 +1,6 @@
 import { tracesClient } from '@app/clients/traces';
 import { TraceFrame } from '@app/protocols/traces';
 import { Location, Locations } from '@rxjs-insights/core';
-import { fromSourcesPaneClient } from '@app/clients/sources-panel';
 import {
   createChromeRuntimeClientAdapter,
   createChromeRuntimeServerAdapter,
@@ -9,6 +8,8 @@ import {
   startServer,
 } from '@lib/rpc';
 import {
+  FromSourcesPane,
+  FromSourcesPaneChannel,
   ToSourcesPane,
   ToSourcesPaneChannel,
 } from '@app/protocols/sources-panel';
@@ -18,6 +19,10 @@ import {
   TargetsNotifications,
   TargetsNotificationsChannel,
 } from '@app/protocols/targets-notifications';
+
+const fromSourcesPaneClient = createClient<FromSourcesPane>(
+  createChromeRuntimeClientAdapter(FromSourcesPaneChannel)
+);
 
 let isHandlingOpenResource = false;
 
