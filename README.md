@@ -15,9 +15,9 @@ RxJS Insights is a toolset that helps you debug and visualize the observables in
 
 **✨ Developer friendly**: Easy to set up. Easy to use.
 
-**✨ Unobtrusive**: Does not require source code changes in order to identify observables.
+**✨ Unobtrusive**: Does not require source code modification.
 
-**✨ Comprehensive**: Tracks all types of observable events and relations.
+**✨ Comprehensive**: Tracks all types of events and relations.
 
 The data gathered by the RxJS Insights includes the information about:
 
