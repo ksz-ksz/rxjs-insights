@@ -24,6 +24,7 @@ import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { useDispatchCallback } from '@lib/store';
 import { Indent } from '@app/components/indent';
 import { RefOutletActionEntry } from '@app/components/get-ref-outlet-entries';
+import { openResourceAvailable } from '@app/features';
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
@@ -206,9 +207,9 @@ function EventTag(props: TagRendererProps<EventRef>) {
 
 const LocationSpan = styled('span')(({ theme }) => ({
   fontFamily: 'Monospace',
-  textDecoration: 'underline',
-  cursor: 'pointer',
   color: theme.inspector.secondary,
+  textDecoration: openResourceAvailable ? 'underline' : undefined,
+  cursor: openResourceAvailable ? 'pointer' : undefined,
 }));
 
 function LocationTag(props: TagRendererProps<LocationRef>) {
@@ -217,9 +218,11 @@ function LocationTag(props: TagRendererProps<LocationRef>) {
   const longName = `${file}:${line}:${column}`;
   const onOpen = useCallback(
     (event: MouseEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      chrome.devtools.panels.openResource(file, line - 1, () => {});
+      if (openResourceAvailable) {
+        event.preventDefault();
+        event.stopPropagation();
+        chrome.devtools.panels.openResource(file, line - 1, () => {});
+      }
     },
     [props.reference]
   );

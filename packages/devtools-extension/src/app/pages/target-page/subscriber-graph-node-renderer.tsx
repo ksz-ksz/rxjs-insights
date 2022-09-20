@@ -29,6 +29,7 @@ import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions'
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
 import { getLocationStrings } from '@app/utils/get-location-strings';
+import { openResourceAvailable } from '@app/features';
 
 const circleRadius = 5;
 const circleCircumference = 2 * Math.PI * circleRadius;
@@ -112,18 +113,34 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
   const [menu, setMenu] = useState<MenuState>({ open: false });
   const onContextMenuOpen = useCallback(
     (event: MouseEvent) => {
-      setMenu({
-        open: true,
-        position: { top: event.clientY, left: event.clientX },
-        focusOptionVisible: !vm.isCaller && !vm.isRoot,
-        expandOptionVisible: !vm.isCaller && !vm.isExpanded,
-        collapseOptionVisible: !vm.isCaller && vm.isExpanded,
-        expandAllOptionVisible: !vm.isCaller,
-        collapseAllOptionVisible: !vm.isCaller,
-        goToSourceOptionVisible: vm.location !== undefined,
-      });
-      event.preventDefault();
-      event.stopPropagation();
+      const focusOptionVisible = !vm.isCaller && !vm.isRoot;
+      const expandOptionVisible = !vm.isCaller && !vm.isExpanded;
+      const collapseOptionVisible = !vm.isCaller && vm.isExpanded;
+      const expandAllOptionVisible = !vm.isCaller;
+      const collapseAllOptionVisible = !vm.isCaller;
+      const goToSourceOptionVisible =
+        openResourceAvailable && vm.location !== undefined;
+      if (
+        focusOptionVisible ||
+        expandOptionVisible ||
+        collapseOptionVisible ||
+        expandAllOptionVisible ||
+        collapseAllOptionVisible ||
+        goToSourceOptionVisible
+      ) {
+        setMenu({
+          open: true,
+          position: { top: event.clientY, left: event.clientX },
+          focusOptionVisible,
+          expandOptionVisible,
+          collapseOptionVisible,
+          expandAllOptionVisible,
+          collapseAllOptionVisible,
+          goToSourceOptionVisible,
+        });
+        event.preventDefault();
+        event.stopPropagation();
+      }
     },
     [setMenu, vm.isRoot, vm.isExpanded]
   );
