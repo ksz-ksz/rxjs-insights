@@ -329,7 +329,7 @@ export const SidePanel = React.memo(
                         }
                       : {
                           position: 'sticky',
-                          bottom: '250vh',
+                          bottom: virtualizer.totalSize,
                           left: 0,
                           transform: `translateY(${virtualRow.start}px)`,
                         }),
