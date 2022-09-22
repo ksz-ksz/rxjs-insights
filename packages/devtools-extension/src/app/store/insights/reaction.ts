@@ -76,14 +76,19 @@ export const insightsReaction = combineReactions()
   )
   .add(
     createReaction((action$) =>
-      action$.pipe(
-        filterActions([
-          subscribersGraphActions.FocusTarget,
-          refOutletContextActions.FocusTarget,
-        ]),
-        map((action) =>
+      merge(
+        action$.pipe(
+          filterActions(subscribersGraphActions.FocusTarget),
+          map((action) => action.payload.toTarget)
+        ),
+        action$.pipe(
+          filterActions(refOutletContextActions.FocusTarget),
+          map((action) => action.payload.target)
+        )
+      ).pipe(
+        map((target) =>
           router.actions.Navigate({
-            url: createUrl(['target', String(action.payload.target.id)]),
+            url: createUrl(['target', String(target.id)]),
           })
         )
       )

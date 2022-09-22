@@ -44,7 +44,7 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
     ([targetState, targetUiState, time]) => {
       const { target: rootTarget, relations } = targetState;
       const { expandedKeys } = targetUiState;
-      const rootTargetKey = String(rootTarget.id);
+      const rootTargetKey = `<${rootTarget.id}>`;
       const target = relations.targets[node.target.id];
       const isCaller = target.type === 'caller';
       const targetKey = node.key;
@@ -158,12 +158,19 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     (event: MouseEvent) => {
       onContextMenuClose(event);
       return subscribersGraphActions.FocusTarget({
-        target: vm.target,
         fromKey: vm.rootTargetKey,
+        fromTarget: vm.rootTarget,
+        toTarget: vm.target,
         toKey: vm.targetKey,
       });
     },
-    [onContextMenuClose, vm.target.id, vm.rootTargetKey, vm.targetKey]
+    [
+      onContextMenuClose,
+      vm.rootTarget,
+      vm.rootTargetKey,
+      vm.target,
+      vm.targetKey,
+    ]
   );
 
   const onExpand = useDispatchCallback(
@@ -228,8 +235,9 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
       }
       return event.ctrlKey
         ? subscribersGraphActions.FocusTarget({
-            target: vm.target,
             fromKey: vm.rootTargetKey,
+            fromTarget: vm.rootTarget,
+            toTarget: vm.target,
             toKey: vm.targetKey,
           })
         : vm.isExpanded
@@ -252,7 +260,14 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
             key: vm.targetKey,
           });
     },
-    [vm.isCaller, vm.isExpanded, vm.rootTarget.id, vm.targetKey]
+    [
+      vm.isCaller,
+      vm.isExpanded,
+      vm.rootTargetKey,
+      vm.rootTarget,
+      vm.targetKey,
+      vm.target,
+    ]
   );
 
   const onMouseEnter = useDispatchCallback(

@@ -225,13 +225,13 @@ export const insightsReducer = createReducer('insights', initialState)
     updateKeyMapping(state, target);
   })
   .add(subscribersGraphActions.FocusTarget, (state, action) => {
-    const { target, fromKey, toKey } = action.payload;
-    const { keysMapping } = state.targetsUi[Number(fromKey)];
+    const { fromTarget, toTarget, toKey } = action.payload;
+    const { keysMapping } = state.targetsUi[fromTarget.id];
     const rebasedKeysMapping = rebaseKeys(keysMapping, toKey);
-    state.targetsUi[target.id] = state.targetsUi[target.id] ?? {
-      expandedKeys: new Set([`<${target.id}>`]),
+    state.targetsUi[toTarget.id] = state.targetsUi[toTarget.id] ?? {
+      expandedKeys: new Set([`<${toTarget.id}>`]),
     };
-    state.targetsUi[target.id].keysMapping = rebasedKeysMapping;
+    state.targetsUi[toTarget.id].keysMapping = rebasedKeysMapping;
   })
   .add(subscribersGraphActions.FollowEvent, (state) => {
     state.following = true;
