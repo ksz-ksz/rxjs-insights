@@ -229,7 +229,7 @@ export const insightsReducer = createReducer('insights', initialState)
     const { keysMapping } = state.targetsUi[Number(fromKey)];
     const rebasedKeysMapping = rebaseKeys(keysMapping, toKey);
     state.targetsUi[target.id] = state.targetsUi[target.id] ?? {
-      expandedKeys: new Set([String(target.id)]),
+      expandedKeys: new Set([`<${target.id}>`]),
     };
     state.targetsUi[target.id].keysMapping = rebasedKeysMapping;
   })
