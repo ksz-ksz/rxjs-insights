@@ -1,9 +1,7 @@
 # Angular setup
 
 Angular is using Webpack under the hood.
-To set up the instrumentation, you'll need to add a plugin to the Webpack build configuration.
-There are a few ways in which it can be done.
-One of the most straightforward ways is to use [custom builders](https://github.com/just-jeb/angular-builders#readme) from the `@angular-builders/custom-webpack` package.
+The instruction below will guide you through setting up the [custom builders](https://github.com/just-jeb/angular-builders#readme) from the `@angular-builders/custom-webpack` package, which will allow you to add the Webpack plugin to your development build configuration (i.e. it will be active only when using the `ng serve`).
 
 > Note: Enabling instrumentation has a considerable performance and memory footprint. Make sure not to enable it in production mode.
 
@@ -32,9 +30,9 @@ npm install --save-dev @angular-builders/custom-webpack
 ```
 
 > Note: The version of the `@angular-builders/custom-webpack` package needs to match the version of Angular.
-> For example, if you are using Angular 12, you need to run `npm install --save-dev @angular-builders/custom-webpack^12`.
+> For example, if you are using Angular 12, you need to run `npm install --save-dev @angular-builders/custom-webpack@^12`.
 
-## 4. Create a custom development build config
+## 4. Create a custom webpack config in the `development.config.js` file
 
 * Place it next to the `angular.json` file.
 * Set its content to:
