@@ -9,10 +9,10 @@ import { LocationOutlet } from '@app/components/location-outlet';
 import { dashboardActions } from '@app/actions/dashboad-actions';
 import { Close } from '@mui/icons-material';
 import React, { useMemo } from 'react';
-import { RelatedTarget } from '@app/protocols/insights';
 import { EmptyStateRenderer } from '@app/pages/dashboard-page/empty-state-renderer';
+import { TargetRef } from '@app/protocols/refs';
 
-function TargetRenderer({ target }: { target: RelatedTarget }) {
+function TargetRenderer({ target }: { target: TargetRef }) {
   const dispatch = useDispatch();
 
   return (
