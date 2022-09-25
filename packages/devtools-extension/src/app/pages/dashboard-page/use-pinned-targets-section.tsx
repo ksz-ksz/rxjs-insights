@@ -18,7 +18,7 @@ export function usePinnedTargetsSection() {
     (target): SidePanelEntry => ({
       key: `pinned-target-${target.id}`,
       getHeight(): number {
-        return 30;
+        return 24;
       },
       render() {
         return (

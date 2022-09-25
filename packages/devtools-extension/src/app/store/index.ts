@@ -13,6 +13,8 @@ import { refsReducer } from '@app/store/refs';
 import { refsReaction } from '@app/store/refs/reaction';
 import { refreshRefsReaction } from '@app/store/refresh-refs/reaction';
 import { hoverTargetsReaction } from '@app/store/hover-targets/reaction';
+import { traceReducer } from '@app/store/trace/slice';
+import { traceReaction } from '@app/store/trace/reaction';
 
 export const store = createStore()
   .addReducer(statusReducer)
@@ -28,6 +30,8 @@ export const store = createStore()
   .addReducer(refsReducer)
   .addReaction(refsReaction)
   .addReaction(refreshRefsReaction)
-  .addReaction(hoverTargetsReaction);
+  .addReaction(hoverTargetsReaction)
+  .addReducer(traceReducer)
+  .addReaction(traceReaction);
 export const { useStore, useDispatch, useSelector, useSelectorFunction } =
   createStoreHooks<typeof store>();

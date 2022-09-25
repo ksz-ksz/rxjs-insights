@@ -28,6 +28,7 @@ import { openResourceAvailable } from '@app/features';
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
+  details?: boolean;
 }
 
 const ObservableSpan = styled('span')(({ theme }) => ({
@@ -196,7 +197,7 @@ function EventTag(props: TagRendererProps<EventRef>) {
       data-time={props.reference.time}
     >
       {props.reference.name}
-      {data && DataTagRenderer ? (
+      {props.details && data && DataTagRenderer ? (
         <EventDataSpan>
           <DataTagRenderer reference={data} />
         </EventDataSpan>
@@ -565,7 +566,10 @@ function ObjectRefOutletRenderer(
       >
         {props.label}
       </LabelSpan>
-      <TagRenderer reference={props.reference} />
+      <TagRenderer
+        reference={props.reference}
+        details={props.details ?? true}
+      />
     </EntryDiv>
   );
 }
@@ -576,7 +580,10 @@ function ValueRefOutletRenderer(props: RefOutletRendererProps) {
     <EntryDiv>
       <Indent indent={props.indent} />
       <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
-      <TagRenderer reference={props.reference} />
+      <TagRenderer
+        reference={props.reference}
+        details={props.details ?? true}
+      />
     </EntryDiv>
   );
 }
@@ -619,6 +626,7 @@ export interface RefOutletEntryProps {
 export interface RefOutletRendererProps<REF extends Ref = Ref> {
   type?: 'enumerable' | 'nonenumerable' | 'special';
   label?: string | number;
+  details?: boolean;
   indent: number;
   stateKey: string;
   path: string;
@@ -678,6 +686,7 @@ export function RefOutletItemEntryRenderer({
 export interface RefSummaryOutletProps {
   type?: 'enumerable' | 'nonenumerable' | 'special';
   label?: string;
+  details?: boolean;
   reference: Ref;
 }
 
@@ -685,6 +694,7 @@ export function RefSummaryOutlet({
   reference,
   type,
   label,
+  details,
 }: RefSummaryOutletProps) {
   return (
     <ValueRefOutletRenderer
@@ -696,6 +706,7 @@ export function RefSummaryOutlet({
       reference={reference}
       expanded={false}
       expandable={false}
+      details={details}
     />
   );
 }

@@ -4,6 +4,7 @@ import { SidePanel } from '@app/components';
 import { SidePanelSection } from '@app/components/side-panel';
 import { usePinnedTargetsSection } from '@app/pages/dashboard-page/use-pinned-targets-section';
 import { Logo } from '@app/components/logo/logo';
+import { useTraceSection } from '@app/pages/dashboard-page/use-trace-section';
 
 const TitleDiv = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -17,12 +18,14 @@ const TitleDiv = styled('div')(({ theme }) => ({
 
 export function DashboardPage() {
   const pinnedTargetsSection = usePinnedTargetsSection();
+  const traceSection = useTraceSection();
 
   const panelSections = useMemo(
     (): SidePanelSection[] => [
-      { label: 'PINNED TARGETS', entries: pinnedTargetsSection },
+      { label: 'TARGETS', entries: pinnedTargetsSection },
+      { label: 'TRACE', entries: traceSection },
     ],
-    [pinnedTargetsSection]
+    [pinnedTargetsSection, traceSection]
   );
 
   return (
