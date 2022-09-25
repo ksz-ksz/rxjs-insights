@@ -11,6 +11,7 @@ import { Trace } from '@app/protocols/traces';
 import { EventRef, TargetRef } from '@app/protocols/refs';
 import { Locations } from '@rxjs-insights/core';
 import { createSelector } from '@lib/store';
+import { EmptyStateRenderer } from '@app/pages/dashboard-page/empty-state-renderer';
 
 interface TaskTraceEntry {
   type: 'task';
@@ -113,53 +114,77 @@ const EventLink = styled(RouterLink)(({ theme }) => ({
   },
 }));
 
+function EventRenderer({ entry }: { entry: EventTraceEntry }) {
+  return (
+    <EventLink
+      key={entry.target.id}
+      router={router}
+      to={createUrl(['target', String(entry.target.id)], {
+        queryParams: {
+          event: String(entry.event.time),
+        },
+      })}
+    >
+      <Box sx={{ whiteSpace: 'nowrap', marginRight: 1 }}>
+        <RefSummaryOutlet reference={entry.event} details={false} />
+        <RefSummaryOutlet reference={entry.target} />
+      </Box>
+      <LocationOutlet locations={entry.target.locations} />
+    </EventLink>
+  );
+}
+
+function TaskRenderer({ entry }: { entry: TaskTraceEntry }) {
+  return (
+    <TaskDiv>
+      {entry.task.name} #{entry.task.id}
+    </TaskDiv>
+  );
+}
+
 export function useTraceSection() {
   const vm = useSelector(vmSelector);
 
-  const entries = vm.entries.map((entry): SidePanelEntry => {
-    switch (entry.type) {
-      case 'event':
-        return {
-          key: `trace-event-${entry.event.time}`,
-          getHeight(): number {
-            return 24;
-          },
-          render() {
-            return (
-              <EventLink
-                key={entry.target.id}
-                router={router}
-                to={createUrl(['target', String(entry.target.id)], {
-                  queryParams: {
-                    event: String(entry.event.time),
+  return useMemo(
+    (): SidePanelEntry[] =>
+      vm.entries.length !== 0
+        ? vm.entries.map((entry): SidePanelEntry => {
+            switch (entry.type) {
+              case 'event':
+                return {
+                  key: `trace-event-${entry.event.time}`,
+                  getHeight(): number {
+                    return 24;
                   },
-                })}
-              >
-                <Box sx={{ whiteSpace: 'nowrap', marginRight: 1 }}>
-                  <RefSummaryOutlet reference={entry.event} details={false} />
-                  <RefSummaryOutlet reference={entry.target} />
-                </Box>
-                <LocationOutlet locations={entry.target.locations} />
-              </EventLink>
-            );
-          },
-        };
-      case 'task':
-        return {
-          key: `trace-task-${entry.task.id}`,
-          getHeight(): number {
-            return 24;
-          },
-          render() {
-            return (
-              <TaskDiv>
-                {entry.task.name} #{entry.task.id}
-              </TaskDiv>
-            );
-          },
-        };
-    }
-  });
-
-  return useMemo(() => entries, [vm]);
+                  render() {
+                    return <EventRenderer entry={entry} />;
+                  },
+                };
+              case 'task':
+                return {
+                  key: `trace-task-${entry.task.id}`,
+                  getHeight(): number {
+                    return 24;
+                  },
+                  render() {
+                    return <TaskRenderer entry={entry} />;
+                  },
+                };
+            }
+          })
+        : [
+            {
+              key: 'trace-empty-state',
+              getHeight(): number {
+                return 48;
+              },
+              render() {
+                return (
+                  <EmptyStateRenderer text="Pause the debugger in the RxJS context to see the trace" />
+                );
+              },
+            },
+          ],
+    [vm]
+  );
 }
