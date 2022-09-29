@@ -15,12 +15,13 @@ function getOrRecordObservableMeta(
       `Internal${name}`,
       undefined,
       undefined,
-      undefined,
-      true
+      undefined
     );
     const observableRef = context.recorder.observableRef(
       observable,
-      declarationRef
+      declarationRef,
+      undefined,
+      true
     );
     const meta: ObservableMeta = {
       observableRef,

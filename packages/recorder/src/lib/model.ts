@@ -16,7 +16,6 @@ export class Declaration {
 
   constructor(
     readonly name: string,
-    readonly internal: boolean,
     readonly func?: Function,
     readonly args?: any[],
     public locations: Locations = {}
@@ -35,6 +34,7 @@ export abstract class Target<EVENT extends Event = Event> {
 
   abstract readonly type: 'observable' | 'subscriber' | 'caller';
   abstract readonly tags: string[];
+  abstract readonly internal: boolean;
   abstract readonly declaration: Declaration;
   abstract readonly destinations: Target[];
 }
@@ -43,6 +43,7 @@ export class Observable extends Target<ObservableEvent> {
   readonly type = 'observable';
 
   constructor(
+    public internal: boolean,
     readonly target: ObservableLike,
     readonly declaration: Declaration,
     readonly sourceObservable?: Observable,
@@ -83,6 +84,10 @@ export class Subscriber extends Target<SubscriberEvent> {
   get tags(): string[] {
     return this.observable.tags;
   }
+
+  get internal(): boolean {
+    return this.observable.internal;
+  }
 }
 
 export class Caller extends Target {
@@ -102,6 +107,10 @@ export class Caller extends Target {
 
   get tags(): string[] {
     return [];
+  }
+
+  get internal(): boolean {
+    return false;
   }
 }
 

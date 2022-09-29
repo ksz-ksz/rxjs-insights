@@ -19,14 +19,14 @@ export interface Recorder {
     name: string,
     func?: Function,
     args?: any[],
-    locations?: PromiseOrValue<Locations>,
-    internal?: boolean
+    locations?: PromiseOrValue<Locations>
   ): DeclarationRef;
 
   observableRef(
     target: ObservableLike,
     observableDeclarationRef: DeclarationRef,
-    sourceObservableRef?: ObservableRef
+    sourceObservableRef?: ObservableRef,
+    internal?: boolean
   ): ObservableRef;
 
   subscriberRef(
@@ -50,6 +50,8 @@ export interface Recorder {
   ): SubscriberEventRef;
 
   addTag(observableRef: ObservableRef, tag: string): void;
+
+  setInternal(observableRef: ObservableRef, internal: boolean): void;
 
   startTask(name: string): void;
 

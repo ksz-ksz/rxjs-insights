@@ -157,13 +157,13 @@ export function playground() {
   // updateSubjectInTapExample();
   // updateSubjectInSubscribeExample();
   // publishWithRefCountExample();
-  // shareExample();
+  shareExample();
   // expandExample();
   // promiseExample();
   // cycleExample();
   // fizzbuzz();
   // subjects();
-  longStackExample();
+  // longStackExample();
 }
 
 function subscriber(name: string) {

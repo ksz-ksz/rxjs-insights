@@ -326,7 +326,7 @@ export function subscriberInfo(subscriber: Subscriber) {
   printGroup({
     ID: { tag: objectTag(subscriber.id) },
     Name: { tag: objectTag(declaration.name) },
-    Internal: declaration.internal ? { tag: objectTag(true) } : undefined,
+    Internal: subscriber.internal ? { tag: objectTag(true) } : undefined,
     Tags:
       subscriber.observable.tags.length !== 0
         ? { tag: objectTag(subscriber.observable.tags, true) }
@@ -364,7 +364,7 @@ export function observableInfo(observable: Observable) {
   printGroup({
     ID: { tag: objectTag(observable.id) },
     Name: { tag: objectTag(declaration.name) },
-    Internal: declaration.internal ? { tag: objectTag(true) } : undefined,
+    Internal: observable.internal ? { tag: objectTag(true) } : undefined,
     Tags:
       observable.tags.length !== 0
         ? { tag: objectTag(observable.tags, true) }

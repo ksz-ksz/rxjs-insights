@@ -16,7 +16,7 @@ import {
   SetRef,
   SubscriberRef,
 } from '@app/protocols/refs';
-import { Event, Observable, Subscriber, Target } from 'packages/recorder';
+import { Event, Observable, Subscriber, Target } from '@rxjs-insights/recorder';
 import {
   getObservable,
   getPrecedingEvent,
@@ -26,7 +26,7 @@ import {
   isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
 import { formatTimestamp } from '@app/utils/format-timestamp';
-import { Location, Locations } from 'packages/core';
+import { Location, Locations } from '@rxjs-insights//core';
 import { Caller } from '@rxjs-insights/recorder/src/lib/model';
 
 function getPropertyDescriptors(
@@ -396,8 +396,8 @@ export class RefsService implements Refs {
         'Tags',
         this.createEntries(observable, 'tags', tags.length)
       ),
-      ...(declaration.internal
-        ? [this.property('Internal', this.create(declaration.internal))]
+      ...(observable.internal
+        ? [this.property('Internal', this.create(observable.internal))]
         : []),
       ...(declaration.func
         ? [this.property('Function', this.create(declaration.func))]
@@ -460,8 +460,8 @@ export class RefsService implements Refs {
         'Tags',
         this.createEntries(subscriber, 'tags', tags.length)
       ),
-      ...(declaration.internal
-        ? [this.property('Internal', this.create(declaration.internal))]
+      ...(subscriber.internal
+        ? [this.property('Internal', this.create(subscriber.internal))]
         : []),
       ...(declaration.func
         ? [this.property('Function', this.create(declaration.func))]

@@ -6,13 +6,13 @@ import {
 
 export function getDestinationTargets(target: Target): Target[] {
   return target.destinations.flatMap((t) =>
-    t.declaration.internal ? getDestinationTargets(t) : [t]
+    t.internal ? getDestinationTargets(t) : [t]
   );
 }
 
 export function getSourceTargets(target: Target): Target[] {
   return target.sources.flatMap((t) =>
-    t.declaration.internal ? getSourceTargets(t) : [t]
+    t.internal ? getSourceTargets(t) : [t]
   );
 }
 

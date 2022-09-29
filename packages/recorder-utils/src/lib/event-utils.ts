@@ -11,7 +11,7 @@ function isNotificationEvent(event: Event) {
 }
 
 function isInternal(event: Event) {
-  return event.target.declaration.internal;
+  return event.target.internal;
 }
 
 export function getPrecedingEvent(event: Event): Event | undefined {

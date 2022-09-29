@@ -36,10 +36,9 @@ export class ModelRecorder implements Recorder {
     name: string,
     func?: Function,
     args?: any[],
-    locations: PromiseOrValue<Locations> = {},
-    internal = false
+    locations: PromiseOrValue<Locations> = {}
   ): DeclarationRef {
-    const declaration = new Declaration(name, internal, func, args);
+    const declaration = new Declaration(name, func, args);
     if (isPromise(locations)) {
       locations?.then((locations) => {
         declaration.locations = locations;
@@ -54,11 +53,17 @@ export class ModelRecorder implements Recorder {
   observableRef(
     target: ObservableLike,
     observableDeclarationRef: DeclarationRef,
-    sourceObservableRef?: ObservableRef
+    sourceObservableRef?: ObservableRef,
+    internal = false
   ): ObservableRef {
     const declaration = deref(observableDeclarationRef);
     const sourceObservable = deref(sourceObservableRef);
-    const observable = new Observable(target, declaration, sourceObservable);
+    const observable = new Observable(
+      internal,
+      target,
+      declaration,
+      sourceObservable
+    );
 
     return ref(observable);
   }
@@ -132,6 +137,11 @@ export class ModelRecorder implements Recorder {
   addTag(observableRef: ObservableRef, tag: string) {
     const observable = deref(observableRef);
     observable.tags.push(tag);
+  }
+
+  setInternal(observableRef: ObservableRef, internal: boolean) {
+    const observable = deref(observableRef);
+    observable.internal = internal;
   }
 
   startTask(name: string) {
