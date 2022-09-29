@@ -12,6 +12,7 @@ import {
   share,
   startWith,
   Subject,
+  switchMap,
   take,
   tap,
 } from 'rxjs';
@@ -142,6 +143,16 @@ function subjects() {
   inspect(subject);
 }
 
+function longStackExample() {
+  const obs = interval(1000).pipe(
+    switchMap((x) => of(x, x).pipe(switchMap((y) => of(x, y, x, y)))),
+    take(42)
+  );
+
+  const sub = obs.subscribe(subscriber('A'));
+  inspect(sub);
+}
+
 export function playground() {
   // updateSubjectInTapExample();
   // updateSubjectInSubscribeExample();
@@ -150,8 +161,9 @@ export function playground() {
   // expandExample();
   // promiseExample();
   // cycleExample();
-  fizzbuzz();
-  subjects();
+  // fizzbuzz();
+  // subjects();
+  longStackExample();
 }
 
 function subscriber(name: string) {

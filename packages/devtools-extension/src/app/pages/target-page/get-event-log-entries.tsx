@@ -242,7 +242,11 @@ function getTasks(
   return tasks;
 }
 
-function getIndent(event: EventItem, indents: Map<number, number>): number {
+function getIndent(
+  event: EventItem,
+  indents: Map<number, number>,
+  excludedIndent: number
+): number {
   if (indents.has(event.event.time)) {
     return indents.get(event.event.time)!;
   } else if (event.parentEvent === undefined) {
@@ -251,7 +255,8 @@ function getIndent(event: EventItem, indents: Map<number, number>): number {
     return indent;
   } else {
     const indent =
-      getIndent(event.parentEvent, indents) + (event.excluded ? 0 : 1);
+      getIndent(event.parentEvent, indents, excludedIndent) +
+      (event.excluded ? excludedIndent : 1);
     if (!event.async) {
       indents.set(event.event.time, indent);
     }
@@ -262,7 +267,8 @@ function getIndent(event: EventItem, indents: Map<number, number>): number {
 function addEventEntries(
   events: EventItem[],
   entries: EventLogEntry[],
-  indents: Map<number, number>
+  indents: Map<number, number>,
+  excludedIndent = 1
 ) {
   for (const event of events) {
     if (event.async) {
@@ -270,7 +276,7 @@ function addEventEntries(
         type: 'event-async',
         event: event.event,
         task: event.task,
-        indent: getIndent(event, indents),
+        indent: getIndent(event, indents, excludedIndent),
         id: event.id,
         excluded: event.excluded,
       });
@@ -278,7 +284,7 @@ function addEventEntries(
       entries.push({
         type: 'event',
         event: event.event,
-        indent: getIndent(event, indents),
+        indent: getIndent(event, indents, excludedIndent),
         id: event.id,
         excluded: event.excluded,
       });
@@ -301,10 +307,10 @@ function addEventEntriesHideExcluded(
           firstEvent.event.time
         }`,
         events: group.map((x) => x.event),
-        indent: getIndent(firstEvent, indents),
+        indent: getIndent(firstEvent, indents, 0),
       });
     } else {
-      addEventEntries(group, entries, indents);
+      addEventEntries(group, entries, indents, 0);
     }
   }
 }
