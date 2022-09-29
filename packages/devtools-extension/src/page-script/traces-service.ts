@@ -3,6 +3,7 @@ import { RefsService } from './refs-service';
 import { getGlobalEnv } from '@rxjs-insights/core';
 import { deref, Event } from '@rxjs-insights/recorder';
 import { EventRef, TargetRef } from '@app/protocols/refs';
+import { getPrecedingEvent } from '@rxjs-insights/recorder-utils';
 
 export class TracesService implements Traces {
   constructor(private readonly refs: RefsService) {}
@@ -30,7 +31,7 @@ export class TracesService implements Traces {
         target: this.refs.create(event.target) as TargetRef,
         locations: event.target.declaration.locations,
       };
-      return [frame, ...this.getTraceImpl(event.precedingEvent)];
+      return [frame, ...this.getTraceImpl(getPrecedingEvent(event))];
     }
   }
 }
