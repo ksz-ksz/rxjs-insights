@@ -6,10 +6,7 @@ import {
 } from '@app/components/graph';
 import { Theme, useTheme } from '@mui/material';
 import { useSelectorFunction } from '@app/store';
-import {
-  targetStateSelector,
-  timeSelector,
-} from '@app/selectors/insights-selectors';
+import { targetStateSelector } from '@app/selectors/insights-selectors';
 import {
   getDirection,
   getEventColors,
@@ -19,6 +16,7 @@ import gsap from 'gsap';
 import { createSelector } from '@lib/store';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
+import { timeSelector } from '@app/selectors/time-selectors';
 
 const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
   createSelector(

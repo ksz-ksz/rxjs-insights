@@ -16,7 +16,6 @@ import { useSelectorFunction } from '@app/store';
 import {
   targetStateSelector,
   targetUiStateSelector,
-  timeSelector,
 } from '@app/selectors/insights-selectors';
 import {
   getDirection,
@@ -30,6 +29,7 @@ import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-targe
 import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
 import { getLocationStrings } from '@app/utils/get-location-strings';
 import { openResourceAvailable } from '@app/features';
+import { timeSelector } from '@app/selectors/time-selectors';
 
 const circleRadius = 5;
 const circleCircumference = 2 * Math.PI * circleRadius;

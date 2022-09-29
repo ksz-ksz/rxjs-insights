@@ -25,7 +25,6 @@ export interface TargetUiState {
 }
 
 export interface InsightsState {
-  time: number;
   playing: boolean;
   following: boolean;
   showExcludedEvents: boolean;
@@ -135,7 +134,6 @@ function updateKeyMapping(state: InsightsState, targetId: number) {
 }
 
 const initialState: InsightsState = {
-  time: 0,
   playing: false,
   following: false,
   showExcludedEvents: false,
@@ -161,15 +159,6 @@ export const insightsReducer = createReducer('insights', initialState)
         updateKeyMapping(state, targetState.target.id);
       }
     }
-  })
-  .add(eventsLogActions.EventSelected, (state, action) => {
-    state.time = action.payload.event.time;
-  })
-  .add(refOutletContextActions.FocusEvent, (state, action) => {
-    state.time = action.payload.event.time;
-  })
-  .add(insightsActions.PlayNextEvent, (state, action) => {
-    state.time = action.payload.event.time;
   })
   .add(eventsLogActions.Play, (state) => {
     state.playing = true;

@@ -97,6 +97,52 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
   };
 }
 
+function arraysEqual<T>(a: T[], b: T[]) {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function routesEqual<DATA>(a: Route<DATA>, b: Route<DATA>) {
+  return a.routeConfigId === b.routeConfigId && arraysEqual(a.path, b.path);
+}
+
+function diffRoutes<DATA>(
+  prevRoutes: Route<DATA>[],
+  nextRoutes: Route<DATA>[]
+) {
+  const length = Math.max(prevRoutes.length, nextRoutes.length);
+
+  for (let i = 0; i < length; i++) {
+    const prevRoute = prevRoutes[i];
+    const nextRoute = nextRoutes[i];
+    if (
+      !(
+        prevRoute !== undefined &&
+        nextRoute !== undefined &&
+        routesEqual(prevRoute, nextRoute)
+      )
+    ) {
+      return {
+        leaveRoutes: prevRoutes.slice(i).reverse(),
+        enterRoutes: nextRoutes.slice(i),
+      };
+    }
+  }
+  return {
+    leaveRoutes: [],
+    enterRoutes: [],
+  };
+}
+
 export function createRouterSlice<SLICE extends string, DATA, METADATA>(
   router: Router<SLICE, DATA, METADATA>
 ) {
@@ -125,8 +171,16 @@ export function createRouterSlice<SLICE extends string, DATA, METADATA>(
               const prevUrl = store.select(router.selectors.url).get();
               const prevRoutes = store.select(router.selectors.routes).get();
               const dispatchOnLeave: Action[] = [];
+              const nextUrl = action.payload.url;
+              const nextRoutes = router.match(action.payload.url.path);
+              const dispatchOnEnter: Action[] = [];
+              const awaits: Observable<never>[] = [];
+              const { leaveRoutes, enterRoutes } = diffRoutes(
+                prevRoutes,
+                nextRoutes
+              );
 
-              for (const route of prevRoutes) {
+              for (const route of leaveRoutes) {
                 const routeConfig = router.getRouteConfig(route.routeConfigId);
                 if (routeConfig?.interceptLeave) {
                   const result = routeConfig.interceptLeave(
@@ -152,12 +206,7 @@ export function createRouterSlice<SLICE extends string, DATA, METADATA>(
                 }
               }
 
-              const nextUrl = action.payload.url;
-              const nextRoutes = router.match(action.payload.url.path);
-              const dispatchOnEnter: Action[] = [];
-              const awaits: Observable<never>[] = [];
-
-              for (const route of nextRoutes) {
+              for (const route of enterRoutes) {
                 const routeConfig = router.getRouteConfig(route.routeConfigId);
                 if (routeConfig?.interceptEnter) {
                   const result = routeConfig.interceptEnter(

@@ -2,10 +2,7 @@ import { RelatedEvent } from '@app/protocols/insights';
 import React from 'react';
 import { styled } from '@mui/material';
 import { useSelector } from '@app/store';
-import {
-  playingSelector,
-  timeSelector,
-} from '@app/selectors/insights-selectors';
+import { playingSelector } from '@app/selectors/insights-selectors';
 import {
   activeTargetStateSelector,
   activeTargetUiStateSelector,
@@ -17,6 +14,7 @@ import { getEvents } from '@app/pages/target-page/get-events';
 import { getIncludedEvents } from '@app/pages/target-page/get-included-events';
 import { EventsTimeline } from '@app/pages/target-page/events-timeline';
 import { EventsControls } from '@app/pages/target-page/events-controls';
+import { timeSelector } from '@app/selectors/time-selectors';
 
 function findLastIndex<T>(items: T[], predicate: (item: T) => boolean): number {
   for (let i = items.length - 1; i >= 0; i--) {

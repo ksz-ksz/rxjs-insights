@@ -21,10 +21,8 @@ import { getEvents } from '@app/pages/target-page/get-events';
 import { SidePanelEntry } from '@app/components/side-panel';
 import { useSelector } from '@app/store';
 import { eventsLogActions } from '@app/actions/events-log-actions';
-import {
-  showExcludedEventsSelector,
-  timeSelector,
-} from '@app/selectors/insights-selectors';
+import { showExcludedEventsSelector } from '@app/selectors/insights-selectors';
+import { timeSelector } from '@app/selectors/time-selectors';
 
 const ExcludedDiv = styled('div')(({ theme }) => ({
   display: 'flex',

@@ -121,7 +121,7 @@ function EventRenderer({ entry }: { entry: EventTraceEntry }) {
       router={router}
       to={createUrl(['target', String(entry.target.id)], {
         queryParams: {
-          event: String(entry.event.time),
+          time: String(entry.event.time),
         },
       })}
     >

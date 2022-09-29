@@ -1,7 +1,6 @@
 import { useSelector } from '@app/store';
 import { createSelector } from '@lib/store';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
-import { timeSelector } from '@app/selectors/insights-selectors';
 import { refsSelector } from '@app/selectors/refs-selectors';
 import {
   getRefOutletEntries,
@@ -9,6 +8,7 @@ import {
 } from '@app/components/get-ref-outlet-entries';
 import { useLastDefinedValue } from '@app/utils';
 import { getRefOutletSidePanelEntries } from '@app/components/get-ref-outlet-side-panel-entries';
+import { timeSelector } from '@app/selectors/time-selectors';
 
 export const vmSelector = createSelector(
   [activeTargetStateSelector, refsSelector, timeSelector],

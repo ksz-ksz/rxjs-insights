@@ -11,7 +11,6 @@ import {
 import {
   followingSelector,
   showExcludedEventsSelector,
-  timeSelector,
 } from '@app/selectors/insights-selectors';
 import { getDoubleTree, LinkData, NodeData } from '@app/components/tree';
 import { useSelector } from '@app/store';
@@ -34,6 +33,7 @@ import {
   getSourceChildKey,
   getSourceChildren,
 } from '@app/utils/related-children';
+import { timeSelector } from '@app/selectors/time-selectors';
 
 function isKeyVisible(visibleKeys: Set<string>, key: string) {
   return visibleKeys.has(key);

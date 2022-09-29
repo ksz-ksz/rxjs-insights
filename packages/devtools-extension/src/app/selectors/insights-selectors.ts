@@ -17,11 +17,6 @@ export const targetUiStateSelector = (targetId: number) =>
     ([insights]) => insights.targetsUi[targetId]
   );
 
-export const timeSelector = createSelector(
-  [insightsSelector],
-  ([insights]) => insights.time
-);
-
 export const playingSelector = createSelector(
   [insightsSelector],
   ([insights]) => insights.playing

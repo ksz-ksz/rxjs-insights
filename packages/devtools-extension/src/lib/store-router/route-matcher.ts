@@ -68,6 +68,7 @@ function createRoute<DATA, METADATA>(
 ): Route<DATA> {
   return {
     routeConfigId: routeNode.id,
+    path,
     data: routeNode.config.data,
     params: getParams(routeNode.config.path, path),
   };

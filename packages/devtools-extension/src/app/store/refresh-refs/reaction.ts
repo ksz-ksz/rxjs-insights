@@ -7,12 +7,12 @@ import {
 } from '@lib/store';
 import { concatMap, distinctUntilChanged, EMPTY, of } from 'rxjs';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
-import { timeSelector } from '@app/selectors/insights-selectors';
 import { RouterSlice } from '@app/store/router';
 import { InsightsSlice } from '@app/store/insights';
 import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { Ref } from '@app/protocols/refs';
+import { timeSelector } from '@app/selectors/time-selectors';
 
 const activeTargetSelector = createSelector(
   [activeTargetStateSelector],
