@@ -5,6 +5,7 @@ import { SidePanelSection } from '@app/components/side-panel';
 import { usePinnedTargetsSection } from '@app/pages/dashboard-page/use-pinned-targets-section';
 import { Logo } from '@app/components/logo/logo';
 import { useTraceSection } from '@app/pages/dashboard-page/use-trace-section';
+import { useSidePanelWidth } from '@app/utils';
 
 const TitleDiv = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -26,6 +27,11 @@ export function DashboardPage() {
       { label: 'TRACE', entries: traceSection },
     ],
     [pinnedTargetsSection, traceSection]
+  );
+
+  const panelWidth = useSidePanelWidth(
+    400,
+    'ui:dashboard-page:side-panel:right:width'
   );
 
   return (
@@ -54,7 +60,7 @@ export function DashboardPage() {
           </Typography>
         </TitleDiv>
       </Box>
-      <SidePanel side="right" sections={panelSections} />
+      <SidePanel side="right" sections={panelSections} {...panelWidth} />
     </Box>
   );
 }

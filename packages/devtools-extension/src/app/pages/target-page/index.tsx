@@ -13,6 +13,7 @@ import { insightsActions } from '@app/actions/insights-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import { useSelector } from '@app/store';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
+import { useSidePanelWidth } from '@app/utils';
 
 function useScrollToEventReaction(
   leftPanelRef: React.MutableRefObject<SidePanelControl | null>
@@ -43,15 +44,20 @@ export function LeftPanel() {
     (): SidePanelSection[] => [{ label: 'EVENTS', entries: eventsSection }],
     [eventsSection]
   );
-  const leftPanelRef = useRef<SidePanelControl | null>(null);
-  useScrollToEventReaction(leftPanelRef);
+  const panelWidth = useSidePanelWidth(
+    400,
+    'ui:target-page:side-panel:left:width'
+  );
+  const panelRef = useRef<SidePanelControl | null>(null);
+  useScrollToEventReaction(panelRef);
 
   return (
     <SidePanel
       side="left"
       sections={sections}
       maxWidth="33%"
-      ref={leftPanelRef}
+      ref={panelRef}
+      {...panelWidth}
     />
   );
 }
@@ -67,8 +73,19 @@ export function RightPanel() {
     ],
     [scopeSection, targetsSection]
   );
+  const panelWidth = useSidePanelWidth(
+    400,
+    'ui:target-page:side-panel:right:width'
+  );
 
-  return <SidePanel side="right" sections={sections} maxWidth="33%" />;
+  return (
+    <SidePanel
+      side="right"
+      sections={sections}
+      maxWidth="33%"
+      {...panelWidth}
+    />
+  );
 }
 
 export function TargetPage() {

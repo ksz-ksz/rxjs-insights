@@ -80,6 +80,8 @@ export interface SidePanelSection {
 
 export interface SidePanelProps {
   side: 'left' | 'right';
+  initialWidth?: number;
+  onWidthChange?(width: number): void;
   minWidth?: string | number;
   maxWidth?: string | number;
   sections: SidePanelSection[];
@@ -88,7 +90,8 @@ export interface SidePanelProps {
 function useResizer(
   side: 'left' | 'right',
   contentDivRef: React.MutableRefObject<HTMLDivElement | null>,
-  resizerDivRef: React.MutableRefObject<HTMLDivElement | null>
+  resizerDivRef: React.MutableRefObject<HTMLDivElement | null>,
+  onWidthChange: ((width: number) => void) | undefined
 ) {
   useEffect(() => {
     const c = side === 'left' ? 1 : -1;
@@ -117,6 +120,7 @@ function useResizer(
           })
         )
         .subscribe((width) => {
+          onWidthChange?.(width);
           contentDiv.style.width = `${width}px`;
         });
 
@@ -240,12 +244,19 @@ export function useSmoothScrollToFn(
 
 export const SidePanel = React.memo(
   React.forwardRef(function SidePanel(
-    { side, minWidth = '200px', maxWidth = '50%', sections }: SidePanelProps,
+    {
+      side,
+      initialWidth = 400,
+      minWidth = '200px',
+      maxWidth = '50%',
+      sections,
+      onWidthChange,
+    }: SidePanelProps,
     forwardedRef: ForwardedRef<SidePanelControl>
   ) {
     const contentDivRef = useRef<HTMLDivElement | null>(null);
     const resizerDivRef = useRef<HTMLDivElement | null>(null);
-    useResizer(side, contentDivRef, resizerDivRef);
+    useResizer(side, contentDivRef, resizerDivRef, onWidthChange);
     const entries = useEntries(sections);
     const stickyIndices = useMemo(() => getStickyIndices(entries), [entries]);
     const activeStickyIndexRef = useRef(-1);
@@ -298,7 +309,7 @@ export const SidePanel = React.memo(
         )}
         <SidePanelContentDiv
           ref={contentDivRef}
-          style={{ width: '400px', minWidth }}
+          style={{ width: initialWidth, minWidth }}
         >
           <div
             style={{
