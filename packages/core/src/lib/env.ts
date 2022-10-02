@@ -1,7 +1,7 @@
 import { Tracer } from './tracer';
 import { Recorder } from './recorder';
 import { Locator } from './locator';
-import { Constructor, ObservableLike, SubjectLike } from './types';
+import { Constructor, ObservableLike } from './types';
 
 const ENV = Symbol.for('@rxjs-insights/env');
 
@@ -26,7 +26,6 @@ export interface Env {
   >;
   instrumentSingleton: Instrument<ObservableLike>;
   instrumentCaller: Instrument<(...args: any[]) => any>;
-  addTag: (observable: ObservableLike, tag: string) => void;
 }
 
 export function setGlobalEnv(env: Env | null) {

@@ -2,11 +2,14 @@ import {
   delay,
   EMPTY,
   expand,
+  filter,
   firstValueFrom,
   from,
   interval,
   lastValueFrom,
+  map,
   of,
+  pipe,
   publish,
   refCount,
   share,
@@ -17,7 +20,8 @@ import {
   tap,
 } from 'rxjs';
 import { inspect } from '@rxjs-insights/devtools';
-import { fizzbuzz } from './fizzbuzz';
+import { declareOperator } from '@rxjs-insights/core/declarations';
+import { internal, tag } from '@rxjs-insights/core/operators';
 
 function updateSubjectInSubscribeExample() {
   const subject = new Subject<number>();
@@ -153,17 +157,54 @@ function longStackExample() {
   inspect(sub);
 }
 
+function internalExample() {
+  const operator = declareOperator(
+    () =>
+      pipe(
+        filter((x: number) => x % 2 === 0),
+        internal(),
+        map((x: number) => x * x),
+        internal(),
+        take(10)
+      ),
+    'operator'
+  );
+
+  const obs = interval(100).pipe(operator());
+  const sub = obs.subscribe(subscriber('A'));
+
+  inspect(sub);
+}
+
+function tagExample() {
+  const obs = interval(100).pipe(
+    filter((x: number) => x % 2 === 0),
+    tag('F'),
+    tag('I'),
+    tag('L'),
+    map((x: number) => x * x),
+    tag('M'),
+    take(10),
+    tag('T')
+  );
+  const sub = obs.subscribe(subscriber('A'));
+
+  inspect(sub);
+}
+
 export function playground() {
   // updateSubjectInTapExample();
   // updateSubjectInSubscribeExample();
   // publishWithRefCountExample();
-  shareExample();
+  // shareExample();
   // expandExample();
   // promiseExample();
   // cycleExample();
   // fizzbuzz();
   // subjects();
   // longStackExample();
+  internalExample();
+  tagExample();
 }
 
 function subscriber(name: string) {

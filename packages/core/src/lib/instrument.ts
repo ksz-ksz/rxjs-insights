@@ -18,7 +18,6 @@ import {
   createInstrumentedSubjectError,
   createInstrumentedSubjectNext,
 } from './instrumented-subject';
-import { createAddTag } from './add-tag';
 import { createInstrumentCaller } from './instrument-caller';
 
 export interface Config {
@@ -85,7 +84,6 @@ export function instrument({
     instrumentOperator: createInstrumentOperator(context),
     instrumentSingleton: createInstrumentSingleton(context),
     instrumentCaller: createInstrumentCaller(context),
-    addTag: createAddTag(context),
   };
 }
 
