@@ -6,7 +6,6 @@ import { Constructor, ObservableLike, SubjectLike } from './types';
 const ENV = Symbol.for('@rxjs-insights/env');
 
 export interface InstrumentationContext {
-  Subject: Constructor<SubjectLike>;
   tracer: Tracer;
   locator: Locator;
   recorder: Recorder;

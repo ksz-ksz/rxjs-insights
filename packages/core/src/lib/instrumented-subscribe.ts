@@ -4,6 +4,7 @@ import {
   Constructor,
   ObservableLike,
   ObserverLike,
+  SubjectLike,
   Subscribe,
   SubscriberLike,
 } from './types';
@@ -51,11 +52,12 @@ function getObserver(
 
 function getDestinationTargetRef(
   context: InstrumentationContext,
+  Subject: Constructor<SubjectLike>,
   subscribe: Subscribe,
   args: any[]
 ) {
   const [maybeObserver] = args;
-  if (maybeObserver instanceof context.Subject) {
+  if (maybeObserver instanceof Subject) {
     return getObservableRef(context, maybeObserver);
   } else {
     const targetRef = context.tracer.getTrace()?.targetRef;
@@ -76,13 +78,15 @@ function getDestinationTargetRef(
 export function createInstrumentedSubscribe(
   context: InstrumentationContext,
   subscribe: Subscribe,
-  Subscriber: Constructor<SubscriberLike>
+  Subscriber: Constructor<SubscriberLike>,
+  Subject: Constructor<SubjectLike>
 ) {
   return function instrumentedSubscribe(this: ObservableLike, ...args: any[]) {
     const observable = this;
     const observableRef = getObservableRef(context, observable);
     const destinationTargetRef = getDestinationTargetRef(
       context,
+      Subject,
       subscribe,
       args
     );

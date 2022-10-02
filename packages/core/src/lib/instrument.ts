@@ -39,7 +39,6 @@ export function instrument({
   recorder,
 }: Config): Env {
   const context: InstrumentationContext = {
-    Subject,
     recorder,
     tracer,
     locator,
@@ -48,7 +47,8 @@ export function instrument({
   Observable.prototype.subscribe = createInstrumentedSubscribe(
     context,
     Observable.prototype.subscribe,
-    Subscriber
+    Subscriber,
+    Subject
   );
 
   Subject.prototype.next = createInstrumentedSubjectNext(
