@@ -43,7 +43,7 @@ const ObservableSpan = styled('span')(({ theme }) => ({
   },
   '&:after': {
     display: 'inline',
-    content: '" " attr(data-tags) "#" attr(data-id)',
+    content: '" " attr(data-tags) " #" attr(data-id)',
     color: theme.inspector.secondary,
   },
 }));
@@ -75,7 +75,7 @@ const SubscriberSpan = styled('span')(({ theme }) => ({
   },
   '&:after': {
     display: 'inline',
-    content: '" " attr(data-tags) "#" attr(data-id)',
+    content: '" " attr(data-tags) " #" attr(data-id)',
     color: theme.inspector.secondary,
   },
 }));
