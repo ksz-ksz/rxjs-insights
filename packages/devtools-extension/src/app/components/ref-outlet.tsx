@@ -620,7 +620,6 @@ export interface RefOutletEntryProps {
   reference: Ref;
   expanded: boolean;
   expandable: boolean;
-  summary: boolean;
 }
 
 export interface RefOutletRendererProps<REF extends Ref = Ref> {
@@ -667,16 +666,11 @@ export function RefOutletActionEntryRenderer({
 
 export function RefOutletItemEntryRenderer({
   reference,
-  summary,
   ...props
 }: RefOutletEntryProps) {
   if (reference.type === 'getter') {
     return <GetterRefOutletRenderer reference={reference} {...props} />;
-  } else if (
-    !summary &&
-    'objectId' in reference &&
-    reference.objectId !== undefined
-  ) {
+  } else if ('objectId' in reference && reference.objectId !== undefined) {
     return <ObjectRefOutletRenderer reference={reference} {...props} />;
   } else {
     return <ValueRefOutletRenderer reference={reference} {...props} />;

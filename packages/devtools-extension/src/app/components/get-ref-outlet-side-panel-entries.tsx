@@ -28,7 +28,6 @@ export function getRefOutletSidePanelEntries(
             expandable={entry.expandable}
             label={entry.label}
             type={entry.type}
-            summary={false}
           />
         );
       },
