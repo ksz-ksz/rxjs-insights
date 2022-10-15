@@ -16,6 +16,7 @@ import { hoverTargetsReaction } from '@app/store/hover-targets/reaction';
 import { traceReducer } from '@app/store/trace/slice';
 import { traceReaction } from '@app/store/trace/reaction';
 import { timeReaction } from '@app/store/time/reaction';
+import { refOutletContextReaction } from '@app/store/ref-outlet-context/reaction';
 
 export const store = createStore()
   .addReducer(statusReducer)
@@ -34,6 +35,7 @@ export const store = createStore()
   .addReaction(hoverTargetsReaction)
   .addReducer(traceReducer)
   .addReaction(traceReaction)
-  .addReaction(timeReaction);
+  .addReaction(timeReaction)
+  .addReaction(refOutletContextReaction);
 export const { useStore, useDispatch, useSelector, useSelectorFunction } =
   createStoreHooks<typeof store>();

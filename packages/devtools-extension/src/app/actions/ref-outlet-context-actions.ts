@@ -1,5 +1,6 @@
 import { createActions } from '@lib/store';
 import { EventRef, TargetRef } from '@app/protocols/refs';
+import { Location } from '@rxjs-insights/core';
 
 export interface RefOutletContextActions {
   FocusTarget: {
@@ -7,6 +8,21 @@ export interface RefOutletContextActions {
   };
   FocusEvent: {
     event: EventRef;
+  };
+  OpenLocation: {
+    location: Location;
+  };
+  InspectValueInConsole: {
+    value: any;
+  };
+  StoreValueAsGlobalVariable: {
+    value: any;
+  };
+  InspectObjectInConsole: {
+    objectId: number;
+  };
+  StoreObjectAsGlobalVariable: {
+    objectId: number;
   };
 }
 

@@ -1,9 +1,6 @@
 import { RefOutletEntry } from '@app/components/get-ref-outlet-entries';
 import { SidePanelEntry } from '@app/components/side-panel';
-import {
-  RefOutletActionEntryRenderer,
-  RefOutletItemEntryRenderer,
-} from '@app/components/ref-outlet';
+import { RefOutletEntryRenderer } from '@app/components/ref-outlet';
 import React from 'react';
 
 export function getRefOutletSidePanelEntries(
@@ -16,10 +13,8 @@ export function getRefOutletSidePanelEntries(
         return 24;
       },
       render() {
-        return 'action' in entry ? (
-          <RefOutletActionEntryRenderer {...entry} />
-        ) : (
-          <RefOutletItemEntryRenderer
+        return (
+          <RefOutletEntryRenderer
             indent={entry.indent}
             stateKey={entry.stateKey}
             path={entry.path}

@@ -17,14 +17,20 @@ import {
   TextRef,
   ValueRef,
 } from '@app/protocols/refs';
-import React, { JSXElementConstructor, MouseEvent, useCallback } from 'react';
-import { styled } from '@mui/material';
+import React, {
+  JSXElementConstructor,
+  MouseEvent,
+  useCallback,
+  useRef,
+  useState,
+} from 'react';
+import { Menu, MenuItem, MenuList, styled } from '@mui/material';
 import { useDispatch } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
-import { useDispatchCallback } from '@lib/store';
+import { Action } from '@lib/store';
 import { Indent } from '@app/components/indent';
-import { RefOutletActionEntry } from '@app/components/get-ref-outlet-entries';
 import { openResourceAvailable } from '@app/features';
+import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
@@ -532,9 +538,185 @@ const EntryDiv = styled('div')({
   whiteSpace: 'nowrap',
 });
 
+interface EntryMenuRef {
+  onContextMenuOpen(event: MouseEvent): void;
+}
+
+interface EntryMenuProps {
+  reference: Ref;
+  stateKey: string;
+  path: string;
+}
+
+interface EntryMenuAction {
+  label: string;
+  action: Action;
+}
+
+function getEntryMenuActions(reference: Ref, stateKey: string, path: string) {
+  const actions: EntryMenuAction[] = [];
+
+  switch (reference.type) {
+    case 'observable':
+    case 'subscriber':
+      actions.push({
+        label: 'Focus in graph',
+        action: refOutletContextActions.FocusTarget({ target: reference }),
+      });
+      if (reference.locations.originalLocation) {
+        actions.push({
+          label: 'Open source location',
+          action: refOutletContextActions.OpenLocation({
+            location: reference.locations.originalLocation,
+          }),
+        });
+      }
+      if (reference.locations.generatedLocation) {
+        actions.push({
+          label: 'Open bundle location',
+          action: refOutletContextActions.OpenLocation({
+            location: reference.locations.generatedLocation,
+          }),
+        });
+      }
+      break;
+    case 'event':
+      actions.push({
+        label: 'Focus in events',
+        action: refOutletContextActions.FocusEvent({ event: reference }),
+      });
+      break;
+    case 'getter':
+      actions.push({
+        label: 'Invoke getter',
+        action: refOutletActions.InvokeGetter({
+          ref: reference,
+          stateKey,
+          path,
+        }),
+      });
+      break;
+  }
+
+  if ('objectId' in reference && reference.objectId !== undefined) {
+    actions.push({
+      label: 'Show in console',
+      action: refOutletContextActions.InspectObjectInConsole({
+        objectId: reference.objectId,
+      }),
+    });
+    actions.push({
+      label: 'Store as global variable',
+      action: refOutletContextActions.StoreObjectAsGlobalVariable({
+        objectId: reference.objectId,
+      }),
+    });
+  } else if ('value' in reference) {
+    actions.push({
+      label: 'Show in console',
+      action: refOutletContextActions.InspectValueInConsole({
+        value: reference.value,
+      }),
+    });
+    actions.push({
+      label: 'Store as global variable',
+      action: refOutletContextActions.StoreValueAsGlobalVariable({
+        value: reference.value,
+      }),
+    });
+  }
+  return actions;
+}
+
+const EntryMenu = React.forwardRef<EntryMenuRef, EntryMenuProps>(
+  function EntryMenu(props, forwardedRef) {
+    const dispatch = useDispatch();
+    const [menu, setMenu] = useState<{
+      open: boolean;
+      position: { top: number; left: number };
+      actions: EntryMenuAction[];
+    }>({ open: false, position: { top: 0, left: 0 }, actions: [] });
+
+    const onContextMenuClose = useCallback(
+      (event: MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setMenu({ ...menu, open: false });
+      },
+      [menu]
+    );
+
+    React.useImperativeHandle(
+      forwardedRef,
+      (): EntryMenuRef => ({
+        onContextMenuOpen: (event: MouseEvent) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setMenu({
+            open: true,
+            position: { top: event.clientY, left: event.clientX },
+            actions: getEntryMenuActions(
+              props.reference,
+              props.stateKey,
+              props.path
+            ),
+          });
+        },
+      }),
+      [props.reference]
+    );
+
+    return (
+      <Menu
+        open={menu.open}
+        anchorReference="anchorPosition"
+        anchorPosition={menu.position}
+        onClose={onContextMenuClose}
+      >
+        <MenuList dense>
+          {menu.actions.length !== 0 ? (
+            menu.actions.map(({ label, action }) => (
+              <MenuItem
+                key={label}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  dispatch(action);
+                  setMenu({ ...menu, open: false });
+                }}
+              >
+                {label}
+              </MenuItem>
+            ))
+          ) : (
+            <MenuItem
+              disabled
+              onClick={() => {
+                setMenu({ ...menu, open: false });
+              }}
+            >
+              No actions available
+            </MenuItem>
+          )}
+        </MenuList>
+      </Menu>
+    );
+  }
+);
+
+function useEntryMenu() {
+  const ref = useRef<EntryMenuRef | null>(null);
+  const onContextMenuOpen = useCallback((event: MouseEvent) => {
+    ref.current?.onContextMenuOpen(event);
+  }, []);
+
+  return { ref, onContextMenuOpen };
+}
+
 function ObjectRefOutletRenderer(
   props: RefOutletRendererProps<Extract<Ref, { objectId?: number }>>
 ) {
+  const menu = useEntryMenu();
   const dispatch = useDispatch();
   const onToggle = useCallback(() => {
     if (props.expanded) {
@@ -558,37 +740,60 @@ function ObjectRefOutletRenderer(
   const TagRenderer = getTagRenderer(props.reference.type);
 
   return (
-    <EntryDiv onClick={onToggle}>
-      <Indent indent={props.indent} />
-      <LabelSpan
-        data-state={props.expanded ? 'expanded' : 'collapsed'}
-        data-type={props.type}
-      >
-        {props.label}
-      </LabelSpan>
-      <TagRenderer
-        reference={props.reference}
-        details={props.details ?? true}
-      />
-    </EntryDiv>
+    <>
+      {(props.menu ?? true) && (
+        <EntryMenu
+          ref={menu.ref}
+          reference={props.reference}
+          stateKey={props.stateKey}
+          path={props.path}
+        />
+      )}
+      <EntryDiv onClick={onToggle} onContextMenu={menu.onContextMenuOpen}>
+        <Indent indent={props.indent} />
+        <LabelSpan
+          data-state={props.expanded ? 'expanded' : 'collapsed'}
+          data-type={props.type}
+        >
+          {props.label}
+        </LabelSpan>
+        <TagRenderer
+          reference={props.reference}
+          details={props.details ?? true}
+        />
+      </EntryDiv>
+    </>
   );
 }
+
 function ValueRefOutletRenderer(props: RefOutletRendererProps) {
+  const menu = useEntryMenu();
   const TagRenderer = getTagRenderer(props.reference.type);
 
   return (
-    <EntryDiv>
-      <Indent indent={props.indent} />
-      <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
-      <TagRenderer
-        reference={props.reference}
-        details={props.details ?? true}
-      />
-    </EntryDiv>
+    <>
+      {(props.menu ?? true) && (
+        <EntryMenu
+          ref={menu.ref}
+          reference={props.reference}
+          stateKey={props.stateKey}
+          path={props.path}
+        />
+      )}
+      <EntryDiv onContextMenu={menu.onContextMenuOpen}>
+        <Indent indent={props.indent} />
+        <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
+        <TagRenderer
+          reference={props.reference}
+          details={props.details ?? true}
+        />
+      </EntryDiv>
+    </>
   );
 }
 
 function GetterRefOutletRenderer(props: RefOutletRendererProps<GetterRef>) {
+  const menu = useEntryMenu();
   const dispatch = useDispatch();
   const onInvoke = useCallback(() => {
     dispatch(
@@ -598,16 +803,26 @@ function GetterRefOutletRenderer(props: RefOutletRendererProps<GetterRef>) {
         path: props.path,
       })
     );
-  }, [props.reference.targetObjectId]);
+  }, [props.reference, props.stateKey, props.path]);
 
   return (
-    <EntryDiv>
-      <Indent indent={props.indent} />
-      <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
-      <a onClick={onInvoke}>
-        <MonospaceSpan sx={{ title: 'Invoke getter' }}>(...)</MonospaceSpan>
-      </a>
-    </EntryDiv>
+    <>
+      {(props.menu ?? true) && (
+        <EntryMenu
+          ref={menu.ref}
+          reference={props.reference}
+          stateKey={props.stateKey}
+          path={props.path}
+        />
+      )}
+      <EntryDiv onContextMenu={menu.onContextMenuOpen}>
+        <Indent indent={props.indent} />
+        <LabelSpan data-type={props.type}>{props.label}</LabelSpan>
+        <a onClick={onInvoke}>
+          <MonospaceSpan sx={{ title: 'Invoke getter' }}>(...)</MonospaceSpan>
+        </a>
+      </EntryDiv>
+    </>
   );
 }
 
@@ -626,6 +841,7 @@ export interface RefOutletRendererProps<REF extends Ref = Ref> {
   type?: 'enumerable' | 'nonenumerable' | 'special';
   label?: string | number;
   details?: boolean;
+  menu?: boolean;
   indent: number;
   stateKey: string;
   path: string;
@@ -634,37 +850,7 @@ export interface RefOutletRendererProps<REF extends Ref = Ref> {
   expandable: boolean;
 }
 
-const ActionSpan = styled('span')(({ theme }) => ({
-  display: 'inline',
-  fontFamily: 'Monospace',
-  textDecoration: 'underline',
-  cursor: 'pointer',
-  color: theme.inspector.secondary,
-  '&:before': {
-    display: 'inline-block',
-    width: '0.6rem',
-    content: '"»"',
-    color: theme.inspector.secondary,
-    whiteSpace: 'pre',
-  },
-}));
-
-export function RefOutletActionEntryRenderer({
-  label,
-  indent,
-  action,
-}: RefOutletActionEntry) {
-  const onClick = useDispatchCallback(action, []);
-
-  return (
-    <EntryDiv>
-      <Indent indent={indent} />
-      <ActionSpan onClick={onClick}>{label}</ActionSpan>
-    </EntryDiv>
-  );
-}
-
-export function RefOutletItemEntryRenderer({
+export function RefOutletEntryRenderer({
   reference,
   ...props
 }: RefOutletEntryProps) {
@@ -701,6 +887,7 @@ export function RefSummaryOutlet({
       expanded={false}
       expandable={false}
       details={details}
+      menu={false}
     />
   );
 }

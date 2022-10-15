@@ -4,7 +4,7 @@ import { Action } from '@lib/store';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import { getRefState, getRefUiState } from '@app/selectors/refs-selectors';
 
-export interface RefOutletItemEntry {
+export interface RefOutletEntry {
   id: string;
   stateKey: string;
   indent: number;
@@ -14,44 +14,6 @@ export interface RefOutletItemEntry {
   label?: string;
   expandable: boolean;
   expanded: boolean;
-}
-
-export interface RefOutletActionEntry {
-  id: string;
-  indent: number;
-  action: () => Action;
-  label: string;
-}
-
-export type RefOutletEntry = RefOutletItemEntry | RefOutletActionEntry;
-
-function addActions(
-  entries: RefOutletEntry[],
-  indent: number,
-  ref: Ref,
-  stateKey: string,
-  path: string
-) {
-  switch (ref.type) {
-    case 'observable':
-    case 'subscriber':
-      entries.push({
-        id: `${stateKey}:${path}:action:focus`,
-        action: () => refOutletContextActions.FocusTarget({ target: ref }),
-        indent,
-        label: `Focus ${ref.type}`,
-      });
-      break;
-    case 'event': {
-      entries.push({
-        id: `${stateKey}:${path}:action:focus`,
-        action: () => refOutletContextActions.FocusEvent({ event: ref }),
-        indent,
-        label: `Focus event`,
-      });
-      break;
-    }
-  }
 }
 
 function getRefOutletEntriesVisitor(
@@ -85,7 +47,6 @@ function getRefOutletEntriesVisitor(
     if (expandedObjects[objectId] === undefined) {
       return false;
     } else {
-      addActions(entries, indent + 1, ref, stateKey, path);
       for (const prop of expandedObjects[objectId]) {
         if (
           !getRefOutletEntriesVisitor(

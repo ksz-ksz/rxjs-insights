@@ -14,6 +14,8 @@ import { InsightsService } from './page-script/insights-service';
 import { TargetsService } from './page-script/targets-service';
 import { TracesService } from './page-script/traces-service';
 import { createInspectFunction } from './page-script/inspect-function';
+import { ConsoleService } from './page-script/console-service';
+import { Console, ConsoleChannel } from '@app/protocols/console';
 
 declare global {
   interface Window {
@@ -46,6 +48,7 @@ function connect(env: Env | undefined) {
     const insights = new InsightsService(refs);
     const targets = new TargetsService(refs);
     const traces = new TracesService(refs);
+    const console = new ConsoleService(refs);
 
     startServer<Refs>(
       createInspectedWindowEvalServerAdapter(RefsChannel),
@@ -65,6 +68,11 @@ function connect(env: Env | undefined) {
     startServer<Traces>(
       createInspectedWindowEvalServerAdapter(TracesChannel),
       traces
+    );
+
+    startServer<Console>(
+      createInspectedWindowEvalServerAdapter(ConsoleChannel),
+      console
     );
 
     window[REFS] = refs;
