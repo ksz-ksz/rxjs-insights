@@ -10,23 +10,35 @@ export class TargetsService implements Targets {
   constructor(private readonly refs: RefsService) {}
 
   lockTarget(objectId: number) {
-    const target = this.refs.getObject(objectId)! as Observable | Subscriber;
-    this.lockedTargets[target.id] = target;
+    const target = this.refs.getObject(objectId) as
+      | Observable
+      | Subscriber
+      | undefined;
+    if (target) this.lockedTargets[target.id] = target;
   }
 
   unlockTarget(objectId: number) {
-    const target = this.refs.getObject(objectId)! as Observable | Subscriber;
-    delete this.lockedTargets[target.id];
+    const target = this.refs.getObject(objectId) as
+      | Observable
+      | Subscriber
+      | undefined;
+    if (target) delete this.lockedTargets[target.id];
   }
 
   pinTarget(objectId: number) {
-    const target = this.refs.getObject(objectId)! as Observable | Subscriber;
-    this.pinnedTargets[target.id] = target;
+    const target = this.refs.getObject(objectId) as
+      | Observable
+      | Subscriber
+      | undefined;
+    if (target) this.pinnedTargets[target.id] = target;
   }
 
   unpinTarget(objectId: number) {
-    const target = this.refs.getObject(objectId)! as Observable | Subscriber;
-    delete this.pinnedTargets[target.id];
+    const target = this.refs.getObject(objectId) as
+      | Observable
+      | Subscriber
+      | undefined;
+    if (target) delete this.pinnedTargets[target.id];
   }
 
   getTargets() {
