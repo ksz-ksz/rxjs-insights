@@ -50,6 +50,8 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
       const targetKey = node.key;
       const event = relations.events[time];
       const location = getLocationStrings(target.locations);
+      const sourceLocation = target.locations.originalLocation;
+      const bundleLocation = target.locations.generatedLocation;
       const isRoot = node.key.startsWith('<') && node.key.endsWith('>');
       const isActive =
         isCaller || (target.startTime <= time && time <= target.endTime);
@@ -69,6 +71,8 @@ const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
         targetKey,
         event,
         location,
+        sourceLocation,
+        bundleLocation,
         isRoot,
         isCaller,
         isSelected,
@@ -91,7 +95,8 @@ interface MenuState {
   collapseOptionVisible?: boolean;
   expandAllOptionVisible?: boolean;
   collapseAllOptionVisible?: boolean;
-  goToSourceOptionVisible?: boolean;
+  openSourceLocation?: boolean;
+  openBundleLocation?: boolean;
 }
 
 export const SubscriberGraphNodeRenderer = React.forwardRef<
@@ -118,15 +123,18 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
       const collapseOptionVisible = !vm.isCaller && vm.isExpanded;
       const expandAllOptionVisible = !vm.isCaller;
       const collapseAllOptionVisible = !vm.isCaller;
-      const goToSourceOptionVisible =
-        openResourceAvailable && vm.location !== undefined;
+      const openSourceLocation =
+        openResourceAvailable && vm.sourceLocation !== undefined;
+      const openBundleLocation =
+        openResourceAvailable && vm.bundleLocation !== undefined;
       if (
         focusOptionVisible ||
         expandOptionVisible ||
         collapseOptionVisible ||
         expandAllOptionVisible ||
         collapseAllOptionVisible ||
-        goToSourceOptionVisible
+        openSourceLocation ||
+        openBundleLocation
       ) {
         setMenu({
           open: true,
@@ -136,7 +144,8 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
           collapseOptionVisible,
           expandAllOptionVisible,
           collapseAllOptionVisible,
-          goToSourceOptionVisible,
+          openSourceLocation,
+          openBundleLocation,
         });
         event.preventDefault();
         event.stopPropagation();
@@ -217,15 +226,26 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     [onContextMenuClose, vm.rootTarget.id, vm.targetKey]
   );
 
-  const onGoToSource = useCallback(
+  const onOpenSourceLocation = useCallback(
     (event: MouseEvent) => {
       onContextMenuClose(event);
-      if (vm.location) {
-        const { file, line } = vm.location.location;
+      if (vm.sourceLocation) {
+        const { file, line } = vm.sourceLocation;
         chrome.devtools.panels.openResource(file, line - 1, () => {});
       }
     },
-    [onContextMenuClose, vm.location]
+    [onContextMenuClose, vm.sourceLocation]
+  );
+
+  const onOpenBundleLocation = useCallback(
+    (event: MouseEvent) => {
+      onContextMenuClose(event);
+      if (vm.bundleLocation) {
+        const { file, line } = vm.bundleLocation;
+        chrome.devtools.panels.openResource(file, line - 1, () => {});
+      }
+    },
+    [onContextMenuClose, vm.bundleLocation]
   );
 
   const onClick = useDispatchCallback(
@@ -329,8 +349,15 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
           {menu.collapseAllOptionVisible && (
             <MenuItem onClick={onCollapseAll}>Collapse all</MenuItem>
           )}{' '}
-          {menu.goToSourceOptionVisible && (
-            <MenuItem onClick={onGoToSource}>Go to source</MenuItem>
+          {menu.openSourceLocation && (
+            <MenuItem onClick={onOpenSourceLocation}>
+              Open source location
+            </MenuItem>
+          )}
+          {menu.openBundleLocation && (
+            <MenuItem onClick={onOpenBundleLocation}>
+              Open bundle location
+            </MenuItem>
           )}
         </MenuList>
       </Menu>
