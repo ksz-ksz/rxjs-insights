@@ -371,7 +371,9 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
         opacity={0}
         fill={vm.nodeColor}
         style={{ transition: `opacity ${duration}s` }}
-      />
+      >
+        {vm.location && <title>{vm.location.long}</title>}
+      </circle>
       <g
         opacity={vm.isExpanded || vm.isRoot || vm.isCaller ? 1 : 0.5}
         style={{ transition: `opacity ${duration}s`, pointerEvents: 'none' }}
@@ -410,7 +412,6 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
             y="18"
           >
             {vm.location.short}
-            <title>{vm.location.long}</title>
           </text>
         )}
       </g>
