@@ -143,6 +143,14 @@ function diffRoutes<DATA>(
   };
 }
 
+function getUrl(url: Url, payload: { url: Url }): Url {
+  return {
+    path: payload.url.path,
+    queryParams: { ...url.queryParams, ...payload.url.queryParams },
+    fragment: payload.url.fragment ?? url.fragment,
+  };
+}
+
 export function createRouterSlice<SLICE extends string, DATA, METADATA>(
   router: Router<SLICE, DATA, METADATA>
 ) {
@@ -171,7 +179,7 @@ export function createRouterSlice<SLICE extends string, DATA, METADATA>(
               const prevUrl = store.select(router.selectors.url).get();
               const prevRoutes = store.select(router.selectors.routes).get();
               const dispatchOnLeave: Action[] = [];
-              const nextUrl = action.payload.url;
+              const nextUrl = getUrl(prevUrl, action.payload);
               const nextRoutes = router.match(action.payload.url.path);
               const dispatchOnEnter: Action[] = [];
               const awaits: Observable<never>[] = [];
