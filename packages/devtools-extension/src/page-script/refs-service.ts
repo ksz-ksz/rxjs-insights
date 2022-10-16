@@ -15,8 +15,15 @@ import {
   Refs,
   SetRef,
   SubscriberRef,
+  TaskRef,
 } from '@app/protocols/refs';
-import { Event, Observable, Subscriber, Target } from '@rxjs-insights/recorder';
+import {
+  Event,
+  Observable,
+  Subscriber,
+  Target,
+  Task,
+} from '@rxjs-insights/recorder';
 import {
   getObservable,
   getPrecedingEvent,
@@ -29,6 +36,8 @@ import { formatTimestamp } from '@app/utils/format-timestamp';
 import { Location, Locations } from '@rxjs-insights//core';
 import { Caller } from '@rxjs-insights/recorder/src/lib/model';
 
+const TAG = Symbol.for('@rxjs-insights/tag');
+
 function getPropertyDescriptors(
   target: any
 ): [string | symbol, PropertyDescriptor][] {
@@ -39,27 +48,23 @@ function getPropertyDescriptors(
 }
 
 function isObservable(x: any): x is Observable {
-  return 'target' in x && 'type' in x && x.type === 'observable';
+  return TAG in x && x[TAG] === 'Observable';
 }
 
 function isSubscriber(x: any): x is Subscriber {
-  return 'target' in x && 'type' in x && x.type === 'subscriber';
+  return TAG in x && x[TAG] === 'Subscriber';
 }
 
 function isCaller(x: any): x is Caller {
-  return 'declaration' in x && 'type' in x && x.type === 'caller';
+  return TAG in x && x[TAG] === 'Caller';
 }
 
 function isEvent(x: any): x is Event {
-  return (
-    'target' in x &&
-    'type' in x &&
-    (x.type === 'subscribe' ||
-      x.type === 'unsubscribe' ||
-      x.type === 'next' ||
-      x.type === 'error' ||
-      x.type === 'complete')
-  );
+  return TAG in x && x[TAG] === 'Event';
+}
+
+function isTask(x: any): x is Task {
+  return TAG in x && x[TAG] === 'Task';
 }
 
 class ObjectsRegistry {
@@ -238,6 +243,13 @@ export class RefsService implements Refs {
           eventType: target.type,
           objectId: this.objects.getObjectId(target),
         };
+      } else if (isTask(target)) {
+        return {
+          type: 'task',
+          id: target.id,
+          name: target.name,
+          objectId: this.objects.getObjectId(target),
+        };
       }
     }
     return this.createDefault(target);
@@ -349,6 +361,8 @@ export class RefsService implements Refs {
         return this.expandCaller(ref);
       case 'event':
         return this.expandEvent(ref);
+      case 'task':
+        return this.expandTask(ref);
       case 'location':
         return this.expandLocations(ref);
       default:
@@ -556,11 +570,7 @@ export class RefsService implements Refs {
       this.property('Time', this.create(time)),
       // this.property('Name', this.create(declaration.name)),
       this.property('Type', this.create(type)),
-      this.property('Task', {
-        type: 'text',
-        text: task.name,
-        suffix: `#${task.id}`,
-      }),
+      this.property('Task', this.create(task)),
       this.property('Timestamp', {
         type: 'text',
         text: formatTimestamp(timestamp),
@@ -598,6 +608,19 @@ export class RefsService implements Refs {
       ),
     ];
   }
+
+  private expandTask(ref: TaskRef): PropertyRef[] {
+    const task = this.objects.getObject<Task>(ref.objectId);
+    if (!task) {
+      return [];
+    }
+    const { id, name } = task;
+    return [
+      this.property('Id', this.create(id)),
+      this.property('Name', this.create(name)),
+    ];
+  }
+
   private expandLocations(ref: LocationRef): PropertyRef[] {
     const locations = this.objects.getObject<Locations>(ref.objectId ?? -1);
 

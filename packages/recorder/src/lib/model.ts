@@ -9,7 +9,10 @@ import {
 } from '@rxjs-insights/core';
 import { CallerRef } from '@rxjs-insights/core';
 
+const TAG = Symbol.for('@rxjs-insights/tag');
+
 export class Declaration {
+  readonly [TAG] = 'Declaration';
   private static IDS = 0;
 
   readonly id = Declaration.IDS++;
@@ -23,6 +26,7 @@ export class Declaration {
 }
 
 export abstract class Target<EVENT extends Event = Event> {
+  abstract readonly [TAG]: string;
   private static IDS = 0;
 
   readonly id = Target.IDS++;
@@ -40,6 +44,7 @@ export abstract class Target<EVENT extends Event = Event> {
 }
 
 export class Observable extends Target<ObservableEvent> {
+  readonly [TAG] = 'Observable';
   readonly type = 'observable';
 
   constructor(
@@ -61,6 +66,7 @@ export class Observable extends Target<ObservableEvent> {
 }
 
 export class Subscriber extends Target<SubscriberEvent> {
+  readonly [TAG] = 'Subscriber';
   readonly type = 'subscriber';
 
   constructor(
@@ -91,6 +97,7 @@ export class Subscriber extends Target<SubscriberEvent> {
 }
 
 export class Caller extends Target {
+  readonly [TAG] = 'Caller';
   readonly type = 'caller';
 
   constructor(
@@ -115,6 +122,7 @@ export class Caller extends Target {
 }
 
 export abstract class Event {
+  readonly [TAG] = 'Event';
   private static TIME = 0;
 
   readonly time = Event.TIME++;
@@ -159,6 +167,7 @@ export class ObservableEvent extends Event {
 }
 
 export class Task {
+  readonly [TAG] = 'Task';
   private static IDS = 0;
 
   readonly id = Task.IDS++;

@@ -14,6 +14,7 @@ import {
   SetRef,
   SubscriberRef,
   SymbolRef,
+  TaskRef,
   TextRef,
   ValueRef,
 } from '@app/protocols/refs';
@@ -209,6 +210,23 @@ function EventTag(props: TagRendererProps<EventRef>) {
         </EventDataSpan>
       ) : null}
     </EventSpan>
+  );
+}
+
+const TaskSpan = styled('span')(({ theme }) => ({
+  fontFamily: 'Monospace',
+  fontStyle: 'oblique',
+  color: theme.inspector.primary,
+  '&:after': {
+    display: 'inline',
+    content: '" #" attr(data-id)',
+    color: theme.inspector.secondary,
+  },
+}));
+
+function TaskTag(props: TagRendererProps<TaskRef>) {
+  return (
+    <TaskSpan data-id={props.reference.id}>{props.reference.name}</TaskSpan>
   );
 }
 
@@ -479,6 +497,7 @@ const tagRenderers: Record<
   subscriber: SubscriberTag,
   caller: CallerTag,
   event: EventTag,
+  task: TaskTag,
   location: LocationTag,
   text: TextTag,
 };

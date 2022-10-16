@@ -140,7 +140,12 @@ export interface TextRef {
   suffix?: string;
 }
 
-// TODO: create TaskRef
+export interface TaskRef {
+  type: 'task';
+  id: number;
+  name: string;
+  objectId: number;
+}
 
 export type Ref =
   | ObjectRef
@@ -159,5 +164,6 @@ export type Ref =
   | SubscriberRef
   | CallerRef
   | EventRef
+  | TaskRef
   | LocationRef
   | TextRef;
