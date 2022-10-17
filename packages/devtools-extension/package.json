@@ -21,6 +21,7 @@
     "@types/d3-hierarchy": "^3.1.0",
     "@types/d3-shape": "^3.1.0",
     "@types/react-transition-group": "^4.4.4",
+    "compare-versions": "^5.0.1",
     "d3-hierarchy": "^3.1.2",
     "d3-shape": "^3.1.0",
     "gsap": "^3.10.4",

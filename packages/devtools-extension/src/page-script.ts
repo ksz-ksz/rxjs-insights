@@ -1,3 +1,4 @@
+import { compare } from 'compare-versions';
 import { createInspectedWindowEvalServerAdapter, startServer } from '@lib/rpc';
 import {
   Instrumentation,
@@ -16,6 +17,7 @@ import { TracesService } from './page-script/traces-service';
 import { createInspectFunction } from './page-script/inspect-function';
 import { ConsoleService } from './page-script/console-service';
 import { Console, ConsoleChannel } from '@app/protocols/console';
+import { REQUIRED_VERSION } from './required-version';
 
 declare global {
   interface Window {
@@ -28,7 +30,18 @@ const REFS = 'RXJS_INSIGHTS_REFS';
 const CONNECT = 'RXJS_INSIGHTS_CONNECT';
 
 function getStatus(env: Env | undefined): InstrumentationStatus {
-  return env ? 'installed' : 'not-installed';
+  if (env) {
+    if (
+      env.version === undefined ||
+      compare(env.version, REQUIRED_VERSION, '<')
+    ) {
+      return 'not-compatible';
+    } else {
+      return 'installed';
+    }
+  } else {
+    return 'not-installed';
+  }
 }
 
 function connect(env: Env | undefined) {

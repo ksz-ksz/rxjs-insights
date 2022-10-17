@@ -16,6 +16,7 @@ export interface Instrument<BASE> {
 }
 
 export interface Env {
+  version: string;
   tracer: Tracer;
   locator: Locator;
   recorder: Recorder;

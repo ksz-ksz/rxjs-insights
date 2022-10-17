@@ -20,6 +20,8 @@ import {
 } from './instrumented-subject';
 import { createInstrumentCaller } from './instrument-caller';
 
+declare const PACKAGE_VERSION: string;
+
 export interface Config {
   Observable: Constructor<ObservableLike>;
   Subject: Constructor<SubjectLike>;
@@ -76,6 +78,7 @@ export function instrument({
   }
 
   return {
+    version: PACKAGE_VERSION,
     tracer,
     locator,
     recorder,

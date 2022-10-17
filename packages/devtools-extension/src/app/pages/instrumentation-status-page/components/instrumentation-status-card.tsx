@@ -3,6 +3,7 @@ import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import React from 'react';
 import { instrumentationStatusPageActions } from '@app/actions/instrumentation-status-page-actions';
 import { statusSelector } from '@app/store/status';
+import { REQUIRED_VERSION } from '../../../../required-version';
 
 export function InstrumentationStatusCard() {
   const dispatch = useDispatch();
@@ -49,6 +50,29 @@ export function InstrumentationStatusCard() {
               }
             >
               Wait
+            </Button>
+          </Box>
+        </Box>
+      );
+    case 'not-compatible':
+      return (
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          padding={2}
+        >
+          <Typography variant="body1" gutterBottom align="center">
+            It seems that the installed instrumentation packages are not
+            compatible with the extension. Update the packages to at least{' '}
+            <code>{REQUIRED_VERSION}</code> and try again.
+          </Typography>
+          <Box>
+            <Button
+              target="_blank"
+              href="https://www.npmjs.com/package/@rxjs-insights/core"
+            >
+              Check out the packages on NPM
             </Button>
           </Box>
         </Box>

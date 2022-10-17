@@ -39,6 +39,11 @@ async function buildTarget(
     outbase: 'src',
     plugins: alias ? [esbuildPluginAlias(getAlias(cwd, alias))] : [],
     loader,
+    define: {
+      PACKAGE_VERSION: JSON.stringify(
+        require(path.join(cwd, 'package.json')).version
+      ),
+    },
   });
 }
 

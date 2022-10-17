@@ -30,7 +30,7 @@ async function serve(target) {
     loader: { '.svg': 'dataurl' },
     watch: true,
     sourcemap: 'linked',
-    tsconfig: 'tsconfig.json',
+    tsconfig: 'tsconfig.lib.json',
     plugins: [
       rxjsInsightsPlugin({
         installModule: path.join(__dirname, './src/app/install-module.ts'),

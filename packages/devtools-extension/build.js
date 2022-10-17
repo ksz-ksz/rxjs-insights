@@ -13,5 +13,5 @@ esbuild.build({
   bundle: true,
   minify: true,
   loader: { '.svg': 'dataurl' },
-  tsconfig: 'tsconfig.json',
+  tsconfig: 'tsconfig.lib.json',
 });
