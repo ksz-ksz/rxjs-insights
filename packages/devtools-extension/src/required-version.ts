@@ -1,1 +1,1 @@
-export const REQUIRED_VERSION = '0.4.3';
+export const REQUIRED_VERSION = '0.5.0';
