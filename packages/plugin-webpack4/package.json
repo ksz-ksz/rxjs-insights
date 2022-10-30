@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/plugin-webpack4",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Setup RxJS Insights easily in Webpack.",
   "keywords": [
     "rxjs",
@@ -45,7 +45,7 @@
     "postpublish": "node ../../scripts/restore-package.js"
   },
   "dependencies": {
-    "@rxjs-insights/plugin-base": "^0.4.2"
+    "@rxjs-insights/plugin-base": "^0.5.0"
   },
   "peerDependencies": {
     "webpack": ">=4.0.0 <5.0.0"

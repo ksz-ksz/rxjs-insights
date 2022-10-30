@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/devtools-extension",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "private": true,
   "scripts": {
     "build": "rimraf dist && node build.js",
@@ -15,9 +15,9 @@
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.6.2",
     "@mui/material": "^5.6.3",
-    "@rxjs-insights/core": "^0.4.3",
-    "@rxjs-insights/recorder": "^0.4.3",
-    "@rxjs-insights/recorder-utils": "^0.4.3",
+    "@rxjs-insights/core": "^0.5.0",
+    "@rxjs-insights/recorder": "^0.5.0",
+    "@rxjs-insights/recorder-utils": "^0.5.0",
     "@types/d3-hierarchy": "^3.1.0",
     "@types/d3-shape": "^3.1.0",
     "@types/react-transition-group": "^4.4.4",
@@ -34,9 +34,9 @@
     "use-sync-external-store": "^1.1.0"
   },
   "devDependencies": {
-    "@rxjs-insights/console": "^0.4.3",
-    "@rxjs-insights/plugin-esbuild": "^0.4.2",
-    "@rxjs-insights/rxjs7": "^0.4.3",
+    "@rxjs-insights/console": "^0.5.0",
+    "@rxjs-insights/plugin-esbuild": "^0.5.0",
+    "@rxjs-insights/rxjs7": "^0.5.0",
     "@types/chrome": "^0.0.180",
     "@types/react": "^17.0.44",
     "@types/react-dom": "^17.0.16",
