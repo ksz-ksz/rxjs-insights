@@ -29,6 +29,10 @@ The data gathered by the RxJS Insights includes the information about:
 * **events**, including the **notification events** (i.e. `next`, `error`, and `complete`) and **subscription events** (i.e. `subscribe` and `unsubscribe`), as well as relations to other events that either caused or are caused by the given event,
 * **async tasks** within which the events happened (e.g. `setTimeout`, `setInterval`, DOM events, REST events, etc.).
 
+**Get [Chrome extension](https://chrome.google.com/webstore/detail/rxjs-insights/nndeaiihppbmgiejbpbpkohdhilffdgj)**
+
+**Get [Firefox extension](https://addons.mozilla.org/en-US/firefox/addon/rxjs-insights/)**
+
 **Try it out on [StackBlitz ⚡](https://stackblitz.com/edit/rxjs-insights-playground?file=src%2Findex.ts)**
 
 ![Example console output](./resources/rxjs-insights.gif)

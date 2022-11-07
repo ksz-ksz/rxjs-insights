@@ -18,4 +18,4 @@
 
 * Run `cd packages/devtools-extension`
 * Run `npm run build`
-* Run `npm run pack-extension:chromium` to pack Chromium extension or `npm run start:firefox` to pack Firefox extension.
+* Run `npm run pack-extension:chromium` to pack Chromium extension or `npm run pack-extension:firefox` to pack Firefox extension.
