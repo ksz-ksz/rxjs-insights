@@ -3,7 +3,7 @@
 ## Prerequisites
 
 1. Instrumentation is set up in the application. See the [instrumentation setup guide](../instrumentation/setup/index.md) for more information.
-2. RxJS Insights Devtools browser extension is installed (currently available only for browsers based on Chromium). Go to the [Chrome Web Store](https://chrome.google.com/webstore/detail/rxjs-insights/nndeaiihppbmgiejbpbpkohdhilffdgj) to get it.
+2. RxJS Insights Devtools browser extension is installed. Go to the [Chrome Web Store](https://chrome.google.com/webstore/detail/rxjs-insights/nndeaiihppbmgiejbpbpkohdhilffdgj) or [Firefox Browser Add-ons](https://addons.mozilla.org/en-US/firefox/addon/rxjs-insights/).
 
 ## 1. Install the RxJS Insights Devtools package
 ```
