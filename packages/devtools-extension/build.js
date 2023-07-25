@@ -1,4 +1,5 @@
 const esbuild = require('esbuild');
+const esbuildEnvFilePlugin = require('esbuild-envfile-plugin');
 
 esbuild.build({
   entryPoints: [
@@ -14,4 +15,5 @@ esbuild.build({
   minify: true,
   loader: { '.svg': 'dataurl' },
   tsconfig: 'tsconfig.lib.json',
+  plugins: [esbuildEnvFilePlugin],
 });

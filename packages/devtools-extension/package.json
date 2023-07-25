@@ -42,6 +42,8 @@
     "@types/react-dom": "^17.0.16",
     "@types/use-sync-external-store": "^0.0.3",
     "archiver": "^5.3.1",
+    "dotenv": "16.3.1",
+    "esbuild-envfile-plugin": "1.0.5",
     "web-ext": "^7.2.0",
     "zone.js": "^0.11.5"
   }

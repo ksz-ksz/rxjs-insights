@@ -11,7 +11,7 @@
     "256": "icons/rxjs-insights-256.png"
   },
   "homepage_url": "https://github.com/ksz-ksz/rxjs-insights",
-  "permissions": [],
+  "permissions": ["storage"],
   "devtools_page": "devtools-page.html",
   "background": {
     "service_worker": "dist/background-script.js"

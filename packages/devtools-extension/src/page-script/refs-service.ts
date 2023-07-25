@@ -33,7 +33,7 @@ import {
   isSubscriberTarget,
 } from '@rxjs-insights/recorder-utils';
 import { formatTimestamp } from '@app/utils/format-timestamp';
-import { Location, Locations } from '@rxjs-insights//core';
+import { Location, Locations } from '@rxjs-insights/core';
 import { Caller } from '@rxjs-insights/recorder/src/lib/model';
 
 const TAG = Symbol.for('@rxjs-insights/tag');

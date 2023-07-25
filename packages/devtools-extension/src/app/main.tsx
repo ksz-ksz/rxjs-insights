@@ -1,4 +1,5 @@
 import 'zone.js';
+import './init-logger';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { App } from './app';

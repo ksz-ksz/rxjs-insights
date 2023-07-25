@@ -1,4 +1,5 @@
 const esbuild = require('esbuild');
+const esbuildEnvFilePlugin = require('esbuild-envfile-plugin');
 const { rxjsInsightsPlugin } = require('@rxjs-insights/plugin-esbuild');
 const path = require('path');
 const fs = require('fs');
@@ -32,6 +33,7 @@ async function serve(target) {
     sourcemap: 'linked',
     tsconfig: 'tsconfig.lib.json',
     plugins: [
+      esbuildEnvFilePlugin,
       rxjsInsightsPlugin({
         installModule: path.join(__dirname, './src/app/install-module.ts'),
       }),
@@ -45,7 +47,7 @@ async function serve(target) {
     sourceDir: process.cwd(),
     target: target === 'firefox' ? 'firefox-desktop' : 'chromium',
     startUrl: 'http://localhost:3000',
-    chromiumProfile: 'chromium-profile',
+    chromiumProfile: process.env.CHROMIUM_PROFILE ?? 'chromium-profile',
     // firefoxProfile: 'firefox-profile', // extension does not always load with that
     keepProfileChanges: true,
     profileCreateIfMissing: true,

@@ -7,6 +7,9 @@ import { CssBaseline, ThemeProvider } from '@mui/material';
 import { AppBarWrapper } from '@app/pages/app-bar-wrapper';
 import { InstrumentationStatusPage } from '@app/pages/instrumentation-status-page';
 import { theme } from '@app/theme';
+import { APPLICATION_LOG } from '@app/logger';
+
+APPLICATION_LOG.info('Devtools initialized');
 
 export function App() {
   return (

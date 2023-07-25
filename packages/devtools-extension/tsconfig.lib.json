@@ -10,6 +10,7 @@
     }
   },
   "files": [
+    "src/env.d.ts",
     "src/app/main.tsx",
     "src/content-script.ts",
     "src/devtools-page.ts",
