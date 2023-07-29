@@ -1,16 +1,14 @@
-import {
-  combineReactions,
-  createReaction,
-  effect,
-  filterActions,
-} from '@lib/store';
-import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
+import { createEffect } from '@lib/state-fx/store';
+import { effect, filterActions } from '@lib/store';
+import { filter } from 'rxjs';
+import { uiActions } from '@app/actions/ui-actions';
 
-export const hoverTargetsReaction = combineReactions()
-  .add(
-    createReaction((action$) =>
-      action$.pipe(
-        filterActions(subscribersGraphActions.TargetHovered),
+export const hoverTargetsEffect = createEffect({
+  namespace: 'hoverTargets',
+  effects: {
+    hover(action$) {
+      return action$.pipe(
+        filter(uiActions.TargetHoveredOnGraph.is),
         effect((action) => {
           const { target } = action.payload;
           document
@@ -21,13 +19,11 @@ export const hoverTargetsReaction = combineReactions()
               }
             });
         })
-      )
-    )
-  )
-  .add(
-    createReaction((action$) =>
-      action$.pipe(
-        filterActions(subscribersGraphActions.TargetUnhovered),
+      );
+    },
+    unhover(action$) {
+      return action$.pipe(
+        filter(uiActions.TargetUnhoveredOnGraph.is),
         effect((action) => {
           const { target } = action.payload;
           document
@@ -38,6 +34,7 @@ export const hoverTargetsReaction = combineReactions()
               }
             });
         })
-      )
-    )
-  );
+      );
+    },
+  },
+});
