@@ -1,7 +1,10 @@
 import { first } from 'rxjs';
-import { createLocationRoute, createRoute } from './route';
+import { createRoute, createRoute } from './route';
+import { NumberParam } from './number-param';
+import { BooleanParam } from './boolean-param';
+import { StringParam } from './string-param';
 
-const statusRoute = createLocationRoute({
+const statusRoute = createRoute({
   path: 'status',
 });
 
@@ -14,24 +17,19 @@ const targetsRoute = createRoute({
   path: 'targets',
 });
 
-const targetsListRoute = createLocationRoute({
+const targetsListRoute = createRoute({
   parent: targetsRoute,
   path: '',
 });
 
-const targetRoute = createLocationRoute({
+const targetRoute = createRoute({
   parent: targetsRoute,
   path: ':targetId',
   pathParams: {
-    targetId: {
-      type: 'number',
-    },
+    targetId: NumberParam,
   },
   queryParams: {
-    time: {
-      type: 'number',
-      default: 0,
-    },
+    time: NumberParam,
   },
 });
 
@@ -137,4 +135,29 @@ const routing = createRouting({
     }),
   ],
   fallbackRoute: {},
+});
+
+const parentRoute = createRoute({
+  path: ':parentParam',
+  pathParams: {
+    parentParam: BooleanParam({ trueValue: 'yes', falseValue: 'no' }),
+  },
+});
+
+const route = createRoute({
+  parent: parentRoute,
+  path: 'asd/:zxc/qwe',
+  pathParams: {
+    zxc: NumberParam,
+  },
+  queryParams: {
+    asd: StringParam,
+  },
+});
+
+route({
+  pathParams: {
+    zxc: 2,
+    parentParam: true,
+  },
 });
