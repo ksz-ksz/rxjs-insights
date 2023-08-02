@@ -1,7 +1,6 @@
+import { Location } from 'history';
 import { ParamType } from './param-type';
-import { StringParam } from './string-param';
-import { NumberParam } from './number-param';
-import { BooleanParam } from './boolean-param';
+import { z, ZodType } from 'zod';
 
 type PathSegments<TPath extends string> = TPath extends ''
   ? never
@@ -22,11 +21,16 @@ type QueryParams = {
   [name: string]: ParamType<unknown>;
 };
 
-type ExtractPathParams<TRoute extends Route<unknown, unknown>> =
-  TRoute extends Route<infer TPathParams, unknown> ? TPathParams : never;
+type ExtractPathParams<TRoute extends Route<unknown, unknown, unknown>> =
+  TRoute extends Route<infer TPathParams, unknown, unknown>
+    ? TPathParams
+    : never;
 
-type ExtractQueryParams<TRoute extends Route<unknown, unknown>> =
-  TRoute extends Route<unknown, infer TQueryParams> ? TQueryParams : never;
+type ExtractSearch<TRoute extends Route<unknown, unknown, unknown>> =
+  TRoute extends Route<unknown, infer TSearch, unknown> ? TSearch : never;
+
+type ExtractHash<TRoute extends Route<unknown, unknown, unknown>> =
+  TRoute extends Route<unknown, unknown, infer THash> ? THash : never;
 
 type ExtractParamType<TPathParam extends ParamType<unknown>> =
   TPathParam extends ParamType<infer T> ? T : never;
@@ -50,81 +54,120 @@ type MapParamTypes<TParams> = {
   [TKey in keyof TParams]: ParamType<TParams[TKey]>;
 };
 
-export interface Route<TPathParams, TQueryParams> {
+export interface Route<TPathParams, TSearch, THash> {
   readonly path: string;
-  readonly pathParams: MapParamTypes<TPathParams>;
-  readonly queryParams: MapParamTypes<TQueryParams>;
+  readonly params: MapParamTypes<TPathParams>;
+  readonly search: ParamType<TSearch>;
+  readonly hash: ParamType<THash>;
 }
 
-export interface CreateLocationWithRequiredOptions<TPathParams, TQueryParams> {
+export interface CreateLocationWithRequiredOptions<
+  TPathParams,
+  TSearch,
+  THash
+> {
   (
     options: CreateLocationOptionsWithRequiredPathParams<
       TPathParams,
-      TQueryParams
+      TSearch,
+      THash
     >
   ): Location;
 }
 
 export interface CreateLocationOptionsWithRequiredPathParams<
   TPathParams,
-  TQueryParams
+  TSearch,
+  THash
 > {
-  pathParams: TPathParams;
-  queryParams?: TQueryParams;
-  fragment?: string;
+  params: TPathParams;
+  search?: TSearch;
+  hash?: THash;
 }
 
 export interface CreateLocationOptionsWithOptionalPathParams<
   TPathParams,
-  TQueryParams
+  TSearch,
+  THash
 > {
-  pathParams?: TPathParams;
-  queryParams?: TQueryParams;
-  fragment?: string;
+  params?: TPathParams;
+  search?: TSearch;
+  hash?: THash;
 }
 
-export interface CreateLocationWithOptionalOptions<TPathParams, TQueryParams> {
+export interface CreateLocationWithOptionalOptions<
+  TPathParams,
+  TSearch,
+  THash
+> {
   (
     options?: CreateLocationOptionsWithOptionalPathParams<
       TPathParams,
-      TQueryParams
+      TSearch,
+      THash
     >
   ): Location;
 }
 
-export type CreateLocation<TPathParams, TQueryParams> =
+export type CreateLocation<TPathParams, TSearch, THash> =
   keyof TPathParams extends never
-    ? CreateLocationWithOptionalOptions<TPathParams, TQueryParams>
-    : CreateLocationWithRequiredOptions<TPathParams, TQueryParams>;
+    ? CreateLocationWithOptionalOptions<TPathParams, TSearch, THash>
+    : CreateLocationWithRequiredOptions<TPathParams, TSearch, THash>;
 
 export interface CreateRouteParams<
   TPath extends string,
   TPathParams extends PathParams<TPath>,
-  TQueryParams extends QueryParams,
-  TParent extends Route<unknown, unknown>
+  TSearch extends ParamType<unknown>,
+  THash extends ParamType<unknown>,
+  TParent extends Route<unknown, unknown, unknown>
 > {
   parent?: TParent;
   path: TPath;
-  pathParams?: TPathParams;
-  queryParams?: TQueryParams;
+  params?: TPathParams;
+  search?: TSearch;
+  hash?: THash;
 }
 
-export type CreateRouteReturn<TPathParams, TQueryParams> = Route<
+export type CreateRouteReturn<TPathParams, TSearch, THash> = Route<
   TPathParams,
-  TQueryParams
+  TSearch,
+  THash
 > &
-  CreateLocation<TPathParams, TQueryParams>;
+  CreateLocation<TPathParams, TSearch, THash>;
 
 export function createRoute<
   TPath extends string,
   TPathParams extends PathParams<TPath>,
-  TQueryParams extends QueryParams,
-  TParent extends Route<unknown, unknown>
+  TSearch extends ParamType<unknown>,
+  THash extends ParamType<unknown>,
+  TParent extends Route<unknown, unknown, unknown>
 >(
-  params: CreateRouteParams<TPath, TPathParams, TQueryParams, TParent>
+  params: CreateRouteParams<TPath, TPathParams, TSearch, THash, TParent>
 ): CreateRouteReturn<
   ExtractPathParams<TParent> & MapPathParams<TPath, TPathParams>,
-  ExtractQueryParams<TParent> & MapQueryParams<TQueryParams>
+  ExtractSearch<TParent> & ExtractParamType<TSearch>,
+  ExtractHash<TParent> & ExtractParamType<THash>
 > {
   return undefined as any;
 }
+
+function Param<T>(type: ZodType<T>): ParamType<T> {
+  return undefined as any;
+}
+
+function EncodedParams<T>(params: MapParamTypes<T>): ParamType<T> {
+  return undefined as any;
+}
+
+const r = createRoute({
+  path: 'targets/:targetId',
+  params: {
+    targetId: Param(z.coerce.number()),
+  },
+  search: EncodedParams({
+    time: Param(z.coerce.number()),
+  }),
+  // hash: EncodedParams({}),
+});
+
+r({ params: { targetId: 42 }, search: { time: 123 } });
