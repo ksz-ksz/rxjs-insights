@@ -1,8 +1,5 @@
-import { Location } from 'history';
+import { Path } from 'history';
 import { ParamType } from './param-type';
-import { z } from 'zod';
-import { Param } from './param';
-import { URLEncodedParams } from './url-encoded-params';
 import { ParamTypes } from './param-types';
 
 type PathSegments<TPath extends string> = TPath extends ''
@@ -38,21 +35,17 @@ export interface Route<TPathParams, TSearch, THash> {
   readonly hash: ParamType<THash>;
 }
 
-export interface CreateLocationWithRequiredOptions<
-  TPathParams,
-  TSearch,
-  THash
-> {
+export interface CreatePathWithRequiredOptions<TPathParams, TSearch, THash> {
   (
-    options: CreateLocationOptionsWithRequiredPathParams<
+    options: CreatePathOptionsWithRequiredPathParams<
       TPathParams,
       TSearch,
       THash
     >
-  ): Location;
+  ): Path;
 }
 
-export interface CreateLocationOptionsWithRequiredPathParams<
+export interface CreatePathOptionsWithRequiredPathParams<
   TPathParams,
   TSearch,
   THash
@@ -62,7 +55,7 @@ export interface CreateLocationOptionsWithRequiredPathParams<
   hash?: THash;
 }
 
-export interface CreateLocationOptionsWithOptionalPathParams<
+export interface CreatePathOptionsWithOptionalPathParams<
   TPathParams,
   TSearch,
   THash
@@ -72,24 +65,20 @@ export interface CreateLocationOptionsWithOptionalPathParams<
   hash?: THash;
 }
 
-export interface CreateLocationWithOptionalOptions<
-  TPathParams,
-  TSearch,
-  THash
-> {
+export interface CreatePathWithOptionalOptions<TPathParams, TSearch, THash> {
   (
-    options?: CreateLocationOptionsWithOptionalPathParams<
+    options?: CreatePathOptionsWithOptionalPathParams<
       TPathParams,
       TSearch,
       THash
     >
-  ): Location;
+  ): Path;
 }
 
-export type CreateLocation<TPathParams, TSearch, THash> =
+export type CreatePath<TPathParams, TSearch, THash> =
   keyof TPathParams extends never
-    ? CreateLocationWithOptionalOptions<TPathParams, TSearch, THash>
-    : CreateLocationWithRequiredOptions<TPathParams, TSearch, THash>;
+    ? CreatePathWithOptionalOptions<TPathParams, TSearch, THash>
+    : CreatePathWithRequiredOptions<TPathParams, TSearch, THash>;
 
 export interface CreateRouteParams<
   TPath extends string,
@@ -110,7 +99,7 @@ export type CreateRouteReturn<TPathParams, TSearch, THash> = Route<
   TSearch,
   THash
 > &
-  CreateLocation<TPathParams, TSearch, THash>;
+  CreatePath<TPathParams, TSearch, THash>;
 
 export function createRoute<
   TPath extends string,
@@ -124,6 +113,4 @@ export function createRoute<
   ExtractPathParams<TParent> & TPathParams,
   ExtractSearch<TParent> & TSearch,
   ExtractHash<TParent> & THash
-> {
-  return undefined as any;
-}
+> {}

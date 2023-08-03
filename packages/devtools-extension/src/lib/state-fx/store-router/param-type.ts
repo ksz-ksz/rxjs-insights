@@ -5,6 +5,7 @@ export interface ParamTypeTransformValidResult<T> {
 
 export interface ParamTypeTransformInvalidResult {
   valid: false;
+  value?: never;
 }
 
 export type ParamTypeFormatResult =
