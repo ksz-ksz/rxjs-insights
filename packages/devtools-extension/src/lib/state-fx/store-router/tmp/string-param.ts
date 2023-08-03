@@ -1,4 +1,4 @@
-import { ParamType, ParamTypeFactory } from './param-type';
+import { ParamType, ParamTypeFactory } from '../param-type';
 import { isParamValueValid, ParamValidator } from './param-validator';
 
 function createStringParam({

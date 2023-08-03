@@ -1,5 +1,5 @@
 import { isParamValueValid, ParamValidator } from './param-validator';
-import { ParamType, ParamTypeFactory } from './param-type';
+import { ParamType, ParamTypeFactory } from '../param-type';
 
 function createIntegerParam({
   validators,

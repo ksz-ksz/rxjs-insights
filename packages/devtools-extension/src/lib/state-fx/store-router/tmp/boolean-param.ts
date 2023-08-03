@@ -1,4 +1,4 @@
-import { ParamType, ParamTypeFactory } from './param-type';
+import { ParamType, ParamTypeFactory } from '../param-type';
 
 function createBooleanParam({
   trueValue = 'true',

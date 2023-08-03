@@ -1,8 +1,11 @@
 import { first } from 'rxjs';
 import { createRoute, createRoute } from './route';
-import { NumberParam } from './number-param';
-import { BooleanParam } from './boolean-param';
-import { StringParam } from './string-param';
+import { NumberParam } from './tmp/number-param';
+import { BooleanParam } from './tmp/boolean-param';
+import { StringParam } from './tmp/string-param';
+import { Param } from './param';
+import { z } from 'zod';
+import { URLEncodedParams } from './url-encoded-params';
 
 const statusRoute = createRoute({
   path: 'status',
@@ -139,25 +142,40 @@ const routing = createRouting({
 
 const parentRoute = createRoute({
   path: ':parentParam',
-  pathParams: {
-    parentParam: BooleanParam({ trueValue: 'yes', falseValue: 'no' }),
+  params: {
+    parentParam: Param(z.coerce.boolean()),
   },
 });
 
 const route = createRoute({
   parent: parentRoute,
   path: 'asd/:zxc/qwe',
-  pathParams: {
-    zxc: NumberParam,
+  params: {
+    zxc: Param(z.coerce.number()),
   },
-  queryParams: {
-    asd: StringParam,
-  },
+  search: URLEncodedParams({
+    asd: Param(z.coerce.string()),
+  }),
 });
 
 route({
-  pathParams: {
+  params: {
     zxc: 2,
     parentParam: true,
   },
 });
+
+interface RouterState {
+  location: {
+    pathname: string;
+    search: string;
+    hash: string;
+  };
+  routes: {
+    id: number;
+    path: string;
+    params: PathParams<string>;
+    search: unknown;
+    hash: unknown;
+  }[];
+}
