@@ -1,11 +1,14 @@
 import { first } from 'rxjs';
-import { createRoute, createRoute } from './route';
+import { createRoute, Route } from './route';
 import { NumberParam } from './tmp/number-param';
-import { BooleanParam } from './tmp/boolean-param';
-import { StringParam } from './tmp/string-param';
-import { Param } from './param';
+import { Param } from './tmp/param';
 import { z } from 'zod';
-import { URLEncodedParams } from './url-encoded-params';
+import { URLEncodedParams } from './tmp/url-encoded-params';
+import {
+  createSelector,
+  createSelectorFunction,
+  SelectorContext,
+} from '@lib/state-fx/store';
 
 const statusRoute = createRoute({
   path: 'status',
@@ -35,60 +38,6 @@ const targetRoute = createRoute({
     time: NumberParam,
   },
 });
-
-const fallbackRoute = createRoute({
-  path: '*',
-});
-
-// opt 1
-
-const routes = [
-  createRouteConfig({
-    route: statusRoute,
-    config: {
-      component: StatusComponen,
-      rules: [
-        canLeave((store, route) =>
-          store
-            .select(instrumentationStatusSelector)
-            .pipe(first((value) => value === 'installed'))
-        ),
-        canEnter((store, route) =>
-          store
-            .select(instrumentationStatusSelector)
-            .pipe(first((value) => value !== 'installed'))
-        ),
-      ],
-    },
-  }),
-  createRouteConfig({
-    route: wrapperRoute,
-    config: {
-      component: WrapperComponent,
-    },
-  }),
-  createRouteConfig({
-    route: targetsListRoute,
-    config: {
-      component: TargetListComponent,
-    },
-  }),
-  createRouteConfig({
-    route: targetRoute,
-    config: {
-      component: TargetComponent,
-      rules: [
-        resolve((store, route) =>
-          store
-            .select(hasTargetStateSelector, [route.pathParams.targetId])
-            .pipe(first(isTruthy))
-        ),
-      ],
-    },
-  }),
-];
-
-// opt 2
 
 const routing = createRouting({
   routes: [
@@ -147,11 +96,14 @@ const parentRoute = createRoute({
   },
 });
 
+type X = ExtractAllPathParams<typeof parentRoute>;
+
 const route = createRoute({
   parent: parentRoute,
-  path: 'asd/:zxc/qwe',
+  path: 'asd/:zxcx/qwe',
   params: {
-    zxc: Param(z.coerce.number()),
+    zxcx: Param(z.coerce.number()),
+    parentParam: Param(z.coerce.number()),
   },
   search: URLEncodedParams({
     asd: Param(z.coerce.string()),
@@ -160,10 +112,18 @@ const route = createRoute({
 
 route({
   params: {
-    zxc: 2,
-    parentParam: true,
+    zxcx: 2,
+    parentParam: 2,
   },
 });
+
+type RouteData<TPathParams, TSearch, THash> = {
+  id: number;
+  path: string;
+  params: TPathParams;
+  search?: TSearch;
+  hash: THash;
+};
 
 interface RouterState {
   location: {
@@ -171,11 +131,34 @@ interface RouterState {
     search: string;
     hash: string;
   };
-  routes: {
-    id: number;
-    path: string;
-    params: PathParams<string>;
-    search: unknown;
-    hash: unknown;
-  }[];
+  routes: RouteData<unknown, unknown, unknown>[];
 }
+
+interface State {
+  router: RouterState;
+}
+
+const state: State = undefined as any;
+
+const selectRoute = createSelector(
+  <TPathParams, TSearch, THash>(
+    context: SelectorContext<State>,
+    route: Route<TPathParams, TSearch, THash>
+  ): RouteData<TPathParams, TSearch, THash> => {
+    return undefined as any;
+  }
+);
+
+const getRoute = createSelectorFunction(selectRoute);
+
+const rd = getRoute(state, route);
+
+type Z = typeof rd['params'];
+
+type X = string & { asd: number };
+
+rd.params.zxcx;
+
+rd.search?.asd;
+
+const;

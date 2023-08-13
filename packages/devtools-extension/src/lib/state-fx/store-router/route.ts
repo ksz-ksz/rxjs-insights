@@ -1,6 +1,7 @@
 import { Path } from 'history';
-import { ParamType } from './param-type';
-import { ParamTypes } from './param-types';
+import { Encoder } from './encoder';
+import { EncoderFactories } from './encoder-factories';
+import { EncoderFactory } from './encoder-factory';
 
 type PathSegments<TPath extends string> = TPath extends ''
   ? never
@@ -8,109 +9,144 @@ type PathSegments<TPath extends string> = TPath extends ''
   ? (THead extends '' ? never : THead) | PathSegments<TTail>
   : TPath;
 
-type PathParamName<TPathSegment> =
-  TPathSegment extends `:${infer TPathParamName}` ? TPathParamName : never;
+type ParamName<TPathSegment> = TPathSegment extends `:${infer TParamName}`
+  ? TParamName
+  : never;
 
-type PathParamNames<TPath extends string> = PathParamName<PathSegments<TPath>>;
+type ParamNames<TPath extends string> = ParamName<PathSegments<TPath>>;
 
-type PathParams<TPath extends string> = {
-  [name in PathParamNames<TPath>]: unknown;
+type Params<TPath extends string> = {
+  [name in ParamNames<TPath>]: unknown;
 };
 
-type ExtractPathParams<TRoute extends Route<unknown, unknown, unknown>> =
-  TRoute extends Route<infer TPathParams, unknown, unknown>
-    ? TPathParams
-    : never;
+type ExtractParams<TRoute> = TRoute extends Route<
+  infer TParams,
+  unknown,
+  unknown
+>
+  ? TParams
+  : never;
 
-type ExtractSearch<TRoute extends Route<unknown, unknown, unknown>> =
-  TRoute extends Route<unknown, infer TSearch, unknown> ? TSearch : never;
+type ExtractSearch<TRoute> = TRoute extends Route<
+  unknown,
+  infer TSearch,
+  unknown
+>
+  ? TSearch
+  : never;
 
-type ExtractHash<TRoute extends Route<unknown, unknown, unknown>> =
-  TRoute extends Route<unknown, unknown, infer THash> ? THash : never;
+type ExtractHash<TRoute> = TRoute extends Route<unknown, unknown, infer THash>
+  ? THash
+  : never;
 
-export interface Route<TPathParams, TSearch, THash> {
+export interface RouteCache {
   readonly path: string;
-  readonly params: ParamTypes<TPathParams>;
-  readonly search: ParamType<TSearch>;
-  readonly hash: ParamType<THash>;
+  readonly paramNames: string[];
+  readonly paramTypes: EncoderFactories<any>;
+  readonly searchTypes: Encoder<any>[];
+  readonly hashTypes: Encoder<any>[];
 }
 
-export interface CreatePathWithRequiredOptions<TPathParams, TSearch, THash> {
-  (
-    options: CreatePathOptionsWithRequiredPathParams<
-      TPathParams,
-      TSearch,
-      THash
-    >
-  ): Path;
+export interface Route<TParams, TSearch, THash> {
+  readonly path: string;
+  readonly paramTypes: EncoderFactories<TParams>;
+  readonly searchType: Encoder<TSearch>;
+  readonly hashType: Encoder<THash>;
+  readonly parent?: Route<any, any, any>;
+  cache?: RouteCache;
 }
 
-export interface CreatePathOptionsWithRequiredPathParams<
-  TPathParams,
-  TSearch,
-  THash
-> {
-  params: TPathParams;
+export interface CreatePathWithRequiredOptions<TParams, TSearch, THash> {
+  (options: CreatePathOptionsWithRequiredParams<TParams, TSearch, THash>): Path;
+}
+
+export interface CreatePathOptionsWithRequiredParams<TParams, TSearch, THash> {
+  params: TParams;
   search?: TSearch;
   hash?: THash;
 }
 
-export interface CreatePathOptionsWithOptionalPathParams<
-  TPathParams,
-  TSearch,
-  THash
-> {
-  params?: TPathParams;
+export interface CreatePathOptionsWithOptionalParams<TParams, TSearch, THash> {
+  params?: TParams;
   search?: TSearch;
   hash?: THash;
 }
 
-export interface CreatePathWithOptionalOptions<TPathParams, TSearch, THash> {
+export interface CreatePathWithOptionalOptions<TParams, TSearch, THash> {
   (
-    options?: CreatePathOptionsWithOptionalPathParams<
-      TPathParams,
-      TSearch,
-      THash
-    >
+    options?: CreatePathOptionsWithOptionalParams<TParams, TSearch, THash>
   ): Path;
 }
 
-export type CreatePath<TPathParams, TSearch, THash> =
-  keyof TPathParams extends never
-    ? CreatePathWithOptionalOptions<TPathParams, TSearch, THash>
-    : CreatePathWithRequiredOptions<TPathParams, TSearch, THash>;
+export type CreatePath<TParams, TSearch, THash> = keyof TParams extends never
+  ? CreatePathWithOptionalOptions<TParams, TSearch, THash>
+  : CreatePathWithRequiredOptions<TParams, TSearch, THash>;
 
-export interface CreateRouteParams<
+export interface CreateRouteOptionsWithRequiredParams<
   TPath extends string,
-  TPathParams extends PathParams<TPath>,
+  TParams extends Params<TPath>,
   TSearch,
   THash,
   TParent extends Route<unknown, unknown, unknown>
 > {
   parent?: TParent;
   path: TPath;
-  params?: ParamTypes<TPathParams>;
-  search?: ParamType<TSearch>;
-  hash?: ParamType<THash>;
+  params: EncoderFactories<TParams>;
+  search?: EncoderFactory<TSearch, ExtractSearch<TParent>>;
+  hash?: EncoderFactory<THash, ExtractHash<TParent>>;
 }
 
-export type CreateRouteReturn<TPathParams, TSearch, THash> = Route<
-  TPathParams,
-  TSearch,
-  THash
-> &
-  CreatePath<TPathParams, TSearch, THash>;
-
-export function createRoute<
+export interface CreateRouteOptionsWithOptionalParams<
   TPath extends string,
-  TPathParams extends PathParams<TPath>,
+  TParams extends Params<TPath>,
   TSearch,
   THash,
   TParent extends Route<unknown, unknown, unknown>
+> {
+  parent?: TParent;
+  path: TPath;
+  params?: EncoderFactories<TParams>;
+  search?: EncoderFactory<TSearch, ExtractSearch<TParent>>;
+  hash?: EncoderFactory<THash, ExtractHash<TParent>>;
+}
+
+export type CreateRouteOptions<
+  TPath extends string,
+  TParams extends Params<TPath>,
+  TSearch,
+  THash,
+  TParent extends Route<unknown, unknown, unknown>
+> = {} extends TParams
+  ? CreateRouteOptionsWithOptionalParams<
+      TPath,
+      TParams,
+      TSearch,
+      THash,
+      TParent
+    >
+  : CreateRouteOptionsWithRequiredParams<
+      TPath,
+      TParams,
+      TSearch,
+      THash,
+      TParent
+    >;
+
+export type CreateRouteReturn<TParams, TSearch, THash> = Route<
+  TParams,
+  TSearch,
+  THash
+> &
+  CreatePath<TParams, TSearch, THash>;
+
+export function createRoute<
+  TPath extends string,
+  TParams extends Params<TPath>,
+  TParent extends Route<unknown, unknown, unknown>,
+  TSearch = ExtractSearch<TParent>,
+  THash = ExtractHash<TParent>
 >(
-  params: CreateRouteParams<TPath, TPathParams, TSearch, THash, TParent>
-): CreateRouteReturn<
-  ExtractPathParams<TParent> & TPathParams,
-  ExtractSearch<TParent> & TSearch,
-  ExtractHash<TParent> & THash
-> {}
+  options: CreateRouteOptions<TPath, TParams, TSearch, THash, TParent>
+): CreateRouteReturn<ExtractParams<TParent> & TParams, TSearch, THash> {
+  return undefined as any;
+}
