@@ -131,6 +131,17 @@ export type CreateRouteReturn<TParams, TSearch, THash> = Route<
 > &
   CreatePath<TParams, TSearch, THash>;
 
+function normalizePath(path: string) {
+  let normalizedPath = path.replaceAll(/\/+/g, '/');
+  if (normalizedPath.startsWith('/')) {
+    normalizedPath = normalizedPath.substring(1);
+  }
+  if (normalizedPath.endsWith('/')) {
+    normalizedPath = normalizedPath.substring(0, -1);
+  }
+  return normalizedPath;
+}
+
 function createEncoders<T>(
   factories: EncoderFactories<T> | undefined
 ): Encoders<T> | undefined {
@@ -238,171 +249,3 @@ export function createRoute<
 
   return Object.assign(createPath, route) as any;
 }
-
-//
-// function routesCollector(
-//   route: Route<any, any, any>,
-//   routes: Route<any, any, any>[]
-// ): Route<any, any, any>[] {
-//   if (route.parent !== undefined) {
-//     routesCollector(route.parent, routes);
-//   }
-//   routes.push(route);
-//   return routes;
-// }
-//
-// function collectRoutes(route: Route<any, any, any>): Route<any, any, any>[] {
-//   return routesCollector(route, []);
-// }
-//
-// function constructPath(routes: Route<any, any, any>[]) {
-//   return normalizePath(routes.map((x) => x.path).join('/'));
-// }
-//
-// function constructParamNames(path: string) {
-//   const paramNames = path
-//     .split('/')
-//     .filter((x) => x.startsWith(':'))
-//     .map((x) => x.substring(1));
-//
-//   for (let firstIndexOf = 0; firstIndexOf < paramNames.length; firstIndexOf++) {
-//     let paramName = paramNames[firstIndexOf];
-//     const lastIndexOf = paramNames.lastIndexOf(paramName);
-//     if (firstIndexOf !== lastIndexOf) {
-//       throw new Error(`duplicated param name: "${paramName}"`);
-//     }
-//   }
-//
-//   return paramNames;
-// }
-//
-// function constructParamTypes(routes: Route<any, any, any>[]) {
-//   const paramTypes: ParamTypes<any> = {};
-//   for (let route of routes) {
-//     for (let key in route.paramTypes) {
-//       if (paramTypes[key] !== undefined) {
-//         throw new Error(`overridden param type: "${key}"`);
-//       }
-//       paramTypes[key] = route.paramTypes[key];
-//     }
-//   }
-//   return paramTypes;
-// }
-//
-// function constructSearchParamTypes(routes: Route<any, any, any>[]) {
-//   const paramTypes: ParamType<any>[] = [];
-//   for (let route of routes) {
-//     if (route.searchType !== undefined) {
-//       paramTypes.push(route.searchType);
-//     }
-//   }
-//   return paramTypes;
-// }
-//
-// function constructHashParamTypes(routes: Route<any, any, any>[]) {
-//   const paramTypes: ParamType<any>[] = [];
-//   for (let route of routes) {
-//     if (route.hashType !== undefined) {
-//       paramTypes.push(route.hashType);
-//     }
-//   }
-//   return paramTypes;
-// }
-//
-// function formatPathname(cache: RouteCache, paramValues: any) {
-//   const { path, paramNames, paramTypes } = cache;
-//
-//   let pathname = path;
-//   for (let paramName of paramNames) {
-//     if (!(paramName in paramTypes)) {
-//       throw new Error(`no path param type for name "${paramName}"`);
-//     }
-//     if (!(paramName in paramValues)) {
-//       throw new Error(`no path param value for name "${paramName}"`);
-//     }
-//
-//     const paramType = paramTypes[paramName];
-//     const paramValue = paramValues[paramName];
-//     const result = paramType.format(paramValue);
-//
-//     if (!result.valid) {
-//       throw new Error(`path param value is invalid for name "${paramName}"`);
-//     }
-//
-//     pathname = pathname.replace(paramName, result.value);
-//   }
-//   return pathname;
-// }
-//
-// function formatParam(
-//   paramTypes: ParamType<any>[],
-//   paramValue: unknown | undefined
-// ) {}
-//
-// export function createRoute<
-//   TPath extends string,
-//   TParams extends Params<TPath>,
-//   TSearch,
-//   THash,
-//   TParent extends Route<unknown, unknown, unknown>
-// >(
-//   params: CreateRouteParams<TPath, TParams, TSearch, THash, TParent>
-// ): CreateRouteReturn<
-//   Extend<ExtractParams<TParent>, TParams>,
-//   Extend<ExtractSearch<TParent>, TSearch>,
-//   Extend<ExtractHash<TParent>, THash>
-// > {
-//   const route: Route<any, any, any> = {
-//     path: params.path,
-//     paramsTypes: params.params,
-//     searchType: params.search,
-//     hashType: params.hash,
-//   };
-//   const createPath: CreatePath<TParams, TSearch, THash> = (
-//     options: CreatePathOptionsWithOptionalParams<
-//       TParams,
-//       TSearch,
-//       THash
-//     > = {}
-//   ): Path => {
-//     if (route.cache === undefined) {
-//       const routes = collectRoutes(route);
-//       const path = constructPath(routes);
-//       const paramNames = constructParamNames(path);
-//       const paramTypes = constructParamTypes(routes);
-//       const searchTypes = constructSearchParamTypes(routes);
-//       const hashTypes = constructHashParamTypes(routes);
-//       route.cache = {
-//         path,
-//         paramNames,
-//         paramTypes,
-//         searchTypes,
-//         hashTypes,
-//       };
-//     }
-//     const pathname = formatPathname(route.cache, options.params);
-//     const search = formatParam(route.cache.searchTypes, options.search);
-//     const hash = formatParam(route.cache.hashTypes, options.hash);
-//
-//     return {
-//       pathname,
-//       search,
-//       hash,
-//     };
-//   };
-// }
-//
-function normalizePath(path: string) {
-  let normalizedPath = path.replaceAll(/\/+/g, '/');
-  if (normalizedPath.startsWith('/')) {
-    normalizedPath = normalizedPath.substring(1);
-  }
-  if (normalizedPath.endsWith('/')) {
-    normalizedPath = normalizedPath.substring(0, -1);
-  }
-  return normalizedPath;
-}
-
-// function mergePaths(parentPath: string, path: string) {
-//   return normalizePath(`${normalizePath(parentPath)}/${normalizePath(path)}`);
-// }
