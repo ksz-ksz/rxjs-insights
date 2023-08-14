@@ -8,7 +8,7 @@ export type ZodTypes<T> = {
 
 export function Params<T, TParent>(
   params: ZodTypes<T>
-): (parent: Encoder<TParent>) => Encoder<Partial<T> & TParent> {
+): (parent?: Encoder<TParent>) => Encoder<Partial<T> & TParent> {
   // @ts-ignore
   return (parent) => {
     if (parent === undefined) {
