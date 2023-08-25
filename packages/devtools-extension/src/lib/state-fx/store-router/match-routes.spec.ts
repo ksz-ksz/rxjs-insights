@@ -2,8 +2,7 @@ import { z } from 'zod';
 import { createRoute } from './route';
 import { PathParam } from './path-param';
 import { createRouting } from './routing';
-import { RouteMatcher } from './route-matcher';
-import { Params } from './params';
+import { matchRoutes } from './match-routes';
 
 const rootRoute = createRoute({
   path: '',
@@ -45,18 +44,9 @@ const rootRouting = createRouting({
   children: [featureRouting],
 });
 
-const searchRoute = createRoute({
-  path: '',
-  search: Params({
-    q: z.coerce.string(),
-  }),
-});
-
 describe('RouteMatcher', () => {
   it('should match featureListRoute', () => {
-    const matcher = new RouteMatcher(rootRouting);
-
-    const result = matcher.match('feature');
+    const result = matchRoutes(rootRouting, 'feature');
 
     expect(result).toEqual([
       {
@@ -74,9 +64,7 @@ describe('RouteMatcher', () => {
   });
 
   it('should match featureDetailsRoute', () => {
-    const matcher = new RouteMatcher(rootRouting);
-
-    const result = matcher.match('feature/42');
+    const result = matchRoutes(rootRouting, 'feature/42');
 
     expect(result).toEqual([
       {
@@ -104,9 +92,7 @@ describe('RouteMatcher', () => {
 
   describe('when pathname is empty', () => {
     it('should not match', () => {
-      const matcher = new RouteMatcher(rootRouting);
-
-      const result = matcher.match('');
+      const result = matchRoutes(rootRouting, '');
 
       expect(result).toEqual([]);
     });
@@ -114,9 +100,7 @@ describe('RouteMatcher', () => {
 
   describe('when pathname contains too many segments', () => {
     it('should not match', () => {
-      const matcher = new RouteMatcher(rootRouting);
-
-      const result = matcher.match('feature/42/dunno');
+      const result = matchRoutes(rootRouting, 'feature/42/dunno');
 
       expect(result).toEqual([]);
     });
@@ -124,9 +108,7 @@ describe('RouteMatcher', () => {
 
   describe('when pathname in unknown', () => {
     it('should not match', () => {
-      const matcher = new RouteMatcher(rootRouting);
-
-      const result = matcher.match('unknown/path/42');
+      const result = matchRoutes(rootRouting, 'unknown/path/42');
 
       expect(result).toEqual([]);
     });

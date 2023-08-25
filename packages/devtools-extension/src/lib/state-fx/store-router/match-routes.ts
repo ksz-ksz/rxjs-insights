@@ -1,7 +1,6 @@
 import { Routing } from './routing';
-import { ActiveRoute } from './active-route';
 
-interface RouteMatch {
+export interface RouteMatch {
   path: string[];
   params: Record<string, unknown>;
   routing: Routing<any, any, any, any, any>;
@@ -70,12 +69,9 @@ function match(
   return [];
 }
 
-export class RouteMatcher<TState, TConfig> {
-  constructor(
-    readonly routing: Routing<TState, TConfig, unknown, unknown, unknown>
-  ) {}
-
-  match(pathname: string): RouteMatch[] {
-    return match(this.routing, pathname.split('/'));
-  }
+export function matchRoutes(
+  routing: Routing<any, any, any, any, any>,
+  pathname: string
+): RouteMatch[] {
+  return match(routing, pathname.split('/'));
 }
