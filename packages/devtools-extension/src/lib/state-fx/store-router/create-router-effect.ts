@@ -233,11 +233,7 @@ function createRuleRoutes(
   return routes.map((route) => createRuleRoute(route, router));
 }
 
-export function createNavigateObservable<
-  TNamespace extends string,
-  TState,
-  TConfig
->(
+function createNavigateObservable<TNamespace extends string, TState, TConfig>(
   action: Action<Navigate>,
   actions: Observable<Action<any>>,
   router: Router<TNamespace, TConfig>,

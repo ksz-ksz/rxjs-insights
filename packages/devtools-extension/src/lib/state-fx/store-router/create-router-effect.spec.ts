@@ -15,10 +15,7 @@ import {
 } from 'rxjs';
 import { Action, createEffect, createStore } from '../store';
 import { createRouterReducer } from './router-reducer';
-import {
-  createNavigateObservable,
-  createRouterEffect,
-} from './create-router-effect';
+import { createRouterEffect } from './create-router-effect';
 import { ActiveRoute } from './active-route';
 
 type ListingEntry = ['N', Action<any>] | ['E', any] | ['C'];
