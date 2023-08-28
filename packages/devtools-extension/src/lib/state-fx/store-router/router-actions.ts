@@ -1,26 +1,26 @@
-import { Path, Update } from 'history';
 import { ActiveRoute } from './active-route';
+import { Location } from './history';
 
 export interface ActivatedRouteEvent<TParams, TSearch, THash> {
   status: 'activated';
-  activatedPath: Path;
+  activatedLocation: Location;
   activatedRoute: ActiveRoute<TParams, TSearch, THash>;
   activatedRoutes: ActiveRoute<any, any, any>[];
 }
 
 export interface DeactivatedRouteEvent<TParams, TSearch, THash> {
   status: 'deactivated';
-  deactivatedPath: Path;
+  deactivatedLocation: Location;
   deactivatedRoute: ActiveRoute<TParams, TSearch, THash>;
   deactivatedRoutes: ActiveRoute<any, any, any>[];
 }
 
 export interface UpdatedRouteEvent<TParams, TSearch, THash> {
   status: 'updated';
-  activatedPath: Path;
+  activatedLocation: Location;
   activatedRoute: ActiveRoute<TParams, TSearch, THash>;
   activatedRoutes: ActiveRoute<any, any, any>[];
-  deactivatedPath: Path | undefined;
+  deactivatedLocation: Location | undefined;
   deactivatedRoute: ActiveRoute<TParams, TSearch, THash>;
   deactivatedRoutes: ActiveRoute<any, any, any>[];
 }
@@ -31,7 +31,7 @@ export type RouteEvent<TParams, TSearch, THash> =
   | UpdatedRouteEvent<TParams, TSearch, THash>;
 
 export interface Navigate {
-  path: Path;
+  location: Location;
   historyMode?: 'push' | 'replace';
   // TODO: we need a global Encoder defined in order to be able to merge/replace search/hash
   // searchMode?: 'merge' | 'replace';
@@ -39,21 +39,21 @@ export interface Navigate {
 }
 
 type NavigationCompleted = {
-  path: Path;
+  location: Location;
   routes: ActiveRoute<any, any, any>[];
 };
 type NavigationCanceled = {
   reason: any;
-  path: Path;
+  location: Location;
   routes?: ActiveRoute<any, any, any>[];
 };
 type NavigationErrored = {
   reason: any;
-  path: Path;
+  location: Location;
   routes?: ActiveRoute<any, any, any>[];
 };
 type NavigationStarted = {
-  path: Path;
+  location: Location;
   routes: ActiveRoute<any, any, any>[];
 };
 

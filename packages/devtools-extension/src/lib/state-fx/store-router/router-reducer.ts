@@ -1,9 +1,10 @@
 import { Actions, createReducer, Reducer, typeOf } from '../store';
-import { Location } from 'history';
+import { HistoryEntry, HistoryEntryOrigin } from './history';
 import { ActiveRoute } from './active-route';
 
 export interface RouterState {
-  location?: Location;
+  currentEntry?: HistoryEntry;
+  currentEntryOrigin?: HistoryEntryOrigin;
   routes?: ActiveRoute<any, any, any>[];
 }
 

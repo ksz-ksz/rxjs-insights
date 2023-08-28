@@ -1,7 +1,7 @@
-import { Path } from 'history';
 import { Encoder } from './encoder';
 import { EncoderFactory } from './encoder-factory';
 import { PathMatchers } from './path-matchers';
+import { Location } from './history';
 
 type PathSegments<TPath extends string> = TPath extends ''
   ? never
@@ -48,31 +48,42 @@ export interface Route<TParams, TSearch, THash> {
   readonly hash: Encoder<THash> | undefined;
 }
 
-export interface CreatePathWithRequiredOptions<TParams, TSearch, THash> {
-  (options: CreatePathOptionsWithRequiredParams<TParams, TSearch, THash>): Path;
+export interface CreateLocationWithRequiredOptions<TParams, TSearch, THash> {
+  (
+    options: CreateLocationOptionsWithRequiredParams<TParams, TSearch, THash>
+  ): Location;
 }
 
-export interface CreatePathOptionsWithRequiredParams<TParams, TSearch, THash> {
+export interface CreateLocationOptionsWithRequiredParams<
+  TParams,
+  TSearch,
+  THash
+> {
   params: TParams;
   search?: TSearch;
   hash?: THash;
 }
 
-export interface CreatePathOptionsWithOptionalParams<TParams, TSearch, THash> {
+export interface CreateLocationOptionsWithOptionalParams<
+  TParams,
+  TSearch,
+  THash
+> {
   params?: TParams;
   search?: TSearch;
   hash?: THash;
 }
 
-export interface CreatePathWithOptionalOptions<TParams, TSearch, THash> {
+export interface CreateLocationWithOptionalOptions<TParams, TSearch, THash> {
   (
-    options?: CreatePathOptionsWithOptionalParams<TParams, TSearch, THash>
-  ): Path;
+    options?: CreateLocationOptionsWithOptionalParams<TParams, TSearch, THash>
+  ): Location;
 }
 
-export type CreatePath<TParams, TSearch, THash> = keyof TParams extends never
-  ? CreatePathWithOptionalOptions<TParams, TSearch, THash>
-  : CreatePathWithRequiredOptions<TParams, TSearch, THash>;
+export type CreateLocation<TParams, TSearch, THash> =
+  keyof TParams extends never
+    ? CreateLocationWithOptionalOptions<TParams, TSearch, THash>
+    : CreateLocationWithRequiredOptions<TParams, TSearch, THash>;
 
 export interface CreateRouteOptionsWithRequiredParams<
   TPath extends string,
@@ -129,7 +140,7 @@ export type CreateRouteReturn<TParams, TSearch, THash> = Route<
   TSearch,
   THash
 > &
-  CreatePath<TParams, TSearch, THash>;
+  CreateLocation<TParams, TSearch, THash>;
 
 function normalizePath(path: string) {
   let normalizedPath = path.replaceAll(/\/+/g, '/');
@@ -227,8 +238,8 @@ export function createRoute<
     hash: createEncoder(options.hash, options?.parent?.hash),
   };
   function createPath(
-    options?: CreatePathOptionsWithOptionalParams<TParams, TSearch, THash>
-  ): Path {
+    options?: CreateLocationOptionsWithOptionalParams<TParams, TSearch, THash>
+  ): Location {
     const pathname = formatPath(route, options?.params);
     const search = formatParam('?', route.search, options?.search);
     const hash = formatParam('#', route.hash, options?.hash);

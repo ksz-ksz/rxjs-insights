@@ -1,6 +1,6 @@
 import { Route } from './route';
 import { Observable } from 'rxjs';
-import { Location, Path } from 'history';
+import { Location } from './history';
 import { ActiveRoute } from './active-route';
 import { Store } from '@lib/state-fx/store';
 
@@ -20,8 +20,8 @@ export interface ActivatedRoutingRuleContext<
   route: ActiveRouting<TState, TConfig, TParams, TSearch, THash>;
   routes: ActiveRouting<TState, TConfig, any, any, any>[];
   store: Store<TState>;
-  path: Path;
-  prevPath: Path | undefined;
+  location: Location;
+  prevLocation: Location | undefined;
 }
 
 export interface DeactivatedRoutingRuleContext<
@@ -35,8 +35,8 @@ export interface DeactivatedRoutingRuleContext<
   prevRoute: ActiveRouting<TState, TConfig, TParams, TSearch, THash>;
   prevRoutes: ActiveRouting<TState, TConfig, any, any, any>[];
   store: Store<TState>;
-  path: Path;
-  prevPath: Path | undefined;
+  location: Location;
+  prevLocation: Location | undefined;
 }
 
 export interface UpdatedRoutingRuleContext<
@@ -52,8 +52,8 @@ export interface UpdatedRoutingRuleContext<
   prevRoute: ActiveRouting<TState, TConfig, TParams, TSearch, THash>;
   prevRoutes: ActiveRouting<TState, TConfig, any, any, any>[];
   store: Store<TState>;
-  path: Path;
-  prevPath: Path | undefined;
+  location: Location;
+  prevLocation: Location | undefined;
 }
 
 export type RoutingRuleContext<TState, TConfig, TParams, TSearch, THash> =
@@ -64,7 +64,7 @@ export type RoutingRuleContext<TState, TConfig, TParams, TSearch, THash> =
 export interface RoutingRule<TState, TConfig, TParams, TSearch, THash> {
   resolve(
     context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
-  ): Observable<Path | boolean>;
+  ): Observable<Location | boolean>;
 
   commit(
     context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
@@ -112,44 +112,3 @@ export function createRoutingFactory<TState, TConfig>(): <
 ) => Routing<TState, TConfig, TParams, TSearch, THash> {
   return createRouting;
 }
-
-// export interface RoutingRuleContext2<TState, TConfig, TParams, TSearch, THash> {
-//   route: ActiveRoute<TParams, TSearch, THash>;
-//   config: TConfig;
-//   store: Store<TState>;
-//   location: Location;
-// }
-//
-// export interface RoutingRule2<TState, TConfig, TParams, TSearch, THash> {
-//   interceptEnter?(
-//     context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
-//   ): Observable<Path | boolean>;
-//
-//   commitEnter?(
-//     context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
-//   ): Observable<void>;
-//
-//   interceptLeave?(
-//     context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
-//   ): Observable<Path | boolean>;
-//
-//   commitLeave?(
-//     context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
-//   ): Observable<void>;
-//
-//   interceptChildEnter?(
-//     context: RoutingRuleContext<TState, TConfig, unknown, unknown, unknown>
-//   ): Observable<Path | boolean>;
-//
-//   commitChildEnter?(
-//     context: RoutingRuleContext<TState, TConfig, unknown, unknown, unknown>
-//   ): Observable<void>;
-//
-//   interceptChildLeave?(
-//     context: RoutingRuleContext<TState, TConfig, unknown, unknown, unknown>
-//   ): Observable<Path | boolean>;
-//
-//   commitChildLeave?(
-//     context: RoutingRuleContext<TState, TConfig, unknown, unknown, unknown>
-//   ): Observable<void>;
-// }

@@ -1,7 +1,7 @@
 import { Store } from '../store';
 import { Router } from './router';
 import { Routing } from './routing';
-import { History, Update } from 'history';
+import { History, HistoryEntry, PopEntryListener } from './history';
 import { Observable } from 'rxjs';
 import { createRouterEffect } from './create-router-effect';
 
@@ -16,11 +16,17 @@ export interface StartRouterOptions<
   history: History;
 }
 
-function fromHistory(history: History): Observable<Update> {
+function fromHistory(history: History): Observable<HistoryEntry> {
   return new Observable((observer) => {
-    return history.listen((update) => {
-      observer.next(update);
-    });
+    const listener: PopEntryListener = (entry) => {
+      observer.next(entry);
+    };
+
+    history.addPopEntryListener(listener);
+
+    return () => {
+      history.removePopEntryListener(listener);
+    };
   });
 }
 

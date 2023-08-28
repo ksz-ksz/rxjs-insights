@@ -1,4 +1,4 @@
-import { History } from 'history';
+import { History } from './history';
 import { Routing, routings } from './routing';
 import { RouterSelectors } from './router-selectors';
 import { RouterActions } from './router-actions';
