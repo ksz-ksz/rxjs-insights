@@ -32,37 +32,51 @@ export type RouteEvent<TParams, TSearch, THash> =
 
 export interface Navigate {
   location: Location;
+  state?: any;
   historyMode?: 'push' | 'replace';
   // TODO: we need a global Encoder defined in order to be able to merge/replace search/hash
   // searchMode?: 'merge' | 'replace';
   // hashMode?: 'merge' | 'replace';
 }
 
-type NavigationCompleted = {
+export interface NavigationRequested {
+  origin: 'pop' | 'push' | 'replace';
   location: Location;
+  state: any;
+  key: string;
+}
+
+export interface NavigationStarted {
+  origin: 'pop' | 'push' | 'replace';
+  location: Location;
+  state: any;
+  key: string;
   routes: ActiveRoute<any, any, any>[];
-};
-type NavigationCanceled = {
-  reason: any;
+}
+
+export interface NavigationCompleted {
+  origin: 'pop' | 'push' | 'replace';
   location: Location;
-  routes?: ActiveRoute<any, any, any>[];
-};
-type NavigationErrored = {
-  reason: any;
-  location: Location;
-  routes?: ActiveRoute<any, any, any>[];
-};
-type NavigationStarted = {
-  location: Location;
+  state: any;
+  key: string;
   routes: ActiveRoute<any, any, any>[];
-};
+}
+
+export interface NavigationCanceled {
+  reason: 'overridden' | 'redirected' | 'intercepted';
+  origin: 'pop' | 'push' | 'replace';
+  location: Location;
+  state: any;
+  key: string;
+  routes?: ActiveRoute<any, any, any>[];
+}
 
 export interface RouterActions {
   Navigate: Navigate;
+  NavigationRequested: NavigationRequested;
   NavigationStarted: NavigationStarted;
   NavigationCompleted: NavigationCompleted;
   NavigationCanceled: NavigationCanceled;
-  NavigationErrored: NavigationErrored;
   RouteResolved: RouteEvent<any, any, any>;
   RouteCommitted: RouteEvent<any, any, any>;
 }

@@ -16,7 +16,7 @@ export interface StartRouterOptions<
   history: History;
 }
 
-function fromHistory(history: History): Observable<HistoryEntry> {
+export function fromHistory(history: History): Observable<HistoryEntry> {
   return new Observable((observer) => {
     const listener: PopEntryListener = (entry) => {
       observer.next(entry);

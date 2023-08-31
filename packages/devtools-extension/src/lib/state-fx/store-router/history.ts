@@ -7,8 +7,6 @@ export interface Location {
 export interface HistoryEntry {
   location: Location;
   state: any;
-  index: number;
-  key: string;
 }
 
 export type HistoryEntryOrigin = 'pop' | 'push' | 'replace';
@@ -36,12 +34,6 @@ export interface History {
   removePopEntryListener(listener: PopEntryListener): void;
 }
 
-interface HistoryState {
-  index: number;
-  key: string;
-  state: any;
-}
-
 function formatLocation({ pathname, search, hash }: Location): string {
   let location = pathname;
   if (search.length !== 0 && search !== '?') {
@@ -59,16 +51,6 @@ function formatLocation({ pathname, search, hash }: Location): string {
   return location;
 }
 
-function isHistoryState(state: any): state is HistoryState {
-  return (
-    typeof state === 'object' &&
-    state !== null &&
-    typeof state.index === 'number' &&
-    typeof state.key === 'string' &&
-    'state' in state
-  );
-}
-
 function getLocation(browserLocation: Location): Location {
   const { pathname, search, hash } = browserLocation;
   return { pathname, search, hash };
@@ -78,26 +60,9 @@ function getCurrentHistoryEntry(
   browserLocation: Location,
   browserState: any
 ): HistoryEntry {
-  const location = getLocation(browserLocation);
-  let key: string;
-  let index: number;
-  let state: any;
-
-  if (isHistoryState(browserState)) {
-    index = browserState.index;
-    key = browserState.key;
-    state = browserState.state;
-  } else {
-    index = 0;
-    key = 'default';
-    state = null;
-  }
-
   return {
-    key,
-    index,
-    state,
-    location,
+    location: getLocation(browserLocation),
+    state: browserState,
   };
 }
 
@@ -113,15 +78,6 @@ class BrowserHistory implements History {
       this.window.history
     );
     this.currentEntryOrigin = 'pop';
-
-    this.window.history.replaceState(
-      {
-        key: this.currentEntry.key,
-        index: this.currentEntry.index,
-        state: this.currentEntry.state,
-      },
-      ''
-    );
 
     this.window.addEventListener('popstate', () => {
       this.currentEntry = getCurrentHistoryEntry(
@@ -153,31 +109,18 @@ class BrowserHistory implements History {
     state: any,
     { mode = 'push' }: NewEntryOptions = {}
   ): HistoryEntry {
-    const browserState: HistoryState = {
-      key: crypto.randomUUID(),
-      index: this.currentEntry.index + (mode === 'push' ? 1 : 0),
-      state,
-    };
     this.currentEntry = {
-      ...browserState,
       location,
+      state,
     };
     this.currentEntryOrigin = mode;
 
     switch (mode) {
       case 'push':
-        this.window.history.pushState(
-          browserState,
-          '',
-          formatLocation(location)
-        );
+        this.window.history.pushState(state, '', formatLocation(location));
         break;
       case 'replace':
-        this.window.history.replaceState(
-          browserState,
-          '',
-          formatLocation(location)
-        );
+        this.window.history.replaceState(state, '', formatLocation(location));
         break;
     }
 
@@ -203,17 +146,22 @@ export function createBrowserHistory(
   return new BrowserHistory(options.window ?? window);
 }
 
+interface MemoryHistoryEntry {
+  index: number;
+  entry: HistoryEntry;
+}
+
 class MemoryHistory implements History {
+  currentIndex: number;
   currentEntry: HistoryEntry;
   currentEntryOrigin: HistoryEntryOrigin;
 
   private readonly listeners: PopEntryListener[] = [];
-  private readonly entries: HistoryEntry[] = [];
+  private readonly entries: MemoryHistoryEntry[] = [];
 
   constructor() {
+    this.currentIndex = 0;
     this.currentEntry = {
-      key: 'default',
-      index: 0,
       state: null,
       location: {
         pathname: '',
@@ -223,11 +171,14 @@ class MemoryHistory implements History {
     };
     this.currentEntryOrigin = 'pop';
 
-    this.entries.push(this.currentEntry);
+    this.entries.push({
+      index: this.currentIndex,
+      entry: this.currentEntry,
+    });
   }
 
   go(delta: number) {
-    const index = this.currentEntry.index + delta;
+    const index = this.currentIndex + delta;
     const entry = this.entries[index];
 
     if (entry === undefined) {
@@ -235,7 +186,8 @@ class MemoryHistory implements History {
       return;
     }
 
-    this.currentEntry = entry;
+    this.currentIndex = entry.index;
+    this.currentEntry = entry.entry;
     this.currentEntryOrigin = 'pop';
 
     for (let listener of this.listeners) {
@@ -257,8 +209,6 @@ class MemoryHistory implements History {
     { mode = 'push' }: NewEntryOptions = {}
   ): HistoryEntry {
     this.currentEntry = {
-      key: crypto.randomUUID(),
-      index: this.currentEntry.index + (mode === 'push' ? 1 : 0),
       state,
       location,
     };
@@ -266,11 +216,18 @@ class MemoryHistory implements History {
 
     switch (mode) {
       case 'push':
-        this.entries.length = this.currentEntry.index;
-        this.entries.push(this.currentEntry);
+        this.entries.length = this.currentIndex;
+        this.currentIndex += 1;
+        this.entries.push({
+          index: this.currentIndex,
+          entry: this.currentEntry,
+        });
         break;
       case 'replace':
-        this.entries[this.currentEntry.index] = this.currentEntry;
+        this.entries[this.currentIndex] = {
+          index: this.currentIndex,
+          entry: this.currentEntry,
+        };
         break;
     }
 

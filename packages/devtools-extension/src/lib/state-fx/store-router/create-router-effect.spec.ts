@@ -87,8 +87,8 @@ function createTestHarness(
 
   router.start(parentRouting);
 
-  const [routerReducer] = createRouterReducer({
-    namespace: 'router',
+  const routerReducer = createRouterReducer({
+    router,
   });
 
   const store = createStore({
@@ -139,13 +139,16 @@ describe('createRouterEffect', () => {
       createTestHarness(actions);
 
     actions.next(
-      router.actions.Navigate({
+      router.actions.NavigationRequested({
         location: childRoute({
           params: {
             parentId: 42,
             childId: 7,
           },
         }),
+        state: null,
+        key: 'key',
+        origin: 'push',
       })
     );
 
@@ -177,11 +180,17 @@ describe('createRouterEffect', () => {
     };
     expect(listing).toEqual(
       [
-        router.actions.Navigate({
+        router.actions.NavigationRequested({
+          origin: 'push',
           location: activeLocation,
+          state: null,
+          key: 'key',
         }),
         router.actions.NavigationStarted({
+          origin: 'push',
           location: activeLocation,
+          state: null,
+          key: 'key',
           routes: [activeParentRoute, activeChildRoute],
         }),
         router.actions.RouteResolved({
@@ -209,7 +218,10 @@ describe('createRouterEffect', () => {
           activatedRoutes: [activeParentRoute, activeChildRoute],
         }),
         router.actions.NavigationCompleted({
+          origin: 'push',
           location: activeLocation,
+          state: null,
+          key: 'key',
           routes: [activeParentRoute, activeChildRoute],
         }),
       ].map((action): ListingEntry => ['N', action])
@@ -224,13 +236,16 @@ describe('createRouterEffect', () => {
         createTestHarness(actions, { resolveParent });
 
       actions.next(
-        router.actions.Navigate({
+        router.actions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 42,
               childId: 7,
             },
           }),
+          state: null,
+          key: 'key',
+          origin: 'push',
         })
       );
 
@@ -262,16 +277,25 @@ describe('createRouterEffect', () => {
       };
       expect(listing).toEqual(
         [
-          router.actions.Navigate({
+          router.actions.NavigationRequested({
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
           }),
           router.actions.NavigationStarted({
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
           router.actions.NavigationCanceled({
             reason: 'intercepted',
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
         ].map((action): ListingEntry => ['N', action])
@@ -287,13 +311,16 @@ describe('createRouterEffect', () => {
         createTestHarness(actions, { resolveChild });
 
       actions.next(
-        router.actions.Navigate({
+        router.actions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 42,
               childId: 7,
             },
           }),
+          state: null,
+          key: 'key',
+          origin: 'push',
         })
       );
 
@@ -325,16 +352,25 @@ describe('createRouterEffect', () => {
       };
       expect(listing).toEqual(
         [
-          router.actions.Navigate({
+          router.actions.NavigationRequested({
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
           }),
           router.actions.NavigationStarted({
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
           router.actions.NavigationCanceled({
             reason: 'intercepted',
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
         ].map((action): ListingEntry => ['N', action])
@@ -365,13 +401,16 @@ describe('createRouterEffect', () => {
         createTestHarness(actions, { resolveParent });
 
       actions.next(
-        router.actions.Navigate({
+        router.actions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 42,
               childId: 7,
             },
           }),
+          state: null,
+          key: 'key',
+          origin: 'push',
         })
       );
 
@@ -430,23 +469,38 @@ describe('createRouterEffect', () => {
       };
       expect(listing).toEqual(
         [
-          router.actions.Navigate({
+          router.actions.NavigationRequested({
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
           }),
           router.actions.NavigationStarted({
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
           router.actions.NavigationCanceled({
             reason: 'redirected',
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.Navigate({
+          router.actions.NavigationRequested({
+            origin: 'push',
             location: redirectedLocation,
+            state: null,
+            key: 'key',
           }),
           router.actions.NavigationStarted({
+            origin: 'push',
             location: redirectedLocation,
+            state: null,
+            key: 'key',
             routes: [redirectedParentRoute, redirectedChildRoute],
           }),
           router.actions.RouteResolved({
@@ -474,7 +528,10 @@ describe('createRouterEffect', () => {
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
           router.actions.NavigationCompleted({
+            origin: 'push',
             location: redirectedLocation,
+            state: null,
+            key: 'key',
             routes: [redirectedParentRoute, redirectedChildRoute],
           }),
         ].map((action): ListingEntry => ['N', action])
@@ -505,13 +562,16 @@ describe('createRouterEffect', () => {
         createTestHarness(actions, { resolveChild });
 
       actions.next(
-        router.actions.Navigate({
+        router.actions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 42,
               childId: 7,
             },
           }),
+          state: null,
+          key: 'key',
+          origin: 'push',
         })
       );
 
@@ -570,23 +630,38 @@ describe('createRouterEffect', () => {
       };
       expect(listing).toEqual(
         [
-          router.actions.Navigate({
+          router.actions.NavigationRequested({
             location: activeLocation,
+            state: null,
+            key: 'key',
+            origin: 'push',
           }),
           router.actions.NavigationStarted({
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
           router.actions.NavigationCanceled({
             reason: 'redirected',
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.Navigate({
+          router.actions.NavigationRequested({
             location: redirectedLocation,
+            state: null,
+            key: 'key',
+            origin: 'push',
           }),
           router.actions.NavigationStarted({
+            origin: 'push',
             location: redirectedLocation,
+            state: null,
+            key: 'key',
             routes: [redirectedParentRoute, redirectedChildRoute],
           }),
           router.actions.RouteResolved({
@@ -614,7 +689,10 @@ describe('createRouterEffect', () => {
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
           router.actions.NavigationCompleted({
+            origin: 'push',
             location: redirectedLocation,
+            state: null,
+            key: 'key',
             routes: [redirectedParentRoute, redirectedChildRoute],
           }),
         ].map((action): ListingEntry => ['N', action])
@@ -631,24 +709,30 @@ describe('createRouterEffect', () => {
         createTestHarness(actions, { resolveParent });
 
       actions.next(
-        router.actions.Navigate({
+        router.actions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 42,
               childId: 7,
             },
           }),
+          state: null,
+          key: 'key',
+          origin: 'push',
         })
       );
 
       actions.next(
-        router.actions.Navigate({
+        router.actions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 43,
               childId: 8,
             },
           }),
+          state: null,
+          key: 'key',
+          origin: 'push',
         })
       );
 
@@ -710,23 +794,38 @@ describe('createRouterEffect', () => {
       };
       expect(listing).toEqual(
         [
-          router.actions.Navigate({
+          router.actions.NavigationRequested({
             location: activeLocation,
+            state: null,
+            key: 'key',
+            origin: 'push',
           }),
           router.actions.NavigationStarted({
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.Navigate({
+          router.actions.NavigationRequested({
             location: redirectedLocation,
+            state: null,
+            key: 'key',
+            origin: 'push',
           }),
           router.actions.NavigationCanceled({
             reason: 'overridden',
+            origin: 'push',
             location: activeLocation,
+            state: null,
+            key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
           router.actions.NavigationStarted({
+            origin: 'push',
             location: redirectedLocation,
+            state: null,
+            key: 'key',
             routes: [redirectedParentRoute, redirectedChildRoute],
           }),
           router.actions.RouteResolved({
@@ -754,7 +853,10 @@ describe('createRouterEffect', () => {
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
           router.actions.NavigationCompleted({
+            origin: 'push',
             location: redirectedLocation,
+            state: null,
+            key: 'key',
             routes: [redirectedParentRoute, redirectedChildRoute],
           }),
         ].map((action): ListingEntry => ['N', action])

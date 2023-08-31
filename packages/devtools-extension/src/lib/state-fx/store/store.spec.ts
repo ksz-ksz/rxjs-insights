@@ -436,10 +436,10 @@ describe('store', () => {
             emit: () => emitSubject,
           },
         });
-        store.registerEffect(scanEffect());
+        store.registerEffect(scanEffect);
 
         // when
-        store.registerEffect(emitEffect()).unsubscribe();
+        store.registerEffect(emitEffect).unsubscribe();
         emitSubject.next(
           userActions.login({ user: { name: 'bob', permissions: ['read'] } })
         );

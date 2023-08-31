@@ -6,21 +6,24 @@ import {
   Store,
   typeOf,
 } from '../store';
-import { Navigate, RouteEvent } from './router-actions';
+import { NavigationRequested, RouteEvent } from './router-actions';
 import { Router } from './router';
-import { Location } from './history';
+import { HistoryEntry, Location } from './history';
 import { ActiveRoute } from './active-route';
 import {
   concat,
   concatMap,
   filter,
   ignoreElements,
+  map,
   Observable,
   of,
+  tap,
 } from 'rxjs';
 import { ActiveRouting } from './routing';
 import { RouterState } from './router-reducer';
 import { diffRoutes } from './diff-routes';
+import { fromHistory } from './start-router';
 
 function matchRoutes<TConfig>(
   router: Router<any, TConfig>,
@@ -236,7 +239,7 @@ function createRuleRoutes(
 }
 
 function createNavigateObservable<TNamespace extends string, TState, TConfig>(
-  action: Action<Navigate>,
+  action: Action<NavigationRequested>,
   actions: Observable<Action<any>>,
   router: Router<TNamespace, TConfig>,
   getRouterState: StateSelectorFunction<
@@ -250,7 +253,7 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
     {
       const { payload } = action;
       const prevState = getRouterState(store.getState());
-      const prevLocation = prevState.currentEntry?.location;
+      const prevLocation = prevState.location;
       const prevRoutes = prevState.routes ?? [];
       const nextLocation = payload.location;
       const nextRoutes = matchRoutes(router, nextLocation);
@@ -260,7 +263,10 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
       );
       subscriber.next(
         router.actions.NavigationStarted({
+          origin: payload.origin,
           location: nextLocation,
+          state: payload.state,
+          key: payload.key,
           routes: nextRoutes,
         })
       );
@@ -299,13 +305,16 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
       let redirected = false;
 
       subscriber.add(
-        actions.pipe(filter(router.actions.Navigate.is)).subscribe({
+        actions.pipe(filter(router.actions.NavigationRequested.is)).subscribe({
           next() {
             if (!redirected) {
               subscriber.next(
                 router.actions.NavigationCanceled({
                   reason: 'overridden',
+                  origin: payload.origin,
                   location: nextLocation,
+                  state: payload.state,
+                  key: payload.key,
                   routes: nextRoutes,
                 })
               );
@@ -330,7 +339,10 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
                 subscriber.next(
                   router.actions.NavigationCanceled({
                     reason: 'intercepted',
+                    origin: payload.origin,
                     location: nextLocation,
+                    state: payload.state,
+                    key: payload.key,
                     routes: nextRoutes,
                   })
                 );
@@ -340,29 +352,25 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
                 subscriber.next(
                   router.actions.NavigationCanceled({
                     reason: 'redirected',
+                    origin: payload.origin,
                     location: nextLocation,
+                    state: payload.state,
+                    key: payload.key,
                     routes: nextRoutes,
                   })
                 );
                 subscriber.next(
-                  router.actions.Navigate({
+                  router.actions.NavigationRequested({
+                    origin: payload.origin,
                     location: value,
+                    state: null,
+                    key: payload.key,
                   })
                 );
                 subscriber.complete();
               }
             },
             error(error) {
-              subscriber.next(
-                router.actions.NavigationErrored({
-                  reason:
-                    error?.message !== undefined
-                      ? String(error.message)
-                      : String(error),
-                  location: nextLocation,
-                  routes: nextRoutes,
-                })
-              );
               subscriber.error(error);
             },
             complete() {
@@ -373,7 +381,10 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
                   events.map(router.actions.RouteCommitted),
                   of(
                     router.actions.NavigationCompleted({
+                      origin: payload.origin,
                       location: nextLocation,
+                      state: payload.state,
+                      key: payload.key,
                       routes: nextRoutes,
                     })
                   )
@@ -386,6 +397,26 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
   });
 }
 
+interface RouterHistoryState {
+  key: string;
+  state: any;
+}
+
+function isRouterHistoryState(x: any): x is RouterHistoryState {
+  return typeof x === 'object' && x !== null && 'key' in x && 'state' in x;
+}
+
+function getState(entry: HistoryEntry): RouterHistoryState {
+  if (isRouterHistoryState(entry.state)) {
+    return entry.state;
+  } else {
+    return {
+      key: 'default',
+      state: null,
+    };
+  }
+}
+
 export function createRouterEffect<TNamespace extends string, TConfig>(
   router: Router<TNamespace, TConfig>
 ) {
@@ -394,9 +425,35 @@ export function createRouterEffect<TNamespace extends string, TConfig>(
     namespace: router.namespace,
     storeState: typeOf<Record<TNamespace, RouterState>>(),
     effects: {
-      navigate(actions, store) {
+      createNewNavigationRequest(actions) {
+        return actions.pipe(
+          filter(router.actions.Navigate.is),
+          map(({ payload }) =>
+            router.actions.NavigationRequested({
+              origin: payload.historyMode ?? 'push',
+              location: payload.location,
+              state: payload.state,
+              key: crypto.randomUUID(),
+            })
+          )
+        );
+      },
+      createPopNavigationRequest() {
+        return fromHistory(router.history).pipe(
+          map((entry) => {
+            const { key, state } = getState(entry);
+            return router.actions.NavigationRequested({
+              origin: 'pop',
+              location: entry.location,
+              state,
+              key,
+            });
+          })
+        );
+      },
+      handleNavigationRequest(actions, store) {
         return actions
-          .pipe(filter(router.actions.Navigate.is))
+          .pipe(filter(router.actions.NavigationRequested.is))
           .pipe(
             concatMap((action) =>
               createNavigateObservable(
@@ -408,6 +465,33 @@ export function createRouterEffect<TNamespace extends string, TConfig>(
               )
             )
           );
+      },
+      syncHistoryAfterNavigationCompleted(actions) {
+        return actions.pipe(
+          filter(router.actions.NavigationCompleted.is),
+          tap(({ payload }) => {
+            const historyState = { state: payload.state, key: payload.key };
+            if (payload.origin !== 'pop') {
+              router.history.newEntry(payload.location, historyState, {
+                mode: payload.origin,
+              });
+            }
+          }),
+          ignoreElements()
+        );
+      },
+      syncHistoryAfterNavigationCancelled(actions, store) {
+        return actions.pipe(
+          filter(router.actions.NavigationCanceled.is),
+          tap(({ payload }) => {
+            if (payload.origin === 'pop' && payload.reason === 'intercepted') {
+              const state = getRouterState(store.getState());
+              const historyState = { state: state.state, key: state.key };
+              router.history.newEntry(state.location, historyState);
+            }
+          }),
+          ignoreElements()
+        );
       },
     },
   });

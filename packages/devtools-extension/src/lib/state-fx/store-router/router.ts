@@ -8,6 +8,7 @@ import { matchRoutes, RouteMatch } from './match-routes';
 
 export interface Router<TNamespace extends string, TConfig> {
   namespace: TNamespace;
+  history: History;
   actions: Actions<RouterActions>;
   selectors: RouterSelectors<TNamespace>;
   start(routing: Routing<any, TConfig, any, any, any>): void;
