@@ -1,10 +1,4 @@
-import {
-  Actions,
-  createReducer,
-  createReducerFromActions,
-  Reducer,
-  typeOf,
-} from '../store';
+import { createReducerFromActions, Reducer, typeOf } from '../store';
 import { Location } from './history';
 import { ActiveRoute } from './active-route';
 import { Router } from './router';
@@ -27,7 +21,7 @@ export function createRouterReducer<TNamespace extends string>({
   RouterState,
   unknown
 > {
-  return createReducerFromActions({
+  const [reducer] = createReducerFromActions({
     namespace: router.namespace,
     initialState: typeOf<RouterState>({
       location: {
@@ -53,4 +47,6 @@ export function createRouterReducer<TNamespace extends string>({
       }),
     }),
   });
+
+  return reducer;
 }

@@ -1,7 +1,7 @@
 import { Action, ActionFactory, createActions } from './actions';
-import { typeOf } from './type-of';
-import { ExtractPayload, is } from './is';
+import { ExtractPayload } from './is';
 import { identity } from 'rxjs';
+import { createStateSelector, Selector } from './selector';
 
 export interface ReducerFunction<TState, TStoreState, TPayload = any> {
   (state: TState, payload: TPayload, storeState: TStoreState): TState | void;
@@ -68,6 +68,7 @@ export function createReducer<
   reducers,
 }: CreateReducersOptions<TNamespace, TState, TStoreState, TReducers>): [
   Reducer<TNamespace, TState, TStoreState>,
+  Selector<Record<TNamespace, TState>, [], TState>,
   ReducerActions<TReducers>
 ] {
   const reducer: Reducer<TNamespace, TState, TStoreState> = {
@@ -93,11 +94,16 @@ export function createReducer<
       return nextState;
     },
   };
+
+  const selector = createStateSelector<Record<TNamespace, TState>, [], TState>(
+    (state) => state[namespace]
+  );
+
   const actions = createActions<ReducerPayloads<TReducers>>({
     namespace,
   });
 
-  return [reducer, actions];
+  return [reducer, selector, actions];
 }
 
 export interface ActionReducer<
@@ -144,13 +150,12 @@ export function createReducerFromActions<
   namespace,
   initialState,
   reducers,
-}: CreateReducerFromActions<TNamespace, TState, TStoreState>): Reducer<
-  TNamespace,
-  TState,
-  TStoreState
-> {
+}: CreateReducerFromActions<TNamespace, TState, TStoreState>): [
+  Reducer<TNamespace, TState, TStoreState>,
+  Selector<Record<TNamespace, TState>, [], TState>
+] {
   const reducerEntries = Object.entries(reducers(identity));
-  return {
+  const reducer = {
     namespace,
     initialState,
     reduce(
@@ -172,4 +177,10 @@ export function createReducerFromActions<
       return nextState;
     },
   };
+
+  const selector = createStateSelector<Record<TNamespace, TState>, [], TState>(
+    (state) => state[namespace]
+  );
+
+  return [reducer, selector];
 }
