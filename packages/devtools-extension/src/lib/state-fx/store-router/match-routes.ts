@@ -73,5 +73,5 @@ export function matchRoutes(
   routing: Routing<any, any, any, any, any>,
   pathname: string
 ): RouteMatch[] {
-  return match(routing, pathname.split('/'));
+  return match(routing, pathname === '' ? [] : pathname.split('/'));
 }

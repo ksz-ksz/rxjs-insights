@@ -34,8 +34,11 @@ export interface History {
   removePopEntryListener(listener: PopEntryListener): void;
 }
 
-function formatLocation({ pathname, search, hash }: Location): string {
-  let location = pathname;
+function formatLocation(
+  { pathname, search, hash }: Location,
+  baseHref: string
+): string {
+  let location = pathname === '' ? baseHref : `${baseHref}${pathname}`;
   if (search.length !== 0 && search !== '?') {
     if (!search.startsWith('?')) {
       location += '?';
@@ -51,17 +54,26 @@ function formatLocation({ pathname, search, hash }: Location): string {
   return location;
 }
 
-function getLocation(browserLocation: Location): Location {
+function getPathname(browserPathname: string, baseHref: string) {
+  if (browserPathname.startsWith(baseHref)) {
+    return browserPathname.substring(baseHref.length);
+  } else {
+    return '';
+  }
+}
+
+function getLocation(browserLocation: Location, baseHref: string): Location {
   const { pathname, search, hash } = browserLocation;
-  return { pathname, search, hash };
+  return { pathname: getPathname(pathname, baseHref), search, hash };
 }
 
 function getCurrentHistoryEntry(
   browserLocation: Location,
-  browserState: any
+  browserState: any,
+  baseHref: string
 ): HistoryEntry {
   return {
-    location: getLocation(browserLocation),
+    location: getLocation(browserLocation, baseHref),
     state: browserState,
   };
 }
@@ -72,17 +84,22 @@ class BrowserHistory implements History {
 
   private readonly listeners: PopEntryListener[] = [];
 
-  constructor(private readonly window: Window) {
+  constructor(
+    private readonly window: Window,
+    private readonly baseHref: string
+  ) {
     this.currentEntry = getCurrentHistoryEntry(
       this.window.location,
-      this.window.history
+      this.window.history.state,
+      this.baseHref
     );
     this.currentEntryOrigin = 'pop';
 
     this.window.addEventListener('popstate', () => {
       this.currentEntry = getCurrentHistoryEntry(
         this.window.location,
-        this.window.history
+        this.window.history.state,
+        this.baseHref
       );
       this.currentEntryOrigin = 'pop';
 
@@ -117,10 +134,18 @@ class BrowserHistory implements History {
 
     switch (mode) {
       case 'push':
-        this.window.history.pushState(state, '', formatLocation(location));
+        this.window.history.pushState(
+          state,
+          '',
+          formatLocation(location, this.baseHref)
+        );
         break;
       case 'replace':
-        this.window.history.replaceState(state, '', formatLocation(location));
+        this.window.history.replaceState(
+          state,
+          '',
+          formatLocation(location, this.baseHref)
+        );
         break;
     }
 
@@ -138,12 +163,13 @@ class BrowserHistory implements History {
 
 export interface BrowserHistoryOptions {
   window?: Window;
+  baseHref?: string;
 }
 
 export function createBrowserHistory(
   options: BrowserHistoryOptions = {}
 ): History {
-  return new BrowserHistory(options.window ?? window);
+  return new BrowserHistory(options.window ?? window, options.baseHref ?? '/');
 }
 
 interface MemoryHistoryEntry {

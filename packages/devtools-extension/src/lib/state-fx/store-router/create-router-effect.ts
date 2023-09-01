@@ -487,7 +487,9 @@ export function createRouterEffect<TNamespace extends string, TConfig>(
             if (payload.origin === 'pop' && payload.reason === 'intercepted') {
               const state = getRouterState(store.getState());
               const historyState = { state: state.state, key: state.key };
-              router.history.newEntry(state.location, historyState);
+              router.history.newEntry(state.location, historyState, {
+                mode: 'replace',
+              });
             }
           }),
           ignoreElements()

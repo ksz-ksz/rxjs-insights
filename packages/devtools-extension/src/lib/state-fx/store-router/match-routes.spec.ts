@@ -8,6 +8,11 @@ const rootRoute = createRoute({
   path: '',
 });
 
+const homeRoute = createRoute({
+  parent: rootRoute,
+  path: '',
+});
+
 const featureRoute = createRoute({
   parent: rootRoute,
   path: 'feature',
@@ -26,6 +31,10 @@ const featureDetailsRoute = createRoute({
   },
 });
 
+const homeRouting = createRouting({
+  route: homeRoute,
+});
+
 const featureListRouting = createRouting({
   route: featureListRoute,
 });
@@ -41,7 +50,7 @@ const featureRouting = createRouting({
 
 const rootRouting = createRouting({
   route: rootRoute,
-  children: [featureRouting],
+  children: [homeRouting, featureRouting],
 });
 
 describe('RouteMatcher', () => {
@@ -55,9 +64,9 @@ describe('RouteMatcher', () => {
         params: {},
       },
       {
+        routing: featureRouting,
         path: ['feature'],
         params: {},
-        routing: featureRouting,
       },
       { path: [], params: {}, routing: featureListRouting },
     ]);
@@ -91,10 +100,21 @@ describe('RouteMatcher', () => {
   });
 
   describe('when pathname is empty', () => {
-    it('should not match', () => {
+    it('should match homeRoute', () => {
       const result = matchRoutes(rootRouting, '');
 
-      expect(result).toEqual([]);
+      expect(result).toEqual([
+        {
+          routing: rootRouting,
+          path: [],
+          params: {},
+        },
+        {
+          routing: homeRouting,
+          path: [],
+          params: {},
+        },
+      ]);
     });
   });
 

@@ -12,8 +12,7 @@ export interface StartRouterOptions<
 > {
   store: Store<TState>;
   router: Router<TNamespace, TConfig>;
-  routing: Routing<TState, TConfig, unknown, unknown, unknown>;
-  history: History;
+  routing: Routing<unknown, TConfig, unknown, unknown, unknown>;
 }
 
 export function fromHistory(history: History): Observable<HistoryEntry> {
@@ -30,11 +29,19 @@ export function fromHistory(history: History): Observable<HistoryEntry> {
   });
 }
 
-export function startRouter<TNamespace extends string, TState, TConfig>({
+export function startRouter<TNamespace extends string, TConfig>({
   store,
-  history,
   router,
   routing,
-}: StartRouterOptions<TNamespace, TState, TConfig>) {
-  createRouterEffect(router);
+}: StartRouterOptions<TNamespace, unknown, TConfig>) {
+  router.start(routing);
+  store.registerEffect(createRouterEffect(router));
+  store.dispatch(
+    router.actions.NavigationRequested({
+      origin: router.history.currentEntryOrigin,
+      location: router.history.currentEntry.location,
+      state: router.history.currentEntry.state,
+      key: 'default',
+    })
+  );
 }

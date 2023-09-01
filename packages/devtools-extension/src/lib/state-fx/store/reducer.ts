@@ -163,8 +163,7 @@ export function createReducerFromActions<
         try {
           if (reducer.action.some(({ is }) => is(action))) {
             nextState =
-              reducer.reduce(nextState, action.payload, storeState) ??
-              nextState;
+              reducer.reduce(nextState, action, storeState) ?? nextState;
           }
         } catch (e) {
           throw new ReducerError(namespace, name, e);
