@@ -1,4 +1,4 @@
-import { createActions } from '@lib/store';
+import { createActions } from '@lib/state-fx/store';
 import { RelatedTarget } from '@app/protocols/insights';
 
 export interface SubscribersGraphActions {
@@ -42,5 +42,6 @@ export interface SubscribersGraphActions {
   TargetUnhovered: { target: RelatedTarget };
 }
 
-export const subscribersGraphActions =
-  createActions<SubscribersGraphActions>('EventsLogActions');
+export const subscribersGraphActions = createActions<SubscribersGraphActions>({
+  namespace: 'EventsLogActions',
+});

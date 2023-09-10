@@ -1,4 +1,4 @@
-import { createActions } from '@lib/store';
+import { createActions } from '@lib/state-fx/store';
 import { EventRef, TargetRef } from '@app/protocols/refs';
 import { Location } from '@rxjs-insights/core';
 
@@ -26,5 +26,6 @@ export interface RefOutletContextActions {
   };
 }
 
-export const refOutletContextActions =
-  createActions<RefOutletContextActions>('RefOutletContext');
+export const refOutletContextActions = createActions<RefOutletContextActions>({
+  namespace: 'RefOutletContext',
+});

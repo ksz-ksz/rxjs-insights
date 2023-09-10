@@ -1,4 +1,4 @@
-import { createActions } from '@lib/store';
+import { createActions } from '@lib/state-fx/store';
 import { RelatedEvent } from '@app/protocols/insights';
 
 export interface EventsLogActions {
@@ -11,5 +11,6 @@ export interface EventsLogActions {
   Pause: void;
 }
 
-export const eventsLogActions =
-  createActions<EventsLogActions>('EventsLogActions');
+export const eventsLogActions = createActions<EventsLogActions>({
+  namespace: 'EventsLogActions',
+});

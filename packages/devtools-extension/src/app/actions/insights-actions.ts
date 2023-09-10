@@ -1,4 +1,4 @@
-import { createActions } from '@lib/store';
+import { createActions } from '@lib/state-fx/store';
 import { RelatedEvent, TargetState } from '@app/protocols/insights';
 
 export interface InsightsActions {
@@ -11,5 +11,6 @@ export interface InsightsActions {
   PlayDone: void;
 }
 
-export const insightsActions =
-  createActions<InsightsActions>('InsightsActions');
+export const insightsActions = createActions<InsightsActions>({
+  namespace: 'InsightsActions',
+});

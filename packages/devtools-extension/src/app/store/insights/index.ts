@@ -1,2 +1,2 @@
-export * from './slice';
-export * from './reaction';
+export * from './reducer';
+export * from './effect';

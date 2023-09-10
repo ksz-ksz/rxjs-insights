@@ -1,5 +1,5 @@
-import { createActions } from '@lib/store';
-import { TargetRef } from "@app/protocols/refs";
+import { createActions } from '@lib/state-fx/store';
+import { TargetRef } from '@app/protocols/refs';
 
 export interface AppBarActions {
   PinTarget: { target: TargetRef };
@@ -7,4 +7,6 @@ export interface AppBarActions {
   RefreshData: void;
 }
 
-export const appBarActions = createActions<AppBarActions>('AppBar');
+export const appBarActions = createActions<AppBarActions>({
+  namespace: 'AppBar',
+});
