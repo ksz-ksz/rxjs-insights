@@ -11,6 +11,7 @@
       "@rxjs-insights/recorder-utils": ["./packages/recorder-utils/src/index.ts"],
       "@lib/store":["./packages/devtools-extension/src/lib/store/index.ts"],
       "@lib/state-fx/store":["./packages/devtools-extension/src/lib/state-fx/store/index.ts"],
+      "@lib/state-fx/store-router":["./packages/devtools-extension/src/lib/state-fx/store-router/index.ts"],
       "@lib/state-fx/store-react":["./packages/devtools-extension/src/lib/state-fx/store-react/index.ts"],
       "@lib/store-router":["./packages/devtools-extension/src/lib/store-router/index.ts"],
       "@lib/operators":["./packages/devtools-extension/src/lib/operators/index.ts"],

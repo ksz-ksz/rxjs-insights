@@ -61,27 +61,16 @@ export type RoutingRuleContext<TState, TConfig, TParams, TSearch, THash> =
   | DeactivatedRoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
   | UpdatedRoutingRuleContext<TState, TConfig, TParams, TSearch, THash>;
 
+// TODO: handle cancellation (context.abortNotifier vs separate callback)
 export interface RoutingRule<TState, TConfig, TParams, TSearch, THash> {
-  resolve(
+  // TODO: rename: check
+  resolve?(
     context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
   ): Observable<Location | boolean>;
 
-  commit(
+  commit?(
     context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
   ): Observable<void>;
-}
-
-export interface CreateRoutingOptions<
-  TState,
-  TConfig,
-  TParams,
-  TSearch,
-  THash
-> {
-  route: Route<TParams, TSearch, THash>;
-  children?: Routing<TState, TConfig, any, any, any>[];
-  config?: TConfig;
-  rules?: RoutingRule<TState, TConfig, TParams, TSearch, THash>[];
 }
 
 export interface Routing<TState, TConfig, TParams, TSearch, THash> {
@@ -94,11 +83,24 @@ export interface Routing<TState, TConfig, TParams, TSearch, THash> {
 
 export const routings = new Map<number, Routing<any, any, any, any, any>>();
 
+export interface CreateRoutingOptions<
+  TState,
+  TConfig,
+  TParams,
+  TSearch,
+  THash
+> {
+  children?: Routing<TState, TConfig, any, any, any>[];
+  config?: TConfig;
+  rules?: RoutingRule<TState, TConfig, TParams, TSearch, THash>[];
+}
+
 export function createRouting<TState, TConfig, TParams, TSearch, THash>(
-  options: CreateRoutingOptions<TState, TConfig, TParams, TSearch, THash>
+  route: Route<TParams, TSearch, THash>,
+  options?: CreateRoutingOptions<TState, TConfig, TParams, TSearch, THash>
 ): Routing<TState, TConfig, TParams, TSearch, THash> {
   const id = routings.size;
-  const routing: Routing<any, any, any, any, any> = { ...options, id };
+  const routing: Routing<any, any, any, any, any> = { id, route, ...options };
   routings.set(id, routing);
   return routing;
 }
@@ -108,7 +110,8 @@ export function createRoutingFactory<TState, TConfig>(): <
   TSearch,
   THash
 >(
-  routing: Routing<TState, TConfig, TParams, TSearch, THash>
+  route: Route<TParams, TSearch, THash>,
+  routing?: CreateRoutingOptions<TState, TConfig, TParams, TSearch, THash>
 ) => Routing<TState, TConfig, TParams, TSearch, THash> {
   return createRouting;
 }

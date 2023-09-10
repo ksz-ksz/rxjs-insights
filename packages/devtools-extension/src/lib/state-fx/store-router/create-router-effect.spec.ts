@@ -57,8 +57,7 @@ function createTestHarness(
     ): Observable<void>;
   } = {}
 ) {
-  const childRouting = createRouting({
-    route: childRoute,
+  const childRouting = createRouting(childRoute, {
     rules: [
       {
         commit: commitChild,
@@ -67,8 +66,7 @@ function createTestHarness(
     ],
   });
 
-  const parentRouting = createRouting({
-    route: parentRoute,
+  const parentRouting = createRouting(parentRoute, {
     children: [childRouting],
     rules: [
       {

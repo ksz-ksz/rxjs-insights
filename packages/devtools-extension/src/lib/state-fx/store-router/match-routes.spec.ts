@@ -31,25 +31,17 @@ const featureDetailsRoute = createRoute({
   },
 });
 
-const homeRouting = createRouting({
-  route: homeRoute,
-});
+const homeRouting = createRouting(homeRoute);
 
-const featureListRouting = createRouting({
-  route: featureListRoute,
-});
+const featureListRouting = createRouting(featureListRoute);
 
-const featureDetailsRouting = createRouting({
-  route: featureDetailsRoute,
-});
+const featureDetailsRouting = createRouting(featureDetailsRoute);
 
-const featureRouting = createRouting({
-  route: featureRoute,
+const featureRouting = createRouting(featureRoute, {
   children: [featureListRouting, featureDetailsRouting],
 });
 
-const rootRouting = createRouting({
-  route: rootRoute,
+const rootRouting = createRouting(rootRoute, {
   children: [homeRouting, featureRouting],
 });
 

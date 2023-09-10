@@ -71,16 +71,18 @@ function createResolveObservable<TNamespace extends string, TConfig>(
     const routing = router.getRouting(deactivatedRoute.id);
     if (routing.rules !== undefined) {
       for (let rule of routing.rules) {
-        resolve.push(
-          rule.resolve({
-            status: 'deactivated',
-            location: nextLocation,
-            prevLocation: prevLocation,
-            prevRoute: createRuleRoute(deactivatedRoute, router),
-            prevRoutes: createRuleRoutes(prevRoutes, router),
-            store,
-          })
-        );
+        if (rule.resolve !== undefined) {
+          resolve.push(
+            rule.resolve({
+              status: 'deactivated',
+              location: nextLocation,
+              prevLocation: prevLocation,
+              prevRoute: createRuleRoute(deactivatedRoute, router),
+              prevRoutes: createRuleRoutes(prevRoutes, router),
+              store,
+            })
+          );
+        }
       }
     }
   }
@@ -88,18 +90,20 @@ function createResolveObservable<TNamespace extends string, TConfig>(
     const routing = router.getRouting(nextUpdateRoute.id);
     if (routing.rules !== undefined) {
       for (let rule of routing.rules) {
-        resolve.push(
-          rule.resolve({
-            status: 'updated',
-            location: nextLocation,
-            prevLocation: prevLocation,
-            route: createRuleRoute(nextUpdateRoute, router),
-            routes: createRuleRoutes(nextRoutes, router),
-            prevRoute: createRuleRoute(prevUpdatedRoute, router),
-            prevRoutes: createRuleRoutes(prevRoutes, router),
-            store,
-          })
-        );
+        if (rule.resolve !== undefined) {
+          resolve.push(
+            rule.resolve({
+              status: 'updated',
+              location: nextLocation,
+              prevLocation: prevLocation,
+              route: createRuleRoute(nextUpdateRoute, router),
+              routes: createRuleRoutes(nextRoutes, router),
+              prevRoute: createRuleRoute(prevUpdatedRoute, router),
+              prevRoutes: createRuleRoutes(prevRoutes, router),
+              store,
+            })
+          );
+        }
       }
     }
   }
@@ -107,16 +111,18 @@ function createResolveObservable<TNamespace extends string, TConfig>(
     const routing = router.getRouting(activatedRoute.id);
     if (routing.rules !== undefined) {
       for (let rule of routing.rules) {
-        resolve.push(
-          rule.resolve({
-            status: 'activated',
-            location: nextLocation,
-            prevLocation: prevLocation,
-            route: createRuleRoute(activatedRoute, router),
-            routes: createRuleRoutes(nextRoutes, router),
-            store,
-          })
-        );
+        if (rule.resolve !== undefined) {
+          resolve.push(
+            rule.resolve({
+              status: 'activated',
+              location: nextLocation,
+              prevLocation: prevLocation,
+              route: createRuleRoute(activatedRoute, router),
+              routes: createRuleRoutes(nextRoutes, router),
+              store,
+            })
+          );
+        }
       }
     }
   }
@@ -139,16 +145,18 @@ function createCommitObservable<TNamespace extends string, TConfig>(
     const routing = router.getRouting(deactivatedRoute.id);
     if (routing.rules !== undefined) {
       for (let rule of routing.rules) {
-        commit.push(
-          rule.commit({
-            status: 'deactivated',
-            location: nextLocation,
-            prevLocation: prevLocation,
-            prevRoute: createRuleRoute(deactivatedRoute, router),
-            prevRoutes: createRuleRoutes(prevRoutes, router),
-            store,
-          })
-        );
+        if (rule.commit !== undefined) {
+          commit.push(
+            rule.commit({
+              status: 'deactivated',
+              location: nextLocation,
+              prevLocation: prevLocation,
+              prevRoute: createRuleRoute(deactivatedRoute, router),
+              prevRoutes: createRuleRoutes(prevRoutes, router),
+              store,
+            })
+          );
+        }
       }
     }
   }
@@ -156,18 +164,20 @@ function createCommitObservable<TNamespace extends string, TConfig>(
     const routing = router.getRouting(nextUpdateRoute.id);
     if (routing.rules !== undefined) {
       for (let rule of routing.rules) {
-        commit.push(
-          rule.commit({
-            status: 'updated',
-            location: nextLocation,
-            prevLocation: prevLocation,
-            route: createRuleRoute(nextUpdateRoute, router),
-            routes: createRuleRoutes(nextRoutes, router),
-            prevRoute: createRuleRoute(prevUpdatedRoute, router),
-            prevRoutes: createRuleRoutes(prevRoutes, router),
-            store,
-          })
-        );
+        if (rule.commit !== undefined) {
+          commit.push(
+            rule.commit({
+              status: 'updated',
+              location: nextLocation,
+              prevLocation: prevLocation,
+              route: createRuleRoute(nextUpdateRoute, router),
+              routes: createRuleRoutes(nextRoutes, router),
+              prevRoute: createRuleRoute(prevUpdatedRoute, router),
+              prevRoutes: createRuleRoutes(prevRoutes, router),
+              store,
+            })
+          );
+        }
       }
     }
   }
@@ -175,16 +185,18 @@ function createCommitObservable<TNamespace extends string, TConfig>(
     const routing = router.getRouting(activatedRoute.id);
     if (routing.rules !== undefined) {
       for (let rule of routing.rules) {
-        commit.push(
-          rule.commit({
-            status: 'activated',
-            location: nextLocation,
-            prevLocation: prevLocation,
-            route: createRuleRoute(activatedRoute, router),
-            routes: createRuleRoutes(nextRoutes, router),
-            store,
-          })
-        );
+        if (rule.commit !== undefined) {
+          commit.push(
+            rule.commit({
+              status: 'activated',
+              location: nextLocation,
+              prevLocation: prevLocation,
+              route: createRuleRoute(activatedRoute, router),
+              routes: createRuleRoutes(nextRoutes, router),
+              store,
+            })
+          );
+        }
       }
     }
   }
