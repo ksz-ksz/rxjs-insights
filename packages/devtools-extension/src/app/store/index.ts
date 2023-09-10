@@ -3,7 +3,7 @@ import {
   routerReaction,
   routerReducer,
   routerTransitionsReaction,
-} from '@app/store/router';
+} from '@app/store/old_router';
 import { statusReactions, statusReducer } from '@app/store/status';
 import { inspectedWindowReaction } from '@app/store/inspected-window';
 import { targetReaction } from '@app/store/targets/reaction';

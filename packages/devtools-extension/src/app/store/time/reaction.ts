@@ -5,7 +5,7 @@ import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions
 import { insightsActions } from '@app/actions/insights-actions';
 import { old_router } from '@app/old_router';
 import { createUrl } from '@lib/store-router';
-import { RouterSlice } from '@app/store/router';
+import { OldRouterSlice } from '@app/store/old_router';
 
 export const timeReaction = createReaction(
   (action$, { getCurrentUrl }) =>
@@ -28,7 +28,7 @@ export const timeReaction = createReaction(
         });
       })
     ),
-  (store: Store<RouterSlice>) => ({
+  (store: Store<OldRouterSlice>) => ({
     getCurrentUrl() {
       return store.select(old_router.selectors.url).get();
     },

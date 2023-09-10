@@ -30,7 +30,7 @@ import { targetsClient } from '@app/clients/targets';
 import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
 import { TargetRef } from '@app/protocols/refs';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
-import { RouterSlice } from '@app/store/router';
+import { OldRouterSlice } from '@app/store/old_router';
 import { InsightsSlice } from '@app/store/insights';
 import { dashboardActions } from '@app/actions/dashboad-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
@@ -123,7 +123,7 @@ export const targetReaction = combineReactions()
             return actions;
           })
         ),
-      (store: Store<RouterSlice & InsightsSlice>) => ({
+      (store: Store<OldRouterSlice & InsightsSlice>) => ({
         activeTarget$: store
           .select(activeTargetSelector)
           .pipe(distinctUntilChanged()),

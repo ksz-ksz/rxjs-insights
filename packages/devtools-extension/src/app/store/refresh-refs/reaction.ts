@@ -7,7 +7,7 @@ import {
 } from '@lib/store';
 import { concatMap, distinctUntilChanged, EMPTY, of } from 'rxjs';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
-import { RouterSlice } from '@app/store/router';
+import { OldRouterSlice } from '@app/store/old_router';
 import { InsightsSlice } from '@app/store/insights';
 import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
@@ -65,7 +65,7 @@ export const refreshRefsReaction = combineReactions()
             }
           })
         ),
-      (store: Store<RouterSlice & InsightsSlice>) => ({
+      (store: Store<OldRouterSlice & InsightsSlice>) => ({
         activeTarget$: store
           .select(activeTargetSelector)
           .pipe(distinctUntilChanged()),
@@ -90,7 +90,7 @@ export const refreshRefsReaction = combineReactions()
             }
           })
         ),
-      (store: Store<RouterSlice & InsightsSlice>) => ({
+      (store: Store<OldRouterSlice & InsightsSlice>) => ({
         activeEvent$: store
           .select(activeEventSelector)
           .pipe(distinctUntilChanged()),
@@ -109,7 +109,7 @@ export const refreshRefsReaction = combineReactions()
           )
         );
       },
-      (store: Store<RouterSlice & InsightsSlice>) => ({
+      (store: Store<OldRouterSlice & InsightsSlice>) => ({
         getRefsToRefresh: (): RefToRefresh[] => {
           const refsToRefresh: RefToRefresh[] = [];
 

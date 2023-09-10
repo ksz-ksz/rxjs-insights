@@ -20,4 +20,4 @@ export const routerTransitionsReaction = createReaction((action$) =>
 
 export const { routerReducer, routerReaction } = createRouterSlice(old_router);
 
-export type RouterSlice = Slice<'router', RouterState<void>>;
+export type OldRouterSlice = Slice<'router', RouterState<void>>;
