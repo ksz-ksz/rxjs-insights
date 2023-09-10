@@ -3,7 +3,7 @@ import { map } from 'rxjs';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import { insightsActions } from '@app/actions/insights-actions';
-import { router } from '@app/router';
+import { old_router } from '@app/old_router';
 import { createUrl } from '@lib/store-router';
 import { RouterSlice } from '@app/store/router';
 
@@ -17,7 +17,7 @@ export const timeReaction = createReaction(
       ]),
       map((action) => {
         const currentUrl = getCurrentUrl();
-        return router.actions.Navigate({
+        return old_router.actions.Navigate({
           url: createUrl(currentUrl.path, {
             queryParams: {
               ...currentUrl.queryParams,
@@ -30,7 +30,7 @@ export const timeReaction = createReaction(
     ),
   (store: Store<RouterSlice>) => ({
     getCurrentUrl() {
-      return store.select(router.selectors.url).get();
+      return store.select(old_router.selectors.url).get();
     },
   })
 );

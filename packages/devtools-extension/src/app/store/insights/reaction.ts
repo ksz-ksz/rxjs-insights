@@ -1,6 +1,6 @@
 import { combineReactions, createReaction, filterActions } from '@lib/store';
 import { createUrl, filterRoute } from '@lib/store-router';
-import { router, targetRouteToken } from '@app/router';
+import { old_router, targetRouteToken } from '@app/old_router';
 import {
   concat,
   delay,
@@ -63,8 +63,8 @@ export const insightsReaction = combineReactions()
                   ])
                 ),
                 action$.pipe(
-                  filterActions(router.actions.RouteLeave),
-                  filterRoute(router, targetRouteToken)
+                  filterActions(old_router.actions.RouteLeave),
+                  filterRoute(old_router, targetRouteToken)
                 )
               )
             ),
@@ -87,7 +87,7 @@ export const insightsReaction = combineReactions()
         )
       ).pipe(
         map((target) =>
-          router.actions.Navigate({
+          old_router.actions.Navigate({
             url: createUrl(['target', String(target.id)]),
           })
         )

@@ -1,7 +1,7 @@
 import { useSelector } from '@app/store';
 import { SidePanelEntry } from '@app/components/side-panel';
 import { createUrl, RouterLink } from '@lib/store-router';
-import { router } from '@app/router';
+import { old_router } from '@app/old_router';
 import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import { Box, styled } from '@mui/material';
 import { LocationOutlet } from '@app/components/location-outlet';
@@ -118,7 +118,7 @@ function EventRenderer({ entry }: { entry: EventTraceEntry }) {
   return (
     <EventLink
       key={entry.target.id}
-      router={router}
+      router={old_router}
       to={createUrl(['target', String(entry.target.id)], {
         queryParams: {
           time: String(entry.event.time),

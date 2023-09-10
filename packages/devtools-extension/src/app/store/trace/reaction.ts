@@ -1,6 +1,6 @@
 import { combineReactions, createReaction } from '@lib/store';
 import { routeEnter, routeLeave } from '@app/utils';
-import { dashboardRouteToken } from '@app/router';
+import { dashboardRouteToken } from '@app/old_router';
 import {
   catchError,
   EMPTY,

@@ -34,7 +34,7 @@ import { RouterSlice } from '@app/store/router';
 import { InsightsSlice } from '@app/store/insights';
 import { dashboardActions } from '@app/actions/dashboad-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
-import { dashboardRouteToken, router } from '@app/router';
+import { dashboardRouteToken, old_router } from '@app/old_router';
 import { filterRoute } from '@lib/store-router';
 import { routeEnter } from '@app/utils';
 

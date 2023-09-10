@@ -9,6 +9,8 @@ import { Store } from '@lib/store';
 import { statusSelector, StatusSlice } from '@app/store/status';
 import { targetStateSelector } from '@app/selectors/insights-selectors';
 
+// FIXME: remove this file and all references
+
 export const statusRouteToken = createRouteToken('status');
 export const dashboardRouteToken = createRouteToken('dashboard');
 export const appBarRouteToken = createRouteToken('appBar');
@@ -61,4 +63,4 @@ export const routerConfig: RouterConfig<
   ],
 };
 
-export const router = createRouter('router', routerConfig);
+export const old_router = createRouter('router', routerConfig);

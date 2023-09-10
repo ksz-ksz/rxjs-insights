@@ -10,7 +10,11 @@ import {
 } from '@mui/material';
 import React from 'react';
 import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
-import { dashboardRouteToken, router, targetRouteToken } from '@app/router';
+import {
+  dashboardRouteToken,
+  old_router,
+  targetRouteToken,
+} from '@app/old_router';
 import { Bookmark, BookmarkAdded, Refresh } from '@mui/icons-material';
 import { useDispatch, useSelector } from '@app/store';
 import { appBarActions } from '@app/actions/app-bar-actions';
@@ -67,7 +71,7 @@ export function AppBarWrapper() {
           >
             <Button
               component={RouterLink}
-              router={router}
+              router={old_router}
               to={createUrl(['dashboard'])}
             >
               <HomeSpan>RxJS Insights</HomeSpan>
@@ -121,12 +125,12 @@ export function AppBarWrapper() {
       </AppBar>
       <Box flex="1 1 0" overflow="hidden">
         <RouterOutlet
-          router={router}
+          router={old_router}
           token={dashboardRouteToken}
           component={DashboardPage}
         />
         <RouterOutlet
-          router={router}
+          router={old_router}
           token={targetRouteToken}
           component={TargetPage}
         />

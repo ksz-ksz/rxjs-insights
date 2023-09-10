@@ -1,6 +1,8 @@
 import { createSelector } from '@lib/store';
-import { router } from '@app/router';
+import { old_router } from '@app/old_router';
 
-export const timeSelector = createSelector([router.selectors.url], ([url]) =>
-  url.queryParams.time !== undefined ? Number(url.queryParams.time) : 0
+export const timeSelector = createSelector(
+  [old_router.selectors.url],
+  ([url]) =>
+    url.queryParams.time !== undefined ? Number(url.queryParams.time) : 0
 );
