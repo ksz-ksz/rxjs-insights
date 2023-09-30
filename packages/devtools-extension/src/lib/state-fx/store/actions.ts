@@ -1,3 +1,6 @@
+import { ActionSource } from '../../example/action-source';
+import { Component } from '../../example/container';
+
 export interface ActionFactory<TPayload> {
   namespace: string;
   name: string;
