@@ -74,7 +74,7 @@ export function createStore<
 ) => Component<Store<TNamespace, TState>> {
   const { namespace, state, deps = [] } = options;
   return (transitions) =>
-    new StoreComponent(namespace, state, deps, transitions);
+    createStoreComponent(namespace, state, deps, transitions);
 }
 
 interface TransitionMapEntry<TState> {
@@ -129,7 +129,7 @@ export class StoreError extends Error {
   }
 }
 
-function createStoreComponent<TNamespace extends string, TState>(
+function createStoreInstance<TNamespace extends string, TState>(
   namespace: TNamespace,
   state: TState,
   actions: Actions,
@@ -160,6 +160,7 @@ function createStoreComponent<TNamespace extends string, TState>(
               throw new StoreError(namespace, key, e);
             }
           }
+          return nextDraft;
         });
         stateSubject.next({ [namespace]: nextState });
       }
@@ -186,40 +187,40 @@ function createStoreComponent<TNamespace extends string, TState>(
   return store;
 }
 
-class StoreComponent<TNamespace extends string, TState>
-  implements Component<Store<TNamespace, TState>>
-{
-  constructor(
-    private readonly namespace: TNamespace,
-    private readonly state: TState,
-    private readonly deps: Deps,
-    private readonly transitions: StateTransitions<TState, Deps>
-  ) {}
+function createStoreComponent<TNamespace extends string, TState>(
+  namespace: TNamespace,
+  state: TState,
+  deps: Deps,
+  transitions: StateTransitions<TState, Deps>
+): Component<Store<TNamespace, TState>> {
+  return {
+    init(
+      container: Container
+    ): InitializedComponent<Store<TNamespace, TState>> {
+      const actionsHandle = container.use(actionsComponent);
+      const depsHandles = deps.map((dep) => container.use(dep));
 
-  init(container: Container): InitializedComponent<Store<TNamespace, TState>> {
-    const actionsHandle = container.use(actionsComponent);
-    const depsHandles = this.deps.map((dep) => container.use(dep));
+      const actions = actionsHandle.component;
+      const depStoreViews = depsHandles.map((depHandle) => depHandle.component);
 
-    const actions = actionsHandle.component;
-    const deps = depsHandles.map((depHandle) => depHandle.component);
+      const store = createStoreInstance(
+        namespace,
+        state,
+        actions,
+        depStoreViews,
+        transitions
+      );
 
-    const store = createStoreComponent(
-      this.namespace,
-      this.state,
-      actions,
-      deps,
-      this.transitions
-    );
-
-    return {
-      component: store,
-      dispose() {
-        store.dispose();
-        actionsHandle.release();
-        for (let depsHandle of depsHandles) {
-          depsHandle.release();
-        }
-      },
-    };
-  }
+      return {
+        component: store,
+        dispose() {
+          store.dispose();
+          actionsHandle.release();
+          for (const depsHandle of depsHandles) {
+            depsHandle.release();
+          }
+        },
+      };
+    },
+  };
 }

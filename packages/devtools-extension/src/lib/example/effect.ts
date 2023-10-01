@@ -37,14 +37,17 @@ function createEmptyStoreView(): StoreView<any> {
   };
 }
 
-function createDepsComponent(actions: Actions, deps: StoreView<any>[]) {
-  switch (deps.length) {
+function createDepsComponent(
+  actions: Actions,
+  depStoreViews: StoreView<any>[]
+) {
+  switch (depStoreViews.length) {
     case 0:
       return createEmptyStoreView();
     case 1:
-      return deps[0];
+      return depStoreViews[0];
     default:
-      return createStoreViewComponent(actions, deps);
+      return createStoreViewComponent(actions, depStoreViews);
   }
 }
 
@@ -58,13 +61,13 @@ export class EffectError extends Error {
   }
 }
 
-function createEffectComponent(
+function createEffectInstance(
   namespace: string,
   actions: Actions,
-  deps: StoreView<any>[],
+  depStoreViews: StoreView<any>[],
   initializers: EffectInitializers<any>
 ): Effect {
-  const depsView = createDepsComponent(actions, deps);
+  const depsView = createDepsComponent(actions, depStoreViews);
   const subscription = merge(
     ...Object.entries(initializers).map(([key, initializer]) =>
       initializer(actions, depsView).pipe(
@@ -85,44 +88,43 @@ function createEffectComponent(
   };
 }
 
-class EffectComponent implements Component<Effect> {
-  constructor(
-    private readonly namespace: string,
-    private readonly deps: Deps,
-    private readonly initializers: EffectInitializers<any>
-  ) {}
+function createEffectComponent(
+  namespace: string,
+  deps: Deps,
+  initializers: EffectInitializers<any>
+): Component<Effect> {
+  return {
+    init(container: Container): InitializedComponent<Effect> {
+      const actionsHandle = container.use(actionsComponent);
+      const depsHandles = deps.map((dep) => container.use(dep));
 
-  init(container: Container): InitializedComponent<Effect> {
-    const { namespace, initializers } = this;
-    const actionsHandle = container.use(actionsComponent);
-    const depsHandles = this.deps.map((dep) => container.use(dep));
+      const actions = actionsHandle.component;
+      const depStoreViews = depsHandles.map((depHandle) => depHandle.component);
 
-    const actions = actionsHandle.component;
-    const deps = depsHandles.map((depHandle) => depHandle.component);
+      const effect = createEffectInstance(
+        namespace,
+        actions,
+        depStoreViews,
+        initializers
+      );
 
-    const effect = createEffectComponent(
-      namespace,
-      actions,
-      deps,
-      initializers
-    );
-
-    return {
-      component: effect,
-      dispose() {
-        effect.dispose();
-        actionsHandle.release();
-        for (let depsHandle of depsHandles) {
-          depsHandle.release();
-        }
-      },
-    };
-  }
+      return {
+        component: effect,
+        dispose() {
+          effect.dispose();
+          actionsHandle.release();
+          for (let depsHandle of depsHandles) {
+            depsHandle.release();
+          }
+        },
+      };
+    },
+  };
 }
 
 export function createEffect<TDeps extends Deps = []>(
   options: CreateEffectOptions<TDeps>
 ): (initializers: EffectInitializers<DepsType<TDeps>>) => Component<Effect> {
   const { namespace, deps = [] } = options;
-  return (initializers) => new EffectComponent(namespace, deps, initializers);
+  return (initializers) => createEffectComponent(namespace, deps, initializers);
 }
