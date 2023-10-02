@@ -3,6 +3,7 @@ import { createActions, typeOf } from '../state-fx/store';
 import { createContainer } from './container';
 import { Observer } from 'rxjs';
 import { actionsComponent } from './actions';
+import { createStoreView } from './store-view';
 
 const fakeActions = createActions<{
   updateFoo: string;
@@ -82,8 +83,18 @@ const fakeStore = createStore({
   }),
 });
 
+const view = createStoreView({
+  deps: [fooStore, barStore],
+});
+
 function createTestHarness() {
   const container = createContainer();
+
+  const v = container.use(view);
+
+  v.component.getState();
+  v.component.getStateObservable();
+
   const storeRef = container.use(fakeStore);
   const actionsRef = container.use(actionsComponent);
   return {

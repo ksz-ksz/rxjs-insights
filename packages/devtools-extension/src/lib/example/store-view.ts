@@ -80,3 +80,5 @@ class StoreViewComponent<T> implements Component<StoreView<T>> {
     };
   }
 }
+
+// TODO: rename: createStatesComposition, createComposition, StateContainer, State
