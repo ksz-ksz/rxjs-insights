@@ -1,7 +1,7 @@
 import { ActionSource } from '../../example/action-source';
 import { Component } from '../../example/container';
 
-export interface ActionFactory<TPayload> {
+export interface ActionType<TPayload> {
   namespace: string;
   name: string;
   (payload: TPayload): Action<TPayload>;
@@ -18,22 +18,22 @@ export interface CreateActionsOptions {
   namespace: string;
 }
 
-export type Actions<TActionPayloads> = {
-  [TActionName in keyof TActionPayloads]: ActionFactory<
+export type ActionTypes<TActionPayloads> = {
+  [TActionName in keyof TActionPayloads]: ActionType<
     TActionPayloads[TActionName]
   >;
 };
 
 export function createActions<TActionPayloads>({
   namespace,
-}: CreateActionsOptions): Actions<TActionPayloads> {
+}: CreateActionsOptions): ActionTypes<TActionPayloads> {
   return new Proxy(
     {},
     {
       get(
-        target: Record<string, ActionFactory<unknown>>,
+        target: Record<string, ActionType<unknown>>,
         name: string
-      ): ActionFactory<unknown> {
+      ): ActionType<unknown> {
         let actionFactory = target[name];
         if (actionFactory === undefined) {
           actionFactory = Object.defineProperties(
@@ -46,11 +46,11 @@ export function createActions<TActionPayloads>({
                   action.namespace === namespace && action.name === name,
               },
             }
-          ) as ActionFactory<unknown>;
+          ) as ActionType<unknown>;
           target[name] = actionFactory;
         }
         return actionFactory;
       },
     }
-  ) as Actions<TActionPayloads>;
+  ) as ActionTypes<TActionPayloads>;
 }

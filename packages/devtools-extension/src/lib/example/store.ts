@@ -1,10 +1,10 @@
-import { Action, ActionFactory } from '@lib/state-fx/store';
+import { Action, ActionType } from '@lib/state-fx/store';
 import { BehaviorSubject, merge, Observable } from 'rxjs';
 import { Actions, actionsComponent } from './actions';
 import { produce } from 'immer';
 import { Component, Container, InitializedComponent } from './container';
 import { StoreView } from './store-view';
-import { Deps, DepsType, getDepsState } from './deps';
+import { Deps, MergeDeps, getDepsState } from './deps';
 
 export interface Store<TNamespace extends string, TState>
   extends StoreView<{ [K in TNamespace]: TState }> {
@@ -21,40 +21,43 @@ export interface CreateStoreOptions<
   deps?: TDeps;
 }
 
-type ExtractActionFactoryPayloadType<TActionFactory> =
-  TActionFactory extends ActionFactory<infer TPayload> ? TPayload : never;
+type ExtractActionTypePayload<TActionType> = TActionType extends ActionType<
+  infer TPayload
+>
+  ? TPayload
+  : never;
 
-export type ActionType<TActionFactories extends ActionFactory<any>[]> = Action<
-  ExtractActionFactoryPayloadType<TActionFactories[number]>
+export type MergeActions<TActionFactories extends ActionType<any>[]> = Action<
+  ExtractActionTypePayload<TActionFactories[number]>
 >;
 
 export interface StateTransition<
   TState,
   TDeps extends Deps,
-  TActions extends ActionFactory<any>[]
+  TActions extends ActionType<any>[]
 > {
   actions: TActions;
   handler: (
     state: TState,
-    action: ActionType<TActions>,
-    deps: DepsType<TDeps>
+    action: MergeActions<TActions>,
+    deps: MergeDeps<TDeps>
   ) => TState | void;
 }
 
 export type StateTransitions<TState, TDeps extends Deps> =
-  | Record<string, StateTransition<TState, TDeps, ActionFactory<any>[]>>
-  | Array<StateTransition<TState, TDeps, ActionFactory<any>[]>>;
+  | Record<string, StateTransition<TState, TDeps, ActionType<any>[]>>
+  | Array<StateTransition<TState, TDeps, ActionType<any>[]>>;
 
 export function tx<
   TState,
   TDeps extends Deps,
-  TActions extends ActionFactory<any>[]
+  TActions extends ActionType<any>[]
 >(
   actions: TActions,
   handler: (
     state: TState,
-    action: ActionType<TActions>,
-    deps: DepsType<TDeps>
+    action: MergeActions<TActions>,
+    deps: MergeDeps<TDeps>
   ) => TState | void
 ): StateTransition<TState, TDeps, TActions> {
   return {
@@ -83,7 +86,7 @@ interface TransitionMapEntry<TState> {
 }
 
 function getTransitionsByActions<TState>(
-  transitions: [string, StateTransition<TState, Deps, ActionFactory<any>[]>][]
+  transitions: [string, StateTransition<TState, Deps, ActionType<any>[]>][]
 ) {
   const transitionsMap = new Map<string, TransitionMapEntry<TState>[]>();
 
@@ -111,7 +114,7 @@ function getTransitionsByActions<TState>(
 }
 
 function getActionSources<TState>(
-  transitions: [string, StateTransition<TState, Deps, ActionFactory<any>[]>][],
+  transitions: [string, StateTransition<TState, Deps, ActionType<any>[]>][],
   actions: Actions
 ) {
   return Array.from(

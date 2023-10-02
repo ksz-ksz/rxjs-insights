@@ -1,5 +1,5 @@
 export * from './effect';
-export * from './actions';
+export * from './action';
 export * from './reducer';
 export * from './selector';
 export * from './store';

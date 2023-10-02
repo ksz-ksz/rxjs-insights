@@ -1,4 +1,4 @@
-import { Deps, DepsType } from './deps';
+import { Deps, MergeDeps } from './deps';
 import { Actions, actionsComponent } from './actions';
 import { catchError, merge, Observable, of, throwError } from 'rxjs';
 import { Action } from '@lib/state-fx/store';
@@ -124,7 +124,7 @@ function createEffectComponent(
 
 export function createEffect<TDeps extends Deps = []>(
   options: CreateEffectOptions<TDeps>
-): (initializers: EffectInitializers<DepsType<TDeps>>) => Component<Effect> {
+): (initializers: EffectInitializers<MergeDeps<TDeps>>) => Component<Effect> {
   const { namespace, deps = [] } = options;
   return (initializers) => createEffectComponent(namespace, deps, initializers);
 }

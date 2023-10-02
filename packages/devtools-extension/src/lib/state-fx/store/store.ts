@@ -1,5 +1,13 @@
-import { BehaviorSubject, Observable, observeOn, queueScheduler, reduce, Subject, Subscription } from 'rxjs';
-import { Action } from './actions';
+import {
+  BehaviorSubject,
+  Observable,
+  observeOn,
+  queueScheduler,
+  reduce,
+  Subject,
+  Subscription,
+} from 'rxjs';
+import { Action } from './action';
 import { Reducer } from './reducer';
 import { Effect } from './effect';
 import { Subtype } from './subtype';
@@ -15,11 +23,17 @@ export interface Store<TState> {
 export class ReducersComposer<TState> {
   private readonly reducers: Reducer<string, any, any>[] = [];
 
-  add<TReducerNamespace extends string, TReducerState, TReducerStoreState extends Subtype<TState>>(
+  add<
+    TReducerNamespace extends string,
+    TReducerState,
+    TReducerStoreState extends Subtype<TState>
+  >(
     reducer: Reducer<TReducerNamespace, TReducerState, TReducerStoreState>
   ): ReducersComposer<TState & Record<TReducerNamespace, TReducerState>> {
     this.reducers.push(reducer);
-    return this as ReducersComposer<TState & Record<TReducerNamespace, TReducerState>>;
+    return this as ReducersComposer<
+      TState & Record<TReducerNamespace, TReducerState>
+    >;
   }
 
   get() {
@@ -39,7 +53,9 @@ function getInitialState<TState>(reducers: Reducer<string, any, any>[]) {
   return initialState as TState;
 }
 
-export function createStore<TState>({ reducers: createReducers }: CreateStoreOptions<TState>): Store<TState> {
+export function createStore<TState>({
+  reducers: createReducers,
+}: CreateStoreOptions<TState>): Store<TState> {
   const reducers = createReducers(new ReducersComposer<{}>()).get();
   const actionsSubject = new Subject<Action<unknown>>();
   const actionsObservable = actionsSubject.pipe(observeOn(queueScheduler));
@@ -52,7 +68,11 @@ export function createStore<TState>({ reducers: createReducers }: CreateStoreOpt
       const nextState = produce(state, (draftState) => {
         for (const reducer of reducers) {
           const reducerState = draftState[reducer.namespace];
-          draftState[reducer.namespace] = reducer.reduce(reducerState, action, draftState);
+          draftState[reducer.namespace] = reducer.reduce(
+            reducerState,
+            action,
+            draftState
+          );
         }
       });
       if (nextState !== state) {

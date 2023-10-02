@@ -8,7 +8,7 @@ type ExtractStoreViewComponentState<T> = T extends Component<StoreView<infer U>>
 
 export type Deps = Component<StoreView<unknown>>[];
 
-export type DepsType<TDeps extends Deps> = Intersection<
+export type MergeDeps<TDeps extends Deps> = Intersection<
   ExtractStoreViewComponentState<TDeps[number]>
 >;
 

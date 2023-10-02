@@ -1,5 +1,5 @@
 import { catchError, merge, Observable } from 'rxjs';
-import { Action } from './actions';
+import { Action } from './action';
 import { Store } from './store';
 
 export interface EffectFunction<TStoreState> {

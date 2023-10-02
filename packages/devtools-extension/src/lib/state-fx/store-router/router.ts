@@ -2,14 +2,14 @@ import { History } from './history';
 import { Routing, routings } from './routing';
 import { RouterSelectors } from './router-selectors';
 import { RouterActions } from './router-actions';
-import { Actions, createActions, createStateSelector } from '../store';
+import { ActionTypes, createActions, createStateSelector } from '../store';
 import { RouterState } from './router-reducer';
 import { matchRoutes, RouteMatch } from './match-routes';
 
 export interface Router<TNamespace extends string, TConfig> {
   namespace: TNamespace;
   history: History;
-  actions: Actions<RouterActions>;
+  actions: ActionTypes<RouterActions>;
   selectors: RouterSelectors<TNamespace>;
   start(routing: Routing<any, TConfig, any, any, any>): void;
   match(pathname: string): RouteMatch[];

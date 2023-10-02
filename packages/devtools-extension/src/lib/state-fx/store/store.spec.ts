@@ -1,7 +1,7 @@
 import { createReducer } from './reducer';
 import { typeOf } from './type-of';
 import { createStore } from './store';
-import { Action, createActions } from './actions';
+import { Action, createActions } from './action';
 import { createEffect } from './effect';
 import { ignoreElements, of, Subject, tap } from 'rxjs';
 

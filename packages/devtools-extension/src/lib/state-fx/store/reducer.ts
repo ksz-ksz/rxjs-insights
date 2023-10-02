@@ -1,4 +1,4 @@
-import { Action, ActionFactory, createActions } from './actions';
+import { Action, ActionType, createActions } from './action';
 import { ExtractPayload } from './is';
 import { identity } from 'rxjs';
 import { createStateSelector, Selector } from './selector';
@@ -30,7 +30,7 @@ export type ReducerPayloads<TReducers> = {
 };
 
 export type ReducerActions<TReducers> = {
-  [TReducerName in keyof TReducers]: ActionFactory<
+  [TReducerName in keyof TReducers]: ActionType<
     ReducerPayload<TReducers[TReducerName]>
   >;
 };
@@ -109,7 +109,7 @@ export function createReducer<
 export interface ActionReducer<
   TState,
   TStoreState,
-  TActions extends ActionFactory<any>[]
+  TActions extends ActionType<any>[]
 > {
   action: [...TActions];
   reduce: (
@@ -120,11 +120,11 @@ export interface ActionReducer<
 }
 
 export type ActionReducers<TState, TStoreState> = {
-  [name: string]: ActionReducer<TState, TStoreState, ActionFactory<any>[]>;
+  [name: string]: ActionReducer<TState, TStoreState, ActionType<any>[]>;
 };
 
 export interface ReducerFactory<TState, TStoreState> {
-  <TActions extends ActionFactory<any>[]>(
+  <TActions extends ActionType<any>[]>(
     opt: ActionReducer<TState, TStoreState, TActions>
   ): ActionReducer<TState, TStoreState, TActions>;
 }
