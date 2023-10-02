@@ -82,14 +82,17 @@ const fakeStore = createStore({
   }),
 });
 
-// TODO: should create dep stores
-// TODO: should release dep stores
-
 function createTestHarness() {
   const container = createContainer();
   const storeRef = container.use(fakeStore);
   const actionsRef = container.use(actionsComponent);
-  return [storeRef.component, actionsRef.component] as const;
+  return {
+    store: storeRef.component,
+    actions: actionsRef.component,
+    storeRef,
+    actionsRef,
+    container,
+  };
 }
 
 type Listing<T> = Array<['N', T] | ['E', any] | ['C']>;
@@ -121,7 +124,7 @@ function createObserver<T>(): Observer<T> & {
 describe('Store', () => {
   describe('when initialized', () => {
     it('should have initial state', () => {
-      const [store] = createTestHarness();
+      const { store } = createTestHarness();
 
       expect(store.getState()).toEqual({
         fake: {
@@ -130,7 +133,7 @@ describe('Store', () => {
       });
     });
     it('should emit initial state when subscribed', () => {
-      const [store] = createTestHarness();
+      const { store } = createTestHarness();
       const observer = createObserver();
       store.getStateObservable().subscribe(observer);
 
@@ -148,7 +151,7 @@ describe('Store', () => {
   });
   describe('when updated', () => {
     it('should update state', () => {
-      const [store, actions] = createTestHarness();
+      const { store, actions } = createTestHarness();
 
       actions.dispatch(fakeActions.update('updated'));
 
@@ -163,7 +166,7 @@ describe('Store', () => {
       });
     });
     it('should emit state update', () => {
-      const [store, actions] = createTestHarness();
+      const { store, actions } = createTestHarness();
       const observer = createObserver();
       store.getStateObservable().subscribe(observer);
       observer.clear();
@@ -188,7 +191,7 @@ describe('Store', () => {
 
     describe('when multiple handlers are called for a single action', () => {
       it('should update state', () => {
-        const [store, actions] = createTestHarness();
+        const { store, actions } = createTestHarness();
 
         actions.dispatch(fakeActions.updateByA({ a: 'updated' }));
 
@@ -203,7 +206,7 @@ describe('Store', () => {
         });
       });
       it('should emit state update only once', () => {
-        const [store, actions] = createTestHarness();
+        const { store, actions } = createTestHarness();
         const observer = createObserver();
         store.getStateObservable().subscribe(observer);
         observer.clear();
@@ -229,7 +232,7 @@ describe('Store', () => {
 
     describe('when has deps', () => {
       it('should have access to deps latest states', () => {
-        const [store, actions] = createTestHarness();
+        const { store, actions } = createTestHarness();
 
         actions.dispatch(fakeActions.updateFoo('foo'));
         actions.dispatch(fakeActions.updateBar('bar'));
@@ -246,7 +249,7 @@ describe('Store', () => {
         });
       });
       it('should not emit on deps emissions', () => {
-        const [store, actions] = createTestHarness();
+        const { store, actions } = createTestHarness();
         const observer = createObserver();
         store.getStateObservable().subscribe(observer);
         observer.clear();
@@ -257,7 +260,7 @@ describe('Store', () => {
         expect(observer.listing).toEqual([]);
       });
       it('should not update state on deps updates', () => {
-        const [store, actions] = createTestHarness();
+        const { store, actions } = createTestHarness();
         const observer = createObserver();
         store.getStateObservable().subscribe(observer);
         observer.clear();
@@ -274,7 +277,7 @@ describe('Store', () => {
 
       describe('when deps handlers are called for the same action', () => {
         it('should have access to deps latest states', () => {
-          const [store, actions] = createTestHarness();
+          const { store, actions } = createTestHarness();
           const observer = createObserver();
           store.getStateObservable().subscribe(observer);
           observer.clear();
@@ -292,7 +295,7 @@ describe('Store', () => {
           });
         });
         it('should emit state update only once', () => {
-          const [store, actions] = createTestHarness();
+          const { store, actions } = createTestHarness();
           const observer = createObserver();
           store.getStateObservable().subscribe(observer);
           observer.clear();
@@ -313,6 +316,44 @@ describe('Store', () => {
               },
             ],
           ]);
+        });
+      });
+    });
+
+    describe('when released', () => {
+      it('should unsubscribe from sources', () => {
+        const { store, actions, storeRef } = createTestHarness();
+
+        storeRef.release();
+
+        actions.dispatch(fakeActions.update('updated'));
+
+        expect(store.getState()).toEqual({
+          fake: {
+            value: 'initial',
+          },
+        });
+      });
+
+      it('should release deps', () => {
+        const { actions, storeRef, container } = createTestHarness();
+        const fooStoreRef = container.use(fooStore);
+        const barStoreRef = container.use(barStore);
+        const foo = fooStoreRef.component;
+        const bar = barStoreRef.component;
+        fooStoreRef.release();
+        barStoreRef.release();
+
+        storeRef.release();
+
+        actions.dispatch(fakeActions.updateFoo('updated'));
+        actions.dispatch(fakeActions.updateBar('updated'));
+
+        expect(foo.getState()).toEqual({
+          foo: 'initial',
+        });
+        expect(bar.getState()).toEqual({
+          bar: 'initial',
         });
       });
     });
