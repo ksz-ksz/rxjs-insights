@@ -1,35 +1,48 @@
 import { useCallback, useRef } from 'react';
 import {
+  Component,
   createSelectorFunction,
   Selector,
   StateSelectorFunction,
+  StoreView,
 } from '@lib/state-fx/store';
-import { useStore } from './use-store';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
+import { useComponent } from './use-component';
+
+export function useSelectorFunction<TState, TArgs extends any[], TResult>(
+  selector: Selector<TState, TArgs, TResult>
+): StateSelectorFunction<TState, TArgs, TResult> {
+  const selectorFunctionRef = useRef<StateSelectorFunction<
+    TState,
+    TArgs,
+    TResult
+  > | null>(null);
+
+  if (selectorFunctionRef.current === null) {
+    selectorFunctionRef.current = createSelectorFunction(selector);
+  }
+
+  return selectorFunctionRef.current;
+}
 
 export function useSelector<TState, TArgs extends any[], TResult>(
+  component: Component<StoreView<TState>>,
   selector: Selector<TState, TArgs, TResult>,
   ...args: TArgs
 ): TResult {
-  const store = useStore<TState>();
-  const selectorFunctionRef = useRef<
-    StateSelectorFunction<TState, TArgs, TResult> | undefined
-  >(undefined);
-  const selectorFunction =
-    selectorFunctionRef.current !== undefined
-      ? selectorFunctionRef.current
-      : (selectorFunctionRef.current = createSelectorFunction(selector));
+  const source = useComponent(component);
+  const selectorFunction = useSelectorFunction(selector);
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      const subscription = store.getStateObservable().subscribe(callback);
+      const subscription = source.getStateObservable().subscribe(callback);
       return () => subscription.unsubscribe();
     },
-    [store]
+    [source]
   );
   const getSnapshot = useCallback(
-    () => selectorFunction(store.getState(), ...args),
-    [store]
+    () => selectorFunction(source.getState(), ...args),
+    [source]
   );
   return useSyncExternalStore(subscribe, getSnapshot);
 }

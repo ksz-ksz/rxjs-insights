@@ -1,58 +1,130 @@
-import { catchError, merge, Observable } from 'rxjs';
-import { Action } from './action';
-import { Store } from './store';
+import { Deps, DepsState } from './deps';
+import { Actions, actionsComponent } from './actions';
+import { catchError, merge, Observable, of, throwError } from 'rxjs';
+import { Action } from '@lib/state-fx/store';
+import { Component, Container, InitializedComponent } from './container';
+import { createStoreViewComponent, StoreView } from './store-view';
 
-export interface EffectFunction<TStoreState> {
-  (action: Observable<Action<any>>, store: Store<TStoreState>): Observable<
-    Action<any>
-  >;
+export interface Effect {
+  dispose(): void;
 }
 
-export interface Effect<TStoreState> {
-  run(
-    action: Observable<Action<any>>,
-    store: Store<TStoreState>
-  ): Observable<Action<any>>;
+export interface EffectInitializer<TDepsState> {
+  (actions: Actions, deps: StoreView<TDepsState>): Observable<Action<any>>;
 }
 
-export interface Effects<TStoreState> {
-  [name: string]: EffectFunction<TStoreState>;
-}
+export type EffectInitializers<TDepsState> =
+  | Record<string, EffectInitializer<TDepsState>>
+  | Array<EffectInitializer<TDepsState>>;
 
-export interface CreateEffectOptions<TStoreState> {
+export interface CreateEffectOptions<TDeps extends Deps> {
   namespace: string;
-  storeState?: TStoreState;
-  effects: Effects<TStoreState>;
+  deps?: [...TDeps];
+}
+
+function createEmptyStoreView(): StoreView<any> {
+  const state = {};
+
+  return {
+    actionSources: [],
+    getState() {
+      return state;
+    },
+    getStateObservable() {
+      return of(state);
+    },
+    dispose() {},
+  };
+}
+
+function createDepsComponent(
+  actions: Actions,
+  depStoreViews: StoreView<any>[]
+) {
+  switch (depStoreViews.length) {
+    case 0:
+      return createEmptyStoreView();
+    case 1:
+      return depStoreViews[0];
+    default:
+      return createStoreViewComponent(actions, depStoreViews);
+  }
 }
 
 export class EffectError extends Error {
   constructor(
     readonly namespace: string,
-    readonly name: string,
+    readonly key: string,
     readonly cause: any
   ) {
-    super(`Error in effect "${namespace}::${name}"`, { cause });
+    super(`Error in ${namespace}::${key}`);
   }
 }
 
-export function createEffect<TStoreState>({
-  namespace,
-  effects,
-}: CreateEffectOptions<TStoreState>): Effect<TStoreState> {
+function createEffectInstance(
+  namespace: string,
+  actions: Actions,
+  depStoreViews: StoreView<any>[],
+  initializers: EffectInitializers<any>
+): Effect {
+  const depsView = createDepsComponent(actions, depStoreViews);
+  const subscription = merge(
+    ...Object.entries(initializers).map(([key, initializer]) =>
+      initializer(actions, depsView).pipe(
+        catchError((e) => throwError(() => new EffectError(namespace, key, e)))
+      )
+    )
+  ).subscribe({
+    next(action) {
+      actions.dispatch(action);
+    },
+    // TODO: error, complete?
+  });
+
   return {
-    run(
-      action: Observable<Action<any>>,
-      store: Store<TStoreState>
-    ): Observable<Action<any>> {
-      return merge(
-        ...Object.entries(effects).map(([name, effect]) =>
-          effect(action, store).pipe(
-            catchError((err) => {
-              throw new EffectError(namespace, name, err);
-            })
-          )
-        )
-      );
+    dispose() {
+      subscription.unsubscribe();
     },
   };
+}
+
+function createEffectComponent(
+  namespace: string,
+  deps: Deps,
+  initializers: EffectInitializers<any>
+): Component<Effect> {
+  return {
+    init(container: Container): InitializedComponent<Effect> {
+      const actionsHandle = container.use(actionsComponent);
+      const depsHandles = deps.map((dep) => container.use(dep));
+
+      const actions = actionsHandle.component;
+      const depStoreViews = depsHandles.map((depHandle) => depHandle.component);
+
+      const effect = createEffectInstance(
+        namespace,
+        actions,
+        depStoreViews,
+        initializers
+      );
+
+      return {
+        component: effect,
+        dispose() {
+          effect.dispose();
+          actionsHandle.release();
+          for (let depsHandle of depsHandles) {
+            depsHandle.release();
+          }
+        },
+      };
+    },
+  };
+}
+
+export function createEffect<TDeps extends Deps = []>(
+  options: CreateEffectOptions<TDeps>
+): (initializers: EffectInitializers<DepsState<TDeps>>) => Component<Effect> {
+  const { namespace, deps = [] } = options;
+  return (initializers) => createEffectComponent(namespace, deps, initializers);
 }

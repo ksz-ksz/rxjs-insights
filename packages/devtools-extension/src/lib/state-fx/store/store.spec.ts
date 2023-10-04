@@ -1,451 +1,371 @@
-import { createReducer } from './reducer';
-import { typeOf } from './type-of';
-import { createStore } from './store';
-import { Action, createActions } from './action';
-import { createEffect } from './effect';
-import { ignoreElements, of, Subject, tap } from 'rxjs';
+import { createStore, tx } from './store';
+import { createActions, typeOf } from './index';
+import { createContainer } from './container';
+import { Observer } from 'rxjs';
+import { actionsComponent } from './actions';
+import { createStoreView } from './store-view';
 
-interface User {
-  name: string;
-  permissions: string[];
+const fakeActions = createActions<{
+  updateFoo: string;
+  updateBar: string;
+  update: string;
+  updateAll: string;
+  updateByA: { a: string };
+  updateByB: { b: string };
+}>({
+  namespace: 'fake',
+});
+
+const fooStore = createStore({
+  namespace: 'foo',
+  state: typeOf<string>('initial'),
+})({
+  update: tx([fakeActions.updateFoo], (state, action) => {
+    return action.payload;
+  }),
+  updateAll: tx([fakeActions.updateAll], (state, action) => {
+    return action.payload;
+  }),
+});
+
+const barStore = createStore({
+  namespace: 'bar',
+  state: typeOf<string>('initial'),
+})({
+  update: tx([fakeActions.updateBar], (state, action) => {
+    return action.payload;
+  }),
+  updateAll: tx([fakeActions.updateAll], (state, action) => {
+    return action.payload;
+  }),
+});
+
+interface FakeState {
+  value: string;
+  deps?: {
+    foo: string;
+    bar: string;
+  };
 }
 
-interface UserState {
-  currentUser: undefined | User;
+const fakeStore = createStore({
+  namespace: 'fake',
+  state: typeOf<FakeState>({ value: 'initial' }),
+  deps: [fooStore, barStore],
+})({
+  update: tx([fakeActions.update], (state, action, deps) => {
+    state.deps = deps;
+    state.value = action.payload;
+  }),
+  updateAll: tx([fakeActions.updateAll], (state, action, deps) => {
+    state.deps = deps;
+    state.value = action.payload;
+  }),
+  set: tx(
+    [fakeActions.updateByA, fakeActions.updateByB],
+    (state, action, deps) => {
+      state.deps = deps;
+      if (fakeActions.updateByA.is(action)) {
+        state.value = action.payload.a;
+      }
+      if (fakeActions.updateByB.is(action)) {
+        state.value = action.payload.b;
+      }
+    }
+  ),
+  appendA: tx([fakeActions.updateByA], (state, action, deps) => {
+    state.deps = deps;
+    state.value += '_' + action.payload.a;
+  }),
+  appendB: tx([fakeActions.updateByB], (state, action, deps) => {
+    state.deps = deps;
+    state.value += '_' + action.payload.b;
+  }),
+});
+
+const view = createStoreView({
+  deps: [fooStore, barStore],
+});
+
+function createTestHarness() {
+  const container = createContainer();
+
+  const v = container.use(view);
+
+  v.component.getState();
+  v.component.getStateObservable();
+
+  const storeRef = container.use(fakeStore);
+  const actionsRef = container.use(actionsComponent);
+  return {
+    store: storeRef.component,
+    actions: actionsRef.component,
+    storeRef,
+    actionsRef,
+    container,
+  };
 }
 
-interface Todo {
-  id: number;
-  name: string;
-}
+type Listing<T> = Array<['N', T] | ['E', any] | ['C']>;
 
-interface TodosState {
-  todos: Todo[];
-}
+function createObserver<T>(): Observer<T> & {
+  listing: Listing<T>;
+  clear: () => void;
+} {
+  const listing: Listing<T> = [];
+  const clear = () => {
+    listing.length = 0;
+  };
 
-function createTestStore() {
-  const [userReducer, userActions] = createReducer({
-    namespace: 'user',
-    initialState: typeOf<UserState>({ currentUser: undefined }),
-    reducers: {
-      login(state, { user }: { user: User }) {
-        state.currentUser = user;
-      },
+  return {
+    listing,
+    clear,
+    next(val) {
+      listing.push(['N', val]);
     },
-  });
-
-  const [todosReducer, todosActions] = createReducer({
-    namespace: 'todos',
-    initialState: typeOf<TodosState>({
-      todos: [],
-    }),
-    reducers: {
-      addTodo(state, { todo }: { todo: Todo }) {
-        state.todos.push(todo);
-      },
-      removeTodo(state, { todoId }: { todoId: number }) {
-        const index = state.todos.findIndex((todo) => todo.id === todoId);
-        if (index !== -1) {
-          state.todos.splice(index, 1);
-        }
-      },
+    error(err) {
+      listing.push(['E', err]);
     },
-  });
-
-  const store = createStore({
-    reducers: (compose) => compose.add(userReducer).add(todosReducer),
-  });
-
-  return { store, userActions, todosActions };
+    complete() {
+      listing.push(['C']);
+    },
+  };
 }
 
-describe('store', () => {
-  describe('state', () => {
-    it('should create initial state', () => {
-      // given
-      const { store } = createTestStore();
+describe('Store', () => {
+  describe('when initialized', () => {
+    it('should have initial state', () => {
+      const { store } = createTestHarness();
 
-      // when
-      const state = store.getState();
-
-      // then
-      expect(state).toEqual({
-        user: { currentUser: undefined },
-        todos: { todos: [] },
+      expect(store.getState()).toEqual({
+        fake: {
+          value: 'initial',
+        },
       });
     });
+    it('should emit initial state when subscribed', () => {
+      const { store } = createTestHarness();
+      const observer = createObserver();
+      store.getStateObservable().subscribe(observer);
 
-    it('should emit the state on subscribe', () => {
-      // given
-      const { store, userActions } = createTestStore();
-      const listing: any[] = [];
+      expect(observer.listing).toEqual([
+        [
+          'N',
+          {
+            fake: {
+              value: 'initial',
+            },
+          },
+        ],
+      ]);
+    });
+  });
+  describe('when updated', () => {
+    it('should update state', () => {
+      const { store, actions } = createTestHarness();
 
-      // when
-      store.getStateObservable().subscribe({
-        next(value) {
-          listing.push(value);
+      actions.dispatch(fakeActions.update('updated'));
+
+      expect(store.getState()).toEqual({
+        fake: {
+          value: 'updated',
+          deps: {
+            foo: 'initial',
+            bar: 'initial',
+          },
         },
       });
+    });
+    it('should emit state update', () => {
+      const { store, actions } = createTestHarness();
+      const observer = createObserver();
+      store.getStateObservable().subscribe(observer);
+      observer.clear();
 
-      // then
-      expect(listing).toEqual([
-        {
-          user: { currentUser: undefined },
-          todos: { todos: [] },
-        },
+      actions.dispatch(fakeActions.update('updated'));
+
+      expect(observer.listing).toEqual([
+        [
+          'N',
+          {
+            fake: {
+              value: 'updated',
+              deps: {
+                foo: 'initial',
+                bar: 'initial',
+              },
+            },
+          },
+        ],
       ]);
     });
 
-    describe('when action is handled by the reducer', () => {
-      it('should not modify the previous state', function () {
-        // given
-        const { store, userActions } = createTestStore();
-        const prevState = store.getState();
+    describe('when multiple handlers are called for a single action', () => {
+      it('should update state', () => {
+        const { store, actions } = createTestHarness();
 
-        // when
-        store.dispatch(
-          userActions.login({ user: { name: 'bob', permissions: ['read'] } })
-        );
+        actions.dispatch(fakeActions.updateByA({ a: 'updated' }));
 
-        // then
-        expect(prevState).toEqual({
-          user: { currentUser: undefined },
-          todos: { todos: [] },
+        expect(store.getState()).toEqual({
+          fake: {
+            value: 'updated_updated',
+            deps: {
+              foo: 'initial',
+              bar: 'initial',
+            },
+          },
         });
       });
+      it('should emit state update only once', () => {
+        const { store, actions } = createTestHarness();
+        const observer = createObserver();
+        store.getStateObservable().subscribe(observer);
+        observer.clear();
 
-      it('should update the state ', function () {
-        // given
-        const { store, userActions } = createTestStore();
+        actions.dispatch(fakeActions.updateByA({ a: 'updated' }));
 
-        // when
-        store.dispatch(
-          userActions.login({ user: { name: 'bob', permissions: ['read'] } })
-        );
-
-        // then
-        const state = store.getState();
-        expect(state).toEqual({
-          user: { currentUser: { name: 'bob', permissions: ['read'] } },
-          todos: { todos: [] },
-        });
-      });
-
-      it('should emit a state update', function () {
-        // given
-        const { store, userActions } = createTestStore();
-        const listing: any[] = [];
-        store.getStateObservable().subscribe({
-          next(value) {
-            listing.push(value);
-          },
-        });
-        listing.length = 0;
-
-        // when
-        store.dispatch(
-          userActions.login({ user: { name: 'bob', permissions: ['read'] } })
-        );
-
-        // then
-        expect(listing).toEqual([
-          {
-            user: { currentUser: { name: 'bob', permissions: ['read'] } },
-            todos: { todos: [] },
-          },
-        ]);
-      });
-    });
-
-    describe('when action is not handled by the reducer', () => {
-      it('should not update the state ', function () {
-        // given
-        const { store } = createTestStore();
-        const otherActions = createActions<{ otherAction: number }>({
-          namespace: 'other',
-        });
-
-        // when
-        store.dispatch(otherActions.otherAction(42));
-
-        // then
-        const state = store.getState();
-        expect(state).toEqual({
-          user: { currentUser: undefined },
-          todos: { todos: [] },
-        });
-      });
-
-      it('should not emit a state update', function () {
-        // given
-        const { store } = createTestStore();
-        const otherActions = createActions<{ otherAction: number }>({
-          namespace: 'other',
-        });
-        const listing: any[] = [];
-        store.getStateObservable().subscribe({
-          next(value) {
-            listing.push(value);
-          },
-        });
-        listing.length = 0;
-
-        // when
-        store.dispatch(otherActions.otherAction(42));
-
-        // then
-        expect(listing).toEqual([]);
-      });
-    });
-  });
-
-  describe('effect', () => {
-    describe('when registered', () => {
-      it('should forward the actions from store to effects', () => {
-        // given
-        const { store, userActions } = createTestStore();
-        const listing: any[] = [];
-        const effect = createEffect({
-          namespace: 'test',
-          effects: {
-            scan: (actions) =>
-              actions.pipe(
-                tap({
-                  next(value) {
-                    listing.push(value);
-                  },
-                }),
-                ignoreElements()
-              ),
-          },
-        });
-        store.registerEffect(effect);
-
-        // when
-        store.dispatch(
-          userActions.login({ user: { name: 'bob', permissions: ['read'] } })
-        );
-
-        // then
-        expect(listing).toEqual([
-          {
-            namespace: 'user',
-            name: 'login',
-            payload: { user: { name: 'bob', permissions: ['read'] } },
-          },
-        ]);
-      });
-      it('should update the store before forwarding action from store to effect', () => {
-        // given
-        const { store, userActions } = createTestStore();
-        const listing: any[] = [];
-        const effect = createEffect({
-          namespace: 'test',
-          effects: {
-            scan: (actions, store) =>
-              actions.pipe(
-                tap({
-                  next(value) {
-                    listing.push(store.getState());
-                  },
-                }),
-                ignoreElements()
-              ),
-          },
-        });
-        store.registerEffect(effect);
-
-        // when
-        store.dispatch(
-          userActions.login({ user: { name: 'bob', permissions: ['read'] } })
-        );
-
-        // then
-        expect(listing).toEqual([
-          {
-            user: { currentUser: { name: 'bob', permissions: ['read'] } },
-            todos: { todos: [] },
-          },
-        ]);
-      });
-      it('should forward the actions from effects to store', () => {
-        // given
-        const { store, userActions } = createTestStore();
-        const listing: any[] = [];
-        const effect = createEffect({
-          namespace: 'test',
-          effects: {
-            scan: (actions, store) =>
-              actions.pipe(
-                tap({
-                  next(value) {
-                    listing.push(value);
-                  },
-                }),
-                ignoreElements()
-              ),
-            emit: () =>
-              of(
-                userActions.login({
-                  user: { name: 'bob', permissions: ['read'] },
-                })
-              ),
-          },
-        });
-
-        // when
-        store.registerEffect(effect);
-
-        // then
-        expect(listing).toEqual([
-          {
-            namespace: 'user',
-            name: 'login',
-            payload: { user: { name: 'bob', permissions: ['read'] } },
-          },
-        ]);
-      });
-      it('should queue the actions', () => {
-        // given
-        const { store, todosActions } = createTestStore();
-        const listing: any[] = [];
-        const effect = createEffect({
-          namespace: 'test',
-          effects: {
-            scan: (actions, store) =>
-              actions.pipe(
-                tap({
-                  next(value) {
-                    listing.push([value, store.getState()]);
-                  },
-                }),
-                ignoreElements()
-              ),
-            emit: () =>
-              of(
-                todosActions.addTodo({ todo: { id: 0, name: 'zero' } }),
-                todosActions.addTodo({ todo: { id: 1, name: 'one' } }),
-                todosActions.addTodo({ todo: { id: 2, name: 'two' } })
-              ),
-          },
-        });
-
-        // when
-        store.registerEffect(effect);
-
-        // then
-        expect(listing).toEqual([
+        expect(observer.listing).toEqual([
           [
+            'N',
             {
-              namespace: 'todos',
-              name: 'addTodo',
-              payload: { todo: { id: 0, name: 'zero' } },
-            },
-            {
-              user: { currentUser: undefined },
-              todos: { todos: [{ id: 0, name: 'zero' }] },
-            },
-          ],
-          [
-            {
-              namespace: 'todos',
-              name: 'addTodo',
-              payload: { todo: { id: 1, name: 'one' } },
-            },
-            {
-              user: { currentUser: undefined },
-              todos: {
-                todos: [
-                  { id: 0, name: 'zero' },
-                  { id: 1, name: 'one' },
-                ],
-              },
-            },
-          ],
-          [
-            {
-              namespace: 'todos',
-              name: 'addTodo',
-              payload: { todo: { id: 2, name: 'two' } },
-            },
-            {
-              user: { currentUser: undefined },
-              todos: {
-                todos: [
-                  { id: 0, name: 'zero' },
-                  { id: 1, name: 'one' },
-                  { id: 2, name: 'two' },
-                ],
+              fake: {
+                value: 'updated_updated',
+                deps: {
+                  foo: 'initial',
+                  bar: 'initial',
+                },
               },
             },
           ],
         ]);
       });
     });
-    describe('when unregistered', () => {
-      it('should not forward the actions from store to effects', () => {
-        // given
-        const { store, userActions } = createTestStore();
-        const listing: any[] = [];
-        const effect = createEffect({
-          namespace: 'test',
-          effects: {
-            scan: (actions) =>
-              actions.pipe(
-                tap({
-                  next(value) {
-                    listing.push(value);
-                  },
-                }),
-                ignoreElements()
-              ),
+
+    describe('when has deps', () => {
+      it('should have access to deps latest states', () => {
+        const { store, actions } = createTestHarness();
+
+        actions.dispatch(fakeActions.updateFoo('foo'));
+        actions.dispatch(fakeActions.updateBar('bar'));
+        actions.dispatch(fakeActions.update('updated'));
+
+        expect(store.getState()).toEqual({
+          fake: {
+            value: 'updated',
+            deps: {
+              foo: 'foo',
+              bar: 'bar',
+            },
           },
         });
-        store.registerEffect(effect).unsubscribe();
-
-        // when
-        store.dispatch(
-          userActions.login({ user: { name: 'bob', permissions: ['read'] } })
-        );
-
-        // then
-        expect(listing).toEqual([]);
       });
-      it('should not forward the actions from effects to store', () => {
-        // given
-        const { store, userActions } = createTestStore();
-        const listing: any[] = [];
-        const scanEffect = createEffect({
-          namespace: 'scan',
-          effects: {
-            scan: (actions, store) =>
-              actions.pipe(
-                tap({
-                  next(value) {
-                    listing.push(value);
+      it('should not emit on deps emissions', () => {
+        const { store, actions } = createTestHarness();
+        const observer = createObserver();
+        store.getStateObservable().subscribe(observer);
+        observer.clear();
+
+        actions.dispatch(fakeActions.updateFoo('foo'));
+        actions.dispatch(fakeActions.updateBar('bar'));
+
+        expect(observer.listing).toEqual([]);
+      });
+      it('should not update state on deps updates', () => {
+        const { store, actions } = createTestHarness();
+        const observer = createObserver();
+        store.getStateObservable().subscribe(observer);
+        observer.clear();
+
+        actions.dispatch(fakeActions.updateFoo('foo'));
+        actions.dispatch(fakeActions.updateBar('bar'));
+
+        expect(store.getState()).toEqual({
+          fake: {
+            value: 'initial',
+          },
+        });
+      });
+
+      describe('when deps handlers are called for the same action', () => {
+        it('should have access to deps latest states', () => {
+          const { store, actions } = createTestHarness();
+          const observer = createObserver();
+          store.getStateObservable().subscribe(observer);
+          observer.clear();
+
+          actions.dispatch(fakeActions.updateAll('updated'));
+
+          expect(store.getState()).toEqual({
+            fake: {
+              value: 'updated',
+              deps: {
+                foo: 'updated',
+                bar: 'updated',
+              },
+            },
+          });
+        });
+        it('should emit state update only once', () => {
+          const { store, actions } = createTestHarness();
+          const observer = createObserver();
+          store.getStateObservable().subscribe(observer);
+          observer.clear();
+
+          actions.dispatch(fakeActions.updateAll('updated'));
+
+          expect(observer.listing).toEqual([
+            [
+              'N',
+              {
+                fake: {
+                  value: 'updated',
+                  deps: {
+                    foo: 'updated',
+                    bar: 'updated',
                   },
-                }),
-                ignoreElements()
-              ),
+                },
+              },
+            ],
+          ]);
+        });
+      });
+    });
+
+    describe('when released', () => {
+      it('should unsubscribe from sources', () => {
+        const { store, actions, storeRef } = createTestHarness();
+
+        storeRef.release();
+
+        actions.dispatch(fakeActions.update('updated'));
+
+        expect(store.getState()).toEqual({
+          fake: {
+            value: 'initial',
           },
         });
-        const emitSubject = new Subject<Action<unknown>>();
-        const emitEffect = createEffect({
-          namespace: 'emit',
-          effects: {
-            emit: () => emitSubject,
-          },
+      });
+
+      it('should release deps', () => {
+        const { actions, storeRef, container } = createTestHarness();
+        const fooStoreRef = container.use(fooStore);
+        const barStoreRef = container.use(barStore);
+        const foo = fooStoreRef.component;
+        const bar = barStoreRef.component;
+        fooStoreRef.release();
+        barStoreRef.release();
+
+        storeRef.release();
+
+        actions.dispatch(fakeActions.updateFoo('updated'));
+        actions.dispatch(fakeActions.updateBar('updated'));
+
+        expect(foo.getState()).toEqual({
+          foo: 'initial',
         });
-        store.registerEffect(scanEffect);
-
-        // when
-        store.registerEffect(emitEffect).unsubscribe();
-        emitSubject.next(
-          userActions.login({ user: { name: 'bob', permissions: ['read'] } })
-        );
-
-        // then
-        expect(listing).toEqual([]);
+        expect(bar.getState()).toEqual({
+          bar: 'initial',
+        });
       });
     });
   });

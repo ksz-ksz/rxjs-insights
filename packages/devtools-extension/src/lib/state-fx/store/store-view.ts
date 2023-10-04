@@ -1,7 +1,7 @@
 import { ActionSource } from './action-source';
 import { BehaviorSubject, merge, Observable } from 'rxjs';
 import { Component, Container, InitializedComponent } from './container';
-import { Deps, MergeDeps, getDepsState } from './deps';
+import { Deps, DepsState, getDepsState } from './deps';
 import { Actions, actionsComponent } from './actions';
 
 export interface StoreView<T> {
@@ -20,7 +20,7 @@ export interface CreateStoreViewOptions<TDeps extends Deps> {
 
 export function createStoreView<TDeps extends Deps>(
   options: CreateStoreViewOptions<TDeps>
-): Component<StoreView<MergeDeps<TDeps>>> {
+): Component<StoreView<DepsState<TDeps>>> {
   return new StoreViewComponent(options.deps);
 }
 

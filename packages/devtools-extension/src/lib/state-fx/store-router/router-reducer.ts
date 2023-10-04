@@ -1,7 +1,7 @@
-import { createReducerFromActions, Reducer, typeOf } from '../store';
 import { Location } from './history';
 import { ActiveRoute } from './active-route';
 import { Router } from './router';
+import { Component, createStore, Store, tx, typeOf } from '@lib/state-fx/store';
 
 export interface RouterState {
   location: Location;
@@ -10,20 +10,17 @@ export interface RouterState {
   origin: 'pop' | 'push' | 'replace';
   routes: ActiveRoute<any, any, any>[];
 }
-export interface CreateRouterReducerOptions<TNamespace extends string> {
+export interface CreateRouterStoreOptions<TNamespace extends string> {
   router: Router<TNamespace, any>;
 }
 
-export function createRouterReducer<TNamespace extends string>({
-  router,
-}: CreateRouterReducerOptions<TNamespace>): Reducer<
-  TNamespace,
-  RouterState,
-  unknown
-> {
-  const [reducer] = createReducerFromActions({
+export function createRouterStore<TNamespace extends string>(
+  options: CreateRouterStoreOptions<TNamespace>
+): Component<Store<TNamespace, RouterState>> {
+  const { router } = options;
+  return createStore({
     namespace: router.namespace,
-    initialState: typeOf<RouterState>({
+    state: typeOf<RouterState>({
       location: {
         pathname: '',
         search: '',
@@ -34,19 +31,13 @@ export function createRouterReducer<TNamespace extends string>({
       origin: 'pop',
       routes: [],
     }),
-    reducers: (reducer) => ({
-      navigationCompleted: reducer({
-        action: [router.actions.NavigationCompleted],
-        reduce: (state, { payload }) => {
-          state.location = payload.location;
-          state.state = payload.state;
-          state.key = payload.key;
-          state.origin = payload.origin;
-          state.routes = payload.routes;
-        },
-      }),
+  })({
+    update: tx([router.actions.NavigationCompleted], (state, { payload }) => {
+      state.location = payload.location;
+      state.state = payload.state;
+      state.key = payload.key;
+      state.origin = payload.origin;
+      state.routes = payload.routes;
     }),
   });
-
-  return reducer;
 }

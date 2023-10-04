@@ -1,9 +1,13 @@
 import {
   Action,
+  Actions,
+  Component,
   createEffect,
   createSelectorFunction,
+  Effect,
   StateSelectorFunction,
   Store,
+  StoreView,
   typeOf,
 } from '../store';
 import { NavigationRequested, RouteEvent } from './router-actions';
@@ -252,14 +256,14 @@ function createRuleRoutes(
 
 function createNavigateObservable<TNamespace extends string, TState, TConfig>(
   action: Action<NavigationRequested>,
-  actions: Observable<Action<any>>,
+  actions: Actions,
   router: Router<TNamespace, TConfig>,
   getRouterState: StateSelectorFunction<
     Record<TNamespace, RouterState>,
     [],
     RouterState
   >,
-  store: Store<Record<TNamespace, RouterState>>
+  store: StoreView<Record<TNamespace, RouterState>>
 ) {
   return new Observable<Action<any>>((subscriber) => {
     {
@@ -317,7 +321,7 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
       let redirected = false;
 
       subscriber.add(
-        actions.pipe(filter(router.actions.NavigationRequested.is)).subscribe({
+        actions.ofType(router.actions.NavigationRequested).subscribe({
           next() {
             if (!redirected) {
               subscriber.next(
@@ -430,83 +434,80 @@ function getState(entry: HistoryEntry): RouterHistoryState {
 }
 
 export function createRouterEffect<TNamespace extends string, TConfig>(
-  router: Router<TNamespace, TConfig>
-) {
+  router: Router<TNamespace, TConfig>,
+  routerStore: Component<Store<TNamespace, RouterState>>
+): Component<Effect> {
   const getRouterState = createSelectorFunction(router.selectors.selectState);
   return createEffect({
     namespace: router.namespace,
-    storeState: typeOf<Record<TNamespace, RouterState>>(),
-    effects: {
-      createNewNavigationRequest(actions) {
-        return actions.pipe(
-          filter(router.actions.Navigate.is),
-          map(({ payload }) =>
-            router.actions.NavigationRequested({
-              origin: payload.historyMode ?? 'push',
-              location: payload.location,
-              state: payload.state,
-              key: crypto.randomUUID(),
-            })
+    deps: [routerStore],
+  })({
+    createNewNavigationRequest(actions) {
+      return actions.ofType(router.actions.Navigate).pipe(
+        map(({ payload }) =>
+          router.actions.NavigationRequested({
+            origin: payload.historyMode ?? 'push',
+            location: payload.location,
+            state: payload.state,
+            key: crypto.randomUUID(),
+          })
+        )
+      );
+    },
+    createPopNavigationRequest() {
+      return fromHistory(router.history).pipe(
+        map((entry) => {
+          const { key, state } = getState(entry);
+          return router.actions.NavigationRequested({
+            origin: 'pop',
+            location: entry.location,
+            state,
+            key,
+          });
+        })
+      );
+    },
+    handleNavigationRequest(actions, store) {
+      return actions
+        .ofType(router.actions.NavigationRequested)
+        .pipe(
+          concatMap((action) =>
+            createNavigateObservable(
+              action,
+              actions,
+              router,
+              getRouterState,
+              store
+            )
           )
         );
-      },
-      createPopNavigationRequest() {
-        return fromHistory(router.history).pipe(
-          map((entry) => {
-            const { key, state } = getState(entry);
-            return router.actions.NavigationRequested({
-              origin: 'pop',
-              location: entry.location,
-              state,
-              key,
+    },
+    syncHistoryAfterNavigationCompleted(actions) {
+      return actions.ofType(router.actions.NavigationCompleted).pipe(
+        tap(({ payload }) => {
+          const historyState = { state: payload.state, key: payload.key };
+          if (payload.origin !== 'pop') {
+            router.history.newEntry(payload.location, historyState, {
+              mode: payload.origin,
             });
-          })
-        );
-      },
-      handleNavigationRequest(actions, store) {
-        return actions
-          .pipe(filter(router.actions.NavigationRequested.is))
-          .pipe(
-            concatMap((action) =>
-              createNavigateObservable(
-                action,
-                actions,
-                router,
-                getRouterState,
-                store
-              )
-            )
-          );
-      },
-      syncHistoryAfterNavigationCompleted(actions) {
-        return actions.pipe(
-          filter(router.actions.NavigationCompleted.is),
-          tap(({ payload }) => {
-            const historyState = { state: payload.state, key: payload.key };
-            if (payload.origin !== 'pop') {
-              router.history.newEntry(payload.location, historyState, {
-                mode: payload.origin,
-              });
-            }
-          }),
-          ignoreElements()
-        );
-      },
-      syncHistoryAfterNavigationCancelled(actions, store) {
-        return actions.pipe(
-          filter(router.actions.NavigationCanceled.is),
-          tap(({ payload }) => {
-            if (payload.origin === 'pop' && payload.reason === 'intercepted') {
-              const state = getRouterState(store.getState());
-              const historyState = { state: state.state, key: state.key };
-              router.history.newEntry(state.location, historyState, {
-                mode: 'replace',
-              });
-            }
-          }),
-          ignoreElements()
-        );
-      },
+          }
+        }),
+        ignoreElements()
+      );
+    },
+    syncHistoryAfterNavigationCancelled(actions, deps) {
+      return actions.ofType(router.actions.NavigationCanceled).pipe(
+        tap(({ payload }) => {
+          if (payload.origin === 'pop' && payload.reason === 'intercepted') {
+            const state = getRouterState(deps.getState());
+            const historyState = { state: state.state, key: state.key };
+            router.history.newEntry(state.location, historyState, {
+              mode: 'replace',
+            });
+          }
+        }),
+        ignoreElements()
+      );
     },
   });
 }

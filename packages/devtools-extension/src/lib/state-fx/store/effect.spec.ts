@@ -1,4 +1,4 @@
-import { createActions, typeOf } from '../state-fx/store';
+import { createActions, typeOf } from './index';
 import { createStore, tx } from './store';
 import { createEffect } from './effect';
 import { map, Observer } from 'rxjs';
