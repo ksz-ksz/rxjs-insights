@@ -1,28 +1,28 @@
-import { ActiveRoute } from './active-route';
+import { RouteObject } from './route-object';
 import { Location } from './history';
 
 export interface ActivatedRouteEvent<TParams, TSearch, THash> {
   status: 'activated';
   activatedLocation: Location;
-  activatedRoute: ActiveRoute<TParams, TSearch, THash>;
-  activatedRoutes: ActiveRoute<any, any, any>[];
+  activatedRoute: RouteObject<TParams, TSearch, THash>;
+  activatedRoutes: RouteObject<any, any, any>[];
 }
 
 export interface DeactivatedRouteEvent<TParams, TSearch, THash> {
   status: 'deactivated';
   deactivatedLocation: Location;
-  deactivatedRoute: ActiveRoute<TParams, TSearch, THash>;
-  deactivatedRoutes: ActiveRoute<any, any, any>[];
+  deactivatedRoute: RouteObject<TParams, TSearch, THash>;
+  deactivatedRoutes: RouteObject<any, any, any>[];
 }
 
 export interface UpdatedRouteEvent<TParams, TSearch, THash> {
   status: 'updated';
   activatedLocation: Location;
-  activatedRoute: ActiveRoute<TParams, TSearch, THash>;
-  activatedRoutes: ActiveRoute<any, any, any>[];
+  activatedRoute: RouteObject<TParams, TSearch, THash>;
+  activatedRoutes: RouteObject<any, any, any>[];
   deactivatedLocation: Location | undefined;
-  deactivatedRoute: ActiveRoute<TParams, TSearch, THash>;
-  deactivatedRoutes: ActiveRoute<any, any, any>[];
+  deactivatedRoute: RouteObject<TParams, TSearch, THash>;
+  deactivatedRoutes: RouteObject<any, any, any>[];
 }
 
 export type RouteEvent<TParams, TSearch, THash> =
@@ -51,7 +51,7 @@ export interface NavigationStarted {
   location: Location;
   state: any;
   key: string;
-  routes: ActiveRoute<any, any, any>[];
+  routes: RouteObject<any, any, any>[];
 }
 
 export interface NavigationCompleted {
@@ -59,7 +59,7 @@ export interface NavigationCompleted {
   location: Location;
   state: any;
   key: string;
-  routes: ActiveRoute<any, any, any>[];
+  routes: RouteObject<any, any, any>[];
 }
 
 export interface NavigationCanceled {
@@ -68,7 +68,7 @@ export interface NavigationCanceled {
   location: Location;
   state: any;
   key: string;
-  routes?: ActiveRoute<any, any, any>[];
+  routes?: RouteObject<any, any, any>[];
 }
 
 export interface RouterActions {

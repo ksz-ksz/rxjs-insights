@@ -1,8 +1,8 @@
-import { ActiveRoute } from './active-route';
+import { RouteObject } from './route-object';
 
 export function diffRoutes(
-  prevRoutes: ActiveRoute<any, any, any>[],
-  nextRoutes: ActiveRoute<any, any, any>[]
+  prevRoutes: RouteObject<any, any, any>[],
+  nextRoutes: RouteObject<any, any, any>[]
 ) {
   if (prevRoutes.length === 0) {
     return {
@@ -22,8 +22,8 @@ export function diffRoutes(
 
   const n = Math.min(prevRoutes.length, nextRoutes.length);
   const updatedRoutes: [
-    ActiveRoute<any, any, any>,
-    ActiveRoute<any, any, any>
+    RouteObject<any, any, any>,
+    RouteObject<any, any, any>
   ][] = [];
   for (let i = 0; i < n; i++) {
     const prevRoute = prevRoutes[i];

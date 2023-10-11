@@ -1,24 +1,24 @@
-import { Routing } from './routing';
+import { RouteConfig } from './route-config';
 
-export interface RouteMatch {
+export interface RouteMatch<TData> {
   path: string[];
   params: Record<string, unknown>;
-  routing: Routing<any, any, any, any, any>;
+  routeConfig: RouteConfig<TData>;
 }
 
-function match(
-  routing: Routing<any, any, any, any, any>,
+function match<TData>(
+  routeConfig: RouteConfig<TData>,
   path: string[]
-): RouteMatch[] {
+): RouteMatch<TData>[] {
   const routePath =
-    routing.route.path === '' ? [] : routing.route.path.split('/');
+    routeConfig.route.path === '' ? [] : routeConfig.route.path.split('/');
   const params: Record<string, any> = {};
   let consumedPath: string[] = [];
   let remainingPath = path;
   for (const routePathSegment of routePath) {
     if (routePathSegment.startsWith(':')) {
       const paramName = routePathSegment.substring(1);
-      const paramMatcher = routing.route?.params?.[paramName];
+      const paramMatcher = (routeConfig.route?.params as any)?.[paramName];
       if (paramMatcher === undefined) {
         throw new Error(`no param matcher for "${paramName}"`);
       }
@@ -41,14 +41,14 @@ function match(
     }
   }
 
-  if (routing.children !== undefined) {
-    for (const childRouting of routing.children) {
+  if (routeConfig.children !== undefined) {
+    for (const childRouting of routeConfig.children) {
       const result = match(childRouting, remainingPath);
       if (result.length !== 0) {
-        const match: RouteMatch = {
+        const match: RouteMatch<TData> = {
           path: consumedPath,
           params,
-          routing,
+          routeConfig: routeConfig,
         };
 
         return [match, ...result];
@@ -57,10 +57,10 @@ function match(
   }
 
   if (remainingPath.length === 0) {
-    const match: RouteMatch = {
+    const match: RouteMatch<TData> = {
       path: consumedPath,
       params,
-      routing,
+      routeConfig: routeConfig,
     };
 
     return [match];
@@ -69,9 +69,9 @@ function match(
   return [];
 }
 
-export function matchRoutes(
-  routing: Routing<any, any, any, any, any>,
+export function matchRoutes<TData>(
+  routeConfig: RouteConfig<TData>,
   pathname: string
-): RouteMatch[] {
-  return match(routing, pathname === '' ? [] : pathname.split('/'));
+): RouteMatch<TData>[] {
+  return match(routeConfig, pathname === '' ? [] : pathname.split('/'));
 }

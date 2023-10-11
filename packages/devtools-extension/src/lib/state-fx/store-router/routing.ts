@@ -1,117 +1,112 @@
-import { Route } from './route';
+import {
+  Actions,
+  actionsComponent,
+  ActionTypes,
+  Component,
+  Container,
+  Effect,
+  InitializedComponent,
+  Store,
+  StoreComponent,
+} from '../store';
+import { Router, RouterComponent } from './router';
+import { RouteConfig, RoutingRule } from './route-config';
+import { History, HistoryEntry, PopEntryListener } from './history';
 import { Observable } from 'rxjs';
-import { Location } from './history';
-import { ActiveRoute } from './active-route';
-import { Store } from '@lib/state-fx/store';
+import { createRouterEffect } from './create-router-effect';
+import { RouterActions } from './router-actions';
+import { RouterState } from './router-store';
+import { ComponentsResolver } from './components-resolver';
 
-export interface ActiveRouting<TState, TConfig, TParams, TSearch, THash> {
-  routing: Routing<TState, TConfig, TParams, TSearch, THash>;
-  route: ActiveRoute<TParams, TSearch, THash>;
+export interface StartRouterOptions<TData> {
+  router: RouterComponent<TData>;
+  routerStore: StoreComponent<string, RouterState>;
+  routerActions: ActionTypes<RouterActions>;
+  routerConfig: RouteConfig<TData>;
 }
 
-export interface ActivatedRoutingRuleContext<
-  TState,
-  TConfig,
-  TParams,
-  TSearch,
-  THash
-> {
-  status: 'activated';
-  route: ActiveRouting<TState, TConfig, TParams, TSearch, THash>;
-  routes: ActiveRouting<TState, TConfig, any, any, any>[];
-  store: Store<TState>;
-  location: Location;
-  prevLocation: Location | undefined;
+export function fromHistory(history: History): Observable<HistoryEntry> {
+  return new Observable((observer) => {
+    const listener: PopEntryListener = (entry) => {
+      observer.next(entry);
+    };
+
+    history.addPopEntryListener(listener);
+
+    return () => {
+      history.removePopEntryListener(listener);
+    };
+  });
 }
 
-export interface DeactivatedRoutingRuleContext<
-  TState,
-  TConfig,
-  TParams,
-  TSearch,
-  THash
-> {
-  status: 'deactivated';
-  prevRoute: ActiveRouting<TState, TConfig, TParams, TSearch, THash>;
-  prevRoutes: ActiveRouting<TState, TConfig, any, any, any>[];
-  store: Store<TState>;
-  location: Location;
-  prevLocation: Location | undefined;
+export interface Routing extends Effect {}
+
+export interface RoutingComponent extends Component<Routing> {}
+
+function createRoutingInstance<TData>(
+  actions: Actions,
+  router: Router<TData>,
+  routerStore: Store<string, RouterState>,
+  routerActions: ActionTypes<RouterActions>,
+  routingRulesResolver: ComponentsResolver<RoutingRule<TData>>
+): Routing {
+  return createRouterEffect(
+    actions,
+    router,
+    routerActions,
+    routerStore,
+    routingRulesResolver
+  );
 }
 
-export interface UpdatedRoutingRuleContext<
-  TState,
-  TConfig,
-  TParams,
-  TSearch,
-  THash
-> {
-  status: 'updated';
-  route: ActiveRouting<TState, TConfig, TParams, TSearch, THash>;
-  routes: ActiveRouting<TState, TConfig, any, any, any>[];
-  prevRoute: ActiveRouting<TState, TConfig, TParams, TSearch, THash>;
-  prevRoutes: ActiveRouting<TState, TConfig, any, any, any>[];
-  store: Store<TState>;
-  location: Location;
-  prevLocation: Location | undefined;
+function createRoutingComponent<TData>(
+  router: RouterComponent<TData>,
+  routerStore: StoreComponent<string, RouterState>,
+  routerActions: ActionTypes<RouterActions>,
+  routerConfig: RouteConfig<TData>
+): RoutingComponent {
+  return {
+    init(container: Container): InitializedComponent<Routing> {
+      const actionsRef = container.use(actionsComponent);
+      const routerRef = container.use(router);
+      const routerStoreRef = container.use(routerStore);
+      const routingRulesResolver = new ComponentsResolver<RoutingRule<TData>>(
+        container
+      );
+
+      routerRef.component.init(routerConfig);
+
+      const routing = createRoutingInstance(
+        actionsRef.component,
+        routerRef.component,
+        routerStoreRef.component,
+        routerActions,
+        routingRulesResolver
+      );
+
+      return {
+        component: routing,
+        dispose() {
+          routing.dispose();
+          actionsRef.release();
+          routerStoreRef.release();
+          routingRulesResolver.dispose();
+        },
+      };
+    },
+  };
 }
 
-export type RoutingRuleContext<TState, TConfig, TParams, TSearch, THash> =
-  | ActivatedRoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
-  | DeactivatedRoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
-  | UpdatedRoutingRuleContext<TState, TConfig, TParams, TSearch, THash>;
-
-// TODO: handle cancellation (context.abortNotifier vs separate callback)
-export interface RoutingRule<TState, TConfig, TParams, TSearch, THash> {
-  // TODO: rename: check
-  resolve?(
-    context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
-  ): Observable<Location | boolean>;
-
-  commit?(
-    context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
-  ): Observable<void>;
-}
-
-export interface Routing<TState, TConfig, TParams, TSearch, THash> {
-  id: number;
-  route: Route<TParams, TSearch, THash>;
-  children?: Routing<TState, TConfig, any, any, any>[];
-  config?: TConfig;
-  rules?: RoutingRule<TState, TConfig, TParams, TSearch, THash>[];
-}
-
-export const routings = new Map<number, Routing<any, any, any, any, any>>();
-
-export interface CreateRoutingOptions<
-  TState,
-  TConfig,
-  TParams,
-  TSearch,
-  THash
-> {
-  children?: Routing<TState, TConfig, any, any, any>[];
-  config?: TConfig;
-  rules?: RoutingRule<TState, TConfig, TParams, TSearch, THash>[];
-}
-
-export function createRouting<TState, TConfig, TParams, TSearch, THash>(
-  route: Route<TParams, TSearch, THash>,
-  options?: CreateRoutingOptions<TState, TConfig, TParams, TSearch, THash>
-): Routing<TState, TConfig, TParams, TSearch, THash> {
-  const id = routings.size;
-  const routing: Routing<any, any, any, any, any> = { id, route, ...options };
-  routings.set(id, routing);
-  return routing;
-}
-
-export function createRoutingFactory<TState, TConfig>(): <
-  TParams,
-  TSearch,
-  THash
->(
-  route: Route<TParams, TSearch, THash>,
-  routing?: CreateRoutingOptions<TState, TConfig, TParams, TSearch, THash>
-) => Routing<TState, TConfig, TParams, TSearch, THash> {
-  return createRouting;
+export function createRouting<TData>({
+  router,
+  routerActions,
+  routerStore,
+  routerConfig,
+}: StartRouterOptions<TData>): RoutingComponent {
+  return createRoutingComponent(
+    router,
+    routerStore,
+    routerActions,
+    routerConfig
+  );
 }

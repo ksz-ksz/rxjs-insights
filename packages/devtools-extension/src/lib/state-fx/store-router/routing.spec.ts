@@ -3,20 +3,37 @@ import { Location, createMemoryHistory } from './history';
 import { createRoute } from './route';
 import { PathParam } from './path-param';
 import { z } from 'zod';
-import { createRouting, RoutingRuleContext } from './routing';
+import {
+  createRouteConfig,
+  RoutingRule,
+  RoutingRuleContext,
+} from './route-config';
 import {
   EMPTY,
   ignoreElements,
+  merge,
   NEVER,
   Observable,
   of,
   Subject,
   tap,
 } from 'rxjs';
-import { Action, createEffect, createStore } from '../store';
-import { createRouterReducer } from './router-reducer';
+import {
+  Action,
+  actionsComponent,
+  Component,
+  Container,
+  createActions,
+  createContainer,
+  createEffect,
+  createStore,
+  InitializedComponent,
+} from '../store';
+import { createRouterStore } from './router-store';
 import { createRouterEffect } from './create-router-effect';
-import { ActiveRoute } from './active-route';
+import { RouteObject } from './route-object';
+import { RouterActions } from './router-actions';
+import { createRouting } from './routing';
 
 type ListingEntry = ['N', Action<any>] | ['E', any] | ['C'];
 
@@ -35,95 +52,114 @@ const childRoute = createRoute({
   },
 });
 
+function createRuleComponent(
+  rule: RoutingRule<any>
+): Component<RoutingRule<any>> {
+  return {
+    init(): InitializedComponent<RoutingRule<any>> {
+      return {
+        component: rule,
+      };
+    },
+  };
+}
+
 function createTestHarness(
   actions: Observable<Action<any>>,
   {
-    resolveParent = () => of(true),
+    checkParent = () => of(true),
     commitParent = () => EMPTY,
-    resolveChild = () => of(true),
+    checkChild = () => of(true),
     commitChild = () => EMPTY,
   }: {
-    resolveParent?(
-      context: RoutingRuleContext<any, any, any, any, any>
+    checkParent?(
+      context: RoutingRuleContext<any>
     ): Observable<Location | boolean>;
-    commitParent?(
-      context: RoutingRuleContext<any, any, any, any, any>
-    ): Observable<void>;
-    resolveChild?(
-      context: RoutingRuleContext<any, any, any, any, any>
+    commitParent?(context: RoutingRuleContext<any>): Observable<void>;
+    checkChild?(
+      context: RoutingRuleContext<any>
     ): Observable<Location | boolean>;
-    commitChild?(
-      context: RoutingRuleContext<any, any, any, any, any>
-    ): Observable<void>;
+    commitChild?(context: RoutingRuleContext<any>): Observable<void>;
   } = {}
 ) {
-  const childRouting = createRouting(childRoute, {
+  const childRouting = createRouteConfig(childRoute, {
     rules: [
-      {
+      createRuleComponent({
+        check: checkChild,
         commit: commitChild,
-        resolve: resolveChild,
-      },
+      }),
     ],
   });
 
-  const parentRouting = createRouting(parentRoute, {
+  const parentRouting = createRouteConfig(parentRoute, {
     children: [childRouting],
     rules: [
-      {
+      createRuleComponent({
+        check: checkParent,
         commit: commitParent,
-        resolve: resolveParent,
-      },
+      }),
     ],
   });
 
   const history = createMemoryHistory();
 
   const router = createRouter({
-    namespace: 'router',
     history,
   });
 
-  router.start(parentRouting);
+  const routerActions = createActions<RouterActions>({ namespace: 'router' });
 
-  const routerReducer = createRouterReducer({
+  const routerStore = createRouterStore({
+    namespace: 'router',
+    actions: routerActions,
+  });
+
+  const routing = createRouting({
     router,
+    routerActions,
+    routerStore,
+    routerConfig: parentRouting,
   });
-
-  const store = createStore({
-    reducers: (c) => c.add(routerReducer),
-  });
-
-  const routerEffect = createRouterEffect(router);
 
   const listing: ListingEntry[] = [];
   const listingEffect = createEffect({
     namespace: 'listing',
-    effects: {
-      listing: (actions) =>
-        actions.pipe(
-          tap({
-            next(x) {
-              listing.push(['N', x]);
-            },
-            error(x) {
-              listing.push(['E', x]);
-            },
-            complete() {
-              listing.push(['C']);
-            },
-          }),
-          ignoreElements()
-        ),
-    },
+  })({
+    listing: (actions) =>
+      merge(
+        actions.ofType(routerActions.Navigate),
+        actions.ofType(routerActions.NavigationRequested),
+        actions.ofType(routerActions.NavigationStarted),
+        actions.ofType(routerActions.NavigationCompleted),
+        actions.ofType(routerActions.NavigationCanceled),
+        actions.ofType(routerActions.RouteResolved),
+        actions.ofType(routerActions.RouteCommitted)
+      ).pipe(
+        tap({
+          next(x) {
+            listing.push(['N', x]);
+          },
+          error(x) {
+            listing.push(['E', x]);
+          },
+          complete() {
+            listing.push(['C']);
+          },
+        }),
+        ignoreElements()
+      ),
   });
 
-  store.registerEffect(listingEffect);
-  store.registerEffect(routerEffect);
+  const container = createContainer();
 
-  actions.subscribe((action) => store.dispatch(action));
+  const actionsRef = container.use(actionsComponent);
+  container.use(listingEffect);
+  container.use(routing);
+
+  actions.subscribe((action) => actionsRef.component.dispatch(action));
 
   return {
-    router,
+    routerActions,
     listing,
     parentRouting,
     childRouting,
@@ -133,11 +169,11 @@ function createTestHarness(
 describe('createRouterEffect', () => {
   it('should emit navigation event', () => {
     const actions = new Subject<Action<any>>();
-    const { router, listing, parentRouting, childRouting } =
+    const { routerActions, listing, parentRouting, childRouting } =
       createTestHarness(actions);
 
     actions.next(
-      router.actions.NavigationRequested({
+      routerActions.NavigationRequested({
         location: childRoute({
           params: {
             parentId: 42,
@@ -156,7 +192,7 @@ describe('createRouterEffect', () => {
       hash: '',
     };
 
-    const activeParentRoute: ActiveRoute<any, any, any> = {
+    const activeParentRoute: RouteObject = {
       id: parentRouting.id,
       path: ['parent', '42'],
       search: undefined,
@@ -166,7 +202,7 @@ describe('createRouterEffect', () => {
       },
     };
 
-    const activeChildRoute: ActiveRoute<any, any, any> = {
+    const activeChildRoute: RouteObject = {
       id: childRouting.id,
       path: ['child', '7'],
       search: undefined,
@@ -178,44 +214,44 @@ describe('createRouterEffect', () => {
     };
     expect(listing).toEqual(
       [
-        router.actions.NavigationRequested({
+        routerActions.NavigationRequested({
           origin: 'push',
           location: activeLocation,
           state: null,
           key: 'key',
         }),
-        router.actions.NavigationStarted({
+        routerActions.NavigationStarted({
           origin: 'push',
           location: activeLocation,
           state: null,
           key: 'key',
           routes: [activeParentRoute, activeChildRoute],
         }),
-        router.actions.RouteResolved({
+        routerActions.RouteResolved({
           status: 'activated',
           activatedLocation: activeLocation,
           activatedRoute: activeParentRoute,
           activatedRoutes: [activeParentRoute, activeChildRoute],
         }),
-        router.actions.RouteResolved({
+        routerActions.RouteResolved({
           status: 'activated',
           activatedLocation: activeLocation,
           activatedRoute: activeChildRoute,
           activatedRoutes: [activeParentRoute, activeChildRoute],
         }),
-        router.actions.RouteCommitted({
+        routerActions.RouteCommitted({
           status: 'activated',
           activatedLocation: activeLocation,
           activatedRoute: activeParentRoute,
           activatedRoutes: [activeParentRoute, activeChildRoute],
         }),
-        router.actions.RouteCommitted({
+        routerActions.RouteCommitted({
           status: 'activated',
           activatedLocation: activeLocation,
           activatedRoute: activeChildRoute,
           activatedRoutes: [activeParentRoute, activeChildRoute],
         }),
-        router.actions.NavigationCompleted({
+        routerActions.NavigationCompleted({
           origin: 'push',
           location: activeLocation,
           state: null,
@@ -230,11 +266,11 @@ describe('createRouterEffect', () => {
     it('should emit navigation event', () => {
       const actions = new Subject<Action<any>>();
       const resolveParent = () => of(false);
-      const { router, listing, parentRouting, childRouting } =
-        createTestHarness(actions, { resolveParent });
+      const { routerActions, listing, parentRouting, childRouting } =
+        createTestHarness(actions, { checkParent: resolveParent });
 
       actions.next(
-        router.actions.NavigationRequested({
+        routerActions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 42,
@@ -253,7 +289,7 @@ describe('createRouterEffect', () => {
         hash: '',
       };
 
-      const activeParentRoute: ActiveRoute<any, any, any> = {
+      const activeParentRoute: RouteObject = {
         id: parentRouting.id,
         path: ['parent', '42'],
         search: undefined,
@@ -263,7 +299,7 @@ describe('createRouterEffect', () => {
         },
       };
 
-      const activeChildRoute: ActiveRoute<any, any, any> = {
+      const activeChildRoute: RouteObject = {
         id: childRouting.id,
         path: ['child', '7'],
         search: undefined,
@@ -275,20 +311,20 @@ describe('createRouterEffect', () => {
       };
       expect(listing).toEqual(
         [
-          router.actions.NavigationRequested({
+          routerActions.NavigationRequested({
             origin: 'push',
             location: activeLocation,
             state: null,
             key: 'key',
           }),
-          router.actions.NavigationStarted({
+          routerActions.NavigationStarted({
             origin: 'push',
             location: activeLocation,
             state: null,
             key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.NavigationCanceled({
+          routerActions.NavigationCanceled({
             reason: 'intercepted',
             origin: 'push',
             location: activeLocation,
@@ -305,11 +341,11 @@ describe('createRouterEffect', () => {
     it('should emit navigation event', () => {
       const actions = new Subject<Action<any>>();
       const resolveChild = () => of(false);
-      const { router, listing, parentRouting, childRouting } =
-        createTestHarness(actions, { resolveChild });
+      const { routerActions, listing, parentRouting, childRouting } =
+        createTestHarness(actions, { checkChild: resolveChild });
 
       actions.next(
-        router.actions.NavigationRequested({
+        routerActions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 42,
@@ -328,7 +364,7 @@ describe('createRouterEffect', () => {
         hash: '',
       };
 
-      const activeParentRoute: ActiveRoute<any, any, any> = {
+      const activeParentRoute: RouteObject = {
         id: parentRouting.id,
         path: ['parent', '42'],
         search: undefined,
@@ -338,7 +374,7 @@ describe('createRouterEffect', () => {
         },
       };
 
-      const activeChildRoute: ActiveRoute<any, any, any> = {
+      const activeChildRoute: RouteObject = {
         id: childRouting.id,
         path: ['child', '7'],
         search: undefined,
@@ -350,20 +386,20 @@ describe('createRouterEffect', () => {
       };
       expect(listing).toEqual(
         [
-          router.actions.NavigationRequested({
+          routerActions.NavigationRequested({
             origin: 'push',
             location: activeLocation,
             state: null,
             key: 'key',
           }),
-          router.actions.NavigationStarted({
+          routerActions.NavigationStarted({
             origin: 'push',
             location: activeLocation,
             state: null,
             key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.NavigationCanceled({
+          routerActions.NavigationCanceled({
             reason: 'intercepted',
             origin: 'push',
             location: activeLocation,
@@ -379,9 +415,7 @@ describe('createRouterEffect', () => {
   describe('when parent rule resolves with path', () => {
     it('should emit navigation event', () => {
       const actions = new Subject<Action<any>>();
-      const resolveParent = (
-        context: RoutingRuleContext<any, any, any, any, any>
-      ) => {
+      const resolveParent = (context: RoutingRuleContext<any>) => {
         if (context.location.pathname === 'parent/42/child/7') {
           return of(
             childRoute({
@@ -395,11 +429,11 @@ describe('createRouterEffect', () => {
           return of(true);
         }
       };
-      const { router, listing, parentRouting, childRouting } =
-        createTestHarness(actions, { resolveParent });
+      const { routerActions, listing, parentRouting, childRouting } =
+        createTestHarness(actions, { checkParent: resolveParent });
 
       actions.next(
-        router.actions.NavigationRequested({
+        routerActions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 42,
@@ -418,7 +452,7 @@ describe('createRouterEffect', () => {
         hash: '',
       };
 
-      const activeParentRoute: ActiveRoute<any, any, any> = {
+      const activeParentRoute: RouteObject = {
         id: parentRouting.id,
         path: ['parent', '42'],
         search: undefined,
@@ -428,7 +462,7 @@ describe('createRouterEffect', () => {
         },
       };
 
-      const activeChildRoute: ActiveRoute<any, any, any> = {
+      const activeChildRoute: RouteObject = {
         id: childRouting.id,
         path: ['child', '7'],
         search: undefined,
@@ -445,7 +479,7 @@ describe('createRouterEffect', () => {
         hash: '',
       };
 
-      const redirectedParentRoute: ActiveRoute<any, any, any> = {
+      const redirectedParentRoute: RouteObject = {
         id: parentRouting.id,
         path: ['parent', '43'],
         search: undefined,
@@ -455,7 +489,7 @@ describe('createRouterEffect', () => {
         },
       };
 
-      const redirectedChildRoute: ActiveRoute<any, any, any> = {
+      const redirectedChildRoute: RouteObject = {
         id: childRouting.id,
         path: ['child', '8'],
         search: undefined,
@@ -467,20 +501,20 @@ describe('createRouterEffect', () => {
       };
       expect(listing).toEqual(
         [
-          router.actions.NavigationRequested({
+          routerActions.NavigationRequested({
             origin: 'push',
             location: activeLocation,
             state: null,
             key: 'key',
           }),
-          router.actions.NavigationStarted({
+          routerActions.NavigationStarted({
             origin: 'push',
             location: activeLocation,
             state: null,
             key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.NavigationCanceled({
+          routerActions.NavigationCanceled({
             reason: 'redirected',
             origin: 'push',
             location: activeLocation,
@@ -488,44 +522,44 @@ describe('createRouterEffect', () => {
             key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.NavigationRequested({
+          routerActions.NavigationRequested({
             origin: 'push',
             location: redirectedLocation,
             state: null,
             key: 'key',
           }),
-          router.actions.NavigationStarted({
+          routerActions.NavigationStarted({
             origin: 'push',
             location: redirectedLocation,
             state: null,
             key: 'key',
             routes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteResolved({
+          routerActions.RouteResolved({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedParentRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteResolved({
+          routerActions.RouteResolved({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedChildRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteCommitted({
+          routerActions.RouteCommitted({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedParentRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteCommitted({
+          routerActions.RouteCommitted({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedChildRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.NavigationCompleted({
+          routerActions.NavigationCompleted({
             origin: 'push',
             location: redirectedLocation,
             state: null,
@@ -540,9 +574,7 @@ describe('createRouterEffect', () => {
   describe('when child rule resolves with path', () => {
     it('should emit navigation event', () => {
       const actions = new Subject<Action<any>>();
-      const resolveChild = (
-        context: RoutingRuleContext<any, any, any, any, any>
-      ) => {
+      const resolveChild = (context: RoutingRuleContext<any>) => {
         if (context.location.pathname === 'parent/42/child/7') {
           return of(
             childRoute({
@@ -556,11 +588,11 @@ describe('createRouterEffect', () => {
           return of(true);
         }
       };
-      const { router, listing, parentRouting, childRouting } =
-        createTestHarness(actions, { resolveChild });
+      const { routerActions, listing, parentRouting, childRouting } =
+        createTestHarness(actions, { checkChild: resolveChild });
 
       actions.next(
-        router.actions.NavigationRequested({
+        routerActions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 42,
@@ -579,7 +611,7 @@ describe('createRouterEffect', () => {
         hash: '',
       };
 
-      const activeParentRoute: ActiveRoute<any, any, any> = {
+      const activeParentRoute: RouteObject = {
         id: parentRouting.id,
         path: ['parent', '42'],
         search: undefined,
@@ -589,7 +621,7 @@ describe('createRouterEffect', () => {
         },
       };
 
-      const activeChildRoute: ActiveRoute<any, any, any> = {
+      const activeChildRoute: RouteObject = {
         id: childRouting.id,
         path: ['child', '7'],
         search: undefined,
@@ -606,7 +638,7 @@ describe('createRouterEffect', () => {
         hash: '',
       };
 
-      const redirectedParentRoute: ActiveRoute<any, any, any> = {
+      const redirectedParentRoute: RouteObject = {
         id: parentRouting.id,
         path: ['parent', '43'],
         search: undefined,
@@ -616,7 +648,7 @@ describe('createRouterEffect', () => {
         },
       };
 
-      const redirectedChildRoute: ActiveRoute<any, any, any> = {
+      const redirectedChildRoute: RouteObject = {
         id: childRouting.id,
         path: ['child', '8'],
         search: undefined,
@@ -628,20 +660,20 @@ describe('createRouterEffect', () => {
       };
       expect(listing).toEqual(
         [
-          router.actions.NavigationRequested({
+          routerActions.NavigationRequested({
             location: activeLocation,
             state: null,
             key: 'key',
             origin: 'push',
           }),
-          router.actions.NavigationStarted({
+          routerActions.NavigationStarted({
             origin: 'push',
             location: activeLocation,
             state: null,
             key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.NavigationCanceled({
+          routerActions.NavigationCanceled({
             reason: 'redirected',
             origin: 'push',
             location: activeLocation,
@@ -649,44 +681,44 @@ describe('createRouterEffect', () => {
             key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.NavigationRequested({
+          routerActions.NavigationRequested({
             location: redirectedLocation,
             state: null,
             key: 'key',
             origin: 'push',
           }),
-          router.actions.NavigationStarted({
+          routerActions.NavigationStarted({
             origin: 'push',
             location: redirectedLocation,
             state: null,
             key: 'key',
             routes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteResolved({
+          routerActions.RouteResolved({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedParentRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteResolved({
+          routerActions.RouteResolved({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedChildRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteCommitted({
+          routerActions.RouteCommitted({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedParentRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteCommitted({
+          routerActions.RouteCommitted({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedChildRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.NavigationCompleted({
+          routerActions.NavigationCompleted({
             origin: 'push',
             location: redirectedLocation,
             state: null,
@@ -703,11 +735,11 @@ describe('createRouterEffect', () => {
       const actions = new Subject<Action<any>>();
       let resolveParentSubject: Subject<Location | boolean>;
       const resolveParent = () => (resolveParentSubject = new Subject());
-      const { router, listing, parentRouting, childRouting } =
-        createTestHarness(actions, { resolveParent });
+      const { routerActions, listing, parentRouting, childRouting } =
+        createTestHarness(actions, { checkParent: resolveParent });
 
       actions.next(
-        router.actions.NavigationRequested({
+        routerActions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 42,
@@ -721,7 +753,7 @@ describe('createRouterEffect', () => {
       );
 
       actions.next(
-        router.actions.NavigationRequested({
+        routerActions.NavigationRequested({
           location: childRoute({
             params: {
               parentId: 43,
@@ -743,7 +775,7 @@ describe('createRouterEffect', () => {
         hash: '',
       };
 
-      const activeParentRoute: ActiveRoute<any, any, any> = {
+      const activeParentRoute: RouteObject = {
         id: parentRouting.id,
         path: ['parent', '42'],
         search: undefined,
@@ -753,7 +785,7 @@ describe('createRouterEffect', () => {
         },
       };
 
-      const activeChildRoute: ActiveRoute<any, any, any> = {
+      const activeChildRoute: RouteObject = {
         id: childRouting.id,
         path: ['child', '7'],
         search: undefined,
@@ -770,7 +802,7 @@ describe('createRouterEffect', () => {
         hash: '',
       };
 
-      const redirectedParentRoute: ActiveRoute<any, any, any> = {
+      const redirectedParentRoute: RouteObject = {
         id: parentRouting.id,
         path: ['parent', '43'],
         search: undefined,
@@ -780,7 +812,7 @@ describe('createRouterEffect', () => {
         },
       };
 
-      const redirectedChildRoute: ActiveRoute<any, any, any> = {
+      const redirectedChildRoute: RouteObject = {
         id: childRouting.id,
         path: ['child', '8'],
         search: undefined,
@@ -792,26 +824,26 @@ describe('createRouterEffect', () => {
       };
       expect(listing).toEqual(
         [
-          router.actions.NavigationRequested({
+          routerActions.NavigationRequested({
             location: activeLocation,
             state: null,
             key: 'key',
             origin: 'push',
           }),
-          router.actions.NavigationStarted({
+          routerActions.NavigationStarted({
             origin: 'push',
             location: activeLocation,
             state: null,
             key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.NavigationRequested({
+          routerActions.NavigationRequested({
             location: redirectedLocation,
             state: null,
             key: 'key',
             origin: 'push',
           }),
-          router.actions.NavigationCanceled({
+          routerActions.NavigationCanceled({
             reason: 'overridden',
             origin: 'push',
             location: activeLocation,
@@ -819,38 +851,38 @@ describe('createRouterEffect', () => {
             key: 'key',
             routes: [activeParentRoute, activeChildRoute],
           }),
-          router.actions.NavigationStarted({
+          routerActions.NavigationStarted({
             origin: 'push',
             location: redirectedLocation,
             state: null,
             key: 'key',
             routes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteResolved({
+          routerActions.RouteResolved({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedParentRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteResolved({
+          routerActions.RouteResolved({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedChildRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteCommitted({
+          routerActions.RouteCommitted({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedParentRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.RouteCommitted({
+          routerActions.RouteCommitted({
             status: 'activated',
             activatedLocation: redirectedLocation,
             activatedRoute: redirectedChildRoute,
             activatedRoutes: [redirectedParentRoute, redirectedChildRoute],
           }),
-          router.actions.NavigationCompleted({
+          routerActions.NavigationCompleted({
             origin: 'push',
             location: redirectedLocation,
             state: null,

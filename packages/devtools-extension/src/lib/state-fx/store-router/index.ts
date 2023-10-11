@@ -1,4 +1,4 @@
-export * from './active-route';
+export * from './route-object';
 export * from './encoder';
 export * from './encoder-factories';
 export * from './encoder-factory';
@@ -12,7 +12,7 @@ export * from './path-param';
 export * from './route';
 export * from './router';
 export * from './router-actions';
-export * from './router-reducer';
+export * from './router-store';
 export * from './router-selectors';
+export * from './route-config';
 export * from './routing';
-export * from './start-router';

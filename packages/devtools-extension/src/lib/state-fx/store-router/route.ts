@@ -39,7 +39,7 @@ type ExtractHash<TRoute> = TRoute extends Route<unknown, unknown, infer THash>
   ? THash
   : never;
 
-export interface Route<TParams, TSearch, THash> {
+export interface Route<TParams = unknown, TSearch = unknown, THash = unknown> {
   readonly id: number;
   readonly parent: Route<any, any, any> | undefined;
   readonly path: string;

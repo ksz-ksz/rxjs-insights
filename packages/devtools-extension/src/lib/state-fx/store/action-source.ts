@@ -3,6 +3,7 @@ import { Action } from '@lib/state-fx/store';
 
 export class ActionSource<T> extends Observable<Action<T>> {
   private readonly subscribers: Subscriber<Action<T>>[] = [];
+  private currentSubscribers: Subscriber<Action<T>>[] | undefined = undefined;
 
   constructor(
     private readonly namespace: string,
@@ -10,10 +11,12 @@ export class ActionSource<T> extends Observable<Action<T>> {
   ) {
     super((subscriber) => {
       this.subscribers.push(subscriber);
+      this.currentSubscribers = undefined;
 
       return () => {
         const indexOfSubscriber = this.subscribers.indexOf(subscriber);
         this.subscribers.splice(indexOfSubscriber, 1);
+        this.currentSubscribers = undefined;
       };
     });
   }
@@ -27,7 +30,10 @@ export class ActionSource<T> extends Observable<Action<T>> {
   }
 
   dispatchAction(action: Action<T>) {
-    for (const subscriber of this.subscribers) {
+    if (this.currentSubscribers === undefined) {
+      this.currentSubscribers = Array.from(this.subscribers);
+    }
+    for (const subscriber of this.currentSubscribers) {
       subscriber.next(action);
     }
   }

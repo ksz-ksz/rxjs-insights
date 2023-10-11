@@ -1,5 +1,5 @@
 import { SelectorFunction } from '@lib/state-fx/store';
-import { RouterState } from './router-reducer';
+import { RouterState } from './router-store';
 
 export interface RouterSelectors<TNamespace extends string> {
   selectState: SelectorFunction<

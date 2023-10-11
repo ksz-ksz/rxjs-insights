@@ -1,6 +1,14 @@
 import { Deps, DepsState } from './deps';
 import { Actions, actionsComponent } from './actions';
-import { catchError, merge, Observable, of, throwError } from 'rxjs';
+import {
+  catchError,
+  merge,
+  Observable,
+  observeOn,
+  of,
+  queueScheduler,
+  throwError,
+} from 'rxjs';
 import { Action } from '@lib/state-fx/store';
 import { Component, Container, InitializedComponent } from './container';
 import { createStoreViewComponent, StoreView } from './store-view';
@@ -61,7 +69,7 @@ export class EffectError extends Error {
   }
 }
 
-function createEffectInstance(
+export function createEffectInstance(
   namespace: string,
   actions: Actions,
   depStoreViews: StoreView<any>[],
@@ -78,6 +86,7 @@ function createEffectInstance(
     next(action) {
       actions.dispatch(action);
     },
+    // TODO: observeOn(queue)?
     // TODO: error, complete?
   });
 

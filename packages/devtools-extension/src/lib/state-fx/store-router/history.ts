@@ -19,9 +19,14 @@ export interface NewEntryOptions {
   mode?: 'push' | 'replace';
 }
 
+// TODO: make it operate with url as string; keep Location for router -> this would require exposing url encoder?
+// TODO: move baseHref to router
+
 export interface History {
   currentEntry: HistoryEntry;
   currentEntryOrigin: HistoryEntryOrigin;
+  parse(pathname: string): Location;
+  format(location: Location): string;
   go(delta: number): void;
   forward(): void;
   back(): void;
@@ -107,6 +112,14 @@ class BrowserHistory implements History {
         listener(this.currentEntry);
       }
     });
+  }
+
+  parse(pathname: string): Location {
+    throw new Error('not impl');
+  }
+
+  format(location: Location): string {
+    return formatLocation(location, this.baseHref);
   }
 
   go(delta: number) {
@@ -201,6 +214,14 @@ class MemoryHistory implements History {
       index: this.currentIndex,
       entry: this.currentEntry,
     });
+  }
+
+  parse(pathname: string): Location {
+    throw new Error('not impl');
+  }
+
+  format(location: Location): string {
+    return formatLocation(location, '');
   }
 
   go(delta: number) {

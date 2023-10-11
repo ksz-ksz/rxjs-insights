@@ -2,7 +2,7 @@ import { statusSelector } from '@app/store/status';
 import { targetStateSelector } from '@app/selectors/insights-selectors';
 import {
   ActivatedRoutingRuleContext,
-  createRoutingFactory,
+  createRouteConfigFactory,
   DeactivatedRoutingRuleContext,
   Location,
   RoutingRule,
@@ -19,7 +19,7 @@ import {
   targetRoute,
 } from '@app/routes';
 
-const createRouting = createRoutingFactory<unknown, unknown>();
+const createRouting = createRouteConfigFactory<unknown, unknown>();
 
 function redirect<TState, TConfig, TParams, TSearch, THash>(
   fn: (
@@ -33,7 +33,7 @@ function redirect<TState, TConfig, TParams, TSearch, THash>(
   ) => Location | Observable<Location>
 ): RoutingRule<TState, TConfig, TParams, TSearch, THash> {
   return {
-    resolve(
+    check(
       context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
     ): Observable<Location | boolean> {
       if (context.status === 'activated') {
@@ -62,7 +62,7 @@ function canActivate<TState, TConfig, TParams, TSearch, THash>(
   ) => boolean | Observable<boolean>
 ): RoutingRule<TState, TConfig, TParams, TSearch, THash> {
   return {
-    resolve(
+    check(
       context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
     ): Observable<Location | boolean> {
       if (context.status === 'activated') {
@@ -91,7 +91,7 @@ function canDeactivate<TState, TConfig, TParams, TSearch, THash>(
   ) => boolean | Observable<boolean>
 ): RoutingRule<TState, TConfig, TParams, TSearch, THash> {
   return {
-    resolve(
+    check(
       context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
     ): Observable<Location | boolean> {
       if (context.status === 'deactivated') {

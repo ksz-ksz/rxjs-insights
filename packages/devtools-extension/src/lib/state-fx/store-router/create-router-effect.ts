@@ -1,19 +1,20 @@
 import {
   Action,
   Actions,
-  Component,
-  createEffect,
-  createSelectorFunction,
+  ActionTypes,
+  createEffectInstance,
   Effect,
   StateSelectorFunction,
   Store,
-  StoreView,
-  typeOf,
 } from '../store';
-import { NavigationRequested, RouteEvent } from './router-actions';
+import {
+  NavigationRequested,
+  RouteEvent,
+  RouterActions,
+} from './router-actions';
 import { Router } from './router';
 import { HistoryEntry, Location } from './history';
-import { ActiveRoute } from './active-route';
+import { RouteObject } from './route-object';
 import {
   concat,
   concatMap,
@@ -24,66 +25,64 @@ import {
   of,
   tap,
 } from 'rxjs';
-import { ActiveRouting } from './routing';
-import { RouterState } from './router-reducer';
+import { RouteContext, RoutingRule } from './route-config';
+import { RouterState } from './router-store';
 import { diffRoutes } from './diff-routes';
-import { fromHistory } from './start-router';
+import { fromHistory } from './routing';
+import { ComponentsResolver } from './components-resolver';
 
-function matchRoutes<TConfig>(
-  router: Router<any, TConfig>,
-  location: Location
-) {
+function matchRoutes<TData>(router: Router<TData>, location: Location) {
   const matches = router.match(location.pathname);
-  const routes: ActiveRoute<any, any, any>[] = [];
+  const routes: RouteObject<any, any, any>[] = [];
   let params = {};
   for (const match of matches) {
     params = { ...params, ...match.params };
     routes.push({
-      id: match.routing.id,
+      id: match.routeConfig.id,
       path: match.path,
       params: params,
-      search: match.routing.route.search?.decode(location.search).value,
-      hash: match.routing.route.hash?.decode(location.hash).value,
+      search: match.routeConfig.route.search?.decode(location.search).value,
+      hash: match.routeConfig.route.hash?.decode(location.hash).value,
     });
   }
   return routes;
 }
 
-function createRuleRoute(
-  route: ActiveRoute<any, any, any>,
-  router: Router<any, any>
-): ActiveRouting<any, any, any, any, any> {
+function createRouteContext<TData>(
+  route: RouteObject,
+  router: Router<TData>
+): RouteContext<TData> {
   return {
     route,
-    routing: router.getRouting(route.id),
+    routeConfig: router.getRouteConfig(route.id),
   };
 }
 
-function createResolveObservable<TNamespace extends string, TConfig>(
-  store: Store<any>,
-  router: Router<TNamespace, TConfig>,
+function createResolveObservable<TNamespace extends string, TData>(
+  routingRulesResolver: ComponentsResolver<RoutingRule<TData>>,
+  router: Router<TData>,
   nextLocation: Location,
   prevLocation: Location | undefined,
-  nextRoutes: ActiveRoute<any, any, any>[],
-  prevRoutes: ActiveRoute<any, any, any>[],
-  updatedRoutes: [ActiveRoute<any, any, any>, ActiveRoute<any, any, any>][],
-  activatedRoutes: ActiveRoute<any, any, any>[],
-  deactivatedRoutes: ActiveRoute<any, any, any>[]
+  nextRoutes: RouteObject<any, any, any>[],
+  prevRoutes: RouteObject<any, any, any>[],
+  updatedRoutes: [RouteObject<any, any, any>, RouteObject<any, any, any>][],
+  activatedRoutes: RouteObject<any, any, any>[],
+  deactivatedRoutes: RouteObject<any, any, any>[]
 ) {
   const resolve: Observable<Location | boolean>[] = [];
   for (const deactivatedRoute of deactivatedRoutes) {
-    const routing = router.getRouting(deactivatedRoute.id);
+    const routing = router.getRouteConfig(deactivatedRoute.id);
     if (routing.rules !== undefined) {
-      for (let rule of routing.rules) {
-        if (rule.resolve !== undefined) {
+      for (const rule of routing.rules) {
+        const resolvedRule = routingRulesResolver.resolve(rule);
+        if (resolvedRule.check !== undefined) {
           resolve.push(
-            rule.resolve({
+            resolvedRule.check({
               status: 'deactivated',
               location: nextLocation,
               prevLocation: prevLocation,
-              prevRoute: createRuleRoute(deactivatedRoute, router),
+              prevRoute: createRouteContext(deactivatedRoute, router),
               prevRoutes: createRuleRoutes(prevRoutes, router),
-              store,
             })
           );
         }
@@ -91,20 +90,20 @@ function createResolveObservable<TNamespace extends string, TConfig>(
     }
   }
   for (const [prevUpdatedRoute, nextUpdateRoute] of updatedRoutes) {
-    const routing = router.getRouting(nextUpdateRoute.id);
+    const routing = router.getRouteConfig(nextUpdateRoute.id);
     if (routing.rules !== undefined) {
-      for (let rule of routing.rules) {
-        if (rule.resolve !== undefined) {
+      for (const rule of routing.rules) {
+        const resolvedRule = routingRulesResolver.resolve(rule);
+        if (resolvedRule.check !== undefined) {
           resolve.push(
-            rule.resolve({
+            resolvedRule.check({
               status: 'updated',
               location: nextLocation,
               prevLocation: prevLocation,
-              route: createRuleRoute(nextUpdateRoute, router),
+              route: createRouteContext(nextUpdateRoute, router),
               routes: createRuleRoutes(nextRoutes, router),
-              prevRoute: createRuleRoute(prevUpdatedRoute, router),
+              prevRoute: createRouteContext(prevUpdatedRoute, router),
               prevRoutes: createRuleRoutes(prevRoutes, router),
-              store,
             })
           );
         }
@@ -112,18 +111,18 @@ function createResolveObservable<TNamespace extends string, TConfig>(
     }
   }
   for (const activatedRoute of activatedRoutes) {
-    const routing = router.getRouting(activatedRoute.id);
+    const routing = router.getRouteConfig(activatedRoute.id);
     if (routing.rules !== undefined) {
-      for (let rule of routing.rules) {
-        if (rule.resolve !== undefined) {
+      for (const rule of routing.rules) {
+        const resolvedRule = routingRulesResolver.resolve(rule);
+        if (resolvedRule.check !== undefined) {
           resolve.push(
-            rule.resolve({
+            resolvedRule.check({
               status: 'activated',
               location: nextLocation,
               prevLocation: prevLocation,
-              route: createRuleRoute(activatedRoute, router),
+              route: createRouteContext(activatedRoute, router),
               routes: createRuleRoutes(nextRoutes, router),
-              store,
             })
           );
         }
@@ -133,31 +132,31 @@ function createResolveObservable<TNamespace extends string, TConfig>(
   return concat(...resolve);
 }
 
-function createCommitObservable<TNamespace extends string, TConfig>(
-  store: Store<any>,
-  router: Router<TNamespace, TConfig>,
+function createCommitObservable<TNamespace extends string, TData>(
+  routingRulesResolver: ComponentsResolver<RoutingRule<TData>>,
+  router: Router<TData>,
   nextLocation: Location,
   prevLocation: Location | undefined,
-  nextRoutes: ActiveRoute<any, any, any>[],
-  prevRoutes: ActiveRoute<any, any, any>[],
-  updatedRoutes: [ActiveRoute<any, any, any>, ActiveRoute<any, any, any>][],
-  activatedRoutes: ActiveRoute<any, any, any>[],
-  deactivatedRoutes: ActiveRoute<any, any, any>[]
+  nextRoutes: RouteObject<any, any, any>[],
+  prevRoutes: RouteObject<any, any, any>[],
+  updatedRoutes: [RouteObject<any, any, any>, RouteObject<any, any, any>][],
+  activatedRoutes: RouteObject<any, any, any>[],
+  deactivatedRoutes: RouteObject<any, any, any>[]
 ) {
   const commit: Observable<void>[] = [];
   for (const deactivatedRoute of deactivatedRoutes) {
-    const routing = router.getRouting(deactivatedRoute.id);
+    const routing = router.getRouteConfig(deactivatedRoute.id);
     if (routing.rules !== undefined) {
-      for (let rule of routing.rules) {
-        if (rule.commit !== undefined) {
+      for (const rule of routing.rules) {
+        const resolvedRule = routingRulesResolver.resolve(rule);
+        if (resolvedRule.commit !== undefined) {
           commit.push(
-            rule.commit({
+            resolvedRule.commit({
               status: 'deactivated',
               location: nextLocation,
               prevLocation: prevLocation,
-              prevRoute: createRuleRoute(deactivatedRoute, router),
+              prevRoute: createRouteContext(deactivatedRoute, router),
               prevRoutes: createRuleRoutes(prevRoutes, router),
-              store,
             })
           );
         }
@@ -165,20 +164,20 @@ function createCommitObservable<TNamespace extends string, TConfig>(
     }
   }
   for (const [prevUpdatedRoute, nextUpdateRoute] of updatedRoutes) {
-    const routing = router.getRouting(nextUpdateRoute.id);
+    const routing = router.getRouteConfig(nextUpdateRoute.id);
     if (routing.rules !== undefined) {
-      for (let rule of routing.rules) {
-        if (rule.commit !== undefined) {
+      for (const rule of routing.rules) {
+        const resolvedRule = routingRulesResolver.resolve(rule);
+        if (resolvedRule.commit !== undefined) {
           commit.push(
-            rule.commit({
+            resolvedRule.commit({
               status: 'updated',
               location: nextLocation,
               prevLocation: prevLocation,
-              route: createRuleRoute(nextUpdateRoute, router),
+              route: createRouteContext(nextUpdateRoute, router),
               routes: createRuleRoutes(nextRoutes, router),
-              prevRoute: createRuleRoute(prevUpdatedRoute, router),
+              prevRoute: createRouteContext(prevUpdatedRoute, router),
               prevRoutes: createRuleRoutes(prevRoutes, router),
-              store,
             })
           );
         }
@@ -186,18 +185,18 @@ function createCommitObservable<TNamespace extends string, TConfig>(
     }
   }
   for (const activatedRoute of activatedRoutes) {
-    const routing = router.getRouting(activatedRoute.id);
+    const routing = router.getRouteConfig(activatedRoute.id);
     if (routing.rules !== undefined) {
-      for (let rule of routing.rules) {
-        if (rule.commit !== undefined) {
+      for (const rule of routing.rules) {
+        const resolvedRule = routingRulesResolver.resolve(rule);
+        if (resolvedRule.commit !== undefined) {
           commit.push(
-            rule.commit({
+            resolvedRule.commit({
               status: 'activated',
               location: nextLocation,
               prevLocation: prevLocation,
-              route: createRuleRoute(activatedRoute, router),
+              route: createRouteContext(activatedRoute, router),
               routes: createRuleRoutes(nextRoutes, router),
-              store,
             })
           );
         }
@@ -207,14 +206,14 @@ function createCommitObservable<TNamespace extends string, TConfig>(
   return concat(...commit);
 }
 
-function createEvents<TNamespace extends string, TConfig>(
+function createEvents<TNamespace extends string, TData>(
   nextLocation: Location,
   prevLocation: Location | undefined,
-  nextRoutes: ActiveRoute<any, any, any>[],
-  prevRoutes: ActiveRoute<any, any, any>[],
-  updatedRoutes: [ActiveRoute<any, any, any>, ActiveRoute<any, any, any>][],
-  activatedRoutes: ActiveRoute<any, any, any>[],
-  deactivatedRoutes: ActiveRoute<any, any, any>[]
+  nextRoutes: RouteObject<any, any, any>[],
+  prevRoutes: RouteObject<any, any, any>[],
+  updatedRoutes: [RouteObject<any, any, any>, RouteObject<any, any, any>][],
+  activatedRoutes: RouteObject<any, any, any>[],
+  deactivatedRoutes: RouteObject<any, any, any>[]
 ) {
   const events: RouteEvent<any, any, any>[] = [];
   for (const deactivatedRoute of deactivatedRoutes) {
@@ -247,28 +246,30 @@ function createEvents<TNamespace extends string, TConfig>(
   return events;
 }
 
-function createRuleRoutes(
-  routes: ActiveRoute<any, any, any>[],
-  router: Router<any, any>
-): ActiveRouting<any, any, any, any, any>[] {
-  return routes.map((route) => createRuleRoute(route, router));
+function createRuleRoutes<TData>(
+  routes: RouteObject<TData>[],
+  router: Router<TData>
+): RouteContext<TData>[] {
+  return routes.map((route) => createRouteContext(route, router));
 }
 
-function createNavigateObservable<TNamespace extends string, TState, TConfig>(
+function createNavigateObservable<TState, TData>(
+  routingRulesResolver: ComponentsResolver<RoutingRule<TData>>,
   action: Action<NavigationRequested>,
   actions: Actions,
-  router: Router<TNamespace, TConfig>,
+  router: Router<TData>,
+  routerActions: ActionTypes<RouterActions>,
   getRouterState: StateSelectorFunction<
-    Record<TNamespace, RouterState>,
+    Record<string, RouterState>,
     [],
     RouterState
   >,
-  store: StoreView<Record<TNamespace, RouterState>>
+  routerStore: Store<string, RouterState>
 ) {
   return new Observable<Action<any>>((subscriber) => {
     {
       const { payload } = action;
-      const prevState = getRouterState(store.getState());
+      const prevState = getRouterState(routerStore.getState());
       const prevLocation = prevState.location;
       const prevRoutes = prevState.routes ?? [];
       const nextLocation = payload.location;
@@ -278,7 +279,7 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
         nextRoutes
       );
       subscriber.next(
-        router.actions.NavigationStarted({
+        routerActions.NavigationStarted({
           origin: payload.origin,
           location: nextLocation,
           state: payload.state,
@@ -287,7 +288,7 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
         })
       );
       const resolve = createResolveObservable(
-        store,
+        routingRulesResolver,
         router,
         nextLocation,
         prevLocation,
@@ -298,7 +299,7 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
         deactivatedRoutes
       );
       const commit = createCommitObservable(
-        store,
+        routingRulesResolver,
         router,
         nextLocation,
         prevLocation,
@@ -321,11 +322,11 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
       let redirected = false;
 
       subscriber.add(
-        actions.ofType(router.actions.NavigationRequested).subscribe({
+        actions.ofType(routerActions.NavigationRequested).subscribe({
           next() {
             if (!redirected) {
               subscriber.next(
-                router.actions.NavigationCanceled({
+                routerActions.NavigationCanceled({
                   reason: 'overridden',
                   origin: payload.origin,
                   location: nextLocation,
@@ -353,7 +354,7 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
             next(value) {
               if (typeof value === 'boolean') {
                 subscriber.next(
-                  router.actions.NavigationCanceled({
+                  routerActions.NavigationCanceled({
                     reason: 'intercepted',
                     origin: payload.origin,
                     location: nextLocation,
@@ -366,7 +367,7 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
               } else {
                 redirected = true;
                 subscriber.next(
-                  router.actions.NavigationCanceled({
+                  routerActions.NavigationCanceled({
                     reason: 'redirected',
                     origin: payload.origin,
                     location: nextLocation,
@@ -376,7 +377,7 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
                   })
                 );
                 subscriber.next(
-                  router.actions.NavigationRequested({
+                  routerActions.NavigationRequested({
                     origin: payload.origin,
                     location: value,
                     state: null,
@@ -392,11 +393,11 @@ function createNavigateObservable<TNamespace extends string, TState, TConfig>(
             complete() {
               subscriber.add(
                 concat(
-                  events.map(router.actions.RouteResolved),
+                  events.map(routerActions.RouteResolved),
                   commit.pipe(ignoreElements()),
-                  events.map(router.actions.RouteCommitted),
+                  events.map(routerActions.RouteCommitted),
                   of(
-                    router.actions.NavigationCompleted({
+                    routerActions.NavigationCompleted({
                       origin: payload.origin,
                       location: nextLocation,
                       state: payload.state,
@@ -433,19 +434,23 @@ function getState(entry: HistoryEntry): RouterHistoryState {
   }
 }
 
-export function createRouterEffect<TNamespace extends string, TConfig>(
-  router: Router<TNamespace, TConfig>,
-  routerStore: Component<Store<TNamespace, RouterState>>
-): Component<Effect> {
-  const getRouterState = createSelectorFunction(router.selectors.selectState);
-  return createEffect({
-    namespace: router.namespace,
-    deps: [routerStore],
-  })({
+export function createRouterEffect<TData>(
+  actions: Actions,
+  router: Router<TData>,
+  routerActions: ActionTypes<RouterActions>,
+  routerStore: Store<string, RouterState>,
+  routingRulesResolver: ComponentsResolver<RoutingRule<TData>>
+): Effect {
+  // TODO: replace with getOwnState or sth
+  function getRouterState(state: { [namespace: string]: RouterState }) {
+    return state[routerStore.namespace];
+  }
+
+  return createEffectInstance('router', actions, [], {
     createNewNavigationRequest(actions) {
-      return actions.ofType(router.actions.Navigate).pipe(
+      return actions.ofType(routerActions.Navigate).pipe(
         map(({ payload }) =>
-          router.actions.NavigationRequested({
+          routerActions.NavigationRequested({
             origin: payload.historyMode ?? 'push',
             location: payload.location,
             state: payload.state,
@@ -458,7 +463,7 @@ export function createRouterEffect<TNamespace extends string, TConfig>(
       return fromHistory(router.history).pipe(
         map((entry) => {
           const { key, state } = getState(entry);
-          return router.actions.NavigationRequested({
+          return routerActions.NavigationRequested({
             origin: 'pop',
             location: entry.location,
             state,
@@ -467,23 +472,25 @@ export function createRouterEffect<TNamespace extends string, TConfig>(
         })
       );
     },
-    handleNavigationRequest(actions, store) {
+    handleNavigationRequest(actions) {
       return actions
-        .ofType(router.actions.NavigationRequested)
+        .ofType(routerActions.NavigationRequested)
         .pipe(
           concatMap((action) =>
             createNavigateObservable(
+              routingRulesResolver,
               action,
               actions,
               router,
+              routerActions,
               getRouterState,
-              store
+              routerStore
             )
           )
         );
     },
     syncHistoryAfterNavigationCompleted(actions) {
-      return actions.ofType(router.actions.NavigationCompleted).pipe(
+      return actions.ofType(routerActions.NavigationCompleted).pipe(
         tap(({ payload }) => {
           const historyState = { state: payload.state, key: payload.key };
           if (payload.origin !== 'pop') {
@@ -496,7 +503,7 @@ export function createRouterEffect<TNamespace extends string, TConfig>(
       );
     },
     syncHistoryAfterNavigationCancelled(actions, deps) {
-      return actions.ofType(router.actions.NavigationCanceled).pipe(
+      return actions.ofType(routerActions.NavigationCanceled).pipe(
         tap(({ payload }) => {
           if (payload.origin === 'pop' && payload.reason === 'intercepted') {
             const state = getRouterState(deps.getState());

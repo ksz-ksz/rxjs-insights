@@ -11,6 +11,12 @@ export interface Store<TNamespace extends string, TState>
   readonly namespace: TNamespace;
 }
 
+export interface StoreComponent<TNamespace extends string, TState>
+  extends Component<Store<TNamespace, TState>> {
+  readonly namespace: TNamespace;
+  readonly deps: Deps;
+}
+
 export interface CreateStoreOptions<
   TNamespace extends string,
   TState,
@@ -73,7 +79,7 @@ export function createStore<
   options: CreateStoreOptions<TNamespace, TState, TDeps>
 ): (
   transitions: StateTransitions<TState, TDeps>
-) => Component<Store<TNamespace, TState>> {
+) => StoreComponent<TNamespace, TState> {
   const { namespace, state, deps = [] } = options;
   return (transitions) =>
     createStoreComponent(namespace, state, deps, transitions);
@@ -194,8 +200,10 @@ function createStoreComponent<TNamespace extends string, TState>(
   state: TState,
   deps: Deps,
   transitions: StateTransitions<TState, Deps>
-): Component<Store<TNamespace, TState>> {
+): StoreComponent<TNamespace, TState> {
   return {
+    namespace,
+    deps,
     init(
       container: Container
     ): InitializedComponent<Store<TNamespace, TState>> {

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { createRoute } from './route';
 import { PathParam } from './path-param';
-import { createRouting } from './routing';
+import { createRouteConfig } from './route-config';
 import { matchRoutes } from './match-routes';
 
 const rootRoute = createRoute({
@@ -31,17 +31,17 @@ const featureDetailsRoute = createRoute({
   },
 });
 
-const homeRouting = createRouting(homeRoute);
+const homeRouting = createRouteConfig(homeRoute);
 
-const featureListRouting = createRouting(featureListRoute);
+const featureListRouting = createRouteConfig(featureListRoute);
 
-const featureDetailsRouting = createRouting(featureDetailsRoute);
+const featureDetailsRouting = createRouteConfig(featureDetailsRoute);
 
-const featureRouting = createRouting(featureRoute, {
+const featureRouting = createRouteConfig(featureRoute, {
   children: [featureListRouting, featureDetailsRouting],
 });
 
-const rootRouting = createRouting(rootRoute, {
+const rootRouting = createRouteConfig(rootRoute, {
   children: [homeRouting, featureRouting],
 });
 

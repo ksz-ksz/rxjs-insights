@@ -1,15 +1,15 @@
-import { ActiveRoute } from './active-route';
+import { RouteObject } from './route-object';
 import { diffRoutes } from './diff-routes';
 
 describe('diff-routes', () => {
   describe('when routes are the same', () => {
     it('should diff', () => {
-      const prevRoutes: Partial<ActiveRoute<any, any, any>>[] = [
+      const prevRoutes: Partial<RouteObject<any, any, any>>[] = [
         { id: 0 },
         { id: 1 },
         { id: 2 },
       ];
-      const nextRoutes: Partial<ActiveRoute<any, any, any>>[] = [
+      const nextRoutes: Partial<RouteObject<any, any, any>>[] = [
         { id: 0 },
         { id: 1 },
         { id: 2 },
@@ -31,12 +31,12 @@ describe('diff-routes', () => {
 
   describe('when has common prefix', () => {
     it('should diff', () => {
-      const prevRoutes: Partial<ActiveRoute<any, any, any>>[] = [
+      const prevRoutes: Partial<RouteObject<any, any, any>>[] = [
         { id: 0 },
         { id: 1 },
         { id: 2 },
       ];
-      const nextRoutes: Partial<ActiveRoute<any, any, any>>[] = [
+      const nextRoutes: Partial<RouteObject<any, any, any>>[] = [
         { id: 0 },
         { id: 1 },
         { id: 3 },
