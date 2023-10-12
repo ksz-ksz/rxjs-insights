@@ -83,10 +83,6 @@ const fakeStore = createStore({
   }),
 });
 
-const view = createStoreView({
-  deps: [fooStore, barStore],
-});
-
 function createTestHarness() {
   const container = createContainer();
 
