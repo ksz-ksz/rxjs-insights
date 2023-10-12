@@ -1,5 +1,5 @@
 import { createRouter } from './router';
-import { Location, createMemoryHistory } from './history';
+import { createMemoryHistory, Location } from './history';
 import { createRoute } from './route';
 import { PathParam } from './path-param';
 import { z } from 'zod';
@@ -12,7 +12,6 @@ import {
   EMPTY,
   ignoreElements,
   merge,
-  NEVER,
   Observable,
   of,
   Subject,
@@ -22,15 +21,12 @@ import {
   Action,
   actionsComponent,
   Component,
-  Container,
   createActions,
   createContainer,
   createEffect,
-  createStore,
   InitializedComponent,
 } from '../store';
 import { createRouterStore } from './router-store';
-import { createRouterEffect } from './create-router-effect';
 import { RouteObject } from './route-object';
 import { RouterActions } from './router-actions';
 import { createRouting } from './routing';
@@ -166,7 +162,7 @@ function createTestHarness(
   };
 }
 
-describe('createRouterEffect', () => {
+describe('routing', () => {
   it('should emit navigation event', () => {
     const actions = new Subject<Action<any>>();
     const { routerActions, listing, parentRouting, childRouting } =
