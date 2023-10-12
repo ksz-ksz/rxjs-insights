@@ -24,7 +24,7 @@ export interface CreateStoreOptions<
 > {
   namespace: TNamespace;
   state: TState;
-  deps?: TDeps;
+  deps?: [...TDeps];
 }
 
 type ExtractActionTypePayload<TActionType> = TActionType extends ActionType<

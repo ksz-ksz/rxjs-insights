@@ -1,4 +1,11 @@
-import { createSelector, createSelectorFunction, createStateSelector, SelectorContext, SelectorFunction, StateSelectorFunction } from './selector';
+import {
+  createSelector,
+  createSelectorFunction,
+  createStateSelector,
+  SelectorContext,
+  SelectorFunction,
+  StateSelectorFunction,
+} from './selector';
 import * as stream from 'stream';
 import { factory } from 'ts-jest/dist/transformers/hoist-jest';
 
@@ -43,7 +50,12 @@ const stateTodoUndefined: State = {
   todos: [todo1, todo2],
 };
 
-interface CallSpec<STATE = any, ARGS extends any[] = any[], RESULT = any, FNS extends string = string> {
+interface CallSpec<
+  STATE = any,
+  ARGS extends any[] = any[],
+  RESULT = any,
+  FNS extends string = string
+> {
   description: string;
   state: STATE;
   args: ARGS;
@@ -72,13 +84,23 @@ class Listing {
   }
 }
 
-interface TestSpec<STATE = any, ARGS extends any[] = any[], RESULT = any, FNS extends string = string> {
+interface TestSpec<
+  STATE = any,
+  ARGS extends any[] = any[],
+  RESULT = any,
+  FNS extends string = string
+> {
   description: string;
   factory: (listing?: Listing) => StateSelectorFunction<STATE, ARGS, RESULT>;
   calls: CallSpec<STATE, ARGS, RESULT, FNS>[];
 }
 
-const testsWithoutArgs: TestSpec<State, [], Todo | undefined, 'selectCurrentTodoId' | 'selectTodos' | 'selectCurrentTodo'>[] = [
+const testsWithoutArgs: TestSpec<
+  State,
+  [],
+  Todo | undefined,
+  'selectCurrentTodoId' | 'selectTodos' | 'selectCurrentTodo'
+>[] = [
   {
     description: 'without args',
     factory: createGetCurrentTodo,
@@ -117,7 +139,8 @@ const testsWithoutArgs: TestSpec<State, [], Todo | undefined, 'selectCurrentTodo
             },
           },
           {
-            description: 'second call when state is different but inputs are the same',
+            description:
+              'second call when state is different but inputs are the same',
             state: { ...stateTodo1 },
             args: [],
             expectedResult: todo1,
@@ -128,7 +151,8 @@ const testsWithoutArgs: TestSpec<State, [], Todo | undefined, 'selectCurrentTodo
             },
           },
           {
-            description: 'second call when state is different and some inputs are not used anymore',
+            description:
+              'second call when state is different and some inputs are not used anymore',
             state: stateTodoUndefined,
             args: [],
             expectedResult: undefined,
@@ -144,7 +168,12 @@ const testsWithoutArgs: TestSpec<State, [], Todo | undefined, 'selectCurrentTodo
   },
 ];
 
-const testsWithArgs: TestSpec<State, [number | undefined], Todo | undefined, 'selectTodos' | 'selectTodoById'>[] = [
+const testsWithArgs: TestSpec<
+  State,
+  [number | undefined],
+  Todo | undefined,
+  'selectTodos' | 'selectTodoById'
+>[] = [
   {
     description: 'with args',
     factory: createGetTodoById,
@@ -160,7 +189,8 @@ const testsWithArgs: TestSpec<State, [number | undefined], Todo | undefined, 'se
         },
         calls: [
           {
-            description: 'second call when state is the same and args are the same',
+            description:
+              'second call when state is the same and args are the same',
             state: stateTodo1,
             args: [todo1.id],
             expectedResult: todo1,
@@ -180,7 +210,8 @@ const testsWithArgs: TestSpec<State, [number | undefined], Todo | undefined, 'se
             },
           },
           {
-            description: 'second call when state is different but inputs are the same',
+            description:
+              'second call when state is different but inputs are the same',
             state: { ...stateTodo1 },
             args: [todo1.id],
             expectedResult: todo1,
@@ -210,7 +241,8 @@ const testsWithArgs: TestSpec<State, [number | undefined], Todo | undefined, 'se
             },
           },
           {
-            description: 'second call when state and args are different and some inputs are not used anymore',
+            description:
+              'second call when state and args are different and some inputs are not used anymore',
             state: stateTodoUndefined,
             args: [undefined],
             expectedResult: undefined,
@@ -225,7 +257,11 @@ const testsWithArgs: TestSpec<State, [number | undefined], Todo | undefined, 'se
   },
 ];
 
-function collectCallChains(callChains: CallSpec[][], call: CallSpec, parentCallChain: CallSpec[] = []) {
+function collectCallChains(
+  callChains: CallSpec[][],
+  call: CallSpec,
+  parentCallChain: CallSpec[] = []
+) {
   const callChain = [...parentCallChain, call];
   callChains.push(callChain);
   if (call.calls) {
@@ -260,7 +296,7 @@ function createSpec(test: TestSpec) {
             target(call.state, ...call.args);
           }
           for (let fn in targetCall.expectedFnRuns) {
-            expect(listing.get(fn), fn).toEqual(targetCall.expectedFnRuns[fn]);
+            expect(listing.get(fn)).toEqual(targetCall.expectedFnRuns[fn]);
           }
         });
       });
@@ -283,16 +319,18 @@ function createGetCurrentTodo(listing?: Listing) {
     listing?.record('selectTodos');
     return state.todos;
   });
-  const selectCurrentTodo = createSelector((context: SelectorContext<State>) => {
-    listing?.record('selectCurrentTodo');
-    const currentTodoId = selectCurrentTodoId(context);
-    if (currentTodoId === undefined) {
-      return undefined;
-    } else {
-      const todos = selectTodos(context);
-      return todos.find((todo) => todo.id === currentTodoId);
+  const selectCurrentTodo = createSelector(
+    (context: SelectorContext<State>) => {
+      listing?.record('selectCurrentTodo');
+      const currentTodoId = selectCurrentTodoId(context);
+      if (currentTodoId === undefined) {
+        return undefined;
+      } else {
+        const todos = selectTodos(context);
+        return todos.find((todo) => todo.id === currentTodoId);
+      }
     }
-  });
+  );
 
   return createSelectorFunction(selectCurrentTodo);
 }
@@ -302,15 +340,17 @@ function createGetTodoById(listing?: Listing) {
     listing?.record('selectTodos');
     return state.todos;
   });
-  const selectTodoById = createSelector((context: SelectorContext<State>, todoId: number | undefined) => {
-    listing?.record('selectTodoById');
-    if (todoId === undefined) {
-      return undefined;
-    } else {
-      const todos = selectTodos(context);
-      return todos.find((todo) => todo.id === todoId);
+  const selectTodoById = createSelector(
+    (context: SelectorContext<State>, todoId: number | undefined) => {
+      listing?.record('selectTodoById');
+      if (todoId === undefined) {
+        return undefined;
+      } else {
+        const todos = selectTodos(context);
+        return todos.find((todo) => todo.id === todoId);
+      }
     }
-  });
+  );
 
   return createSelectorFunction(selectTodoById);
 }

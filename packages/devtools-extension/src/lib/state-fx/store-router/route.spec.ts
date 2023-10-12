@@ -2,6 +2,7 @@ import { createRoute } from './route';
 import { Param } from './param';
 import { z } from 'zod';
 import { Params } from './params';
+import { PathParam } from './path-param';
 
 describe('route', function () {
   describe('createRoute', function () {
@@ -24,7 +25,7 @@ describe('route', function () {
         const featureRoute = createRoute({
           path: 'feature/:id',
           params: {
-            id: Param(z.coerce.number()),
+            id: PathParam(z.coerce.number()),
           },
           search: Params({
             foo: z.coerce.boolean(),
@@ -72,7 +73,7 @@ describe('route', function () {
           const rootRoute = createRoute({
             path: 'root/:type',
             params: {
-              type: Param(z.enum(['a', 'b'])),
+              type: PathParam(z.enum(['a', 'b'])),
             },
             search: Params({
               devmode: z.coerce.boolean(),
@@ -83,7 +84,7 @@ describe('route', function () {
             parent: rootRoute,
             path: 'feature/:id',
             params: {
-              id: Param(z.coerce.number()),
+              id: PathParam(z.coerce.number()),
             },
             search: Params({
               foo: z.coerce.boolean(),

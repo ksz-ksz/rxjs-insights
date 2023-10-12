@@ -51,16 +51,16 @@ describe('RouteMatcher', () => {
 
     expect(result).toEqual([
       {
-        routing: rootRouting,
+        routeConfig: rootRouting,
         path: [],
         params: {},
       },
       {
-        routing: featureRouting,
+        routeConfig: featureRouting,
         path: ['feature'],
         params: {},
       },
-      { path: [], params: {}, routing: featureListRouting },
+      { path: [], params: {}, routeConfig: featureListRouting },
     ]);
   });
 
@@ -69,19 +69,19 @@ describe('RouteMatcher', () => {
 
     expect(result).toEqual([
       {
-        routing: rootRouting,
+        routeConfig: rootRouting,
 
         path: [],
         params: {},
       },
       {
-        routing: featureRouting,
+        routeConfig: featureRouting,
 
         path: ['feature'],
         params: {},
       },
       {
-        routing: featureDetailsRouting,
+        routeConfig: featureDetailsRouting,
 
         path: ['42'],
         params: {
@@ -97,12 +97,12 @@ describe('RouteMatcher', () => {
 
       expect(result).toEqual([
         {
-          routing: rootRouting,
+          routeConfig: rootRouting,
           path: [],
           params: {},
         },
         {
-          routing: homeRouting,
+          routeConfig: homeRouting,
           path: [],
           params: {},
         },

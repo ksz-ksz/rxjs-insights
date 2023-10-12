@@ -90,11 +90,6 @@ const view = createStoreView({
 function createTestHarness() {
   const container = createContainer();
 
-  const v = container.use(view);
-
-  v.component.getState();
-  v.component.getStateObservable();
-
   const storeRef = container.use(fakeStore);
   const actionsRef = container.use(actionsComponent);
   return {
