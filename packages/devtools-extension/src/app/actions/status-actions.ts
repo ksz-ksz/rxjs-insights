@@ -1,5 +1,5 @@
 import { InstrumentationStatus } from '@app/protocols/instrumentation-status';
-import { createActions } from '@lib/store';
+import { createActions } from '@lib/state-fx/store';
 
 export interface StatusActions {
   InstrumentationStatusResolved: {
@@ -7,4 +7,6 @@ export interface StatusActions {
   };
 }
 
-export const statusActions = createActions<StatusActions>('Status');
+export const statusActions = createActions<StatusActions>({
+  namespace: 'Status',
+});

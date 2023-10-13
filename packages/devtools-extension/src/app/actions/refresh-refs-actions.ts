@@ -1,5 +1,5 @@
 import { Ref } from '@app/protocols/refs';
-import { createActions } from '@lib/store';
+import { createActions } from '@lib/state-fx/store';
 
 export interface RefreshRefsActions {
   LoadExpanded: {
@@ -15,5 +15,6 @@ export interface RefreshRefsActions {
   };
 }
 
-export const refreshRefsActions =
-  createActions<RefreshRefsActions>('RefreshRefsActions');
+export const refreshRefsActions = createActions<RefreshRefsActions>({
+  namespace: 'RefreshRefsActions',
+});

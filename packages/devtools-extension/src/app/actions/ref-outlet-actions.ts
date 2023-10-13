@@ -1,5 +1,5 @@
-import { createActions } from '@lib/store';
 import { GetterRef, Ref } from '@app/protocols/refs';
+import { createActions } from '@lib/state-fx/store';
 
 export interface RefOutletActions {
   Expand: { stateKey: string; path: string; ref: Ref };
@@ -11,4 +11,6 @@ export interface RefOutletActions {
   };
 }
 
-export const refOutletActions = createActions<RefOutletActions>('RefOutlet');
+export const refOutletActions = createActions<RefOutletActions>({
+  namespace: 'RefOutlet',
+});

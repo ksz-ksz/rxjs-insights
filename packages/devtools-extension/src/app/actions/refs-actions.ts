@@ -1,5 +1,5 @@
-import { createActions } from '@lib/store';
 import { PropertyRef, Ref } from '@app/protocols/refs';
+import { createActions } from '@lib/state-fx/store';
 
 export interface RefsActions {
   RefsForExpandedPathsLoaded: {
@@ -15,4 +15,4 @@ export interface RefsActions {
   };
 }
 
-export const refsActions = createActions<RefsActions>('Refs');
+export const refsActions = createActions<RefsActions>({ namespace: 'Refs' });
