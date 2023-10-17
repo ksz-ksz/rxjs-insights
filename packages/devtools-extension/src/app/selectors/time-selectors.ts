@@ -1,8 +1,11 @@
-import { createSelector } from '@lib/store';
-import { old_router } from '@app/old_router';
+import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
+import { selectRoute } from '@app/router';
+import { targetRoute } from '@app/routes';
 
+// TODO: impl changed
 export const timeSelector = createSelector(
-  [old_router.selectors.url],
-  ([url]) =>
-    url.queryParams.time !== undefined ? Number(url.queryParams.time) : 0
+  (context: SelectorContextFromDeps<[typeof selectRoute]>) => {
+    const route = selectRoute(context, targetRoute);
+    return route?.search?.time ?? 0;
+  }
 );

@@ -7,7 +7,7 @@ import {
   createActions,
   createReaction,
   createReducer,
-  createSelector,
+  old_createSelector,
   filterActions,
   Selector,
   Slice,
@@ -66,15 +66,15 @@ export function createRouter<SLICE extends string, DATA, METADATA>(
 
   const routerActions = createActions<RouterActions<DATA>>(routerSlice);
 
-  const routerSelector = createSelector(
+  const routerSelector = old_createSelector(
     (state: Slice<SLICE, RouterState<DATA>>) => state[routerSlice]
   );
 
   const routerSelectors: RouterSelectors<SLICE, DATA, METADATA> = {
-    url: createSelector([routerSelector], ([router]) => router.url),
-    routes: createSelector([routerSelector], ([router]) => router.routes),
+    url: old_createSelector([routerSelector], ([router]) => router.url),
+    routes: old_createSelector([routerSelector], ([router]) => router.routes),
     route(routeToken: RouteToken) {
-      return createSelector([routerSelector], ([router]) =>
+      return old_createSelector([routerSelector], ([router]) =>
         router.routes.find(
           (route) =>
             routeMatcher.getRouteConfig(route.routeConfigId)?.token ===

@@ -1,5 +1,5 @@
 import { useSelector } from '@app/store';
-import { createSelector } from '@lib/store';
+import { old_createSelector } from '@lib/store';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { refsSelector } from '@app/selectors/refs-selectors';
 import {
@@ -9,7 +9,7 @@ import {
 import { useLastDefinedValue } from '@app/utils';
 import { getRefOutletSidePanelEntries } from '@app/components/get-ref-outlet-side-panel-entries';
 
-const vmSelector = createSelector(
+const vmSelector = old_createSelector(
   [activeTargetStateSelector, refsSelector],
   ([activeTargetState, refs]) => {
     const { relations } = activeTargetState!;

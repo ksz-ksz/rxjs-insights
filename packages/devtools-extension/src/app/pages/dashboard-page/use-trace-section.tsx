@@ -10,7 +10,7 @@ import { traceSelector } from '@app/selectors/trace-selectors';
 import { Trace } from '@app/protocols/traces';
 import { EventRef, TargetRef } from '@app/protocols/refs';
 import { Locations } from '@rxjs-insights/core';
-import { createSelector } from '@lib/store';
+import { old_createSelector } from '@lib/store';
 import { EmptyStateRenderer } from '@app/pages/dashboard-page/empty-state-renderer';
 
 interface TaskTraceEntry {
@@ -54,7 +54,7 @@ function getTraceEntries(trace: Trace): TraceEntry[] {
   return entries;
 }
 
-const vmSelector = createSelector(
+const vmSelector = old_createSelector(
   [traceSelector],
   ([trace]) => {
     const entries = trace.trace ? getTraceEntries(trace.trace) : [];

@@ -1,9 +1,15 @@
 import { Action, ActionType } from '@lib/state-fx/store';
 import { ActionSource } from './action-source';
 import { Component, Container, InitializedComponent } from './container';
+import { Observable } from 'rxjs';
+
+export interface ActionsSelector<T> {
+  select(actions: Actions): T;
+}
 
 export interface Actions {
   dispatch(action: Action<any>): void;
+  select<T>(selector: ActionsSelector<T>): T;
   of<T>(namespace: string, name: string): ActionSource<T>;
   ofType<T>(factory: ActionType<T>): ActionSource<T>;
 }
@@ -23,6 +29,9 @@ function createActionsComponent(): Actions {
     dispatch(action: Action<any>) {
       const source = this.of(action.namespace, action.name);
       source.dispatchAction(action);
+    },
+    select<T>(selector: ActionsSelector<T>): T {
+      return selector.select(this);
     },
     of<T>(namespace: string, name: string): ActionSource<T> {
       const actionKey = `${namespace}::${name}`;

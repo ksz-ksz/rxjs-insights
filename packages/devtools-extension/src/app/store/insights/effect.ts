@@ -2,7 +2,6 @@ import {
   concat,
   delay,
   endWith,
-  filter,
   from,
   map,
   merge,
@@ -19,31 +18,31 @@ import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { routeActivated, routeDeactivated } from '@app/utils';
 import { createEffect } from '@lib/state-fx/store';
-import { router } from '@app/router';
+import { routerActions } from '@app/router';
 import { targetRoute } from '@app/routes';
-import { is } from '../../../lib/state-fx/store/is';
 
 export const insightsEffect = createEffect({
   namespace: 'insights',
-  effects: {
-    loadTargetAfterActivatingTheRoute(action) {
-      return action.pipe(
-        routeActivated(router, targetRoute),
-        switchMap((route) => {
-          const targetId = route.params.targetId;
-          return action.pipe(
-            filter(appBarActions.RefreshData.is),
-            startWith(undefined),
-            takeUntil(action.pipe(routeDeactivated(router, targetRoute))),
-            switchMap(() => from(insightsClient.getTargetState(targetId)))
-          );
-        }),
-        map((state) => insightsActions.TargetStateLoaded({ state }))
-      );
-    },
-    autoplayEvents(action$) {
-      return action$.pipe(
-        filter(eventsLogActions.Play.is),
+})({
+  loadTargetAfterActivatingTheRoute(actions) {
+    return actions.select(routeActivated(routerActions, targetRoute)).pipe(
+      switchMap((route) => {
+        const targetId = route.params.targetId;
+        return actions.ofType(appBarActions.RefreshData).pipe(
+          startWith(undefined),
+          takeUntil(
+            actions.select(routeDeactivated(routerActions, targetRoute))
+          ),
+          switchMap(() => from(insightsClient.getTargetState(targetId)))
+        );
+      }),
+      map((state) => insightsActions.TargetStateLoaded({ state }))
+    );
+  },
+  autoplayEvents(actions) {
+    return actions
+      .ofType(eventsLogActions.Play)
+      .pipe(
         switchMap((action) =>
           concat(
             ...action.payload.events.map((event) =>
@@ -52,40 +51,34 @@ export const insightsEffect = createEffect({
           ).pipe(
             takeUntil(
               merge(
-                action$.pipe(
-                  filter(
-                    is(eventsLogActions.Pause, eventsLogActions.EventSelected)
-                  )
-                ),
-                action$.pipe(routeDeactivated(router, targetRoute))
+                actions.ofType(eventsLogActions.Pause),
+                actions.ofType(eventsLogActions.EventSelected),
+                actions.select(routeDeactivated(routerActions, targetRoute))
               )
             ),
             endWith(insightsActions.PlayDone())
           )
         )
       );
-    },
-    navigateToTarget(action$) {
-      return merge(
-        action$.pipe(
-          filter(subscribersGraphActions.FocusTarget.is),
-          map((action) => action.payload.toTarget)
-        ),
-        action$.pipe(
-          filter(refOutletContextActions.FocusTarget.is),
-          map((action) => action.payload.target)
-        )
-      ).pipe(
-        map((target) =>
-          router.actions.Navigate({
-            location: targetRoute({
-              params: {
-                targetId: target.id,
-              },
-            }),
-          })
-        )
-      );
-    },
+  },
+  navigateToTarget(actions) {
+    return merge(
+      actions
+        .ofType(subscribersGraphActions.FocusTarget)
+        .pipe(map((action) => action.payload.toTarget)),
+      actions
+        .ofType(refOutletContextActions.FocusTarget)
+        .pipe(map((action) => action.payload.target))
+    ).pipe(
+      map((target) =>
+        routerActions.Navigate({
+          location: targetRoute({
+            params: {
+              targetId: target.id,
+            },
+          }),
+        })
+      )
+    );
   },
 });

@@ -1,19 +1,48 @@
-import { createSelector } from '@lib/store';
-import { old_router, targetRouteToken } from '@app/old_router';
 import { insightsSelector } from '@app/selectors/insights-selectors';
+import {
+  createSelector,
+  SelectorContext,
+  SelectorContextFromDeps,
+  StoreState,
+} from '@lib/state-fx/store';
+import { routerStore, selectRoute } from '@app/router';
+import { targetRoute } from '@app/routes';
+import { insightsStore } from '@app/store/insights/store';
 
 export const activeTargetStateSelector = createSelector(
-  [old_router.selectors.route(targetRouteToken), insightsSelector],
-  ([route, insights]) =>
-    route?.params?.targetId
-      ? insights.targets[Number(route.params.targetId)]
-      : undefined
+  (
+    context: SelectorContextFromDeps<
+      [typeof selectRoute, typeof insightsSelector]
+    >
+  ) => {
+    const targetId = selectRoute(context, targetRoute)?.params?.targetId;
+    return targetId !== undefined
+      ? insightsSelector(context).targets[targetId]
+      : undefined;
+  }
+);
+
+export const activeTargetSelector = createSelector(
+  (context: SelectorContextFromDeps<[typeof activeTargetStateSelector]>) => {
+    const activeTargetState = activeTargetStateSelector(context);
+    if (activeTargetState) {
+      const { target } = activeTargetState;
+      return target;
+    } else {
+      return undefined;
+    }
+  }
 );
 
 export const activeTargetUiStateSelector = createSelector(
-  [old_router.selectors.route(targetRouteToken), insightsSelector],
-  ([route, insights]) =>
-    route?.params?.targetId
-      ? insights.targetsUi[Number(route.params.targetId)]
-      : undefined
+  (
+    context: SelectorContextFromDeps<
+      [typeof selectRoute, typeof insightsSelector]
+    >
+  ) => {
+    const targetId = selectRoute(context, targetRoute)?.params?.targetId;
+    return targetId !== undefined
+      ? insightsSelector(context).targetsUi[targetId]
+      : undefined;
+  }
 );

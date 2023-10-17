@@ -1,33 +1,50 @@
-import { createSelector } from '@lib/store';
-import { InsightsSlice } from '@app/store/insights';
+import {
+  createSelector,
+  SelectorContext,
+  SelectorState,
+} from '@lib/state-fx/store';
+import { createStoreSelector } from '../../lib/state-fx/store/store-selector';
+import { insightsStore } from '@app/store/insights/store';
 
-export const insightsSelector = createSelector(
-  (state: InsightsSlice) => state.insights
+export const insightsSelector = createStoreSelector(insightsStore);
+
+export const targetStateSelector = createSelector(
+  (
+    context: SelectorContext<SelectorState<typeof insightsSelector>>,
+    targetId: number
+  ) => {
+    const insights = insightsSelector(context);
+    return insights.targets[targetId];
+  }
 );
 
-export const targetStateSelector = (targetId: number) =>
-  createSelector(
-    [insightsSelector],
-    ([insights]) => insights.targets[targetId]
-  );
-
-export const targetUiStateSelector = (targetId: number) =>
-  createSelector(
-    [insightsSelector],
-    ([insights]) => insights.targetsUi[targetId]
-  );
+export const targetUiStateSelector = createSelector(
+  (
+    context: SelectorContext<SelectorState<typeof insightsSelector>>,
+    targetId: number
+  ) => {
+    const insights = insightsSelector(context);
+    return insights.targetsUi[targetId];
+  }
+);
 
 export const playingSelector = createSelector(
-  [insightsSelector],
-  ([insights]) => insights.playing
+  (context: SelectorContext<SelectorState<typeof insightsSelector>>) => {
+    const insights = insightsSelector(context);
+    return insights.playing;
+  }
 );
 
 export const followingSelector = createSelector(
-  [insightsSelector],
-  ([insights]) => insights.following
+  (context: SelectorContext<SelectorState<typeof insightsSelector>>) => {
+    const insights = insightsSelector(context);
+    return insights.following;
+  }
 );
 
 export const showExcludedEventsSelector = createSelector(
-  [insightsSelector],
-  ([insights]) => insights.showExcludedEvents
+  (context: SelectorContext<SelectorState<typeof insightsSelector>>) => {
+    const insights = insightsSelector(context);
+    return insights.showExcludedEvents;
+  }
 );

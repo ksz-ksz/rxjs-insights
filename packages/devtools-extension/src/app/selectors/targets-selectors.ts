@@ -1,6 +1,6 @@
-import { createSelector } from '@lib/store';
+import { old_createSelector } from '@lib/store';
 import { TargetsSlice } from '@app/store/targets';
 
-export const targetsSelector = createSelector(
+export const targetsSelector = old_createSelector(
   (state: TargetsSlice) => state.targets
 );

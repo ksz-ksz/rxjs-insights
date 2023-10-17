@@ -1,7 +1,8 @@
-import { createSelector } from '@lib/store';
-import { RefsSlice, RefsState, RefState, RefUiState } from '@app/store/refs';
+import { RefsState, RefState, RefUiState } from '@app/store/refs';
+import { createStoreSelector } from '../../lib/state-fx/store/store-selector';
+import { refsStore } from '@app/store/refs/store';
 
-export const refsSelector = createSelector((state: RefsSlice) => state.refs);
+export const refsSelector = createStoreSelector(refsStore);
 
 const defaultRefState: RefState = { expandedObjects: {} };
 

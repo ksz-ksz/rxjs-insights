@@ -13,13 +13,13 @@ import {
   getTargetColors,
 } from '@app/pages/target-page/subscriber-graph-utils';
 import gsap from 'gsap';
-import { createSelector } from '@lib/store';
+import { old_createSelector } from '@lib/store';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
 import { timeSelector } from '@app/selectors/time-selectors';
 
 const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
-  createSelector(
+  old_createSelector(
     [targetStateSelector(getRootTargetIdFromKey(node.key)), timeSelector],
     ([targetState, time]) => {
       const { relations } = targetState;

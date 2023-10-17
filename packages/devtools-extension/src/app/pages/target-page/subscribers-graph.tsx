@@ -3,7 +3,7 @@ import {
   RelatedTarget,
   Relations,
 } from '@app/protocols/insights';
-import { createSelector, useDispatchCallback } from '@lib/store';
+import { old_createSelector, useDispatchCallback } from '@lib/store';
 import {
   activeTargetStateSelector,
   activeTargetUiStateSelector,
@@ -161,7 +161,7 @@ function getViewBoxPadding(focus: (number | string)[]) {
   return focus.length === 0 ? 40 : 100;
 }
 
-const hierarchyTreeSelector = createSelector(
+const hierarchyTreeSelector = old_createSelector(
   [activeTargetStateSelector, activeTargetUiStateSelector],
   ([activeTargetState, activeTargetUiState]) => {
     const { target, relations } = activeTargetState!;
@@ -193,7 +193,7 @@ const hierarchyTreeSelector = createSelector(
   }
 );
 
-const vmSelector = createSelector(
+const vmSelector = old_createSelector(
   [
     hierarchyTreeSelector,
     timeSelector,

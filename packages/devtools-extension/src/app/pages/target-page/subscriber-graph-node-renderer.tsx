@@ -23,7 +23,7 @@ import {
   getTargetColors,
 } from '@app/pages/target-page/subscriber-graph-utils';
 import gsap from 'gsap';
-import { createSelector, useDispatchCallback } from '@lib/store';
+import { old_createSelector, useDispatchCallback } from '@lib/store';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
@@ -35,7 +35,7 @@ const circleRadius = 5;
 const circleCircumference = 2 * Math.PI * circleRadius;
 
 const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
-  createSelector(
+  old_createSelector(
     [
       targetStateSelector(getRootTargetIdFromKey(node.key)),
       targetUiStateSelector(getRootTargetIdFromKey(node.key)),

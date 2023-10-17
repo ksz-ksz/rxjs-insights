@@ -1,34 +1,33 @@
 import {
   combineReactions,
   createReaction,
-  createSelector,
+  old_createSelector,
   filterActions,
   Store,
 } from '@lib/store';
 import { concatMap, distinctUntilChanged, EMPTY, of } from 'rxjs';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { OldRouterSlice } from '@app/store/old_router';
-import { InsightsSlice } from '@app/store/insights';
+import { insightsStore, InsightsSlice } from '@app/store/insights/store';
 import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { Ref } from '@app/protocols/refs';
 import { timeSelector } from '@app/selectors/time-selectors';
-
-const activeTargetSelector = createSelector(
-  [activeTargetStateSelector],
-  ([activeTargetState]) => {
-    if (activeTargetState) {
-      const { target } = activeTargetState;
-      return target;
-    } else {
-      return undefined;
-    }
-  }
-);
+import {
+  createEffect,
+  createSelector,
+  SelectorContextFromDeps,
+} from '@lib/state-fx/store';
+import { routerStore } from '@app/router';
 
 const activeEventSelector = createSelector(
-  [activeTargetStateSelector, timeSelector],
-  ([activeTargetState, time]) => {
+  (
+    context: SelectorContextFromDeps<
+      [typeof activeTargetStateSelector, typeof timeSelector]
+    >
+  ) => {
+    const activeTargetState = activeTargetStateSelector(context);
+    const time = timeSelector(context);
     if (activeTargetState) {
       const { relations } = activeTargetState!;
       return relations.events[time];
@@ -36,7 +35,7 @@ const activeEventSelector = createSelector(
   }
 );
 
-const activeRelatedTargetsSelector = createSelector(
+const activeRelatedTargetsSelector = old_createSelector(
   [activeTargetStateSelector],
   ([activeTargetState]) => {
     if (activeTargetState) {
@@ -45,6 +44,15 @@ const activeRelatedTargetsSelector = createSelector(
     }
   }
 );
+
+export const refreshRefsEffect = createEffect({
+  namespace: 'refreshRefs',
+  deps: [routerStore, insightsStore],
+})({
+  handleActiveTargetChange(actions, deps) {
+    return;
+  },
+});
 
 export const refreshRefsReaction = combineReactions()
   .add(

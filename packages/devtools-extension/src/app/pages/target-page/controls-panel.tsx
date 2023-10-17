@@ -8,7 +8,7 @@ import {
   activeTargetUiStateSelector,
 } from '@app/selectors/active-target-state-selector';
 import { eventsLogActions } from '@app/actions/events-log-actions';
-import { createSelector, useDispatchCallback } from '@lib/store';
+import { old_createSelector, useDispatchCallback } from '@lib/store';
 import { getTargetTimeframes } from '@app/pages/target-page/get-target-timeframes';
 import { getEvents } from '@app/pages/target-page/get-events';
 import { getIncludedEvents } from '@app/pages/target-page/get-included-events';
@@ -37,7 +37,7 @@ function findFirstIndex<T>(
   return -1;
 }
 
-const eventsSelector = createSelector(
+const eventsSelector = old_createSelector(
   [activeTargetStateSelector, activeTargetUiStateSelector],
   ([activeTargetState, activeTargetUiState]) => {
     const { target, relations } = activeTargetState!;
@@ -50,7 +50,7 @@ const eventsSelector = createSelector(
   }
 );
 
-const vmSelector = createSelector(
+const vmSelector = old_createSelector(
   [eventsSelector, timeSelector, playingSelector],
   ([{ events, relations }, time, playing]) => ({
     events,

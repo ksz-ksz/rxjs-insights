@@ -45,12 +45,12 @@ export interface Equals<T> {
   (a: T, b: T): boolean;
 }
 
-export function createSelector<STATE, RESULT>(
+export function old_createSelector<STATE, RESULT>(
   project: Project<STATE, RESULT>,
   equals?: Equals<RESULT>
 ): Selector<STATE, RESULT>;
 
-export function createSelector<
+export function old_createSelector<
   DEPS extends Record<string, Selector<any, any>>,
   RESULT
 >(
@@ -59,22 +59,22 @@ export function createSelector<
   equals?: Equals<RESULT>
 ): Selector<SelectorStates<DEPS>, RESULT>;
 
-export function createSelector<
+export function old_createSelector<
   DEPS extends Record<string, Selector<any, any>>,
   RESULT
 >(deps: DEPS): Selector<SelectorStates<DEPS>, SelectorResults<DEPS>>;
 
-export function createSelector<DEPS extends Selector<any, any>[], RESULT>(
+export function old_createSelector<DEPS extends Selector<any, any>[], RESULT>(
   deps: [...DEPS],
   project: Project<SelectorResults<DEPS>, RESULT>,
   equals?: Equals<RESULT>
 ): Selector<SelectorStates<DEPS>, RESULT>;
 
-export function createSelector<DEPS extends Selector<any, any>[], RESULT>(
+export function old_createSelector<DEPS extends Selector<any, any>[], RESULT>(
   deps: [...DEPS]
 ): Selector<SelectorStates<DEPS>, SelectorResults<DEPS>>;
 
-export function createSelector(
+export function old_createSelector(
   depsOrProject: any,
   projectOrEquals?: any,
   equals?: any

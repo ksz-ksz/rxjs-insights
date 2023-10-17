@@ -11,7 +11,7 @@ import { Indent } from '@app/components/indent';
 import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import React, { useMemo } from 'react';
 import { styled, Typography } from '@mui/material';
-import { createSelector, useDispatchCallback } from '@lib/store';
+import { old_createSelector, useDispatchCallback } from '@lib/store';
 import {
   activeTargetStateSelector,
   activeTargetUiStateSelector,
@@ -69,7 +69,7 @@ const RefOutletSpan = styled('span')({
     opacity: 0.5,
   },
 });
-const eventsSelector = createSelector(
+const eventsSelector = old_createSelector(
   [
     activeTargetStateSelector,
     activeTargetUiStateSelector,
@@ -90,7 +90,7 @@ const eventsSelector = createSelector(
     return { entries };
   }
 );
-const vmSelector = createSelector(
+const vmSelector = old_createSelector(
   [eventsSelector, timeSelector],
   ([{ entries }, time]) => ({
     entries,

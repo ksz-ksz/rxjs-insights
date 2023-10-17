@@ -24,7 +24,7 @@ import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { LocationOutlet } from '@app/components/location-outlet';
 import { targetsSelector } from '@app/selectors/targets-selectors';
-import { createSelector } from '@lib/store';
+import { old_createSelector } from '@lib/store';
 
 const HomeSpan = styled('span')(({ theme }) => ({
   fontWeight: 600,
@@ -40,7 +40,7 @@ function Spacer({ space }: { space: number }) {
   );
 }
 
-const vm = createSelector(
+const vm = old_createSelector(
   [activeTargetStateSelector, targetsSelector],
   ([activeTargetState, targets]) => {
     const target = activeTargetState?.target;

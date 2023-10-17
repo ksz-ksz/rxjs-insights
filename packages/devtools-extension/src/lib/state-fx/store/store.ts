@@ -5,6 +5,7 @@ import { produce } from 'immer';
 import { Component, Container, InitializedComponent } from './container';
 import { StoreView } from './store-view';
 import { Deps, DepsState, getDepsState } from './deps';
+import { infer } from 'zod';
 
 export interface Store<TNamespace extends string, TState>
   extends StoreView<{ [K in TNamespace]: TState }> {
@@ -234,3 +235,8 @@ function createStoreComponent<TNamespace extends string, TState>(
     },
   };
 }
+
+export type StoreState<TStore extends StoreComponent<any, any>> =
+  TStore extends StoreComponent<infer TNamespace, infer TState>
+    ? { [K in TNamespace]: TState }
+    : never;

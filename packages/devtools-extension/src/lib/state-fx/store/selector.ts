@@ -1,21 +1,31 @@
-export interface SelectorState<STATE, ARGS extends any[] = any[], RESULT = any> {
+interface SelectorStateData<STATE, ARGS extends any[] = any[], RESULT = any> {
   selector: Selector<STATE, ARGS, RESULT>;
   lastArgs: ARGS;
   lastState: STATE;
-  lastInputs: SelectorInput<STATE>[];
+  lastInputs: SelectorInputData<STATE>[];
   lastResult: RESULT;
 }
 
-interface SelectorInput<STATE, ARGS extends any[] = any[], RESULT = any> {
+interface SelectorInputData<STATE, ARGS extends any[] = any[], RESULT = any> {
   lastResult: RESULT;
-  selectorState: SelectorState<STATE, ARGS, RESULT>;
+  selectorState: SelectorStateData<STATE, ARGS, RESULT>;
 }
 
 export interface SelectorContext<STATE> {
   state: STATE;
-  selectors: Map<Selector<any, any, any>, SelectorState<any>>;
-  inputs: undefined | SelectorInput<any>[];
+  selectors: Map<Selector<any, any, any>, SelectorStateData<any>>;
+  inputs: undefined | SelectorInputData<any>[];
 }
+
+export type SelectorStatesIntersection<T extends [...any]> = T extends [infer U]
+  ? SelectorState<U>
+  : T extends [infer THead, ...infer TTail]
+  ? SelectorState<THead> & SelectorStatesIntersection<TTail>
+  : never;
+
+export type SelectorContextFromDeps<T extends any[]> = SelectorContext<
+  SelectorStatesIntersection<T>
+>;
 
 export interface SelectorFunction<STATE, ARGS extends any[], RESULT> {
   (context: SelectorContext<STATE>, ...args: ARGS): RESULT;
@@ -25,7 +35,8 @@ export interface StateSelectorFunction<STATE, ARGS extends any[], RESULT> {
   (state: STATE, ...args: ARGS): RESULT;
 }
 
-export interface Selector<STATE, ARGS extends any[], RESULT> extends SelectorFunction<STATE, ARGS, RESULT> {}
+export interface Selector<STATE, ARGS extends any[], RESULT>
+  extends SelectorFunction<STATE, ARGS, RESULT> {}
 
 function hasArgsChanged(args: any[], lastArgs: any[]) {
   if (lastArgs.length !== args.length) {
@@ -40,7 +51,11 @@ function hasArgsChanged(args: any[], lastArgs: any[]) {
   return false;
 }
 
-function hasInputsChanged<STATE>(context: SelectorContext<STATE>, lastState: STATE, lastInputs: SelectorInput<STATE>[]) {
+function hasInputsChanged<STATE>(
+  context: SelectorContext<STATE>,
+  lastState: STATE,
+  lastInputs: SelectorInputData<STATE>[]
+) {
   if (lastState === context.state) {
     // console.log(`hasInputsChanged: false (state didn't change)`);
     return false;
@@ -54,7 +69,10 @@ function hasInputsChanged<STATE>(context: SelectorContext<STATE>, lastState: STA
       selectorState: { selector, lastArgs },
       lastResult,
     } = input;
-    const result = lastArgs.length === 0 ? selector(context) : selector(context, ...lastArgs);
+    const result =
+      lastArgs.length === 0
+        ? selector(context)
+        : selector(context, ...lastArgs);
     if (result !== lastResult) {
       changed = true;
       break;
@@ -74,12 +92,19 @@ function createSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
   fn: SelectorFunction<STATE, ARGS, RESULT>,
   options: CreateSelectorOptions = {}
 ): Selector<STATE, ARGS, RESULT> {
-  const hasLocalScope = options.scope !== undefined ? options.scope === 'local' : true;
-  let globalSelectorState: SelectorState<STATE, ARGS, RESULT> | undefined;
+  const hasLocalScope =
+    options.scope !== undefined ? options.scope === 'local' : true;
+  let globalSelectorState: SelectorStateData<STATE, ARGS, RESULT> | undefined;
   return function selector(context: SelectorContext<STATE>, ...args: ARGS) {
     // console.group(`${fn.name}(${args.map((arg) => JSON.stringify(arg)).join(', ')})`);
     const parentInputs = context.inputs;
-    let selectorState = hasLocalScope ? (context.selectors.get(selector) as unknown as SelectorState<STATE, ARGS, RESULT>) : globalSelectorState;
+    let selectorState = hasLocalScope
+      ? (context.selectors.get(selector) as unknown as SelectorStateData<
+          STATE,
+          ARGS,
+          RESULT
+        >)
+      : globalSelectorState;
     let result: RESULT;
     if (selectorState === undefined) {
       // console.log('initial state');
@@ -105,7 +130,10 @@ function createSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
       // console.groupEnd();
     } else {
       const { lastArgs, lastState, lastInputs } = selectorState;
-      if (hasArgsChanged(args, lastArgs) || hasInputsChanged(context, lastState, lastInputs)) {
+      if (
+        hasArgsChanged(args, lastArgs) ||
+        hasInputsChanged(context, lastState, lastInputs)
+      ) {
         context.inputs = [];
         // console.group(`run`);
         // @ts-ignore
@@ -125,18 +153,31 @@ function createSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
         result = selectorState.lastResult;
       }
     }
-    parentInputs?.push({ selectorState: selectorState as any, lastResult: result });
+    parentInputs?.push({
+      selectorState: selectorState as any,
+      lastResult: result,
+    });
     return result;
   };
 }
 
-function createSelectorWithoutArgs<STATE, RESULT>(fn: SelectorFunction<STATE, [], RESULT>, options: CreateSelectorOptions = {}): Selector<STATE, [], RESULT> {
-  const hasLocalScope = options.scope !== undefined ? options.scope === 'local' : false;
-  let globalSelectorState: SelectorState<STATE, [], RESULT> | undefined;
+function createSelectorWithoutArgs<STATE, RESULT>(
+  fn: SelectorFunction<STATE, [], RESULT>,
+  options: CreateSelectorOptions = {}
+): Selector<STATE, [], RESULT> {
+  const hasLocalScope =
+    options.scope !== undefined ? options.scope === 'local' : false;
+  let globalSelectorState: SelectorStateData<STATE, [], RESULT> | undefined;
   return function selector(context: SelectorContext<STATE>) {
     // console.group(`${fn.name}()`);
     const parentInputs = context.inputs;
-    let selectorState = hasLocalScope ? (context.selectors.get(selector) as unknown as SelectorState<STATE, [], RESULT>) : globalSelectorState;
+    let selectorState = hasLocalScope
+      ? (context.selectors.get(selector) as unknown as SelectorStateData<
+          STATE,
+          [],
+          RESULT
+        >)
+      : globalSelectorState;
     let result: RESULT;
     if (selectorState === undefined) {
       // console.log('initial state');
@@ -181,7 +222,10 @@ function createSelectorWithoutArgs<STATE, RESULT>(fn: SelectorFunction<STATE, []
         result = selectorState.lastResult;
       }
     }
-    parentInputs?.push({ selectorState: selectorState as any, lastResult: result });
+    parentInputs?.push({
+      selectorState: selectorState as any,
+      lastResult: result,
+    });
     return result;
   };
 }
@@ -191,27 +235,36 @@ export function createSelector<STATE, ARGS extends any[], RESULT>(
   options: CreateSelectorOptions = {}
 ): Selector<STATE, ARGS, RESULT> {
   // @ts-ignore
-  return fn.length > 1 ? createSelectorWithArgs(fn, options) : createSelectorWithoutArgs(fn, options);
+  return fn.length > 1
+    ? createSelectorWithArgs(fn, options)
+    : createSelectorWithoutArgs(fn, options);
 }
 
 function createStateSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
   fn: StateSelectorFunction<STATE, ARGS, RESULT>,
   options: CreateSelectorOptions = {}
 ): Selector<STATE, ARGS, RESULT> {
-  const hasLocalScope = options.scope !== undefined ? options.scope === 'local' : true;
-  let globalSelectorState: SelectorState<STATE, ARGS, RESULT> | undefined;
+  const hasLocalScope =
+    options.scope !== undefined ? options.scope === 'local' : true;
+  let globalSelectorState: SelectorStateData<STATE, ARGS, RESULT> | undefined;
 
-  return function stateSelector(context: SelectorContext<STATE>, ...args: ARGS) {
+  return function stateSelector(
+    context: SelectorContext<STATE>,
+    ...args: ARGS
+  ) {
     // console.group(`${fn.name}(${args.map((arg) => JSON.stringify(arg)).join(', ')})`);
 
-    let selectorState = hasLocalScope ? context.selectors.get(stateSelector) : globalSelectorState;
+    let selectorState = hasLocalScope
+      ? context.selectors.get(stateSelector)
+      : globalSelectorState;
     const parentInputs = context.inputs;
     // @ts-ignore
     let result: RESULT;
     if (selectorState === undefined) {
       // console.log('initial state');
       // @ts-ignore
-      result = args.length === 0 ? fn(context.state) : fn(context.state, ...args);
+      result =
+        args.length === 0 ? fn(context.state) : fn(context.state, ...args);
       selectorState = {
         selector: stateSelector as any,
         lastArgs: args,
@@ -229,7 +282,8 @@ function createStateSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
       if (hasArgsChanged(args, lastArgs) || context.state !== lastState) {
         // console.log('run');
         // @ts-ignore
-        result = args.length === 0 ? fn(context.state) : fn(context.state, ...args);
+        result =
+          args.length === 0 ? fn(context.state) : fn(context.state, ...args);
         selectorState.lastResult = result;
         selectorState.lastState = context.state;
         selectorState.lastArgs = args;
@@ -252,13 +306,16 @@ function createStateSelectorWithoutArgs<STATE, RESULT>(
   fn: StateSelectorFunction<STATE, [], RESULT>,
   options: CreateSelectorOptions = {}
 ): Selector<STATE, [], RESULT> {
-  const hasLocalScope = options.scope !== undefined ? options.scope === 'local' : false;
-  let globalSelectorState: SelectorState<STATE, [], RESULT> | undefined;
+  const hasLocalScope =
+    options.scope !== undefined ? options.scope === 'local' : false;
+  let globalSelectorState: SelectorStateData<STATE, [], RESULT> | undefined;
 
   return function stateSelector(context: SelectorContext<STATE>) {
     // console.group(`${fn.name}()`);
 
-    let selectorState = hasLocalScope ? context.selectors.get(stateSelector) : globalSelectorState;
+    let selectorState = hasLocalScope
+      ? context.selectors.get(stateSelector)
+      : globalSelectorState;
     const parentInputs = context.inputs;
     // @ts-ignore
     let result: RESULT;
@@ -306,10 +363,14 @@ export function createStateSelector<STATE, ARGS extends any[], RESULT>(
   options: CreateSelectorOptions = {}
 ): Selector<STATE, ARGS, RESULT> {
   // @ts-ignore
-  return fn.length > 1 ? createStateSelectorWithArgs(fn, options) : createStateSelectorWithoutArgs(fn, options);
+  return fn.length > 1
+    ? createStateSelectorWithArgs(fn, options)
+    : createStateSelectorWithoutArgs(fn, options);
 }
 
-export function createSelectorFunction<STATE, ARGS extends any[], RESULT>(selector: Selector<STATE, ARGS, RESULT>): StateSelectorFunction<STATE, ARGS, RESULT> {
+export function createSelectorFunction<STATE, ARGS extends any[], RESULT>(
+  selector: Selector<STATE, ARGS, RESULT>
+): StateSelectorFunction<STATE, ARGS, RESULT> {
   const context: SelectorContext<STATE> = {
     selectors: new Map(),
     inputs: undefined as any,
@@ -321,3 +382,15 @@ export function createSelectorFunction<STATE, ARGS extends any[], RESULT>(select
     return selector(context, ...args);
   };
 }
+
+export type SelectorStateImpl<TSelector> = TSelector extends Selector<
+  infer TState,
+  any,
+  any
+>
+  ? TState
+  : never;
+
+export type SelectorState<TSelector> = {
+  [K in keyof SelectorStateImpl<TSelector>]: SelectorStateImpl<TSelector>[K];
+};
