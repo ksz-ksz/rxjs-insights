@@ -1,6 +1,7 @@
 import { Trace } from '@app/protocols/traces';
-import { createReducer, Slice } from '@lib/store';
+import { Slice } from '@lib/store';
 import { traceActions } from '@app/actions/trace-actions';
+import { createStore, tx } from '@lib/state-fx/store';
 
 export interface TraceState {
   trace?: Trace;
@@ -12,9 +13,11 @@ const initialState: TraceState = {
   trace: undefined,
 };
 
-export const traceReducer = createReducer('trace', initialState).add(
-  traceActions.TraceLoaded,
-  (state, action) => {
+export const traceStore = createStore({
+  namespace: 'trace',
+  state: initialState,
+})({
+  setState: tx([traceActions.TraceLoaded], (state, action) => {
     state.trace = action.payload.trace;
-  }
-);
+  }),
+});

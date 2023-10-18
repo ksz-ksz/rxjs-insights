@@ -3,6 +3,7 @@ import { targetStateSelector } from '@app/selectors/insights-selectors';
 import {
   ActivatedRoutingRuleContext,
   createRouteConfigFactory,
+  createRouting,
   DeactivatedRoutingRuleContext,
   Location,
   RoutingRule,
@@ -18,23 +19,18 @@ import {
   statusRoute,
   targetRoute,
 } from '@app/routes';
+import { router, routerActions, routerStore } from '@app/router';
 
-const createRouting = createRouteConfigFactory<unknown, unknown>();
+const createRouteConfig = createRouteConfigFactory<unknown, unknown>();
 
 function redirect<TState, TConfig, TParams, TSearch, THash>(
   fn: (
-    context: ActivatedRoutingRuleContext<
-      TState,
-      TConfig,
-      TParams,
-      TSearch,
-      THash
-    >
+    context: ActivatedRoutingRuleContext<TConfig, TParams, TSearch, THash>
   ) => Location | Observable<Location>
-): RoutingRule<TState, TConfig, TParams, TSearch, THash> {
+): RoutingRule<TConfig, TParams, TSearch, THash> {
   return {
     check(
-      context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
+      context: RoutingRuleContext<TConfig, TParams, TSearch, THash>
     ): Observable<Location | boolean> {
       if (context.status === 'activated') {
         const location = fn(context);
@@ -52,18 +48,12 @@ function redirect<TState, TConfig, TParams, TSearch, THash>(
 
 function canActivate<TState, TConfig, TParams, TSearch, THash>(
   fn: (
-    context: ActivatedRoutingRuleContext<
-      TState,
-      TConfig,
-      TParams,
-      TSearch,
-      THash
-    >
+    context: ActivatedRoutingRuleContext<TConfig, TParams, TSearch, THash>
   ) => boolean | Observable<boolean>
-): RoutingRule<TState, TConfig, TParams, TSearch, THash> {
+): RoutingRule<TConfig, TParams, TSearch, THash> {
   return {
     check(
-      context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
+      context: RoutingRuleContext<TConfig, TParams, TSearch, THash>
     ): Observable<Location | boolean> {
       if (context.status === 'activated') {
         const result = fn(context);
@@ -79,20 +69,14 @@ function canActivate<TState, TConfig, TParams, TSearch, THash>(
   };
 }
 
-function canDeactivate<TState, TConfig, TParams, TSearch, THash>(
+function canDeactivate<TConfig, TParams, TSearch, THash>(
   fn: (
-    context: DeactivatedRoutingRuleContext<
-      TState,
-      TConfig,
-      TParams,
-      TSearch,
-      THash
-    >
+    context: DeactivatedRoutingRuleContext<TConfig, TParams, TSearch, THash>
   ) => boolean | Observable<boolean>
-): RoutingRule<TState, TConfig, TParams, TSearch, THash> {
+): RoutingRule<TConfig, TParams, TSearch, THash> {
   return {
     check(
-      context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
+      context: RoutingRuleContext<TConfig, TParams, TSearch, THash>
     ): Observable<Location | boolean> {
       if (context.status === 'deactivated') {
         const result = fn(context);
@@ -108,16 +92,16 @@ function canDeactivate<TState, TConfig, TParams, TSearch, THash>(
   };
 }
 
-function activate<TState, TConfig, TParams, TSearch, THash>(
+function activate<TConfig, TParams, TSearch, THash>(
   fn: (
     context:
-      | ActivatedRoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
-      | UpdatedRoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
+      | ActivatedRoutingRuleContext<TConfig, TParams, TSearch, THash>
+      | UpdatedRoutingRuleContext<TConfig, TParams, TSearch, THash>
   ) => Observable<unknown>
-): RoutingRule<TState, TConfig, TParams, TSearch, THash> {
+): RoutingRule<TConfig, TParams, TSearch, THash> {
   return {
     commit(
-      context: RoutingRuleContext<TState, TConfig, TParams, TSearch, THash>
+      context: RoutingRuleContext<TConfig, TParams, TSearch, THash>
     ): Observable<void> {
       if (context.status === 'activated' || context.status === 'updated') {
         return fn(context).pipe(ignoreElements());
@@ -128,9 +112,9 @@ function activate<TState, TConfig, TParams, TSearch, THash>(
   };
 }
 
-export const routing = createRouting(rootRoute, {
+const routerConfig = createRouteConfig(rootRoute, {
   children: [
-    createRouting(statusRoute, {
+    createRouteConfig(statusRoute, {
       rules: [
         canActivate(({ store }) => {
           // FIXME
@@ -148,10 +132,10 @@ export const routing = createRouting(rootRoute, {
         }),
       ],
     }),
-    createRouting(dashboardRoute),
-    createRouting(appBarRoute, {
+    createRouteConfig(dashboardRoute),
+    createRouteConfig(appBarRoute, {
       children: [
-        createRouting(targetRoute, {
+        createRouteConfig(targetRoute, {
           rules: [
             activate(({ store, route }) => {
               // FIXME
@@ -163,8 +147,15 @@ export const routing = createRouting(rootRoute, {
         }),
       ],
     }),
-    createRouting(fallbackRoute, {
+    createRouteConfig(fallbackRoute, {
       rules: [redirect(() => statusRoute())],
     }),
   ],
+});
+
+export const routing = createRouting({
+  router,
+  routerActions,
+  routerStore,
+  routerConfig,
 });
