@@ -1,6 +1,4 @@
-import { combineReactions, createReaction } from '@lib/store';
-import { routeEnter, routeLeave } from '@app/utils';
-import { dashboardRouteToken } from '@app/old_router';
+import { routeActivated, routeDeactivated } from '@app/utils';
 import {
   catchError,
   EMPTY,
@@ -12,11 +10,15 @@ import {
 } from 'rxjs';
 import { tracesClient } from '@app/clients/traces';
 import { traceActions } from '@app/actions/trace-actions';
+import { createEffect } from '@lib/state-fx/store';
+import { routerActions } from '@app/router';
+import { dashboardRoute } from '@app/routes';
 
-export const traceReaction = combineReactions().add(
-  createReaction((action$) =>
-    action$.pipe(
-      routeEnter(dashboardRouteToken),
+export const traceEffect = createEffect({
+  namespace: 'trace',
+})({
+  handleDashboardEnter(actions) {
+    return actions.select(routeActivated(routerActions, dashboardRoute)).pipe(
       switchMap(() =>
         timer(0, 1000).pipe(
           switchMap(() =>
@@ -25,9 +27,11 @@ export const traceReaction = combineReactions().add(
               catchError(() => EMPTY)
             )
           ),
-          takeUntil(action$.pipe(routeLeave(dashboardRouteToken)))
+          takeUntil(
+            actions.select(routeDeactivated(routerActions, dashboardRoute))
+          )
         )
       )
-    )
-  )
-);
+    );
+  },
+});

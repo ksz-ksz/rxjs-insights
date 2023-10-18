@@ -15,7 +15,7 @@ import { refreshRefsReaction } from '@app/store/refresh-refs/effect';
 import { hoverTargetsReaction } from '@app/store/hover-targets/reaction';
 import { traceReducer } from '@app/store/trace/slice';
 import { traceReaction } from '@app/store/trace/reaction';
-import { timeReaction } from '@app/store/time/reaction';
+import { timeReaction } from '@app/store/time/effect';
 import { refOutletContextReaction } from '@app/store/ref-outlet-context/effect';
 
 export const store = createStore()

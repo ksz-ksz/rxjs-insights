@@ -8,7 +8,7 @@ export interface ActionType<TPayload> {
   is(action: Action<unknown>): action is Action<TPayload>;
 }
 
-export interface Action<TPayload> {
+export interface Action<TPayload = unknown> {
   namespace: string;
   name: string;
   payload: TPayload;
