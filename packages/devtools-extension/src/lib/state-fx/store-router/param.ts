@@ -1,18 +1,17 @@
 import { Encoder } from './encoder';
 import { ZodType } from 'zod';
-import { safeDecode } from './safe-decode';
 
 export const Param =
   <T>(param: ZodType<T>) =>
-  (): Encoder<T> => {
+  (): Encoder<string, T> => {
     return new ParamEncoder(param);
   };
 
-export class ParamEncoder<T> implements Encoder<T> {
+export class ParamEncoder<T> implements Encoder<string, T> {
   constructor(readonly param: ZodType<T>) {}
 
   decode(value: string) {
-    const result = this.param.safeParse(safeDecode(value));
+    const result = this.param.safeParse(value);
     if (result.success) {
       return {
         valid: true,
@@ -29,7 +28,7 @@ export class ParamEncoder<T> implements Encoder<T> {
     if (result.success) {
       return {
         valid: true,
-        value: encodeURIComponent(String(result.data)),
+        value: String(result.data),
       } as const;
     } else {
       return {

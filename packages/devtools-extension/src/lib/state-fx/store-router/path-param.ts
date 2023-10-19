@@ -1,7 +1,9 @@
 import { PathFormatResult, PathMatcher, PathMatchResult } from './path-matcher';
-import { Encoder } from './encoder';
+import { composeEncoders, Encoder } from './encoder';
 import { ZodType } from 'zod';
 import { ParamEncoder } from './param';
+import { UrlParamsEncoder } from './url-params-encoder';
+import { UrlParamEncoder } from './url-param-encoder';
 
 export interface PathParamOptions {
   optional?: boolean;
@@ -29,14 +31,23 @@ export function PathParam(
   { optional = false, variadic = false }: PathParamOptions = {}
 ): PathMatcher<any> {
   if (variadic) {
-    return new VariadicPathParamMatcher(new ParamEncoder(param), optional);
+    return new VariadicPathParamMatcher(
+      composeEncoders(new UrlParamEncoder(), new ParamEncoder(param)),
+      optional
+    );
   } else {
-    return new PathParamMatcher(new ParamEncoder(param), optional);
+    return new PathParamMatcher(
+      composeEncoders(new UrlParamEncoder(), new ParamEncoder(param)),
+      optional
+    );
   }
 }
 
 export class PathParamMatcher<T> implements PathMatcher<T | undefined> {
-  constructor(readonly encoder: Encoder<T>, readonly optional: boolean) {}
+  constructor(
+    readonly encoder: Encoder<string, T>,
+    readonly optional: boolean
+  ) {}
 
   match(path: string[]): PathMatchResult<T | undefined> {
     if (path.length === 0) {
@@ -98,7 +109,10 @@ export class PathParamMatcher<T> implements PathMatcher<T | undefined> {
 export class VariadicPathParamMatcher<T>
   implements PathMatcher<T[] | undefined>
 {
-  constructor(readonly encoder: Encoder<T>, readonly optional: boolean) {}
+  constructor(
+    readonly encoder: Encoder<string, T>,
+    readonly optional: boolean
+  ) {}
 
   match(path: string[]): PathMatchResult<T[] | undefined> {
     if (path.length === 0) {

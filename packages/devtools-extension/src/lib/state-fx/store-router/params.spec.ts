@@ -1,5 +1,10 @@
 import { z } from 'zod';
 import { ParamsEncoder } from './params';
+import { createUrlParams, UrlParams } from './url-params';
+
+function count(urlParams: UrlParams | undefined) {
+  return urlParams !== undefined ? Array.from(urlParams).length : -1;
+}
 
 describe('ParamsEncoder', function () {
   describe('decode', function () {
@@ -10,7 +15,7 @@ describe('ParamsEncoder', function () {
       });
 
       const result = paramsEncoder.decode(
-        'foo=%21%40%23%24%25%5E%26*%28%29_%2B&bar=15'
+        createUrlParams(['foo', '!@#$%^&*()_+'], ['bar', '15'])
       );
 
       expect(result.valid).toBe(true);
@@ -27,26 +32,14 @@ describe('ParamsEncoder', function () {
           bar: z.coerce.number(),
         });
 
-        const result = paramsEncoder.decode('foo=asd&bar=zxc');
+        const result = paramsEncoder.decode(
+          createUrlParams(['foo', 'asd'], ['bar', 'zxc'])
+        );
 
         expect(result.valid).toBe(true);
         expect(result.value).toEqual({
           foo: 'asd',
         });
-      });
-    });
-
-    describe('when search string is garbage', function () {
-      it('should return an empty object', function () {
-        const paramsEncoder = new ParamsEncoder({
-          foo: z.coerce.string(),
-          bar: z.coerce.number(),
-        });
-
-        const result = paramsEncoder.decode('!@#$%^&*())_');
-
-        expect(result.valid).toBe(true);
-        expect(result.value).toEqual({});
       });
     });
   });
@@ -64,7 +57,9 @@ describe('ParamsEncoder', function () {
       });
 
       expect(result.valid).toBe(true);
-      expect(result.value).toBe('foo=!%40%23%24%25%5E%26*()_%2B&bar=42');
+      expect(count(result.value)).toBe(2);
+      expect(result.value?.get('foo')).toBe('!@#$%^&*()_+');
+      expect(result.value?.get('bar')).toBe('42');
     });
 
     describe('when some of the params are invalid', function () {
@@ -80,7 +75,8 @@ describe('ParamsEncoder', function () {
         } as any);
 
         expect(result.valid).toBe(true);
-        expect(result.value).toBe('foo=asd');
+        expect(count(result.value)).toBe(1);
+        expect(result.value?.get('foo')).toBe('asd');
       });
     });
 
@@ -96,7 +92,8 @@ describe('ParamsEncoder', function () {
         });
 
         expect(result.valid).toBe(true);
-        expect(result.value).toBe('foo=asd');
+        expect(count(result.value)).toBe(1);
+        expect(result.value?.get('foo')).toBe('asd');
       });
     });
 
@@ -112,7 +109,8 @@ describe('ParamsEncoder', function () {
         } as any);
 
         expect(result.valid).toBe(true);
-        expect(result.value).toBe('foo=asd');
+        expect(count(result.value)).toBe(1);
+        expect(result.value?.get('foo')).toBe('asd');
       });
     });
   });

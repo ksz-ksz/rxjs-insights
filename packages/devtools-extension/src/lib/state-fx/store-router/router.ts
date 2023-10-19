@@ -2,30 +2,42 @@ import { History, Location } from './history';
 import { RouteConfig } from './route-config';
 import { matchRoutes, RouteMatch } from './match-routes';
 import { Component, InitializedComponent } from '@lib/state-fx/store';
+import { Encoder } from './encoder';
 
-export interface Router<TData> {
+export interface Router<TData, TSearchInput, THashInput> {
   readonly history: History;
+  readonly searchEncoder: Encoder<string, TSearchInput>;
+  readonly hashEncoder: Encoder<string, THashInput>;
   createHref(location: Location): string;
-  match(pathname: string): RouteMatch<TData>[];
-  getRouteConfig(id: number): RouteConfig<TData>;
-  init(routeConfig: RouteConfig<TData>): void;
+  match(pathname: string): RouteMatch<TData, TSearchInput, THashInput>[];
+  getRouteConfig(id: number): RouteConfig<TData, TSearchInput, THashInput>;
+  init(routeConfig: RouteConfig<TData, TSearchInput, THashInput>): void;
 }
 
-export interface RouterComponent<TData> extends Component<Router<TData>> {}
+export interface RouterComponent<TData, TSearchInput, THashInput>
+  extends Component<Router<TData, TSearchInput, THashInput>> {}
 
-export interface CreateRouterOptions<TData> {
+export interface CreateRouterOptions<TData, TSearchInput, THashInput> {
   history: History;
+  searchEncoder: Encoder<string, TSearchInput>;
+  hashEncoder: Encoder<string, THashInput>;
 }
 
-export function createRouter<TData>({
+export function createRouter<TData, TSearchInput, THashInput>({
   history,
-}: CreateRouterOptions<TData>): RouterComponent<TData> {
-  return createRouterComponent(history);
+  searchEncoder,
+  hashEncoder,
+}: CreateRouterOptions<TData, TSearchInput, THashInput>): RouterComponent<
+  TData,
+  TSearchInput,
+  THashInput
+> {
+  return createRouterComponent(history, searchEncoder, hashEncoder);
 }
 
-function routeConfigVisitor<TData>(
-  routeConfig: RouteConfig<TData>,
-  apply: (target: RouteConfig<TData>) => void
+function routeConfigVisitor<TData, TSearchInput, THashInput>(
+  routeConfig: RouteConfig<TData, TSearchInput, THashInput>,
+  apply: (target: RouteConfig<TData, TSearchInput, THashInput>) => void
 ) {
   apply(routeConfig);
   for (const child of routeConfig?.children ?? []) {
@@ -33,22 +45,35 @@ function routeConfigVisitor<TData>(
   }
 }
 
-function createRouterInstance<TData>(history: History): Router<TData> {
-  const routeConfigs = new Map<number, RouteConfig<TData>>();
-  let rootRouteConfig: RouteConfig<TData> | undefined = undefined;
+function createRouterInstance<TData, TSearchInput, THashInput>(
+  history: History,
+  searchEncoder: Encoder<string, TSearchInput>,
+  hashEncoder: Encoder<string, THashInput>
+): Router<TData, TSearchInput, THashInput> {
+  const routeConfigs = new Map<
+    number,
+    RouteConfig<TData, TSearchInput, THashInput>
+  >();
+  let rootRouteConfig:
+    | RouteConfig<TData, TSearchInput, THashInput>
+    | undefined = undefined;
 
   function createHref(location: Location): string {
     return history.format(location);
   }
 
-  function match(pathname: string): RouteMatch<TData>[] {
+  function match(
+    pathname: string
+  ): RouteMatch<TData, TSearchInput, THashInput>[] {
     if (rootRouteConfig === undefined) {
       throw new Error(`router not initialized`);
     }
     return matchRoutes(rootRouteConfig, pathname);
   }
 
-  function getRouteConfig(routeId: number): RouteConfig<TData> {
+  function getRouteConfig(
+    routeId: number
+  ): RouteConfig<TData, TSearchInput, THashInput> {
     if (rootRouteConfig === undefined) {
       throw new Error(`router not initialized`);
     }
@@ -60,7 +85,7 @@ function createRouterInstance<TData>(history: History): Router<TData> {
     return routeConfig;
   }
 
-  function init(routeConfig: RouteConfig<TData>) {
+  function init(routeConfig: RouteConfig<TData, TSearchInput, THashInput>) {
     if (rootRouteConfig !== undefined) {
       throw new Error(`router initialized`);
     }
@@ -72,6 +97,8 @@ function createRouterInstance<TData>(history: History): Router<TData> {
 
   return {
     history,
+    searchEncoder,
+    hashEncoder,
     createHref,
     match,
     getRouteConfig,
@@ -79,12 +106,18 @@ function createRouterInstance<TData>(history: History): Router<TData> {
   };
 }
 
-function createRouterComponent<TData>(
-  history: History
-): RouterComponent<TData> {
+function createRouterComponent<TData, TSearchInput, THashInput>(
+  history: History,
+  searchEncoder: Encoder<string, TSearchInput>,
+  hashEncoder: Encoder<string, THashInput>
+): RouterComponent<TData, TSearchInput, THashInput> {
   return {
-    init(): InitializedComponent<Router<TData>> {
-      const component = createRouterInstance<TData>(history);
+    init(): InitializedComponent<Router<TData, TSearchInput, THashInput>> {
+      const component = createRouterInstance<TData, TSearchInput, THashInput>(
+        history,
+        searchEncoder,
+        hashEncoder
+      );
       return { component };
     },
   };

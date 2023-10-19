@@ -39,13 +39,19 @@ type ExtractHash<TRoute> = TRoute extends Route<unknown, unknown, infer THash>
   ? THash
   : never;
 
-export interface Route<TParams = unknown, TSearch = unknown, THash = unknown> {
+export interface Route<
+  TParams = unknown,
+  TSearch = unknown,
+  THash = unknown,
+  TSearchInput = unknown,
+  THashInput = unknown
+> {
   readonly id: number;
   readonly parent: Route<any, any, any> | undefined;
   readonly path: string;
   readonly params: PathMatchers<TParams> | undefined;
-  readonly search: Encoder<TSearch> | undefined;
-  readonly hash: Encoder<THash> | undefined;
+  readonly search: Encoder<TSearchInput, TSearch> | undefined;
+  readonly hash: Encoder<THashInput, THash> | undefined;
 }
 
 export interface CreateLocationWithRequiredOptions<TParams, TSearch, THash> {
@@ -90,13 +96,15 @@ export interface CreateRouteOptionsWithRequiredParams<
   TParams extends Params<TPath>,
   TSearch,
   THash,
-  TParent extends Route<unknown, unknown, unknown>
+  TParent extends Route<unknown, unknown, unknown>,
+  TSearchInput,
+  THashInput
 > {
   parent?: TParent;
   path: TPath;
   params: PathMatchers<TParams>;
-  search?: EncoderFactory<TSearch, ExtractSearch<TParent>>;
-  hash?: EncoderFactory<THash, ExtractHash<TParent>>;
+  search?: EncoderFactory<TSearchInput, TSearch, ExtractSearch<TParent>>;
+  hash?: EncoderFactory<THashInput, THash, ExtractHash<TParent>>;
 }
 
 export interface CreateRouteOptionsWithOptionalParams<
@@ -104,13 +112,15 @@ export interface CreateRouteOptionsWithOptionalParams<
   TParams extends Params<TPath>,
   TSearch,
   THash,
-  TParent extends Route<unknown, unknown, unknown>
+  TParent extends Route<unknown, unknown, unknown>,
+  TSearchInput,
+  THashInput
 > {
   parent?: TParent;
   path: TPath;
   params?: PathMatchers<TParams>;
-  search?: EncoderFactory<TSearch, ExtractSearch<TParent>>;
-  hash?: EncoderFactory<THash, ExtractHash<TParent>>;
+  search?: EncoderFactory<TSearchInput, TSearch, ExtractSearch<TParent>>;
+  hash?: EncoderFactory<THashInput, THash, ExtractHash<TParent>>;
 }
 
 export type CreateRouteOptions<
@@ -118,21 +128,27 @@ export type CreateRouteOptions<
   TParams extends Params<TPath>,
   TSearch,
   THash,
-  TParent extends Route<unknown, unknown, unknown>
+  TParent extends Route<unknown, unknown, unknown>,
+  TSearchInput,
+  THashInput
 > = {} extends TParams
   ? CreateRouteOptionsWithOptionalParams<
       TPath,
       TParams,
       TSearch,
       THash,
-      TParent
+      TParent,
+      TSearchInput,
+      THashInput
     >
   : CreateRouteOptionsWithRequiredParams<
       TPath,
       TParams,
       TSearch,
       THash,
-      TParent
+      TParent,
+      TSearchInput,
+      THashInput
     >;
 
 export type CreateRouteReturn<TParams, TSearch, THash> = Route<
@@ -154,9 +170,9 @@ function normalizePath(path: string) {
 }
 
 function createEncoder(
-  factory: EncoderFactory<any, any> | undefined,
-  parentEncoder: Encoder<any> | undefined
-): Encoder<any> | undefined {
+  factory: EncoderFactory<any, any, any> | undefined,
+  parentEncoder: Encoder<any, any> | undefined
+): Encoder<any, any> | undefined {
   if (factory === undefined) {
     return parentEncoder;
   }
@@ -205,9 +221,9 @@ function formatPath(
   }
 }
 
-function formatParam<T>(
+function formatParam<TInput, T>(
   prefix: string,
-  encoder: Encoder<T> | undefined,
+  encoder: Encoder<TInput, T> | undefined,
   value: T | undefined
 ): string {
   const result = value !== undefined ? encoder?.encode(value) : undefined;
@@ -221,13 +237,23 @@ function formatParam<T>(
 let ROUTE_ID = 0;
 
 export function createRoute<
+  TSearchInput,
+  THashInput,
   TPath extends string,
   TParams extends Params<TPath>,
   TParent extends Route<unknown, unknown, unknown>,
   TSearch = ExtractSearch<TParent>,
   THash = ExtractHash<TParent>
 >(
-  options: CreateRouteOptions<TPath, TParams, TSearch, THash, TParent>
+  options: CreateRouteOptions<
+    TPath,
+    TParams,
+    TSearch,
+    THash,
+    TParent,
+    TSearchInput,
+    THashInput
+  >
 ): CreateRouteReturn<ExtractParams<TParent> & TParams, TSearch, THash> {
   const route: Route<TParams, TSearch, THash> = {
     id: ROUTE_ID++,
@@ -248,4 +274,24 @@ export function createRoute<
   }
 
   return Object.assign(createPath, route) as any;
+}
+
+export function createRouteFactory<TSearchInput, THashInput>(): <
+  TPath extends string,
+  TParams extends Params<TPath>,
+  TParent extends Route,
+  TSearch = ExtractSearch<TParent>,
+  THash = ExtractHash<TParent>
+>(
+  options: CreateRouteOptions<
+    TPath,
+    TParams,
+    TSearch,
+    THash,
+    TParent,
+    TSearchInput,
+    THashInput
+  >
+) => CreateRouteReturn<ExtractParams<TParent> & TParams, TSearch, THash> {
+  return createRoute;
 }

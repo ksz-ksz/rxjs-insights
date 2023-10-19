@@ -1,5 +1,12 @@
-import { createRoute, Params, PathParam } from '@lib/state-fx/store-router';
+import {
+  createRouteFactory,
+  Params,
+  PathParam,
+} from '@lib/state-fx/store-router';
 import { z } from 'zod';
+import { UrlParams } from '../lib/state-fx/store-router/url-params';
+
+const createRoute = createRouteFactory<UrlParams, string>();
 
 export const rootRoute = createRoute({
   path: '',

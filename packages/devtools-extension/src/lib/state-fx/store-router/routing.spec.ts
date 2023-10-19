@@ -30,6 +30,8 @@ import { createRouterStore } from './router-store';
 import { RouteObject } from './route-object';
 import { RouterActions } from './router-actions';
 import { createRouting } from './routing';
+import { UrlParamsEncoder } from './url-params-encoder';
+import { UrlParamEncoder } from './url-param-encoder';
 
 type ListingEntry = ['N', Action<any>] | ['E', any] | ['C'];
 
@@ -101,6 +103,8 @@ function createTestHarness(
 
   const router = createRouter({
     history,
+    searchEncoder: new UrlParamsEncoder(),
+    hashEncoder: new UrlParamEncoder(),
   });
 
   const routerActions = createActions<RouterActions>({ namespace: 'router' });

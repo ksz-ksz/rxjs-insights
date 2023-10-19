@@ -2,7 +2,7 @@ import { Route } from './route';
 import { Observable } from 'rxjs';
 import { Location } from './history';
 import { RouteObject } from './route-object';
-import { Component, Store, StoreView } from '@lib/state-fx/store';
+import { Component } from '@lib/state-fx/store';
 
 export interface RouteContext<
   TData,
@@ -83,35 +83,69 @@ export interface RoutingRule<
 
 export interface RouteConfig<
   TData,
+  TSearchInput,
+  THashInput,
   TParams = unknown,
   TSearch = unknown,
   THash = unknown
 > {
   id: number;
-  route: Route<TParams, TSearch, THash>;
-  children?: RouteConfig<TData>[];
+  route: Route<TParams, TSearch, THash, TSearchInput, THashInput>;
+  children?: RouteConfig<TData, TSearchInput, THashInput>[];
   data?: TData;
   rules?: Component<RoutingRule<TData, TParams, TSearch, THash>>[];
 }
 
-export interface CreateRouteConfigOptions<TData, TParams, TSearch, THash> {
-  children?: RouteConfig<TData>[];
+export interface CreateRouteConfigOptions<
+  TData,
+  TSearchInput,
+  THashInput,
+  TParams,
+  TSearch,
+  THash
+> {
+  children?: RouteConfig<TData, TSearchInput, THashInput>[];
   data?: TData;
   rules?: Component<RoutingRule<TData, TParams, TSearch, THash>>[];
 }
 
 let routeConfigId = 0;
 
-export function createRouteConfig<TData, TParams, TSearch, THash>(
-  route: Route<TParams, TSearch, THash>,
-  options?: CreateRouteConfigOptions<TData, TParams, TSearch, THash>
-): RouteConfig<TData, TParams, TSearch, THash> {
+export function createRouteConfig<
+  TData,
+  TParams,
+  TSearch,
+  THash,
+  TSearchInput,
+  THashInput
+>(
+  route: Route<TParams, TSearch, THash, TSearchInput, THashInput>,
+  options?: CreateRouteConfigOptions<
+    TData,
+    TSearchInput,
+    THashInput,
+    TParams,
+    TSearch,
+    THash
+  >
+): RouteConfig<TData, TSearchInput, THashInput, TParams, TSearch, THash> {
   return { id: routeConfigId++, route, ...options };
 }
 
-export function createRouteConfigFactory<TData>(): <TParams, TSearch, THash>(
-  route: Route<TParams, TSearch, THash>,
-  routing?: CreateRouteConfigOptions<TData, TParams, TSearch, THash>
-) => RouteConfig<TData, TParams, TSearch, THash> {
+export function createRouteConfigFactory<TData, TSearchInput, THashInput>(): <
+  TParams,
+  TSearch,
+  THash
+>(
+  route: Route<TParams, TSearch, THash, TSearchInput, THashInput>,
+  routing?: CreateRouteConfigOptions<
+    TData,
+    TSearchInput,
+    THashInput,
+    TParams,
+    TSearch,
+    THash
+  >
+) => RouteConfig<TData, TSearchInput, THashInput, TParams, TSearch, THash> {
   return createRouteConfig;
 }

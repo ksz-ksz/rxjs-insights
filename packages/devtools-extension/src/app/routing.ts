@@ -20,8 +20,13 @@ import {
   targetRoute,
 } from '@app/routes';
 import { router, routerActions, routerStore } from '@app/router';
+import { UrlParams } from '../lib/state-fx/store-router/url-params';
 
-const createRouteConfig = createRouteConfigFactory<unknown, unknown>();
+const createRouteConfig = createRouteConfigFactory<
+  unknown,
+  UrlParams,
+  string
+>();
 
 function redirect<TState, TConfig, TParams, TSearch, THash>(
   fn: (

@@ -1,6 +1,6 @@
 import { Encoder } from './encoder';
 import { ZodType } from 'zod';
-import { safeDecode } from './safe-decode';
+import { createUrlParams, UrlParams } from './url-params';
 
 export type ZodTypes<T> = {
   [K in keyof T]: ZodType<T[K]>;
@@ -8,7 +8,9 @@ export type ZodTypes<T> = {
 
 export function Params<T, TParent>(
   params: ZodTypes<T>
-): (parent?: Encoder<TParent>) => Encoder<Partial<T> & TParent> {
+): (
+  parent?: Encoder<UrlParams, TParent>
+) => Encoder<UrlParams, Partial<T> & TParent> {
   // @ts-ignore
   return (parent) => {
     if (parent === undefined) {
@@ -24,38 +26,15 @@ export function Params<T, TParent>(
   };
 }
 
-function decodeParams(string: string): Record<string, string> {
-  const params: Record<string, string> = {};
-  for (let pair of string.split('&')) {
-    const [key, val] = pair.split('=');
-    const decodedKey = key !== undefined ? safeDecode(key) : '';
-    const decodedVal = val !== undefined ? safeDecode(val) : '';
-    params[decodedKey] = decodedVal;
-  }
-  return params;
-}
-
-function encodeParams(params: Record<string, string>): string {
-  const pairs: string[] = [];
-  for (const key in params) {
-    const val = params[key];
-    const encodedKey = encodeURIComponent(key);
-    const encodedVal = encodeURIComponent(val);
-    pairs.push(`${encodedKey}=${encodedVal}`);
-  }
-  return pairs.join('&');
-}
-
-export class ParamsEncoder<T> implements Encoder<Partial<T>> {
+export class ParamsEncoder<T> implements Encoder<UrlParams, Partial<T>> {
   constructor(readonly params: ZodTypes<T>) {}
 
-  decode(value: string) {
+  decode(value: UrlParams) {
     const parsedParams: Partial<T> = {};
     try {
-      const decodedParams = decodeParams(value);
       for (const paramKey in this.params) {
         const param = this.params[paramKey];
-        const paramValue = decodedParams[paramKey];
+        const paramValue = value.get(paramKey);
         if (paramValue !== undefined) {
           const result = param.safeParse(paramValue);
           if (result.success) {
@@ -73,18 +52,18 @@ export class ParamsEncoder<T> implements Encoder<Partial<T>> {
     if (typeof value !== 'object' || value === null) {
       return { valid: false } as const;
     }
-    const params: Record<string, string> = {};
+    const entries: [string, string][] = [];
     for (const paramKey in this.params) {
       const param = this.params[paramKey];
       const paramValue = value[paramKey];
       if (paramValue !== undefined) {
         const result = param.safeParse(paramValue as any);
         if (result.success) {
-          params[paramKey] = String(result.data);
+          entries.push([paramKey, String(result.data)]);
         }
       }
     }
 
-    return { valid: true, value: encodeParams(params) } as const;
+    return { valid: true, value: createUrlParams(...entries) } as const;
   }
 }
