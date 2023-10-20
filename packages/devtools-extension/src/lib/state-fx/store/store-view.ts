@@ -3,6 +3,7 @@ import { BehaviorSubject, merge, Observable } from 'rxjs';
 import { Component, Container, InitializedComponent } from './container';
 import { Deps, DepsState, getDepsState } from './deps';
 import { Actions, actionsComponent } from './actions';
+import { StoreComponent } from './store';
 
 export interface StoreView<T> {
   readonly actionSources: ActionSource<any>[];
@@ -15,12 +16,12 @@ export interface StoreView<T> {
 }
 
 export interface CreateStoreViewOptions<TDeps extends Deps> {
-  deps: TDeps;
+  deps: [...TDeps];
 }
 
 export function createStoreView<TDeps extends Deps>(
   options: CreateStoreViewOptions<TDeps>
-): Component<StoreView<DepsState<TDeps>>> {
+): StoreViewComponent<DepsState<TDeps>> {
   return new StoreViewComponent(options.deps);
 }
 
@@ -80,5 +81,8 @@ class StoreViewComponent<T> implements Component<StoreView<T>> {
     };
   }
 }
+
+export type StoreViewState<TStoreView extends StoreViewComponent<any>> =
+  TStoreView extends StoreViewComponent<infer TState> ? TState : never;
 
 // TODO: rename: createStatesComposition, createComposition, StateContainer, State

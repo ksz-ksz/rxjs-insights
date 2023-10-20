@@ -12,7 +12,7 @@ export const refsEffect = createEffect({
   namespace: 'refs',
   deps: [refsStore],
 })({
-  handleExpand(actions, deps) {
+  handleExpand(actions, [refs]) {
     return merge(
       actions.ofType(refOutletActions.Expand),
       actions.ofType(refreshRefsActions.LoadExpanded),
@@ -20,8 +20,8 @@ export const refsEffect = createEffect({
     ).pipe(
       concatMap((action) => {
         const { ref, path, stateKey } = action.payload;
-        const state = getRefState(deps.getState(), stateKey);
-        const uiState = getRefUiState(deps.getState(), stateKey);
+        const state = getRefState(refs.getState(), stateKey);
+        const uiState = getRefUiState(refs.getState(), stateKey);
         return from(loadRefsForExpandedPaths(path, ref, state, uiState)).pipe(
           map((refs) =>
             refsActions.RefsForExpandedPathsLoaded({ stateKey, refs })

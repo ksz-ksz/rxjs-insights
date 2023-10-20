@@ -1,13 +1,16 @@
 import { insightsSelector } from '@app/selectors/insights-selectors';
 import {
   createSelector,
-  SelectorContext,
+  createStoreView,
   SelectorContextFromDeps,
-  StoreState,
 } from '@lib/state-fx/store';
 import { routerStore, selectRoute } from '@app/router';
 import { targetRoute } from '@app/routes';
 import { insightsStore } from '@app/store/insights/store';
+
+export const activeTargetState = createStoreView({
+  deps: [routerStore, insightsStore],
+});
 
 export const activeTargetStateSelector = createSelector(
   (

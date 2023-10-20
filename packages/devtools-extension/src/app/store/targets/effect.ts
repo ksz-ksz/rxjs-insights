@@ -28,30 +28,20 @@ import { routeActivated } from '@app/utils';
 import {
   createEffect,
   createSelectorFunction,
+  select,
   Selector,
 } from '@lib/state-fx/store';
 import { routerActions, routerStore } from '@app/router';
 import { insightsStore } from '@app/store/insights/store';
 import { dashboardRoute } from '@app/routes';
-import { activeTargetSelector } from '@app/selectors/active-target-state-selector';
-
-function select<TState, TArgs extends any[], TResult>(
-  selector: Selector<TState, TArgs, TResult>,
-  ...args: TArgs
-): OperatorFunction<TState, TResult> {
-  return (source: Observable<TState>) =>
-    new Observable((observer) => {
-      const fn = createSelectorFunction(selector);
-
-      return source
-        .pipe(map((state) => fn(state, ...args)))
-        .subscribe(observer);
-    });
-}
+import {
+  activeTargetSelector,
+  activeTargetState,
+} from '@app/selectors/active-target-state-selector';
 
 export const targetEffect = createEffect({
   namespace: 'target',
-  deps: [routerStore, insightsStore],
+  deps: [activeTargetState],
 })({
   handleDashboardEnter(actions) {
     return actions.select(routeActivated(routerActions, dashboardRoute)).pipe(
@@ -97,8 +87,8 @@ export const targetEffect = createEffect({
       })
     );
   },
-  handleLockToggle(actions, deps) {
-    return deps.getStateObservable().pipe(
+  handleLockToggle(actions, [activeTargets]) {
+    return activeTargets.getStateObservable().pipe(
       select(activeTargetSelector),
       distinctUntilChanged(),
       startWith(undefined),

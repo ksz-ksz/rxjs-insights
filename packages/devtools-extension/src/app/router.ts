@@ -6,9 +6,13 @@ import {
   RouterActions,
 } from '@lib/state-fx/store-router';
 import { createActions } from '@lib/state-fx/store';
+import { UrlParamsEncoder } from '../lib/state-fx/store-router/url-params-encoder';
+import { UrlParamEncoder } from '../lib/state-fx/store-router/url-param-encoder';
 
 export const router = createRouter({
   history: createMemoryHistory(),
+  searchEncoder: new UrlParamsEncoder(),
+  hashEncoder: new UrlParamEncoder(),
 });
 
 export const routerActions = createActions<RouterActions>({

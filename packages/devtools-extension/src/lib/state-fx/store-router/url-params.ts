@@ -21,11 +21,11 @@ export class UrlParams {
   }
 
   set(...entries: [string, string][]) {
-    return setValues(new Map(this.map), entries);
+    return new UrlParams(setValues(new Map(this.map), entries));
   }
 
   append(...entries: [string, string][]) {
-    return appendValues(new Map(this.map), entries);
+    return new UrlParams(appendValues(new Map(this.map), entries));
   }
 }
 

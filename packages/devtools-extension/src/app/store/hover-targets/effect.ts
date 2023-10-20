@@ -1,6 +1,5 @@
 import { createEffect } from '@lib/state-fx/store';
 import { effect } from '@lib/store';
-import { filter } from 'rxjs';
 import { uiActions } from '@app/actions/ui-actions';
 
 export const hoverTargetsEffect = createEffect({

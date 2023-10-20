@@ -1,3 +1,4 @@
+export * from './operators';
 export * from './action';
 export * from './action-source';
 export * from './actions';

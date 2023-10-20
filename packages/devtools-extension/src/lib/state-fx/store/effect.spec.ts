@@ -1,4 +1,4 @@
-import { createActions, typeOf } from './index';
+import { createActions, createStoreView, typeOf } from './index';
 import { createStore, tx } from './store';
 import { createEffect } from './effect';
 import { map, Observer } from 'rxjs';
@@ -38,28 +38,34 @@ const barStore = createStore({
   }),
 });
 
+const composedStore = createStoreView({
+  deps: [fooStore, barStore],
+});
+
 const fakeEffect = createEffect({
   namespace: 'fake',
-  deps: [fooStore, barStore],
+  deps: {
+    store: composedStore,
+  },
 })({
-  handleFoo(actions, deps) {
+  handleFoo(actions, { store }) {
     return actions.ofType(fakeActions.updateFoo).pipe(
       map((action) =>
         fakeActions.result({
           value: action.payload,
           from: 'foo',
-          deps: deps.getState(),
+          deps: store.getState(),
         })
       )
     );
   },
-  handleBar(actions, deps) {
+  handleBar(actions, { store }) {
     return actions.ofType(fakeActions.updateBar).pipe(
       map((action) =>
         fakeActions.result({
           value: action.payload,
           from: 'bar',
-          deps: deps.getState(),
+          deps: store.getState(),
         })
       )
     );
