@@ -234,10 +234,9 @@ export function createSelector<STATE, ARGS extends any[], RESULT>(
   fn: SelectorFunction<STATE, ARGS, RESULT>,
   options: CreateSelectorOptions = {}
 ): Selector<STATE, ARGS, RESULT> {
-  // @ts-ignore
   return fn.length > 1
-    ? createSelectorWithArgs(fn, options)
-    : createSelectorWithoutArgs(fn, options);
+    ? (createSelectorWithArgs(fn as any, options) as any)
+    : (createSelectorWithoutArgs(fn as any, options) as any);
 }
 
 function createStateSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
@@ -262,9 +261,10 @@ function createStateSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
     let result: RESULT;
     if (selectorState === undefined) {
       // console.log('initial state');
-      // @ts-ignore
       result =
-        args.length === 0 ? fn(context.state) : fn(context.state, ...args);
+        args.length === 0
+          ? (fn as any)(context.state)
+          : fn(context.state, ...args);
       selectorState = {
         selector: stateSelector as any,
         lastArgs: args,
@@ -281,9 +281,10 @@ function createStateSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
       const { lastArgs, lastState } = selectorState;
       if (hasArgsChanged(args, lastArgs) || context.state !== lastState) {
         // console.log('run');
-        // @ts-ignore
         result =
-          args.length === 0 ? fn(context.state) : fn(context.state, ...args);
+          args.length === 0
+            ? (fn as any)(context.state)
+            : fn(context.state, ...args);
         selectorState.lastResult = result;
         selectorState.lastState = context.state;
         selectorState.lastArgs = args;
@@ -362,10 +363,9 @@ export function createStateSelector<STATE, ARGS extends any[], RESULT>(
   fn: StateSelectorFunction<STATE, ARGS, RESULT>,
   options: CreateSelectorOptions = {}
 ): Selector<STATE, ARGS, RESULT> {
-  // @ts-ignore
   return fn.length > 1
-    ? createStateSelectorWithArgs(fn, options)
-    : createStateSelectorWithoutArgs(fn, options);
+    ? (createStateSelectorWithArgs(fn as any, options) as any)
+    : (createStateSelectorWithoutArgs(fn as any, options) as any);
 }
 
 export function createSelectorFunction<STATE, ARGS extends any[], RESULT>(
@@ -376,7 +376,6 @@ export function createSelectorFunction<STATE, ARGS extends any[], RESULT>(
     inputs: undefined as any,
     state: undefined as any,
   };
-  // @ts-ignore
   return function selectorFunction(state: STATE, ...args: ARGS) {
     context.state = state;
     return selector(context, ...args);

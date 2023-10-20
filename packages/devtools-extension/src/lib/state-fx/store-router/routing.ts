@@ -35,11 +35,11 @@ import { ComponentsResolver } from './components-resolver';
 import { RouteObject } from './route-object';
 import { diffRoutes } from './diff-routes';
 
-export interface StartRouterOptions<TData> {
-  router: RouterComponent<TData>;
+export interface CreateRoutingOptions<TData, TSearchInput, THashInput> {
+  router: RouterComponent<TData, TSearchInput, THashInput>;
   routerStore: StoreComponent<string, RouterState>;
   routerActions: ActionTypes<RouterActions>;
-  routerConfig: RouteConfig<TData>;
+  routerConfig: RouteConfig<TData, TSearchInput, THashInput>;
 }
 
 export function fromHistory(history: History): Observable<HistoryEntry> {
@@ -60,8 +60,13 @@ export interface Routing extends Effect {}
 
 export interface RoutingComponent extends Component<Routing> {}
 
-function matchRoutes<TData>(router: Router<TData>, location: Location) {
+function matchRoutes<TData, TSearchInput, THashInput>(
+  router: Router<TData, TSearchInput, THashInput>,
+  location: Location
+) {
   const matches = router.match(location.pathname);
+  const decodedSearch = router.searchEncoder.decode(location.search);
+  const decodedHash = router.hashEncoder.decode(location.hash);
   const routes: RouteObject<any, any, any>[] = [];
   let params = {};
   for (const match of matches) {
@@ -70,16 +75,20 @@ function matchRoutes<TData>(router: Router<TData>, location: Location) {
       id: match.routeConfig.id,
       path: match.path,
       params: params,
-      search: match.routeConfig.route.search?.decode(location.search).value,
-      hash: match.routeConfig.route.hash?.decode(location.hash).value,
+      search: decodedSearch.valid
+        ? match.routeConfig.route.search?.decode(decodedSearch.value).value
+        : undefined,
+      hash: decodedHash.valid
+        ? match.routeConfig.route.hash?.decode(decodedHash.value).value
+        : undefined,
     });
   }
   return routes;
 }
 
-function createRouteContext<TData>(
+function createRouteContext<TData, TSearchInput, THashInput>(
   route: RouteObject,
-  router: Router<TData>
+  router: Router<TData, TSearchInput, THashInput>
 ): RouteContext<TData> {
   return {
     route,
@@ -87,9 +96,14 @@ function createRouteContext<TData>(
   };
 }
 
-function createResolveObservable<TNamespace extends string, TData>(
+function createResolveObservable<
+  TNamespace extends string,
+  TData,
+  TSearchInput,
+  THashInput
+>(
   routingRulesResolver: ComponentsResolver<RoutingRule<TData>>,
-  router: Router<TData>,
+  router: Router<TData, TSearchInput, THashInput>,
   nextLocation: Location,
   prevLocation: Location | undefined,
   nextRoutes: RouteObject<any, any, any>[],
@@ -161,9 +175,14 @@ function createResolveObservable<TNamespace extends string, TData>(
   return concat(...resolve);
 }
 
-function createCommitObservable<TNamespace extends string, TData>(
+function createCommitObservable<
+  TNamespace extends string,
+  TData,
+  TSearchInput,
+  THashInput
+>(
   routingRulesResolver: ComponentsResolver<RoutingRule<TData>>,
-  router: Router<TData>,
+  router: Router<TData, TSearchInput, THashInput>,
   nextLocation: Location,
   prevLocation: Location | undefined,
   nextRoutes: RouteObject<any, any, any>[],
@@ -277,16 +296,16 @@ function createEvents<TNamespace extends string, TData>(
 
 function createRuleRoutes<TData>(
   routes: RouteObject<TData>[],
-  router: Router<TData>
+  router: Router<TData, unknown, unknown>
 ): RouteContext<TData>[] {
   return routes.map((route) => createRouteContext(route, router));
 }
 
-function createNavigateObservable<TState, TData>(
+function createNavigateObservable<TState, TData, TSearchInput, THashInput>(
   routingRulesResolver: ComponentsResolver<RoutingRule<TData>>,
   action: Action<NavigationRequested>,
   actions: Actions,
-  router: Router<TData>,
+  router: Router<TData, TSearchInput, THashInput>,
   routerActions: ActionTypes<RouterActions>,
   getRouterState: StateSelectorFunction<
     Record<string, RouterState>,
@@ -463,9 +482,9 @@ function getState(entry: HistoryEntry): RouterHistoryState {
   }
 }
 
-function createRoutingInstance<TData>(
+function createRoutingInstance<TData, TSearchInput, THashInput>(
   actions: Actions,
-  router: Router<TData>,
+  router: Router<TData, TSearchInput, THashInput>,
   routerStore: Store<string, RouterState>,
   routerActions: ActionTypes<RouterActions>,
   routingRulesResolver: ComponentsResolver<RoutingRule<TData>>
@@ -550,11 +569,11 @@ function createRoutingInstance<TData>(
   }
 }
 
-function createRoutingComponent<TData>(
-  router: RouterComponent<TData>,
+function createRoutingComponent<TData, TSearchInput, THashInput>(
+  router: RouterComponent<TData, TSearchInput, THashInput>,
   routerStore: StoreComponent<string, RouterState>,
   routerActions: ActionTypes<RouterActions>,
-  routerConfig: RouteConfig<TData>
+  routerConfig: RouteConfig<TData, TSearchInput, THashInput>
 ): RoutingComponent {
   return {
     init(container: Container): InitializedComponent<Routing> {
@@ -588,12 +607,12 @@ function createRoutingComponent<TData>(
   };
 }
 
-export function createRouting<TData>({
+export function createRouting<TData, TSearchInput, THashInput>({
   router,
   routerActions,
   routerStore,
   routerConfig,
-}: StartRouterOptions<TData>): RoutingComponent {
+}: CreateRoutingOptions<TData, TSearchInput, THashInput>): RoutingComponent {
   return createRoutingComponent(
     router,
     routerStore,

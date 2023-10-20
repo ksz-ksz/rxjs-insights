@@ -1,6 +1,6 @@
 import { createRouter } from './router';
 import { createMemoryHistory, Location } from './history';
-import { createRoute } from './route';
+import { createRouteFactory } from './route';
 import { PathParam } from './path-param';
 import { z } from 'zod';
 import {
@@ -34,6 +34,11 @@ import { UrlParamsEncoder } from './url-params-encoder';
 import { UrlParamEncoder } from './url-param-encoder';
 
 type ListingEntry = ['N', Action<any>] | ['E', any] | ['C'];
+
+const createRoute = createRouteFactory({
+  searchEncoder: new UrlParamsEncoder(),
+  hashEncoder: new UrlParamEncoder(),
+});
 
 const parentRoute = createRoute({
   path: 'parent/:parentId',

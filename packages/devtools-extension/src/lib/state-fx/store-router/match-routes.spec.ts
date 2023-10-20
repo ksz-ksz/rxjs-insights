@@ -1,8 +1,15 @@
 import { z } from 'zod';
-import { createRoute } from './route';
+import { createRouteFactory } from './route';
 import { PathParam } from './path-param';
 import { createRouteConfig } from './route-config';
 import { matchRoutes } from './match-routes';
+import { UrlParamsEncoder } from './url-params-encoder';
+import { UrlParamEncoder } from './url-param-encoder';
+
+const createRoute = createRouteFactory({
+  searchEncoder: new UrlParamsEncoder(),
+  hashEncoder: new UrlParamEncoder(),
+});
 
 const rootRoute = createRoute({
   path: '',

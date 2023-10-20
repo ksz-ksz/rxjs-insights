@@ -1,4 +1,4 @@
-import { Encoder } from './encoder';
+import { composeEncoders, Encoder } from './encoder';
 import { EncoderFactory } from './encoder-factory';
 import { PathMatchers } from './path-matchers';
 import { Location } from './history';
@@ -236,47 +236,14 @@ function formatParam<TInput, T>(
 
 let ROUTE_ID = 0;
 
-export function createRoute<
-  TSearchInput,
-  THashInput,
-  TPath extends string,
-  TParams extends Params<TPath>,
-  TParent extends Route<unknown, unknown, unknown>,
-  TSearch = ExtractSearch<TParent>,
-  THash = ExtractHash<TParent>
->(
-  options: CreateRouteOptions<
-    TPath,
-    TParams,
-    TSearch,
-    THash,
-    TParent,
-    TSearchInput,
-    THashInput
-  >
-): CreateRouteReturn<ExtractParams<TParent> & TParams, TSearch, THash> {
-  const route: Route<TParams, TSearch, THash> = {
-    id: ROUTE_ID++,
-    parent: options.parent,
-    path: normalizePath(options.path),
-    params: options.params,
-    search: createEncoder(options.search, options?.parent?.search),
-    hash: createEncoder(options.hash, options?.parent?.hash),
-  };
-  function createPath(
-    options?: CreateLocationOptionsWithOptionalParams<TParams, TSearch, THash>
-  ): Location {
-    const pathname = formatPath(route, options?.params);
-    const search = formatParam('?', route.search, options?.search);
-    const hash = formatParam('#', route.hash, options?.hash);
-
-    return { pathname, search, hash };
-  }
-
-  return Object.assign(createPath, route) as any;
+export interface CreateRouteFactoryOptions<TSearchInput, THashInput> {
+  searchEncoder: Encoder<string, TSearchInput>;
+  hashEncoder: Encoder<string, THashInput>;
 }
 
-export function createRouteFactory<TSearchInput, THashInput>(): <
+export function createRouteFactory<TSearchInput, THashInput>(
+  options: CreateRouteFactoryOptions<TSearchInput, THashInput>
+): <
   TPath extends string,
   TParams extends Params<TPath>,
   TParent extends Route,
@@ -293,5 +260,52 @@ export function createRouteFactory<TSearchInput, THashInput>(): <
     THashInput
   >
 ) => CreateRouteReturn<ExtractParams<TParent> & TParams, TSearch, THash> {
-  return createRoute;
+  const { searchEncoder: searchInputEncoder, hashEncoder: hashInputEncoder } =
+    options;
+  return function createRoute<
+    TSearchInput,
+    THashInput,
+    TPath extends string,
+    TParams extends Params<TPath>,
+    TParent extends Route,
+    TSearch = ExtractSearch<TParent>,
+    THash = ExtractHash<TParent>
+  >(
+    options: CreateRouteOptions<
+      TPath,
+      TParams,
+      TSearch,
+      THash,
+      TParent,
+      TSearchInput,
+      THashInput
+    >
+  ): CreateRouteReturn<ExtractParams<TParent> & TParams, TSearch, THash> {
+    const route: Route<TParams, TSearch, THash> = {
+      id: ROUTE_ID++,
+      parent: options.parent,
+      path: normalizePath(options.path),
+      params: options.params,
+      search: createEncoder(options.search, options?.parent?.search),
+      hash: createEncoder(options.hash, options?.parent?.hash),
+    };
+
+    const searchEncoder = route.search
+      ? composeEncoders(searchInputEncoder, route.search)
+      : undefined;
+    const hashEncoder = route.hash
+      ? composeEncoders(hashInputEncoder, route.hash)
+      : undefined;
+    function createPath(
+      options?: CreateLocationOptionsWithOptionalParams<TParams, TSearch, THash>
+    ): Location {
+      const pathname = formatPath(route, options?.params);
+      const search = formatParam('?', searchEncoder, options?.search);
+      const hash = formatParam('#', hashEncoder, options?.hash);
+
+      return { pathname, search, hash };
+    }
+
+    return Object.assign(createPath, route) as any;
+  };
 }

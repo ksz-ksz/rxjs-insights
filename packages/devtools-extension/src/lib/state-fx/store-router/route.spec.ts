@@ -1,8 +1,15 @@
-import { createRoute } from './route';
+import { createRouteFactory } from './route';
 import { Param } from './param';
 import { z } from 'zod';
 import { Params } from './params';
 import { PathParam } from './path-param';
+import { UrlParamsEncoder } from './url-params-encoder';
+import { UrlParamEncoder } from './url-param-encoder';
+
+const createRoute = createRouteFactory({
+  searchEncoder: new UrlParamsEncoder(),
+  hashEncoder: new UrlParamEncoder(),
+});
 
 describe('route', function () {
   describe('createRoute', function () {
@@ -47,6 +54,35 @@ describe('route', function () {
           pathname: 'feature/42',
           search: '?foo=true',
           hash: '#bar',
+        });
+      });
+
+      it('should encode path segments, search hand hash', () => {
+        const featureRoute = createRoute({
+          path: '!@#/:val',
+          params: {
+            val: PathParam(z.coerce.string()),
+          },
+          search: Params({
+            val: z.coerce.string(),
+          }),
+          hash: Param(z.coerce.string()),
+        });
+
+        const path = featureRoute({
+          params: {
+            val: '$%^',
+          },
+          search: {
+            val: '&*(',
+          },
+          hash: ')_+',
+        });
+
+        expect(path).toEqual({
+          pathname: '!@#/%24%25%5E',
+          search: '?val=%26*(',
+          hash: '#)_%2B',
         });
       });
 

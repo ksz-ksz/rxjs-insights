@@ -6,6 +6,6 @@ export interface RouteObject<
   id: number;
   path: string[];
   params: TParams;
-  search: TSearch;
-  hash: THash;
+  search: TSearch; // TODO: might be undefined; see routing.ts/matchRoutes
+  hash: THash; // TODO: might be undefined; see routing.ts/matchRoutes
 }
