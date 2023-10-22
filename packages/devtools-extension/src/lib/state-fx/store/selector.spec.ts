@@ -3,11 +3,8 @@ import {
   createSelectorFunction,
   createStateSelector,
   SelectorContext,
-  SelectorFunction,
   StateSelectorFunction,
 } from './selector';
-import * as stream from 'stream';
-import { factory } from 'ts-jest/dist/transformers/hoist-jest';
 
 interface Todo {
   id: number;

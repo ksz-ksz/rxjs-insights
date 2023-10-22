@@ -1,5 +1,6 @@
 import { RouteObject } from './route-object';
 import { Location } from './history';
+import { ActionTypes } from '@lib/state-fx/store';
 
 export interface ActivatedRouteEvent<TParams, TSearch, THash> {
   status: 'activated';
@@ -80,3 +81,5 @@ export interface RouterActions {
   RouteResolved: RouteEvent<any, any, any>;
   RouteCommitted: RouteEvent<any, any, any>;
 }
+
+export type RouterActionTypes = ActionTypes<RouterActions>;

@@ -21,9 +21,14 @@ import {
 } from '@app/routes';
 import { router, routerActions, routerStore } from '@app/router';
 import { UrlParams } from '../lib/state-fx/store-router/url-params';
+import { RouterData } from '../lib/state-fx/store-router-react/router-data';
+import { AppBarWrapper } from '@app/pages/app-bar-wrapper';
+import { InstrumentationStatusPage } from '@app/pages/instrumentation-status-page';
+import { TargetPage } from '@app/pages/target-page';
+import { DashboardPage } from '@app/pages/dashboard-page';
 
 const createRouteConfig = createRouteConfigFactory<
-  unknown,
+  RouterData,
   UrlParams,
   string
 >();
@@ -120,6 +125,9 @@ function activate<TConfig, TParams, TSearch, THash>(
 const routerConfig = createRouteConfig(rootRoute, {
   children: [
     createRouteConfig(statusRoute, {
+      data: {
+        component: InstrumentationStatusPage,
+      },
       rules: [
         canActivate(({ store }) => {
           // FIXME
@@ -137,10 +145,20 @@ const routerConfig = createRouteConfig(rootRoute, {
         }),
       ],
     }),
-    createRouteConfig(dashboardRoute),
+    createRouteConfig(dashboardRoute, {
+      data: {
+        component: DashboardPage,
+      },
+    }),
     createRouteConfig(appBarRoute, {
+      data: {
+        component: AppBarWrapper,
+      },
       children: [
         createRouteConfig(targetRoute, {
+          data: {
+            component: TargetPage,
+          },
           rules: [
             activate(({ store, route }) => {
               // FIXME

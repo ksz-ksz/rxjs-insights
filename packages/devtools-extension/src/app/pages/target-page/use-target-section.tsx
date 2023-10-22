@@ -1,5 +1,3 @@
-import { useSelector } from '@app/store';
-import { old_createSelector } from '@lib/store';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { refsSelector } from '@app/selectors/refs-selectors';
 import {
@@ -8,11 +6,18 @@ import {
 } from '@app/components/get-ref-outlet-entries';
 import { useLastDefinedValue } from '@app/utils';
 import { getRefOutletSidePanelEntries } from '@app/components/get-ref-outlet-side-panel-entries';
+import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
+import { useSelector } from '@lib/state-fx/store-react';
+import { scopeStore } from '@app/pages/target-page/scope-store';
 
-const vmSelector = old_createSelector(
-  [activeTargetStateSelector, refsSelector],
-  ([activeTargetState, refs]) => {
-    const { relations } = activeTargetState!;
+const vmSelector = createSelector(
+  (
+    context: SelectorContextFromDeps<
+      [typeof activeTargetStateSelector, typeof refsSelector]
+    >
+  ) => {
+    const { relations } = activeTargetStateSelector(context)!;
+    const refs = refsSelector(context);
     const targets = Object.values(relations.targets);
 
     const refOutletEntries = targets.flatMap((target) =>
@@ -28,5 +33,5 @@ const vmSelector = old_createSelector(
 );
 
 export function useTargetSection() {
-  return useLastDefinedValue(useSelector(vmSelector), []);
+  return useLastDefinedValue(useSelector(scopeStore, vmSelector), []);
 }

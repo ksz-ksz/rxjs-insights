@@ -7,34 +7,43 @@ import { ControlsPanel } from '@app/pages/target-page/controls-panel';
 import { SidePanelControl, SidePanelSection } from '@app/components/side-panel';
 import { useScopeSection } from '@app/pages/target-page/use-scope-section';
 import { useTargetSection } from '@app/pages/target-page/use-target-section';
-import { effect, filterActions, useReaction } from '@lib/store';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { insightsActions } from '@app/actions/insights-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
-import { useSelector } from '@app/store';
-import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
+import {
+  activeTargetState,
+  activeTargetStateSelector,
+} from '@app/selectors/active-target-state-selector';
 import { useSidePanelWidth } from '@app/utils';
+import { useStoreEffect } from '../../../lib/state-fx/store-react/use-store-effect';
+import { createEffect, effect } from '@lib/state-fx/store';
+import { merge } from 'rxjs';
+import { useSelector } from '@lib/state-fx/store-react';
 
 function useScrollToEventReaction(
   leftPanelRef: React.MutableRefObject<SidePanelControl | null>
 ) {
-  useReaction(
-    (action$) =>
-      action$.pipe(
-        filterActions([
-          eventsLogActions.EventSelected,
-          insightsActions.PlayNextEvent,
-          refOutletContextActions.FocusEvent,
-        ]),
-        effect((action) => {
-          const leftPanel = leftPanelRef.current;
-          if (leftPanel) {
-            const { event } = action.payload;
-            leftPanel.scrollToKey(`event-${event.time}`);
-          }
-        })
-      ),
-    []
+  useStoreEffect(
+    createEffect({
+      namespace: 'useScrollToEventReaction',
+    })({
+      handleScroll(actions) {
+        return merge(
+          actions.ofType(eventsLogActions.EventSelected),
+          actions.ofType(insightsActions.PlayNextEvent),
+          actions.ofType(refOutletContextActions.FocusEvent)
+        ).pipe(
+          effect((action) => {
+            const leftPanel = leftPanelRef.current;
+            if (leftPanel) {
+              const { event } = action.payload;
+              leftPanel.scrollToKey(`event-${event.time}`);
+            }
+          })
+        );
+      },
+    }),
+    [leftPanelRef]
   );
 }
 
@@ -89,9 +98,12 @@ export function RightPanel() {
 }
 
 export function TargetPage() {
-  const activeTargetState = useSelector(activeTargetStateSelector);
+  const activeTarget = useSelector(
+    activeTargetState,
+    activeTargetStateSelector
+  );
 
-  if (!activeTargetState) {
+  if (!activeTarget) {
     return null;
   }
 

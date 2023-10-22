@@ -1,5 +1,5 @@
 import { Action, ActionType } from '@lib/state-fx/store';
-import { BehaviorSubject, merge, Observable } from 'rxjs';
+import { BehaviorSubject, map, merge, Observable } from 'rxjs';
 import { Actions, actionsComponent } from './actions';
 import { produce } from 'immer';
 import { Component, Container, InitializedComponent } from './container';
@@ -10,6 +10,9 @@ import { infer } from 'zod';
 export interface Store<TNamespace extends string, TState>
   extends StoreView<{ [K in TNamespace]: TState }> {
   readonly namespace: TNamespace;
+
+  getOwnState(): TState;
+  getOwnStateObservable(): Observable<TState>;
 }
 
 export interface StoreComponent<TNamespace extends string, TState>
@@ -187,6 +190,12 @@ function createStoreInstance<TNamespace extends string, TState>(
       return stateSubject.asObservable() as Observable<{
         [K in TNamespace]: TState;
       }>;
+    },
+    getOwnState(): TState {
+      return stateSubject.getValue()[namespace];
+    },
+    getOwnStateObservable(): Observable<TState> {
+      return stateSubject.asObservable().pipe(map((state) => state[namespace]));
     },
     dispose() {
       subscription.unsubscribe();

@@ -1,4 +1,3 @@
-import { Slice } from '@lib/store';
 import { PropertyRef } from '@app/protocols/refs';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { refsActions } from '@app/actions/refs-actions';
@@ -18,8 +17,6 @@ export interface RefsState {
   states: Record<string, RefState>;
   uiStates: Record<string, RefUiState>;
 }
-
-export type RefsSlice = Slice<'refs', RefsState>;
 
 const initialState: RefsState = {
   states: {},

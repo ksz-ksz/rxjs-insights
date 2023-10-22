@@ -12,7 +12,6 @@ import {
   NodeRendererProps,
 } from '@app/components/graph';
 import { Menu, MenuItem, MenuList, Theme, useTheme } from '@mui/material';
-import { useSelectorFunction } from '@app/store';
 import {
   targetStateSelector,
   targetUiStateSelector,
@@ -23,66 +22,81 @@ import {
   getTargetColors,
 } from '@app/pages/target-page/subscriber-graph-utils';
 import gsap from 'gsap';
-import { old_createSelector, useDispatchCallback } from '@lib/store';
 import { subscribersGraphActions } from '@app/actions/subscribers-graph-actions';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
 import { getLocationStrings } from '@app/utils/get-location-strings';
 import { openResourceAvailable } from '@app/features';
 import { timeSelector } from '@app/selectors/time-selectors';
+import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
+import { useDispatchCallback, useSelector } from '@lib/state-fx/store-react';
+import { activeTargetState } from '@app/selectors/active-target-state-selector';
 
 const circleRadius = 5;
 const circleCircumference = 2 * Math.PI * circleRadius;
 
-const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
-  old_createSelector(
-    [
-      targetStateSelector(getRootTargetIdFromKey(node.key)),
-      targetUiStateSelector(getRootTargetIdFromKey(node.key)),
-      timeSelector,
-    ],
-    ([targetState, targetUiState, time]) => {
-      const { target: rootTarget, relations } = targetState;
-      const { expandedKeys } = targetUiState;
-      const rootTargetKey = `<${rootTarget.id}>`;
-      const target = relations.targets[node.target.id];
-      const isCaller = target.type === 'caller';
-      const targetKey = node.key;
-      const event = relations.events[time];
-      const location = getLocationStrings(target.locations);
-      const sourceLocation = target.locations.originalLocation;
-      const bundleLocation = target.locations.generatedLocation;
-      const isRoot = node.key.startsWith('<') && node.key.endsWith('>');
-      const isActive =
-        isCaller || (target.startTime <= time && time <= target.endTime);
-      const isSelected = event && event.target === target.id;
-      const isExpanded = expandedKeys.has(node.key);
-      const targetColors = getTargetColors(theme, target);
-      const textColor = isRoot ? targetColors.primary : targetColors.secondary;
-      const nodeColor = isActive
-        ? textColor
-        : theme.palette.action.disabledBackground;
-      const selectedColor = event && getEventColors(theme, event).secondary;
+const vmSelector = createSelector(
+  (
+    context: SelectorContextFromDeps<
+      [
+        typeof targetStateSelector,
+        typeof targetUiStateSelector,
+        typeof timeSelector
+      ]
+    >,
+    node: RelatedTargetHierarchyNode,
+    theme: Theme
+  ) => {
+    const targetState = targetStateSelector(
+      context,
+      getRootTargetIdFromKey(node.key)
+    );
+    const targetUiState = targetUiStateSelector(
+      context,
+      getRootTargetIdFromKey(node.key)
+    );
+    const time = timeSelector(context);
+    const { target: rootTarget, relations } = targetState;
+    const { expandedKeys } = targetUiState;
+    const rootTargetKey = `<${rootTarget.id}>`;
+    const target = relations.targets[node.target.id];
+    const isCaller = target.type === 'caller';
+    const targetKey = node.key;
+    const event = relations.events[time];
+    const location = getLocationStrings(target.locations);
+    const sourceLocation = target.locations.originalLocation;
+    const bundleLocation = target.locations.generatedLocation;
+    const isRoot = node.key.startsWith('<') && node.key.endsWith('>');
+    const isActive =
+      isCaller || (target.startTime <= time && time <= target.endTime);
+    const isSelected = event && event.target === target.id;
+    const isExpanded = expandedKeys.has(node.key);
+    const targetColors = getTargetColors(theme, target);
+    const textColor = isRoot ? targetColors.primary : targetColors.secondary;
+    const nodeColor = isActive
+      ? textColor
+      : theme.palette.action.disabledBackground;
+    const selectedColor = event && getEventColors(theme, event).secondary;
 
-      return {
-        rootTarget,
-        rootTargetKey,
-        target,
-        targetKey,
-        event,
-        location,
-        sourceLocation,
-        bundleLocation,
-        isRoot,
-        isCaller,
-        isSelected,
-        isExpanded,
-        textColor,
-        nodeColor,
-        selectedColor,
-      };
-    }
-  );
+    return {
+      rootTarget,
+      rootTargetKey,
+      target,
+      targetKey,
+      event,
+      location,
+      sourceLocation,
+      bundleLocation,
+      isRoot,
+      isCaller,
+      isSelected,
+      isExpanded,
+      textColor,
+      nodeColor,
+      selectedColor,
+    };
+  }
+);
 
 interface MenuState {
   open: boolean;
@@ -110,7 +124,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     []
   );
   const theme = useTheme();
-  const vm = useSelectorFunction(vmSelector, node.data, theme);
+  const vm = useSelector(activeTargetState, vmSelector, node.data, theme);
 
   const circleRef = useRef<SVGCircleElement | null>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);

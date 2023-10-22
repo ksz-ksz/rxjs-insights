@@ -1,13 +1,9 @@
-import { filterRoute, RouteToken } from '@lib/store-router';
-import { filter, map, Observable, pipe } from 'rxjs';
-import { filterActions } from '@lib/store';
-import { old_router } from '@app/old_router';
+import { filter, map, Observable } from 'rxjs';
 import {
   ActivatedRouteEvent,
   DeactivatedRouteEvent,
   Route,
   RouteObject,
-  Router,
   RouterActions,
   UpdatedRouteEvent,
 } from '@lib/state-fx/store-router';
@@ -61,15 +57,3 @@ export function routeDeactivated<TParams, TSearch, THash>(
     },
   };
 }
-
-export const routeEnter = (token: RouteToken) =>
-  pipe(
-    filterActions(old_router.actions.RouteEnter),
-    filterRoute(old_router, token)
-  );
-
-export const routeLeave = (token: RouteToken) =>
-  pipe(
-    filterActions(old_router.actions.RouteLeave),
-    filterRoute(old_router, token)
-  );

@@ -9,22 +9,24 @@ import {
   useTheme,
 } from '@mui/material';
 import React from 'react';
-import { createUrl, RouterLink, RouterOutlet } from '@lib/store-router';
-import {
-  dashboardRouteToken,
-  old_router,
-  targetRouteToken,
-} from '@app/old_router';
 import { Bookmark, BookmarkAdded, Refresh } from '@mui/icons-material';
-import { useDispatch, useSelector } from '@app/store';
 import { appBarActions } from '@app/actions/app-bar-actions';
-import { TargetPage } from '@app/pages/target-page';
-import { DashboardPage } from '@app/pages/dashboard-page';
 import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
 import { LocationOutlet } from '@app/components/location-outlet';
 import { targetsSelector } from '@app/selectors/targets-selectors';
-import { old_createSelector } from '@lib/store';
+import {
+  createSelector,
+  createStoreView,
+  SelectorContextFromDeps,
+} from '@lib/state-fx/store';
+import { useDispatch, useSelector } from '@lib/state-fx/store-react';
+import { router, routerActions, routerStore } from '@app/router';
+import { targetsStore } from '@app/store/targets/store';
+import { insightsStore } from '@app/store/insights/store';
+import { RouterLink } from '../../../lib/state-fx/store-router-react/router-link';
+import { dashboardRoute } from '@app/routes';
+import { RouterOutlet } from '../../../lib/state-fx/store-router-react';
 
 const HomeSpan = styled('span')(({ theme }) => ({
   fontWeight: 600,
@@ -40,12 +42,17 @@ function Spacer({ space }: { space: number }) {
   );
 }
 
-const vm = old_createSelector(
-  [activeTargetStateSelector, targetsSelector],
-  ([activeTargetState, targets]) => {
-    const target = activeTargetState?.target;
+const vm = createSelector(
+  (
+    context: SelectorContextFromDeps<
+      [typeof activeTargetStateSelector, typeof targetsSelector]
+    >
+  ) => {
+    const target = activeTargetStateSelector(context)?.target;
     const isTargetPinned =
-      target && targets.targets.find((x) => x.id === target.id) !== undefined;
+      target &&
+      targetsSelector(context).targets.find((x) => x.id === target.id) !==
+        undefined;
 
     return {
       target,
@@ -54,9 +61,13 @@ const vm = old_createSelector(
   }
 );
 
+const store = createStoreView({
+  deps: [routerStore, insightsStore, targetsStore],
+});
+
 export function AppBarWrapper() {
   const dispatch = useDispatch();
-  const { target, isTargetPinned } = useSelector(vm);
+  const { target, isTargetPinned } = useSelector(store, vm);
 
   return (
     <Box display="flex" height="100%" flexDirection="column">
@@ -71,8 +82,8 @@ export function AppBarWrapper() {
           >
             <Button
               component={RouterLink}
-              router={old_router}
-              to={createUrl(['dashboard'])}
+              routerActions={routerActions}
+              location={dashboardRoute()}
             >
               <HomeSpan>RxJS Insights</HomeSpan>
             </Button>
@@ -124,16 +135,7 @@ export function AppBarWrapper() {
         </Toolbar>
       </AppBar>
       <Box flex="1 1 0" overflow="hidden">
-        <RouterOutlet
-          router={old_router}
-          token={dashboardRouteToken}
-          component={DashboardPage}
-        />
-        <RouterOutlet
-          router={old_router}
-          token={targetRouteToken}
-          component={TargetPage}
-        />
+        <RouterOutlet router={router} routerStore={routerStore} />
       </Box>
     </Box>
   );

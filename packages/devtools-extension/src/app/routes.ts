@@ -4,9 +4,13 @@ import {
   PathParam,
 } from '@lib/state-fx/store-router';
 import { z } from 'zod';
-import { UrlParams } from '../lib/state-fx/store-router/url-params';
+import { UrlParamsEncoder } from '../lib/state-fx/store-router/url-params-encoder';
+import { UrlParamEncoder } from '../lib/state-fx/store-router/url-param-encoder';
 
-const createRoute = createRouteFactory<UrlParams, string>();
+const createRoute = createRouteFactory({
+  searchEncoder: new UrlParamsEncoder(),
+  hashEncoder: new UrlParamEncoder(),
+});
 
 export const rootRoute = createRoute({
   path: '',

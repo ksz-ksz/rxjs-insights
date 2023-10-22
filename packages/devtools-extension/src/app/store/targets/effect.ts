@@ -1,4 +1,3 @@
-import { effect } from '@lib/store';
 import { fromServer } from '@lib/operators';
 import { createChromeRuntimeServerAdapter, startServer } from '@lib/rpc';
 import {
@@ -28,6 +27,7 @@ import { routeActivated } from '@app/utils';
 import {
   createEffect,
   createSelectorFunction,
+  effect,
   select,
   Selector,
 } from '@lib/state-fx/store';

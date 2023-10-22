@@ -1,6 +1,4 @@
-import { old_createSelector } from '@lib/store';
-import { TraceSlice } from '@app/store/trace/store';
+import { traceStore } from '@app/store/trace/store';
+import { createStoreSelector } from '../../lib/state-fx/store/store-selector';
 
-export const traceSelector = old_createSelector(
-  (state: TraceSlice) => state.trace
-);
+export const traceSelector = createStoreSelector(traceStore);

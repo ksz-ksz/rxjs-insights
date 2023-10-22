@@ -8,8 +8,9 @@ import {
 import { createActions } from '@lib/state-fx/store';
 import { UrlParamsEncoder } from '../lib/state-fx/store-router/url-params-encoder';
 import { UrlParamEncoder } from '../lib/state-fx/store-router/url-param-encoder';
+import { RouterData } from '../lib/state-fx/store-router-react';
 
-export const router = createRouter({
+export const router = createRouter<RouterData>({
   history: createMemoryHistory(),
   searchEncoder: new UrlParamsEncoder(),
   hashEncoder: new UrlParamEncoder(),

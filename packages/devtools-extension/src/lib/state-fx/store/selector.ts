@@ -84,16 +84,18 @@ function hasInputsChanged<STATE>(
   return changed;
 }
 
-export interface CreateSelectorOptions {
+export interface CreateSelectorOptions<RESULT> {
   scope?: 'local' | 'global';
+  equals?: (a: RESULT, b: RESULT) => boolean;
 }
 
 function createSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
   fn: SelectorFunction<STATE, ARGS, RESULT>,
-  options: CreateSelectorOptions = {}
+  options: CreateSelectorOptions<RESULT> = {}
 ): Selector<STATE, ARGS, RESULT> {
   const hasLocalScope =
     options.scope !== undefined ? options.scope === 'local' : true;
+  const equals = options.equals;
   let globalSelectorState: SelectorStateData<STATE, ARGS, RESULT> | undefined;
   return function selector(context: SelectorContext<STATE>, ...args: ARGS) {
     // console.group(`${fn.name}(${args.map((arg) => JSON.stringify(arg)).join(', ')})`);
@@ -139,7 +141,11 @@ function createSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
         // @ts-ignore
         result = args.length === 0 ? fn(context) : fn(context, ...args);
         // console.groupEnd();
-        selectorState.lastResult = result;
+        selectorState.lastResult = equals
+          ? equals(selectorState.lastResult, result)
+            ? selectorState.lastResult
+            : result
+          : result;
         selectorState.lastState = context.state;
         selectorState.lastArgs = args;
         selectorState.lastInputs = context.inputs;
@@ -163,10 +169,11 @@ function createSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
 
 function createSelectorWithoutArgs<STATE, RESULT>(
   fn: SelectorFunction<STATE, [], RESULT>,
-  options: CreateSelectorOptions = {}
+  options: CreateSelectorOptions<RESULT> = {}
 ): Selector<STATE, [], RESULT> {
   const hasLocalScope =
     options.scope !== undefined ? options.scope === 'local' : false;
+  const equals = options.equals;
   let globalSelectorState: SelectorStateData<STATE, [], RESULT> | undefined;
   return function selector(context: SelectorContext<STATE>) {
     // console.group(`${fn.name}()`);
@@ -209,7 +216,11 @@ function createSelectorWithoutArgs<STATE, RESULT>(
         // @ts-ignore
         result = fn(context);
         // console.groupEnd();
-        selectorState.lastResult = result;
+        selectorState.lastResult = equals
+          ? equals(selectorState.lastResult, result)
+            ? selectorState.lastResult
+            : result
+          : result;
         selectorState.lastState = context.state;
         selectorState.lastInputs = context.inputs;
         context.inputs = parentInputs;
@@ -232,7 +243,7 @@ function createSelectorWithoutArgs<STATE, RESULT>(
 
 export function createSelector<STATE, ARGS extends any[], RESULT>(
   fn: SelectorFunction<STATE, ARGS, RESULT>,
-  options: CreateSelectorOptions = {}
+  options: CreateSelectorOptions<RESULT> = {}
 ): Selector<STATE, ARGS, RESULT> {
   return fn.length > 1
     ? (createSelectorWithArgs(fn as any, options) as any)
@@ -241,7 +252,7 @@ export function createSelector<STATE, ARGS extends any[], RESULT>(
 
 function createStateSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
   fn: StateSelectorFunction<STATE, ARGS, RESULT>,
-  options: CreateSelectorOptions = {}
+  options: CreateSelectorOptions<RESULT> = {}
 ): Selector<STATE, ARGS, RESULT> {
   const hasLocalScope =
     options.scope !== undefined ? options.scope === 'local' : true;
@@ -305,7 +316,7 @@ function createStateSelectorWithArgs<STATE, ARGS extends any[], RESULT>(
 
 function createStateSelectorWithoutArgs<STATE, RESULT>(
   fn: StateSelectorFunction<STATE, [], RESULT>,
-  options: CreateSelectorOptions = {}
+  options: CreateSelectorOptions<RESULT> = {}
 ): Selector<STATE, [], RESULT> {
   const hasLocalScope =
     options.scope !== undefined ? options.scope === 'local' : false;
@@ -361,7 +372,7 @@ function createStateSelectorWithoutArgs<STATE, RESULT>(
 
 export function createStateSelector<STATE, ARGS extends any[], RESULT>(
   fn: StateSelectorFunction<STATE, ARGS, RESULT>,
-  options: CreateSelectorOptions = {}
+  options: CreateSelectorOptions<RESULT> = {}
 ): Selector<STATE, ARGS, RESULT> {
   return fn.length > 1
     ? (createStateSelectorWithArgs(fn as any, options) as any)

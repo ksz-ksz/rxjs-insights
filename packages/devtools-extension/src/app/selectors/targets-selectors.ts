@@ -1,6 +1,4 @@
-import { old_createSelector } from '@lib/store';
-import { TargetsSlice } from '@app/store/targets';
+import { targetsStore } from '@app/store/targets/store';
+import { createStoreSelector } from '../../lib/state-fx/store/store-selector';
 
-export const targetsSelector = old_createSelector(
-  (state: TargetsSlice) => state.targets
-);
+export const targetsSelector = createStoreSelector(targetsStore);

@@ -42,7 +42,8 @@ export function useSelector<TState, TArgs extends any[], TResult>(
   );
   const getSnapshot = useCallback(
     () => selectorFunction(source.getState(), ...args),
-    [source]
+    [source, ...args]
   );
+
   return useSyncExternalStore(subscribe, getSnapshot);
 }

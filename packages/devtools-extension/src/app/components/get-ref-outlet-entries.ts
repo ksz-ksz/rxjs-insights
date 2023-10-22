@@ -1,7 +1,5 @@
 import { PropertyRef, Ref } from '@app/protocols/refs';
-import { RefsState, RefState, RefUiState } from '@app/store/refs';
-import { Action } from '@lib/store';
-import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
+import { RefsState } from '@app/store/refs';
 import { getRefState, getRefUiState } from '@app/selectors/refs-selectors';
 
 export interface RefOutletEntry {

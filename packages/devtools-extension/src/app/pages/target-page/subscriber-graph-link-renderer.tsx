@@ -5,7 +5,6 @@ import {
   LinkRendererProps,
 } from '@app/components/graph';
 import { Theme, useTheme } from '@mui/material';
-import { useSelectorFunction } from '@app/store';
 import { targetStateSelector } from '@app/selectors/insights-selectors';
 import {
   getDirection,
@@ -13,38 +12,54 @@ import {
   getTargetColors,
 } from '@app/pages/target-page/subscriber-graph-utils';
 import gsap from 'gsap';
-import { old_createSelector } from '@lib/store';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
 import { timeSelector } from '@app/selectors/time-selectors';
+import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
+import { useSelector } from '@lib/state-fx/store-react';
+import { activeTargetState } from '@app/selectors/active-target-state-selector';
 
-const vmSelector = (node: RelatedTargetHierarchyNode, theme: Theme) =>
-  old_createSelector(
-    [targetStateSelector(getRootTargetIdFromKey(node.key)), timeSelector],
-    ([targetState, time]) => {
-      const { relations } = targetState;
-      const event = relations.events[time];
-      const target = relations.targets[node.target.id];
-      const isSelected = event && event.target === target.id;
-      const linkColor = getTargetColors(theme, target).secondary;
-      const selectedColor = event && getEventColors(theme, event).secondary;
+const vmSelector = createSelector(
+  (
+    context: SelectorContextFromDeps<
+      [typeof targetStateSelector, typeof timeSelector]
+    >,
+    node: RelatedTargetHierarchyNode,
+    theme: Theme
+  ) => {
+    const targetState = targetStateSelector(
+      context,
+      getRootTargetIdFromKey(node.key)
+    );
+    const time = timeSelector(context);
+    const { relations } = targetState;
+    const event = relations.events[time];
+    const target = relations.targets[node.target.id];
+    const isSelected = event && event.target === target.id;
+    const linkColor = getTargetColors(theme, target).secondary;
+    const selectedColor = event && getEventColors(theme, event).secondary;
 
-      return {
-        event,
-        target,
-        isSelected,
-        linkColor,
-        selectedColor,
-      };
-    }
-  );
+    return {
+      event,
+      target,
+      isSelected,
+      linkColor,
+      selectedColor,
+    };
+  }
+);
 
 export const SubscriberGraphLinkRenderer = React.forwardRef<
   LinkControl,
   LinkRendererProps<RelatedTargetHierarchyNode>
 >(function LinkRenderer({ link }, forwardedRef) {
   const theme = useTheme();
-  const vm = useSelectorFunction(vmSelector, link.source.data, theme);
+  const vm = useSelector(
+    activeTargetState,
+    vmSelector,
+    link.source.data,
+    theme
+  );
 
   const elementRef = useRef<SVGPathElement | null>(null);
   React.useImperativeHandle(

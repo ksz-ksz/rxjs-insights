@@ -1,8 +1,7 @@
-import { effect } from '@lib/store';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import { openResourceAvailable } from '@app/features';
 import { consoleClient } from '@app/clients/console';
-import { createEffect } from '@lib/state-fx/store';
+import { createEffect, effect } from '@lib/state-fx/store';
 
 export const refOutletContextEffect = createEffect({
   namespace: 'ref-outlet-context',

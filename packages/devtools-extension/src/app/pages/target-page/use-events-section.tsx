@@ -11,18 +11,19 @@ import { Indent } from '@app/components/indent';
 import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import React, { useMemo } from 'react';
 import { styled, Typography } from '@mui/material';
-import { old_createSelector, useDispatchCallback } from '@lib/store';
 import {
+  activeTargetState,
   activeTargetStateSelector,
   activeTargetUiStateSelector,
 } from '@app/selectors/active-target-state-selector';
 import { getTargetTimeframes } from '@app/pages/target-page/get-target-timeframes';
 import { getEvents } from '@app/pages/target-page/get-events';
 import { SidePanelEntry } from '@app/components/side-panel';
-import { useSelector } from '@app/store';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { showExcludedEventsSelector } from '@app/selectors/insights-selectors';
 import { timeSelector } from '@app/selectors/time-selectors';
+import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
+import { useDispatchCallback, useSelector } from '@lib/state-fx/store-react';
 
 const ExcludedDiv = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -69,15 +70,19 @@ const RefOutletSpan = styled('span')({
     opacity: 0.5,
   },
 });
-const eventsSelector = old_createSelector(
-  [
-    activeTargetStateSelector,
-    activeTargetUiStateSelector,
-    showExcludedEventsSelector,
-  ],
-  ([activeTargetState, activeTargetUiState, showExcludedEvents]) => {
-    const { target, relations } = activeTargetState!;
-    const { expandedKeys } = activeTargetUiState!;
+const eventsSelector = createSelector(
+  (
+    context: SelectorContextFromDeps<
+      [
+        typeof activeTargetStateSelector,
+        typeof activeTargetUiStateSelector,
+        typeof showExcludedEventsSelector
+      ]
+    >
+  ) => {
+    const { target, relations } = activeTargetStateSelector(context)!;
+    const { expandedKeys } = activeTargetUiStateSelector(context)!;
+    const showExcludedEvents = showExcludedEventsSelector(context);
     const timeframes = getTargetTimeframes(target, relations, expandedKeys);
     const allEvents = getEvents(relations);
     const entries = getEventLogEntries(
@@ -90,16 +95,23 @@ const eventsSelector = old_createSelector(
     return { entries };
   }
 );
-const vmSelector = old_createSelector(
-  [eventsSelector, timeSelector],
-  ([{ entries }, time]) => ({
-    entries,
-    time,
-  })
+const vmSelector = createSelector(
+  (
+    context: SelectorContextFromDeps<
+      [typeof eventsSelector, typeof timeSelector]
+    >
+  ) => {
+    const { entries } = eventsSelector(context);
+    const time = timeSelector(context);
+    return {
+      entries,
+      time,
+    };
+  }
 );
 
 export function useEventsSection() {
-  const vm = useSelector(vmSelector);
+  const vm = useSelector(activeTargetState, vmSelector);
   const onEventSelected = useDispatchCallback(
     (event: RelatedEvent) => eventsLogActions.EventSelected({ event }),
     []
