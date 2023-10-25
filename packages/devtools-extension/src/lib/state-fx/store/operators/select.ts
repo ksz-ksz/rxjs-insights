@@ -1,4 +1,4 @@
-import { createSelectorFunction, Selector } from '@lib/state-fx/store';
+import { createSelectorFunction, Selector } from '../selector';
 import { map, Observable, OperatorFunction } from 'rxjs';
 
 export function select<TState, TArgs extends any[], TResult>(

@@ -3,7 +3,6 @@ import { createActions, typeOf } from './index';
 import { createContainer } from './container';
 import { Observer } from 'rxjs';
 import { actionsComponent } from './actions';
-import { createStoreView } from './store-view';
 
 const fakeActions = createActions<{
   updateFoo: string;

@@ -10,15 +10,12 @@ import { useTargetSection } from '@app/pages/target-page/use-target-section';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { insightsActions } from '@app/actions/insights-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
-import {
-  activeTargetState,
-  selectActiveTargetState,
-} from '@app/selectors/active-target-state-selector';
+import { selectActiveTargetState } from '@app/selectors/active-target-state-selector';
 import { useSidePanelWidth } from '@app/utils';
 import { useStoreEffect } from '../../../lib/state-fx/store-react/use-store-effect';
 import { createEffect, effect } from '@lib/state-fx/store';
 import { merge } from 'rxjs';
-import { useSelector } from '@lib/state-fx/store-react';
+import { useSuperSelector } from '@lib/state-fx/store-react';
 
 function useScrollToEventReaction(
   leftPanelRef: React.MutableRefObject<SidePanelControl | null>
@@ -98,7 +95,7 @@ export function RightPanel() {
 }
 
 export function TargetPage() {
-  const activeTarget = useSelector(activeTargetState, selectActiveTargetState);
+  const activeTarget = useSuperSelector(selectActiveTargetState);
 
   if (!activeTarget) {
     return null;

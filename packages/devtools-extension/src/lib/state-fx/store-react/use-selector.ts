@@ -6,7 +6,6 @@ import {
   Selector,
   StateSelectorFunction,
   Store,
-  StoreView,
 } from '@lib/state-fx/store';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { useComponent } from './use-component';
@@ -31,7 +30,7 @@ export function useSelectorFunction<TState, TArgs extends any[], TResult>(
 }
 
 export function useSelector<TState, TArgs extends any[], TResult>(
-  component: Component<StoreView<TState>>,
+  component: Component<Store<TState>>,
   selector: Selector<TState, TArgs, TResult>,
   ...args: TArgs
 ): TResult {

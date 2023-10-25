@@ -1,4 +1,4 @@
-import { createActions, createStoreView, typeOf } from './index';
+import { createActions, typeOf } from './index';
 import { createStore, tx } from './store';
 import { createEffect } from './effect';
 import { map, Observer } from 'rxjs';
@@ -38,34 +38,31 @@ const barStore = createStore({
   }),
 });
 
-const composedStore = createStoreView({
-  deps: [fooStore, barStore],
-});
-
 const fakeEffect = createEffect({
   namespace: 'fake',
   deps: {
-    store: composedStore,
+    fooStore,
+    barStore,
   },
 })({
-  handleFoo(actions, { store }) {
+  handleFoo(actions, { fooStore, barStore }) {
     return actions.ofType(fakeActions.updateFoo).pipe(
       map((action) =>
         fakeActions.result({
           value: action.payload,
           from: 'foo',
-          deps: store.getState(),
+          deps: { foo: fooStore.getState(), bar: barStore.getState() },
         })
       )
     );
   },
-  handleBar(actions, { store }) {
+  handleBar(actions, { fooStore, barStore }) {
     return actions.ofType(fakeActions.updateBar).pipe(
       map((action) =>
         fakeActions.result({
           value: action.payload,
           from: 'bar',
-          deps: store.getState(),
+          deps: { foo: fooStore.getState(), bar: barStore.getState() },
         })
       )
     );
@@ -174,12 +171,8 @@ describe('Effect', () => {
       actions.dispatch(fakeActions.updateFoo('updated'));
       actions.dispatch(fakeActions.updateBar('updated'));
 
-      expect(foo.getState()).toEqual({
-        foo: 'initial',
-      });
-      expect(bar.getState()).toEqual({
-        bar: 'initial',
-      });
+      expect(foo.getState()).toEqual('initial');
+      expect(bar.getState()).toEqual('initial');
     });
   });
 });

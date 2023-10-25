@@ -3,7 +3,6 @@ import { BehaviorSubject, merge, Observable } from 'rxjs';
 import { Actions, actionsComponent } from './actions';
 import { produce } from 'immer';
 import { Component, Container, InitializedComponent } from './container';
-import { StoreView } from './store-view';
 import { Deps, DepsState, getDepsState } from './deps';
 
 export interface Store<TState> {
@@ -136,7 +135,7 @@ function createStoreInstance<TNamespace extends string, TState>(
   namespace: TNamespace,
   state: TState,
   actions: Actions,
-  deps: StoreView<any>[],
+  deps: Store<any>[],
   transitions: StateTransitions<TState, Deps>
 ) {
   const transitionsEntries = Object.entries(transitions);

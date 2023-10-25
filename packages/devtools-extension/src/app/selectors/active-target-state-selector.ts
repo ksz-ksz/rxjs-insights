@@ -1,13 +1,7 @@
 import { selectInsightsState } from '@app/selectors/insights-selectors';
-import { createStoreView } from '@lib/state-fx/store';
-import { routerStore, selectRoute } from '@app/router';
+import { selectRoute } from '@app/router';
 import { targetRoute } from '@app/routes';
-import { insightsStore } from '@app/store/insights/store';
 import { createSuperSelector } from '../../lib/state-fx/store/super-selector';
-
-export const activeTargetState = createStoreView({
-  deps: [routerStore, insightsStore],
-});
 
 export const selectActiveTargetState = createSuperSelector(
   [selectRoute, selectInsightsState],

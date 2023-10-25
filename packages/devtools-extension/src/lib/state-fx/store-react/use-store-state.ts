@@ -1,9 +1,9 @@
-import { Component, StoreView } from '@lib/state-fx/store';
+import { Component, Store } from '@lib/state-fx/store';
 import { useComponent } from './use-component';
 import { useCallback } from 'react';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
-export function useStoreState<TState>(component: Component<StoreView<TState>>) {
+export function useStoreState<TState>(component: Component<Store<TState>>) {
   const source = useComponent(component);
 
   const subscribe = useCallback(

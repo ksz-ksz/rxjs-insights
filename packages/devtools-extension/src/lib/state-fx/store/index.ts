@@ -7,6 +7,5 @@ export * from './deps';
 export * from './effect';
 export * from './selector';
 export * from './store';
-export * from './store-view';
 export * from './subtype';
 export * from './type-of';

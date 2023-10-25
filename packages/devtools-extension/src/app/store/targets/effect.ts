@@ -25,14 +25,12 @@ import { routeActivated } from '@app/utils';
 import { createEffect, effect, select } from '@lib/state-fx/store';
 import { routerActions } from '@app/router';
 import { dashboardRoute } from '@app/routes';
-import {
-  activeTargetState,
-  selectActiveTarget,
-} from '@app/selectors/active-target-state-selector';
+import { selectActiveTarget } from '@app/selectors/active-target-state-selector';
+import { createSelection } from '../../../lib/state-fx/store/selection';
 
 export const targetEffect = createEffect({
   namespace: 'target',
-  deps: [activeTargetState],
+  deps: { activeTarget: createSelection(selectActiveTarget) },
 })({
   handleDashboardEnter(actions) {
     return actions.select(routeActivated(routerActions, dashboardRoute)).pipe(
@@ -78,9 +76,9 @@ export const targetEffect = createEffect({
       })
     );
   },
-  handleLockToggle(actions, [activeTargets]) {
-    return activeTargets.getStateObservable().pipe(
-      select(selectActiveTarget),
+  handleLockToggle(actions, { activeTarget }) {
+    return activeTarget.pipe(
+      map(() => activeTarget.getResult()),
       distinctUntilChanged(),
       startWith(undefined),
       pairwise(),
