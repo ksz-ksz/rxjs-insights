@@ -13,8 +13,8 @@ import {
 } from '@app/components/graph';
 import { Menu, MenuItem, MenuList, Theme, useTheme } from '@mui/material';
 import {
-  targetStateSelector,
-  targetUiStateSelector,
+  selectTargetState,
+  selectTargetUiState,
 } from '@app/selectors/insights-selectors';
 import {
   getDirection,
@@ -27,35 +27,28 @@ import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-targe
 import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
 import { getLocationStrings } from '@app/utils/get-location-strings';
 import { openResourceAvailable } from '@app/features';
-import { timeSelector } from '@app/selectors/time-selectors';
-import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
-import { useDispatchCallback, useSelector } from '@lib/state-fx/store-react';
-import { activeTargetState } from '@app/selectors/active-target-state-selector';
+import { selectTime } from '@app/selectors/time-selectors';
+import {
+  useDispatchCallback,
+  useSuperSelector,
+} from '@lib/state-fx/store-react';
+import { createSuperSelector } from '../../../lib/state-fx/store/super-selector';
 
 const circleRadius = 5;
 const circleCircumference = 2 * Math.PI * circleRadius;
 
-const vmSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [
-        typeof targetStateSelector,
-        typeof targetUiStateSelector,
-        typeof timeSelector
-      ]
-    >,
-    node: RelatedTargetHierarchyNode,
-    theme: Theme
-  ) => {
-    const targetState = targetStateSelector(
+const selectVm = createSuperSelector(
+  [selectTargetState, selectTargetUiState, selectTime],
+  (context, node: RelatedTargetHierarchyNode, theme: Theme) => {
+    const targetState = selectTargetState(
       context,
       getRootTargetIdFromKey(node.key)
     );
-    const targetUiState = targetUiStateSelector(
+    const targetUiState = selectTargetUiState(
       context,
       getRootTargetIdFromKey(node.key)
     );
-    const time = timeSelector(context);
+    const time = selectTime(context);
     const { target: rootTarget, relations } = targetState;
     const { expandedKeys } = targetUiState;
     const rootTargetKey = `<${rootTarget.id}>`;
@@ -124,7 +117,7 @@ export const SubscriberGraphNodeRenderer = React.forwardRef<
     []
   );
   const theme = useTheme();
-  const vm = useSelector(activeTargetState, vmSelector, node.data, theme);
+  const vm = useSuperSelector(selectVm, node.data, theme);
 
   const circleRef = useRef<SVGCircleElement | null>(null);
   const tweenRef = useRef<gsap.core.Tween | null>(null);

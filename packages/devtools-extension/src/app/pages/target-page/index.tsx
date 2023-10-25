@@ -12,7 +12,7 @@ import { insightsActions } from '@app/actions/insights-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import {
   activeTargetState,
-  activeTargetStateSelector,
+  selectActiveTargetState,
 } from '@app/selectors/active-target-state-selector';
 import { useSidePanelWidth } from '@app/utils';
 import { useStoreEffect } from '../../../lib/state-fx/store-react/use-store-effect';
@@ -98,10 +98,7 @@ export function RightPanel() {
 }
 
 export function TargetPage() {
-  const activeTarget = useSelector(
-    activeTargetState,
-    activeTargetStateSelector
-  );
+  const activeTarget = useSelector(activeTargetState, selectActiveTargetState);
 
   if (!activeTarget) {
     return null;

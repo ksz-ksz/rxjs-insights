@@ -1,29 +1,21 @@
-import { concatMap, distinctUntilChanged, EMPTY, of } from 'rxjs';
+import { concatMap, distinctUntilChanged, EMPTY, map, of } from 'rxjs';
 import {
-  activeTargetSelector,
-  activeTargetState,
-  activeTargetStateSelector,
+  selectActiveTarget,
+  selectActiveTargetState,
 } from '@app/selectors/active-target-state-selector';
 import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { Ref } from '@app/protocols/refs';
-import { timeSelector } from '@app/selectors/time-selectors';
-import {
-  createEffect,
-  createSelector,
-  createSelectorFunction,
-  select,
-  SelectorContextFromDeps,
-} from '@lib/state-fx/store';
+import { selectTime } from '@app/selectors/time-selectors';
+import { createEffect } from '@lib/state-fx/store';
+import { createSuperSelector } from '../../../lib/state-fx/store/super-selector';
+import { createSelection } from '../../../lib/state-fx/store/selection';
 
-const activeEventSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [typeof activeTargetStateSelector, typeof timeSelector]
-    >
-  ) => {
-    const activeTargetState = activeTargetStateSelector(context);
-    const time = timeSelector(context);
+const selectActiveEvent = createSuperSelector(
+  [selectActiveTargetState, selectTime],
+  (context) => {
+    const activeTargetState = selectActiveTargetState(context);
+    const time = selectTime(context);
     if (activeTargetState) {
       const { relations } = activeTargetState;
       return relations.events[time];
@@ -31,9 +23,10 @@ const activeEventSelector = createSelector(
   }
 );
 
-const activeRelatedTargetsSelector = createSelector(
-  (context: SelectorContextFromDeps<[typeof activeTargetStateSelector]>) => {
-    const activeTargetState = activeTargetStateSelector(context);
+const selectActiveRelatedTargets = createSuperSelector(
+  [selectActiveTargetState],
+  (context) => {
+    const activeTargetState = selectActiveTargetState(context);
     if (activeTargetState) {
       const { relations } = activeTargetState;
       return Object.values(relations.targets);
@@ -43,11 +36,15 @@ const activeRelatedTargetsSelector = createSelector(
 
 export const refreshRefsEffect = createEffect({
   namespace: 'refreshRefs',
-  deps: [activeTargetState],
+  deps: {
+    activeTarget: createSelection(selectActiveTarget),
+    activeEvent: createSelection(selectActiveEvent),
+    activeRelatedTargets: createSelection(selectActiveRelatedTargets),
+  },
 })({
-  handleActiveTargetChange(actions, [activeTargets]) {
-    return activeTargets.getStateObservable().pipe(
-      select(activeTargetSelector),
+  handleActiveTargetChange(actions, { activeTarget }) {
+    return activeTarget.pipe(
+      map(() => activeTarget.getResult()),
       distinctUntilChanged(),
       concatMap((target) => {
         if (target) {
@@ -64,9 +61,9 @@ export const refreshRefsEffect = createEffect({
       })
     );
   },
-  handleActiveEventChange(actions, [activeTargets]) {
-    return activeTargets.getStateObservable().pipe(
-      select(activeEventSelector),
+  handleActiveEventChange(actions, { activeTarget }) {
+    return activeTarget.pipe(
+      map(() => activeTarget.getResult()),
       distinctUntilChanged(),
       concatMap((event) => {
         if (event) {
@@ -83,32 +80,28 @@ export const refreshRefsEffect = createEffect({
       })
     );
   },
-  handleRefreshData(actions, [activeTargets]) {
-    const getActiveTarget = createSelectorFunction(activeTargetSelector);
-    const getActiveEvent = createSelectorFunction(activeEventSelector);
-    const getActiveRelatedTargets = createSelectorFunction(
-      activeRelatedTargetsSelector
-    );
+  handleRefreshData(
+    actions,
+    { activeTarget, activeEvent, activeRelatedTargets }
+  ) {
     function getRefsToRefresh(): RefToRefresh[] {
       const refsToRefresh: RefToRefresh[] = [];
 
-      const scopeTargetRef = getActiveTarget(activeTargets.getState());
+      const scopeTargetRef = activeTarget.getResult();
       if (scopeTargetRef) {
         refsToRefresh.push({
           ref: scopeTargetRef,
           stateKey: 'context-target',
         });
       }
-      const scopeEventRef = getActiveEvent(activeTargets.getState());
+      const scopeEventRef = activeEvent.getResult();
       if (scopeEventRef) {
         refsToRefresh.push({
           ref: scopeEventRef,
           stateKey: 'context-event',
         });
       }
-      const relatedTargetRefs = getActiveRelatedTargets(
-        activeTargets.getState()
-      );
+      const relatedTargetRefs = activeRelatedTargets.getResult();
       if (relatedTargetRefs) {
         refsToRefresh.push(
           ...relatedTargetRefs.map((ref) => ({

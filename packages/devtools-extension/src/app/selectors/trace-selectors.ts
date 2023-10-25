@@ -1,4 +1,4 @@
 import { traceStore } from '@app/store/trace/store';
-import { createStoreSelector } from '../../lib/state-fx/store/store-selector';
+import { createStoreSuperSelector } from '../../lib/state-fx/store/super-selector';
 
-export const traceSelector = createStoreSelector(traceStore);
+export const selectTraceState = createStoreSuperSelector(traceStore);

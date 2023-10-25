@@ -7,7 +7,7 @@ import {
 import { JSXElementConstructor } from 'react';
 import { Store } from '@lib/store';
 import { statusSelector, StatusSlice } from '@app/store/status';
-import { targetStateSelector } from '@app/selectors/insights-selectors';
+import { selectTargetState } from '@app/selectors/insights-selectors';
 
 // FIXME: remove this file and all references
 
@@ -54,7 +54,7 @@ export const routerConfig: RouterConfig<
           path: ['target', ':targetId'],
           await(store, url, route) {
             return store.select(
-              targetStateSelector(Number(route.params!.targetId))
+              selectTargetState(Number(route.params!.targetId))
             );
           },
         },

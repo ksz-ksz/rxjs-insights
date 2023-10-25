@@ -12,18 +12,20 @@ import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import React, { useMemo } from 'react';
 import { styled, Typography } from '@mui/material';
 import {
-  activeTargetState,
-  activeTargetStateSelector,
-  activeTargetUiStateSelector,
+  selectActiveTargetState,
+  selectTargetUiState,
 } from '@app/selectors/active-target-state-selector';
 import { getTargetTimeframes } from '@app/pages/target-page/get-target-timeframes';
 import { getEvents } from '@app/pages/target-page/get-events';
 import { SidePanelEntry } from '@app/components/side-panel';
 import { eventsLogActions } from '@app/actions/events-log-actions';
-import { showExcludedEventsSelector } from '@app/selectors/insights-selectors';
-import { timeSelector } from '@app/selectors/time-selectors';
-import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
-import { useDispatchCallback, useSelector } from '@lib/state-fx/store-react';
+import { selectShowExcludedEvents } from '@app/selectors/insights-selectors';
+import { selectTime } from '@app/selectors/time-selectors';
+import {
+  useDispatchCallback,
+  useSuperSelector,
+} from '@lib/state-fx/store-react';
+import { createSuperSelector } from '../../../lib/state-fx/store/super-selector';
 
 const ExcludedDiv = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -70,19 +72,12 @@ const RefOutletSpan = styled('span')({
     opacity: 0.5,
   },
 });
-const eventsSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [
-        typeof activeTargetStateSelector,
-        typeof activeTargetUiStateSelector,
-        typeof showExcludedEventsSelector
-      ]
-    >
-  ) => {
-    const { target, relations } = activeTargetStateSelector(context)!;
-    const { expandedKeys } = activeTargetUiStateSelector(context)!;
-    const showExcludedEvents = showExcludedEventsSelector(context);
+const eventsSelector = createSuperSelector(
+  [selectActiveTargetState, selectTargetUiState, selectShowExcludedEvents],
+  (context) => {
+    const { target, relations } = selectActiveTargetState(context)!;
+    const { expandedKeys } = selectTargetUiState(context)!;
+    const showExcludedEvents = selectShowExcludedEvents(context);
     const timeframes = getTargetTimeframes(target, relations, expandedKeys);
     const allEvents = getEvents(relations);
     const entries = getEventLogEntries(
@@ -95,14 +90,11 @@ const eventsSelector = createSelector(
     return { entries };
   }
 );
-const vmSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [typeof eventsSelector, typeof timeSelector]
-    >
-  ) => {
+const selectVm = createSuperSelector(
+  [eventsSelector, selectTime],
+  (context) => {
     const { entries } = eventsSelector(context);
-    const time = timeSelector(context);
+    const time = selectTime(context);
     return {
       entries,
       time,
@@ -111,7 +103,7 @@ const vmSelector = createSelector(
 );
 
 export function useEventsSection() {
-  const vm = useSelector(activeTargetState, vmSelector);
+  const vm = useSuperSelector(selectVm);
   const onEventSelected = useDispatchCallback(
     (event: RelatedEvent) => eventsLogActions.EventSelected({ event }),
     []

@@ -13,8 +13,6 @@ import {
   from,
   map,
   merge,
-  Observable,
-  OperatorFunction,
   pairwise,
   startWith,
   switchMap,
@@ -24,19 +22,12 @@ import { TargetRef } from '@app/protocols/refs';
 import { dashboardActions } from '@app/actions/dashboad-actions';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { routeActivated } from '@app/utils';
-import {
-  createEffect,
-  createSelectorFunction,
-  effect,
-  select,
-  Selector,
-} from '@lib/state-fx/store';
-import { routerActions, routerStore } from '@app/router';
-import { insightsStore } from '@app/store/insights/store';
+import { createEffect, effect, select } from '@lib/state-fx/store';
+import { routerActions } from '@app/router';
 import { dashboardRoute } from '@app/routes';
 import {
-  activeTargetSelector,
   activeTargetState,
+  selectActiveTarget,
 } from '@app/selectors/active-target-state-selector';
 
 export const targetEffect = createEffect({
@@ -89,7 +80,7 @@ export const targetEffect = createEffect({
   },
   handleLockToggle(actions, [activeTargets]) {
     return activeTargets.getStateObservable().pipe(
-      select(activeTargetSelector),
+      select(selectActiveTarget),
       distinctUntilChanged(),
       startWith(undefined),
       pairwise(),

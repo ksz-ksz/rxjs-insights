@@ -1,21 +1,27 @@
-import React, { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Component, ComponentRef } from '@lib/state-fx/store';
 import { useContainer } from './use-container';
 
 export function useComponent<T>(component: Component<T>): T {
   const container = useContainer();
-  const refRef = React.useRef<ComponentRef<any> | null>(null);
-  if (refRef.current === null) {
-    refRef.current = container.use(component);
+  const componentDataRef = useRef<[Component<T>, ComponentRef<T>] | null>(null);
+  if (componentDataRef.current !== null) {
+    const [prevComponent, prevComponentRef] = componentDataRef.current;
+    if (prevComponent !== component) {
+      prevComponentRef.release();
+      componentDataRef.current = [component, container.use(component)];
+    }
+  } else {
+    componentDataRef.current = [component, container.use(component)];
   }
 
   useEffect(() => {
-    const ref = refRef.current!;
-
-    return () => {
-      ref.release();
-    };
+    if (componentDataRef.current !== null) {
+      const [, prevComponentRef] = componentDataRef.current;
+      prevComponentRef.release();
+    }
   }, []);
 
-  return refRef.current!.component;
+  const [, componentRef] = componentDataRef.current;
+  return componentRef.component;
 }

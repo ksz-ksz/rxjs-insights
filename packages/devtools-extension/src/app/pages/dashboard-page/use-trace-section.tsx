@@ -3,17 +3,16 @@ import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import { Box, styled } from '@mui/material';
 import { LocationOutlet } from '@app/components/location-outlet';
 import React, { useMemo } from 'react';
-import { traceSelector } from '@app/selectors/trace-selectors';
+import { selectTraceState } from '@app/selectors/trace-selectors';
 import { Trace } from '@app/protocols/traces';
 import { EventRef, TargetRef } from '@app/protocols/refs';
 import { Locations } from '@rxjs-insights/core';
 import { EmptyStateRenderer } from '@app/pages/dashboard-page/empty-state-renderer';
-import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
 import { routerActions } from '@app/router';
 import { RouterLink } from '../../../lib/state-fx/store-router-react/router-link';
 import { targetRoute } from '@app/routes';
-import { traceStore } from '@app/store/trace/store';
-import { useSelector } from '@lib/state-fx/store-react';
+import { useSuperSelector } from '@lib/state-fx/store-react';
+import { createSuperSelector } from '../../../lib/state-fx/store/super-selector';
 
 interface TaskTraceEntry {
   type: 'task';
@@ -56,9 +55,10 @@ function getTraceEntries(trace: Trace): TraceEntry[] {
   return entries;
 }
 
-const vmSelector = createSelector(
-  (context: SelectorContextFromDeps<[typeof traceSelector]>) => {
-    const trace = traceSelector(context);
+const selectVm = createSuperSelector(
+  [selectTraceState],
+  (context) => {
+    const trace = selectTraceState(context);
     const entries = trace.trace ? getTraceEntries(trace.trace) : [];
     return { entries };
   },
@@ -148,7 +148,7 @@ function TaskRenderer({ entry }: { entry: TaskTraceEntry }) {
 }
 
 export function useTraceSection() {
-  const vm = useSelector(traceStore, vmSelector);
+  const vm = useSuperSelector(selectVm);
 
   return useMemo(
     (): SidePanelEntry[] =>

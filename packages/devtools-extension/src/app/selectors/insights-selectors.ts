@@ -1,50 +1,47 @@
-import {
-  createSelector,
-  SelectorContext,
-  SelectorState,
-} from '@lib/state-fx/store';
-import { createStoreSelector } from '../../lib/state-fx/store/store-selector';
 import { insightsStore } from '@app/store/insights/store';
+import {
+  createStoreSuperSelector,
+  createSuperSelector,
+} from '../../lib/state-fx/store/super-selector';
 
-export const insightsSelector = createStoreSelector(insightsStore);
+export const selectInsightsState = createStoreSuperSelector(insightsStore);
 
-export const targetStateSelector = createSelector(
-  (
-    context: SelectorContext<SelectorState<typeof insightsSelector>>,
-    targetId: number
-  ) => {
-    const insights = insightsSelector(context);
+export const selectTargetState = createSuperSelector(
+  [selectInsightsState],
+  (context, targetId: number) => {
+    const insights = selectInsightsState(context);
     return insights.targets[targetId];
   }
 );
 
-export const targetUiStateSelector = createSelector(
-  (
-    context: SelectorContext<SelectorState<typeof insightsSelector>>,
-    targetId: number
-  ) => {
-    const insights = insightsSelector(context);
+export const selectTargetUiState = createSuperSelector(
+  [selectInsightsState],
+  (context, targetId: number) => {
+    const insights = selectInsightsState(context);
     return insights.targetsUi[targetId];
   }
 );
 
-export const playingSelector = createSelector(
-  (context: SelectorContext<SelectorState<typeof insightsSelector>>) => {
-    const insights = insightsSelector(context);
+export const selectPlaying = createSuperSelector(
+  [selectInsightsState],
+  (context) => {
+    const insights = selectInsightsState(context);
     return insights.playing;
   }
 );
 
-export const followingSelector = createSelector(
-  (context: SelectorContext<SelectorState<typeof insightsSelector>>) => {
-    const insights = insightsSelector(context);
+export const selectFollowing = createSuperSelector(
+  [selectInsightsState],
+  (context) => {
+    const insights = selectInsightsState(context);
     return insights.following;
   }
 );
 
-export const showExcludedEventsSelector = createSelector(
-  (context: SelectorContext<SelectorState<typeof insightsSelector>>) => {
-    const insights = insightsSelector(context);
+export const selectShowExcludedEvents = createSuperSelector(
+  [selectInsightsState],
+  (context) => {
+    const insights = selectInsightsState(context);
     return insights.showExcludedEvents;
   }
 );

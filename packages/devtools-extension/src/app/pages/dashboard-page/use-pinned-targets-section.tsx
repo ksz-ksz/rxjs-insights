@@ -1,4 +1,4 @@
-import { targetsSelector } from '@app/selectors/targets-selectors';
+import { selectTargetsState } from '@app/selectors/targets-selectors';
 import { SidePanelEntry } from '@app/components/side-panel';
 import { RefSummaryOutlet } from '@app/components/ref-outlet';
 import { Box, IconButton } from '@mui/material';
@@ -11,7 +11,7 @@ import { TargetRef } from '@app/protocols/refs';
 import { useDispatch, useSelector } from '@lib/state-fx/store-react';
 import { RouterLink } from '../../../lib/state-fx/store-router-react/router-link';
 import { targetRoute } from '@app/routes';
-import { router, routerActions } from '@app/router';
+import { routerActions } from '@app/router';
 import { targetsStore } from '@app/store/targets/store';
 
 function TargetRenderer({ target }: { target: TargetRef }) {
@@ -48,7 +48,7 @@ function TargetRenderer({ target }: { target: TargetRef }) {
 }
 
 export function usePinnedTargetsSection() {
-  const vm = useSelector(targetsStore, targetsSelector);
+  const vm = useSelector(targetsStore, selectTargetsState);
 
   return useMemo(
     (): SidePanelEntry[] =>

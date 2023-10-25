@@ -1,33 +1,28 @@
-import { insightsSelector } from '@app/selectors/insights-selectors';
-import {
-  createSelector,
-  createStoreView,
-  SelectorContextFromDeps,
-} from '@lib/state-fx/store';
+import { selectInsightsState } from '@app/selectors/insights-selectors';
+import { createStoreView } from '@lib/state-fx/store';
 import { routerStore, selectRoute } from '@app/router';
 import { targetRoute } from '@app/routes';
 import { insightsStore } from '@app/store/insights/store';
+import { createSuperSelector } from '../../lib/state-fx/store/super-selector';
 
 export const activeTargetState = createStoreView({
   deps: [routerStore, insightsStore],
 });
 
-export const activeTargetStateSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [typeof selectRoute, typeof insightsSelector]
-    >
-  ) => {
+export const selectActiveTargetState = createSuperSelector(
+  [selectRoute, selectInsightsState],
+  (context) => {
     const targetId = selectRoute(context, targetRoute)?.params?.targetId;
     return targetId !== undefined
-      ? insightsSelector(context).targets[targetId]
+      ? selectInsightsState(context).targets[targetId]
       : undefined;
   }
 );
 
-export const activeTargetSelector = createSelector(
-  (context: SelectorContextFromDeps<[typeof activeTargetStateSelector]>) => {
-    const activeTargetState = activeTargetStateSelector(context);
+export const selectActiveTarget = createSuperSelector(
+  [selectActiveTargetState],
+  (context) => {
+    const activeTargetState = selectActiveTargetState(context);
     if (activeTargetState) {
       const { target } = activeTargetState;
       return target;
@@ -37,15 +32,12 @@ export const activeTargetSelector = createSelector(
   }
 );
 
-export const activeTargetUiStateSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [typeof selectRoute, typeof insightsSelector]
-    >
-  ) => {
+export const selectTargetUiState = createSuperSelector(
+  [selectRoute, selectInsightsState],
+  (context) => {
     const targetId = selectRoute(context, targetRoute)?.params?.targetId;
     return targetId !== undefined
-      ? insightsSelector(context).targetsUi[targetId]
+      ? selectInsightsState(context).targetsUi[targetId]
       : undefined;
   }
 );

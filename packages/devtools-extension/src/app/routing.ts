@@ -1,5 +1,5 @@
 import { statusSelector } from '@app/store/status';
-import { targetStateSelector } from '@app/selectors/insights-selectors';
+import { selectTargetState } from '@app/selectors/insights-selectors';
 import {
   ActivatedRoutingRuleContext,
   createRouteConfigFactory,
@@ -163,7 +163,7 @@ const routerConfig = createRouteConfig(rootRoute, {
             activate(({ store, route }) => {
               // FIXME
               return store.select(
-                targetStateSelector(route.route.params.targetId)
+                selectTargetState(route.route.params.targetId)
               );
             }),
           ],

@@ -1,20 +1,18 @@
-import {
-  createSelector,
-  Selector,
-  SelectorContext,
-  SelectorState,
-  StoreComponent,
-  StoreState,
-} from '@lib/state-fx/store';
-import { Router, RouterComponent } from './router';
-import { createStoreSelector } from '../store/store-selector';
+import { SelectorContext, StoreComponent } from '@lib/state-fx/store';
 import { Route } from './route';
 import { RouterState } from './router-store';
 import { RouteObject } from './route-object';
+import {
+  createStoreSuperSelector,
+  createSuperSelector,
+} from '../store/super-selector';
 
-type SelectRoute<TNamespace extends string> = {
+export type SelectRoute = {
+  deps: StoreComponent<string, any>[];
   <TParams, TSearch, THash>(
-    context: SelectorContext<{ [K in TNamespace]: RouterState }>,
+    context: SelectorContext<{
+      get(x: StoreComponent<string, RouterState>): RouterState;
+    }>,
     ...args: [Route<TParams, TSearch, THash>]
   ): RouteObject<TParams, TSearch, THash> | undefined;
 };
@@ -27,20 +25,17 @@ export function createRouterSelectors<TNamespace extends string>(
   options: CreateRouterSelector<TNamespace>
 ) {
   const { store } = options;
-  const selectRouterState: Selector<
-    { [K in TNamespace]: RouterState },
-    [],
-    RouterState
-  > = createStoreSelector(store);
-  const selectRoute: SelectRoute<TNamespace> = createSelector(
+  const selectRouterState = createStoreSuperSelector(store);
+  const selectRoute = createSuperSelector(
+    [selectRouterState],
     <TParams, TSearch, THash>(
-      context: SelectorContext<{ [K in TNamespace]: RouterState }>,
+      context: SelectorContext<{
+        get(x: StoreComponent<string, RouterState>): RouterState;
+      }>,
       route: Route<TParams, TSearch, THash>
     ) => {
       const state = selectRouterState(context);
-      return state.routes.find(({ id }) => id === route.id) as
-        | RouteObject<TParams, TSearch, THash>
-        | undefined;
+      return state.routes.find(({ id }) => id === route.id);
     }
   );
 

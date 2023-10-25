@@ -1,11 +1,10 @@
 import { RelatedEvent } from '@app/protocols/insights';
 import React from 'react';
 import { styled } from '@mui/material';
-import { playingSelector } from '@app/selectors/insights-selectors';
+import { selectPlaying } from '@app/selectors/insights-selectors';
 import {
-  activeTargetState,
-  activeTargetStateSelector,
-  activeTargetUiStateSelector,
+  selectActiveTargetState,
+  selectTargetUiState,
 } from '@app/selectors/active-target-state-selector';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { getTargetTimeframes } from '@app/pages/target-page/get-target-timeframes';
@@ -13,9 +12,12 @@ import { getEvents } from '@app/pages/target-page/get-events';
 import { getIncludedEvents } from '@app/pages/target-page/get-included-events';
 import { EventsTimeline } from '@app/pages/target-page/events-timeline';
 import { EventsControls } from '@app/pages/target-page/events-controls';
-import { timeSelector } from '@app/selectors/time-selectors';
-import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
-import { useDispatchCallback, useSelector } from '@lib/state-fx/store-react';
+import { selectTime } from '@app/selectors/time-selectors';
+import {
+  useDispatchCallback,
+  useSuperSelector,
+} from '@lib/state-fx/store-react';
+import { createSuperSelector } from '../../../lib/state-fx/store/super-selector';
 
 function findLastIndex<T>(items: T[], predicate: (item: T) => boolean): number {
   for (let i = items.length - 1; i >= 0; i--) {
@@ -38,14 +40,11 @@ function findFirstIndex<T>(
   return -1;
 }
 
-const eventsSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [typeof activeTargetStateSelector, typeof activeTargetUiStateSelector]
-    >
-  ) => {
-    const { target, relations } = activeTargetStateSelector(context)!;
-    const { expandedKeys } = activeTargetUiStateSelector(context)!;
+const selectEvents = createSuperSelector(
+  [selectActiveTargetState, selectTargetUiState],
+  (context) => {
+    const { target, relations } = selectActiveTargetState(context)!;
+    const { expandedKeys } = selectTargetUiState(context)!;
     const timeframes = getTargetTimeframes(target, relations, expandedKeys);
     const allEvents = getEvents(relations);
     const events = getIncludedEvents(relations, allEvents, timeframes);
@@ -54,15 +53,12 @@ const eventsSelector = createSelector(
   }
 );
 
-const vmSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [typeof eventsSelector, typeof timeSelector, typeof playingSelector]
-    >
-  ) => {
-    const { events, relations } = eventsSelector(context);
-    const time = timeSelector(context);
-    const playing = playingSelector(context);
+const selectVm = createSuperSelector(
+  [selectEvents, selectTime, selectPlaying],
+  (context) => {
+    const { events, relations } = selectEvents(context);
+    const time = selectTime(context);
+    const playing = selectPlaying(context);
     return {
       events,
       time,
@@ -113,7 +109,7 @@ function getClosestEvent(
 const ControlsDiv = styled('div')({});
 
 export function ControlsPanel() {
-  const vm = useSelector(activeTargetState, vmSelector);
+  const vm = useSuperSelector(selectVm);
 
   const onGoToFirst = useDispatchCallback(() => {
     const first = vm.events.at(0)!;

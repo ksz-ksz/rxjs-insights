@@ -5,7 +5,7 @@ import {
   LinkRendererProps,
 } from '@app/components/graph';
 import { Theme, useTheme } from '@mui/material';
-import { targetStateSelector } from '@app/selectors/insights-selectors';
+import { selectTargetState } from '@app/selectors/insights-selectors';
 import {
   getDirection,
   getEventColors,
@@ -14,24 +14,18 @@ import {
 import gsap from 'gsap';
 import { RelatedTargetHierarchyNode } from '@app/pages/target-page/related-target-hierarchy-node';
 import { getRootTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
-import { timeSelector } from '@app/selectors/time-selectors';
-import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
-import { useSelector } from '@lib/state-fx/store-react';
-import { activeTargetState } from '@app/selectors/active-target-state-selector';
+import { selectTime } from '@app/selectors/time-selectors';
+import { useSuperSelector } from '@lib/state-fx/store-react';
+import { createSuperSelector } from '../../../lib/state-fx/store/super-selector';
 
-const vmSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [typeof targetStateSelector, typeof timeSelector]
-    >,
-    node: RelatedTargetHierarchyNode,
-    theme: Theme
-  ) => {
-    const targetState = targetStateSelector(
+const selectVm = createSuperSelector(
+  [selectTargetState, selectTime],
+  (context, node: RelatedTargetHierarchyNode, theme: Theme) => {
+    const targetState = selectTargetState(
       context,
       getRootTargetIdFromKey(node.key)
     );
-    const time = timeSelector(context);
+    const time = selectTime(context);
     const { relations } = targetState;
     const event = relations.events[time];
     const target = relations.targets[node.target.id];
@@ -54,12 +48,7 @@ export const SubscriberGraphLinkRenderer = React.forwardRef<
   LinkRendererProps<RelatedTargetHierarchyNode>
 >(function LinkRenderer({ link }, forwardedRef) {
   const theme = useTheme();
-  const vm = useSelector(
-    activeTargetState,
-    vmSelector,
-    link.source.data,
-    theme
-  );
+  const vm = useSuperSelector(selectVm, link.source.data, theme);
 
   const elementRef = useRef<SVGPathElement | null>(null);
   React.useImperativeHandle(

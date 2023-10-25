@@ -4,13 +4,12 @@ import {
   Relations,
 } from '@app/protocols/insights';
 import {
-  activeTargetState,
-  activeTargetStateSelector,
-  activeTargetUiStateSelector,
+  selectActiveTargetState,
+  selectTargetUiState,
 } from '@app/selectors/active-target-state-selector';
 import {
-  followingSelector,
-  showExcludedEventsSelector,
+  selectFollowing,
+  selectShowExcludedEvents,
 } from '@app/selectors/insights-selectors';
 import { getDoubleTree, LinkData, NodeData } from '@app/components/tree';
 import { Graph } from '@app/components/graph';
@@ -32,9 +31,12 @@ import {
   getSourceChildKey,
   getSourceChildren,
 } from '@app/utils/related-children';
-import { timeSelector } from '@app/selectors/time-selectors';
-import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
-import { useDispatchCallback, useSelector } from '@lib/state-fx/store-react';
+import { selectTime } from '@app/selectors/time-selectors';
+import {
+  useDispatchCallback,
+  useSuperSelector,
+} from '@lib/state-fx/store-react';
+import { createSuperSelector } from '../../../lib/state-fx/store/super-selector';
 
 function isKeyVisible(visibleKeys: Set<string>, key: string) {
   return visibleKeys.has(key);
@@ -162,14 +164,11 @@ function getViewBoxPadding(focus: (number | string)[]) {
   return focus.length === 0 ? 40 : 100;
 }
 
-const hierarchyTreeSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [typeof activeTargetStateSelector, typeof activeTargetUiStateSelector]
-    >
-  ) => {
-    const { target, relations } = activeTargetStateSelector(context)!;
-    const { expandedKeys, keysMapping } = activeTargetUiStateSelector(context)!;
+const selectHierarchyTree = createSuperSelector(
+  [selectActiveTargetState, selectTargetUiState],
+  (context) => {
+    const { target, relations } = selectActiveTargetState(context)!;
+    const { expandedKeys, keysMapping } = selectTargetUiState(context)!;
     const visibleKeys = getVisibleKeys(target, relations, expandedKeys);
     const sources = getRelatedHierarchyNode(
       relations,
@@ -197,21 +196,13 @@ const hierarchyTreeSelector = createSelector(
   }
 );
 
-const vmSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [
-        typeof hierarchyTreeSelector,
-        typeof timeSelector,
-        typeof followingSelector,
-        typeof showExcludedEventsSelector
-      ]
-    >
-  ) => {
-    const hierarchyTree = hierarchyTreeSelector(context);
-    const time = timeSelector(context);
-    const following = followingSelector(context);
-    const showExcludedEvents = showExcludedEventsSelector(context);
+const selectVm = createSuperSelector(
+  [selectHierarchyTree, selectTime, selectFollowing, selectShowExcludedEvents],
+  (context) => {
+    const hierarchyTree = selectHierarchyTree(context);
+    const time = selectTime(context);
+    const following = selectFollowing(context);
+    const showExcludedEvents = selectShowExcludedEvents(context);
     const { relations, target, sources, destinations, getNodeKey, getLinkKey } =
       hierarchyTree;
     const { nodes, links } = getDoubleTree(
@@ -246,7 +237,7 @@ function isTargetActive(time: number, target: RelatedTarget) {
 }
 
 export function SubscribersGraph() {
-  const vm = useSelector(activeTargetState, vmSelector);
+  const vm = useSuperSelector(selectVm);
   const onFollowChange = useDispatchCallback(
     () =>
       vm.following

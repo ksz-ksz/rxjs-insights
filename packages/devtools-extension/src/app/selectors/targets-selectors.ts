@@ -1,4 +1,4 @@
 import { targetsStore } from '@app/store/targets/store';
-import { createStoreSelector } from '../../lib/state-fx/store/store-selector';
+import { createStoreSuperSelector } from '../../lib/state-fx/store/super-selector';
 
-export const targetsSelector = createStoreSelector(targetsStore);
+export const selectTargetsState = createStoreSuperSelector(targetsStore);

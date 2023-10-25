@@ -1,29 +1,21 @@
-import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
-import { refsSelector } from '@app/selectors/refs-selectors';
+import { selectActiveTargetState } from '@app/selectors/active-target-state-selector';
+import { selectRefsState } from '@app/selectors/refs-selectors';
 import {
   getRefOutletEntries,
   RefOutletEntry,
 } from '@app/components/get-ref-outlet-entries';
 import { useLastDefinedValue } from '@app/utils';
 import { getRefOutletSidePanelEntries } from '@app/components/get-ref-outlet-side-panel-entries';
-import { timeSelector } from '@app/selectors/time-selectors';
-import { createSelector, SelectorContextFromDeps } from '@lib/state-fx/store';
-import { useSelector } from '@lib/state-fx/store-react';
-import { scopeStore } from '@app/pages/target-page/scope-store';
+import { selectTime } from '@app/selectors/time-selectors';
+import { useSuperSelector } from '@lib/state-fx/store-react';
+import { createSuperSelector } from '../../../lib/state-fx/store/super-selector';
 
-export const vmSelector = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [
-        typeof activeTargetStateSelector,
-        typeof refsSelector,
-        typeof timeSelector
-      ]
-    >
-  ) => {
-    const { target, relations } = activeTargetStateSelector(context)!;
-    const refs = refsSelector(context);
-    const time = timeSelector(context);
+export const selectVm = createSuperSelector(
+  [selectActiveTargetState, selectRefsState, selectTime],
+  (context) => {
+    const { target, relations } = selectActiveTargetState(context)!;
+    const refs = selectRefsState(context);
+    const time = selectTime(context);
     const event = relations.events[time];
 
     const refOutletEntries = [
@@ -42,5 +34,5 @@ export const vmSelector = createSelector(
 );
 
 export function useScopeSection() {
-  return useLastDefinedValue(useSelector(scopeStore, vmSelector), []);
+  return useLastDefinedValue(useSuperSelector(selectVm), []);
 }

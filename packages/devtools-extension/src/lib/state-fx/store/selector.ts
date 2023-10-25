@@ -21,7 +21,7 @@ export type SelectorStatesIntersection<T extends [...any]> = T extends [infer U]
   ? SelectorState<U>
   : T extends [infer THead, ...infer TTail]
   ? SelectorState<THead> & SelectorStatesIntersection<TTail>
-  : never;
+  : unknown;
 
 export type SelectorContextFromDeps<T extends any[]> = SelectorContext<
   SelectorStatesIntersection<T>

@@ -12,21 +12,15 @@ import React from 'react';
 import { Bookmark, BookmarkAdded, Refresh } from '@mui/icons-material';
 import { appBarActions } from '@app/actions/app-bar-actions';
 import { RefSummaryOutlet } from '@app/components/ref-outlet';
-import { activeTargetStateSelector } from '@app/selectors/active-target-state-selector';
+import { selectActiveTargetState } from '@app/selectors/active-target-state-selector';
 import { LocationOutlet } from '@app/components/location-outlet';
-import { targetsSelector } from '@app/selectors/targets-selectors';
-import {
-  createSelector,
-  createStoreView,
-  SelectorContextFromDeps,
-} from '@lib/state-fx/store';
-import { useDispatch, useSelector } from '@lib/state-fx/store-react';
+import { selectTargetsState } from '@app/selectors/targets-selectors';
+import { useDispatch, useSuperSelector } from '@lib/state-fx/store-react';
 import { router, routerActions, routerStore } from '@app/router';
-import { targetsStore } from '@app/store/targets/store';
-import { insightsStore } from '@app/store/insights/store';
 import { RouterLink } from '../../../lib/state-fx/store-router-react/router-link';
 import { dashboardRoute } from '@app/routes';
 import { RouterOutlet } from '../../../lib/state-fx/store-router-react';
+import { createSuperSelector } from '../../../lib/state-fx/store/super-selector';
 
 const HomeSpan = styled('span')(({ theme }) => ({
   fontWeight: 600,
@@ -42,16 +36,13 @@ function Spacer({ space }: { space: number }) {
   );
 }
 
-const vm = createSelector(
-  (
-    context: SelectorContextFromDeps<
-      [typeof activeTargetStateSelector, typeof targetsSelector]
-    >
-  ) => {
-    const target = activeTargetStateSelector(context)?.target;
+const selectVm = createSuperSelector(
+  [selectActiveTargetState, selectTargetsState],
+  (context) => {
+    const target = selectActiveTargetState(context)?.target;
     const isTargetPinned =
       target &&
-      targetsSelector(context).targets.find((x) => x.id === target.id) !==
+      selectTargetsState(context).targets.find((x) => x.id === target.id) !==
         undefined;
 
     return {
@@ -61,13 +52,9 @@ const vm = createSelector(
   }
 );
 
-const store = createStoreView({
-  deps: [routerStore, insightsStore, targetsStore],
-});
-
 export function AppBarWrapper() {
   const dispatch = useDispatch();
-  const { target, isTargetPinned } = useSelector(store, vm);
+  const { target, isTargetPinned } = useSuperSelector(selectVm);
 
   return (
     <Box display="flex" height="100%" flexDirection="column">
