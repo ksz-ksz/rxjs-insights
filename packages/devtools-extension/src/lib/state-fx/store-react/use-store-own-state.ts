@@ -3,9 +3,7 @@ import { useComponent } from './use-component';
 import { useCallback } from 'react';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 
-export function useStoreOwnState<TState>(
-  component: Component<Store<string, TState>>
-) {
+export function useStoreOwnState<TState>(component: Component<Store<TState>>) {
   const source = useComponent(component);
 
   const subscribe = useCallback(

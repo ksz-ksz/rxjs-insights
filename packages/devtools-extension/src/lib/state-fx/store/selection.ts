@@ -8,7 +8,7 @@ export class Selection<TArgs extends any[], TResult> extends Observable<void> {
   private readonly fn: StateSelectorFunction<any, TArgs, TResult>;
   constructor(
     private readonly selector: SuperSelector<any, any, any>,
-    private readonly deps: Store<string, any>[]
+    private readonly deps: Store<any>[]
   ) {
     super((subscriber) => {
       const observer: Observer<void> = {
@@ -23,7 +23,7 @@ export class Selection<TArgs extends any[], TResult> extends Observable<void> {
         },
       };
       for (const dep of this.deps) {
-        subscriber.add(dep.getOwnStateObservable().subscribe(observer));
+        subscriber.add(dep.getStateObservable().subscribe(observer));
       }
     });
     this.fn = createSelectorFunction(selector);
@@ -35,11 +35,8 @@ export class Selection<TArgs extends any[], TResult> extends Observable<void> {
   }
 }
 
-function getState(
-  selector: SuperSelector<any, any, any>,
-  deps: Store<string, any>[]
-) {
-  const map = new Map<Component<Store<string, any>>, any>();
+function getState(selector: SuperSelector<any, any, any>, deps: Store<any>[]) {
+  const map = new Map<Component<Store<any>>, any>();
 
   const n = deps.length;
 
@@ -47,7 +44,7 @@ function getState(
     const storeComponent = selector.deps[i];
     const store = deps[i];
 
-    map.set(storeComponent, store.getOwnState());
+    map.set(storeComponent, store.getState());
   }
 
   return map;
@@ -55,7 +52,7 @@ function getState(
 
 function createSelectionInstance<TArgs extends any[], TResult>(
   selector: SuperSelector<any, TArgs, TResult>,
-  deps: Store<string, any>[]
+  deps: Store<any>[]
 ): Selection<TArgs, TResult> {
   return new Selection<TArgs, TResult>(selector, deps);
 }

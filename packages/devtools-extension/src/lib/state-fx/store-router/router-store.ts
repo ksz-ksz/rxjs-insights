@@ -10,14 +10,14 @@ export interface RouterState {
   origin: 'pop' | 'push' | 'replace';
   routes: RouteObject<any, any, any>[];
 }
-export interface CreateRouterStoreOptions<TNamespace extends string> {
-  namespace: TNamespace;
+export interface CreateRouterStoreOptions {
+  namespace: string;
   actions: ActionTypes<RouterActions>;
 }
 
-export function createRouterStore<TNamespace extends string>(
-  options: CreateRouterStoreOptions<TNamespace>
-): StoreComponent<TNamespace, RouterState> {
+export function createRouterStore(
+  options: CreateRouterStoreOptions
+): StoreComponent<RouterState> {
   const { namespace, actions } = options;
   return createStore({
     namespace,

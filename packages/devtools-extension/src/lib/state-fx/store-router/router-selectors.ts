@@ -8,29 +8,27 @@ import {
 } from '../store/super-selector';
 
 export type SelectRoute = {
-  deps: StoreComponent<string, any>[];
+  deps: StoreComponent<any>[];
   <TParams, TSearch, THash>(
     context: SelectorContext<{
-      get(x: StoreComponent<string, RouterState>): RouterState;
+      get(x: StoreComponent<RouterState>): RouterState;
     }>,
     ...args: [Route<TParams, TSearch, THash>]
   ): RouteObject<TParams, TSearch, THash> | undefined;
 };
 
-export interface CreateRouterSelector<TNamespace extends string> {
-  store: StoreComponent<TNamespace, RouterState>;
+export interface CreateRouterSelector {
+  store: StoreComponent<RouterState>;
 }
 
-export function createRouterSelectors<TNamespace extends string>(
-  options: CreateRouterSelector<TNamespace>
-) {
+export function createRouterSelectors(options: CreateRouterSelector) {
   const { store } = options;
   const selectRouterState = createStoreSuperSelector(store);
   const selectRoute = createSuperSelector(
     [selectRouterState],
     <TParams, TSearch, THash>(
       context: SelectorContext<{
-        get(x: StoreComponent<string, RouterState>): RouterState;
+        get(x: StoreComponent<RouterState>): RouterState;
       }>,
       route: Route<TParams, TSearch, THash>
     ) => {

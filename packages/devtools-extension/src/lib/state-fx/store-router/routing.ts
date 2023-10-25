@@ -37,7 +37,7 @@ import { diffRoutes } from './diff-routes';
 
 export interface CreateRoutingOptions<TData, TSearchInput, THashInput> {
   router: RouterComponent<TData, TSearchInput, THashInput>;
-  routerStore: StoreComponent<string, RouterState>;
+  routerStore: StoreComponent<RouterState>;
   routerActions: ActionTypes<RouterActions>;
   routerConfig: RouteConfig<TData, TSearchInput, THashInput>;
 }
@@ -312,7 +312,7 @@ function createNavigateObservable<TState, TData, TSearchInput, THashInput>(
     [],
     RouterState
   >,
-  routerStore: Store<string, RouterState>
+  routerStore: Store<RouterState>
 ) {
   return new Observable<Action<any>>((subscriber) => {
     {
@@ -485,7 +485,7 @@ function getState(entry: HistoryEntry): RouterHistoryState {
 function createRoutingInstance<TData, TSearchInput, THashInput>(
   actions: Actions,
   router: Router<TData, TSearchInput, THashInput>,
-  routerStore: Store<string, RouterState>,
+  routerStore: Store<RouterState>,
   routerActions: ActionTypes<RouterActions>,
   routingRulesResolver: ComponentsResolver<RoutingRule<TData>>
 ): Routing {
@@ -571,7 +571,7 @@ function createRoutingInstance<TData, TSearchInput, THashInput>(
 
 function createRoutingComponent<TData, TSearchInput, THashInput>(
   router: RouterComponent<TData, TSearchInput, THashInput>,
-  routerStore: StoreComponent<string, RouterState>,
+  routerStore: StoreComponent<RouterState>,
   routerActions: ActionTypes<RouterActions>,
   routerConfig: RouteConfig<TData, TSearchInput, THashInput>
 ): RoutingComponent {

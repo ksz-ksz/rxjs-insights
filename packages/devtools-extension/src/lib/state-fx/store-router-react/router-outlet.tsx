@@ -12,19 +12,20 @@ import { useStoreOwnState } from '../store-react/use-store-own-state';
 
 export interface RouterOutletProps {
   router: RouterComponent<RouterData, unknown, unknown>;
-  routerStore: StoreComponent<string, RouterState>;
+  routerStore: StoreComponent<RouterState>;
 }
 
 function useRoutes(
-  routerStoreComponent: StoreComponent<string, RouterState>
+  routerStoreComponent: StoreComponent<RouterState>
 ): RouteObject[] {
+  // todo: is store a super-selector?
   const routerState = useStoreOwnState(routerStoreComponent);
   return routerState.routes;
 }
 
 function useRouteContexts(
   routerComponent: RouterComponent<RouterData, unknown, unknown>,
-  routerStoreComponent: StoreComponent<string, RouterState>
+  routerStoreComponent: StoreComponent<RouterState>
 ): RouteContext<RouterData>[] {
   const router = useComponent(routerComponent);
   const routes = useRoutes(routerStoreComponent);

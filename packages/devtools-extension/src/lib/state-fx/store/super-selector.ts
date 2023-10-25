@@ -9,14 +9,14 @@ import { StoreComponent } from './store';
 
 export interface SuperSelector<TState, TArgs extends any[], TResult>
   extends Selector<TState, TArgs, TResult> {
-  deps: StoreComponent<string, any>[];
+  deps: StoreComponent<any>[];
 }
 
 export interface StoreEntry<T> {
-  get(store: StoreComponent<string, T>): T;
+  get(store: StoreComponent<T>): T;
 }
 
-export function createStoreSuperSelector<T>(store: StoreComponent<string, T>) {
+export function createStoreSuperSelector<T>(store: StoreComponent<T>) {
   return Object.assign(
     createStateSelector((state: StoreEntry<T>) => state.get(store)),
     {
@@ -26,7 +26,7 @@ export function createStoreSuperSelector<T>(store: StoreComponent<string, T>) {
 }
 
 function getDeps(selectors: SuperSelector<any, any, any>[]) {
-  const deps = new Set<StoreComponent<string, any>>();
+  const deps = new Set<StoreComponent<any>>();
   for (const selector of selectors) {
     for (const dep of selector.deps) {
       deps.add(dep);

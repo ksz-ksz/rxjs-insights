@@ -56,7 +56,7 @@ export function useSelector<TState, TArgs extends any[], TResult>(
 interface SuperSelectorData<TArgs extends any[], TResult> {
   selector: SuperSelector<any, TArgs, TResult>;
   fn: StateSelectorFunction<any, TArgs, TResult>;
-  deps: ComponentRef<Store<string, any>>[];
+  deps: ComponentRef<Store<any>>[];
 }
 
 export function useSuperSelectorFunction<TArgs extends any[], TResult>(

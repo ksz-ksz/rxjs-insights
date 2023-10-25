@@ -1,32 +1,25 @@
-import { Action, ActionType } from '@lib/state-fx/store';
-import { BehaviorSubject, map, merge, Observable } from 'rxjs';
+import { Action, ActionSource, ActionType } from '@lib/state-fx/store';
+import { BehaviorSubject, merge, Observable } from 'rxjs';
 import { Actions, actionsComponent } from './actions';
 import { produce } from 'immer';
 import { Component, Container, InitializedComponent } from './container';
 import { StoreView } from './store-view';
 import { Deps, DepsState, getDepsState } from './deps';
-import { infer } from 'zod';
 
-export interface Store<TNamespace extends string, TState>
-  extends StoreView<{ [K in TNamespace]: TState }> {
-  readonly namespace: TNamespace;
+export interface Store<TState> {
+  readonly actionSources: ActionSource<any>[];
 
-  getOwnState(): TState;
-  getOwnStateObservable(): Observable<TState>;
+  getState(): TState;
+
+  getStateObservable(): Observable<TState>;
+
+  dispose(): void;
 }
 
-export interface StoreComponent<TNamespace extends string, TState>
-  extends Component<Store<TNamespace, TState>> {
-  readonly namespace: TNamespace;
-  readonly deps: Deps;
-}
+export interface StoreComponent<TState> extends Component<Store<TState>> {}
 
-export interface CreateStoreOptions<
-  TNamespace extends string,
-  TState,
-  TDeps extends Deps
-> {
-  namespace: TNamespace;
+export interface CreateStoreOptions<TState, TDeps extends Deps> {
+  namespace: string;
   state: TState;
   deps?: [...TDeps];
 }
@@ -80,10 +73,8 @@ export function createStore<
   TState,
   TDeps extends Deps = []
 >(
-  options: CreateStoreOptions<TNamespace, TState, TDeps>
-): (
-  transitions: StateTransitions<TState, TDeps>
-) => StoreComponent<TNamespace, TState> {
+  options: CreateStoreOptions<TState, TDeps>
+): (transitions: StateTransitions<TState, TDeps>) => StoreComponent<TState> {
   const { namespace, state, deps = [] } = options;
   return (transitions) =>
     createStoreComponent(namespace, state, deps, transitions);
@@ -152,9 +143,7 @@ function createStoreInstance<TNamespace extends string, TState>(
   const transitionsByActions = getTransitionsByActions(transitionsEntries);
   const actionSources = getActionSources(transitionsEntries, actions);
 
-  const stateSubject = new BehaviorSubject({
-    [namespace]: state,
-  });
+  const stateSubject = new BehaviorSubject(state);
 
   const subscription = merge(...actionSources).subscribe({
     next(action) {
@@ -162,7 +151,7 @@ function createStoreInstance<TNamespace extends string, TState>(
       const transitions = transitionsByActions.get(actionKey);
       if (transitions !== undefined) {
         const depsState = getDepsState(deps);
-        const prevState = stateSubject.getValue()[namespace];
+        const prevState = stateSubject.getValue();
         const nextState = produce(prevState, (draft: TState) => {
           let nextDraft = draft;
           for (const { key, handler } of transitions) {
@@ -174,28 +163,19 @@ function createStoreInstance<TNamespace extends string, TState>(
           }
           return nextDraft;
         });
-        stateSubject.next({ [namespace]: nextState });
+        stateSubject.next(nextState);
       }
     },
     // TODO: error, complete?
   });
 
-  const store: Store<TNamespace, TState> = {
-    namespace,
+  const store: Store<TState> = {
     actionSources,
     getState() {
-      return stateSubject.getValue() as { [K in TNamespace]: TState };
+      return stateSubject.getValue();
     },
     getStateObservable() {
-      return stateSubject.asObservable() as Observable<{
-        [K in TNamespace]: TState;
-      }>;
-    },
-    getOwnState(): TState {
-      return stateSubject.getValue()[namespace];
-    },
-    getOwnStateObservable(): Observable<TState> {
-      return stateSubject.asObservable().pipe(map((state) => state[namespace]));
+      return stateSubject.asObservable();
     },
     dispose() {
       subscription.unsubscribe();
@@ -210,13 +190,9 @@ function createStoreComponent<TNamespace extends string, TState>(
   state: TState,
   deps: Deps,
   transitions: StateTransitions<TState, Deps>
-): StoreComponent<TNamespace, TState> {
+): StoreComponent<TState> {
   return {
-    namespace,
-    deps,
-    init(
-      container: Container
-    ): InitializedComponent<Store<TNamespace, TState>> {
+    init(container: Container): InitializedComponent<Store<TState>> {
       const actionsHandle = container.use(actionsComponent);
       const depsHandles = deps.map((dep) => container.use(dep));
 
@@ -244,8 +220,3 @@ function createStoreComponent<TNamespace extends string, TState>(
     },
   };
 }
-
-export type StoreState<TStore extends StoreComponent<any, any>> =
-  TStore extends StoreComponent<infer TNamespace, infer TState>
-    ? { [K in TNamespace]: TState }
-    : never;
