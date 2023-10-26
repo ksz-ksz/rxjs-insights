@@ -8,11 +8,10 @@ import { Close } from '@mui/icons-material';
 import React, { useMemo } from 'react';
 import { EmptyStateRenderer } from '@app/pages/dashboard-page/empty-state-renderer';
 import { TargetRef } from '@app/protocols/refs';
-import { useDispatch, useSelector } from '@lib/state-fx/store-react';
+import { useDispatch, useSuperSelector } from '@lib/state-fx/store-react';
 import { RouterLink } from '../../../lib/state-fx/store-router-react/router-link';
 import { targetRoute } from '@app/routes';
 import { routerActions } from '@app/router';
-import { targetsStore } from '@app/store/targets/store';
 
 function TargetRenderer({ target }: { target: TargetRef }) {
   const dispatch = useDispatch();
@@ -48,7 +47,7 @@ function TargetRenderer({ target }: { target: TargetRef }) {
 }
 
 export function usePinnedTargetsSection() {
-  const vm = useSelector(targetsStore, selectTargetsState);
+  const vm = useSuperSelector(selectTargetsState);
 
   return useMemo(
     (): SidePanelEntry[] =>
