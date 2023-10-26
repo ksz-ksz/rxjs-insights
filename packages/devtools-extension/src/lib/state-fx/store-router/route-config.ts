@@ -2,7 +2,13 @@ import { Route } from './route';
 import { Observable } from 'rxjs';
 import { Location } from './history';
 import { RouteObject } from './route-object';
-import { Component } from '@lib/state-fx/store';
+import {
+  Component,
+  Container,
+  Deps,
+  InitializedComponent,
+  useDeps,
+} from '@lib/state-fx/store';
 
 export interface RouteContext<
   TData,
@@ -148,4 +154,31 @@ export function createRouteConfigFactory<TData, TSearchInput, THashInput>(): <
   >
 ) => RouteConfig<TData, TSearchInput, THashInput, TParams, TSearch, THash> {
   return createRouteConfig;
+}
+
+export function createRoutingRule<TData, TParams, TSearch, THash, TDeps>(
+  create: (deps: TDeps) => RoutingRule<TData, TParams, TSearch, THash>,
+  depsComponents?: Deps<TDeps>
+): Component<RoutingRule<TData, TParams, TSearch, THash>> {
+  return {
+    init(
+      container: Container
+    ): InitializedComponent<RoutingRule<TData, TParams, TSearch, THash>> {
+      const { deps, depsHandles } = useDeps(
+        container,
+        depsComponents ?? ({} as Deps<TDeps>)
+      );
+
+      const routingRule = create(deps);
+
+      return {
+        component: routingRule,
+        dispose() {
+          for (const depsHandle of depsHandles) {
+            depsHandle.release();
+          }
+        },
+      };
+    },
+  };
 }
