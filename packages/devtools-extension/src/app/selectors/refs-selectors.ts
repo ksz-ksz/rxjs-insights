@@ -1,4 +1,4 @@
-import { RefsState, RefState, RefUiState } from '@app/store/refs';
+import { RefsState, RefState, RefUiState } from '@app/store/refs/store';
 import { refsStore } from '@app/store/refs/store';
 import { createStoreSuperSelector } from '../../lib/state-fx/store/super-selector';
 

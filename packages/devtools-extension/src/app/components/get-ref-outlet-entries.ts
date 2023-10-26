@@ -1,6 +1,6 @@
 import { PropertyRef, Ref } from '@app/protocols/refs';
-import { RefsState } from '@app/store/refs';
 import { getRefState, getRefUiState } from '@app/selectors/refs-selectors';
+import { RefsState } from '@app/store/refs/store';
 
 export interface RefOutletEntry {
   id: string;

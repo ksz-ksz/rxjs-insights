@@ -6,9 +6,8 @@ import {
 } from '@lib/state-fx/store-router';
 import { StoreComponent } from '@lib/state-fx/store';
 import { RouterData } from './router-data';
-import { useComponent } from '@lib/state-fx/store-react';
+import { useComponent, useStoreState } from '@lib/state-fx/store-react';
 import React, { useContext, useMemo } from 'react';
-import { useStoreOwnState } from '../store-react/use-store-own-state';
 
 export interface RouterOutletProps {
   router: RouterComponent<RouterData, unknown, unknown>;
@@ -18,8 +17,7 @@ export interface RouterOutletProps {
 function useRoutes(
   routerStoreComponent: StoreComponent<RouterState>
 ): RouteObject[] {
-  // todo: is store a super-selector?
-  const routerState = useStoreOwnState(routerStoreComponent);
+  const routerState = useStoreState(routerStoreComponent);
   return routerState.routes;
 }
 

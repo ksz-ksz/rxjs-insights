@@ -7,4 +7,3 @@ export * from './use-selector';
 export * from './use-dispatch';
 export * from './use-dispatch-callback';
 export * from './use-store-state';
-export * from './use-store-own-state';

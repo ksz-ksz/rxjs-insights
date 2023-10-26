@@ -32,14 +32,13 @@ export const timeEffect = createEffect({
   deps: { router, routerStore },
 })({
   syncTimeInUrl(actions, { router, routerStore }) {
-    const getRouterState = createSelectorFunction(selectRouterState);
     return merge(
       actions.ofType(eventsLogActions.EventSelected),
       actions.ofType(refOutletContextActions.FocusEvent),
       actions.ofType(insightsActions.PlayNextEvent)
     ).pipe(
       map((action) => {
-        const routerState = getRouterState(routerStore.getState());
+        const routerState = routerStore.getState();
 
         return routerActions.Navigate({
           historyMode: 'replace',

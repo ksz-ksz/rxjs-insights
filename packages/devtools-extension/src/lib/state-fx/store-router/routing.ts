@@ -307,17 +307,12 @@ function createNavigateObservable<TState, TData, TSearchInput, THashInput>(
   actions: Actions,
   router: Router<TData, TSearchInput, THashInput>,
   routerActions: ActionTypes<RouterActions>,
-  getRouterState: StateSelectorFunction<
-    Record<string, RouterState>,
-    [],
-    RouterState
-  >,
   routerStore: Store<RouterState>
 ) {
   return new Observable<Action<any>>((subscriber) => {
     {
       const { payload } = action;
-      const prevState = getRouterState(routerStore.getState());
+      const prevState = routerStore.getState();
       const prevLocation = prevState.location;
       const prevRoutes = prevState.routes ?? [];
       const nextLocation = payload.location;
@@ -490,82 +485,84 @@ function createRoutingInstance<TData, TSearchInput, THashInput>(
   routingRulesResolver: ComponentsResolver<RoutingRule<TData>>
 ): Routing {
   {
-    // TODO: replace with getOwnState or sth
-    function getRouterState(state: { [namespace: string]: RouterState }) {
-      return state[routerStore.namespace];
-    }
-
-    return createEffectInstance('router', actions, [], {
-      createNewNavigationRequest(actions) {
-        return actions.ofType(routerActions.Navigate).pipe(
-          map(({ payload }) =>
-            routerActions.NavigationRequested({
-              origin: payload.historyMode ?? 'push',
-              location: payload.location,
-              state: payload.state,
-              key: crypto.randomUUID(),
-            })
-          )
-        );
-      },
-      createPopNavigationRequest() {
-        return fromHistory(router.history).pipe(
-          map((entry) => {
-            const { key, state } = getState(entry);
-            return routerActions.NavigationRequested({
-              origin: 'pop',
-              location: entry.location,
-              state,
-              key,
-            });
-          })
-        );
-      },
-      handleNavigationRequest(actions) {
-        return actions
-          .ofType(routerActions.NavigationRequested)
-          .pipe(
-            concatMap((action) =>
-              createNavigateObservable(
-                routingRulesResolver,
-                action,
-                actions,
-                router,
-                routerActions,
-                getRouterState,
-                routerStore
-              )
+    return createEffectInstance(
+      'router',
+      actions,
+      {},
+      {
+        createNewNavigationRequest(actions) {
+          return actions.ofType(routerActions.Navigate).pipe(
+            map(({ payload }) =>
+              routerActions.NavigationRequested({
+                origin: payload.historyMode ?? 'push',
+                location: payload.location,
+                state: payload.state,
+                key: crypto.randomUUID(),
+              })
             )
           );
-      },
-      syncHistoryAfterNavigationCompleted(actions) {
-        return actions.ofType(routerActions.NavigationCompleted).pipe(
-          tap(({ payload }) => {
-            const historyState = { state: payload.state, key: payload.key };
-            if (payload.origin !== 'pop') {
-              router.history.newEntry(payload.location, historyState, {
-                mode: payload.origin,
+        },
+        createPopNavigationRequest() {
+          return fromHistory(router.history).pipe(
+            map((entry) => {
+              const { key, state } = getState(entry);
+              return routerActions.NavigationRequested({
+                origin: 'pop',
+                location: entry.location,
+                state,
+                key,
               });
-            }
-          }),
-          ignoreElements()
-        );
-      },
-      syncHistoryAfterNavigationCancelled(actions, deps) {
-        return actions.ofType(routerActions.NavigationCanceled).pipe(
-          tap(({ payload }) => {
-            if (payload.origin === 'pop' && payload.reason === 'intercepted') {
-              const state = getRouterState(deps.getState());
-              const historyState = { state: state.state, key: state.key };
-              router.history.newEntry(state.location, historyState, {
-                mode: 'replace',
-              });
-            }
-          }),
-          ignoreElements()
-        );
-      },
-    });
+            })
+          );
+        },
+        handleNavigationRequest(actions) {
+          return actions
+            .ofType(routerActions.NavigationRequested)
+            .pipe(
+              concatMap((action) =>
+                createNavigateObservable(
+                  routingRulesResolver,
+                  action,
+                  actions,
+                  router,
+                  routerActions,
+                  routerStore
+                )
+              )
+            );
+        },
+        syncHistoryAfterNavigationCompleted(actions) {
+          return actions.ofType(routerActions.NavigationCompleted).pipe(
+            tap(({ payload }) => {
+              const historyState = { state: payload.state, key: payload.key };
+              if (payload.origin !== 'pop') {
+                router.history.newEntry(payload.location, historyState, {
+                  mode: payload.origin,
+                });
+              }
+            }),
+            ignoreElements()
+          );
+        },
+        syncHistoryAfterNavigationCancelled(actions) {
+          return actions.ofType(routerActions.NavigationCanceled).pipe(
+            tap(({ payload }) => {
+              if (
+                payload.origin === 'pop' &&
+                payload.reason === 'intercepted'
+              ) {
+                const state = routerStore.getState();
+                const historyState = { state: state.state, key: state.key };
+                router.history.newEntry(state.location, historyState, {
+                  mode: 'replace',
+                });
+              }
+            }),
+            ignoreElements()
+          );
+        },
+      }
+    );
   }
 }
 
@@ -577,6 +574,7 @@ function createRoutingComponent<TData, TSearchInput, THashInput>(
 ): RoutingComponent {
   return {
     init(container: Container): InitializedComponent<Routing> {
+      // refactor to component with deps
       const actionsRef = container.use(actionsComponent);
       const routerRef = container.use(router);
       const routerStoreRef = container.use(routerStore);

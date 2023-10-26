@@ -1,6 +1,7 @@
 export type { Deref, Ref } from './lib/model';
 export {
   Declaration,
+  Caller,
   Event,
   Observable,
   ObservableEvent,

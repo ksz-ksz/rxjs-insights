@@ -1,14 +1,14 @@
-import { useDispatch, useSelector } from '@app/store';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import React from 'react';
 import { instrumentationStatusPageActions } from '@app/actions/instrumentation-status-page-actions';
-import { statusSelector } from '@app/store/status';
 import { REQUIRED_VERSION } from '../../../../required-version';
+import { useDispatch, useSuperSelector } from '@lib/state-fx/store-react';
+import { selectInstrumentationStatus } from '@app/selectors/status-selectors';
 
 export function InstrumentationStatusCard() {
   const dispatch = useDispatch();
-  const status = useSelector(statusSelector);
-  switch (status.instrumentationStatus) {
+  const instrumentationStatus = useSuperSelector(selectInstrumentationStatus);
+  switch (instrumentationStatus) {
     case undefined:
       return (
         <Box

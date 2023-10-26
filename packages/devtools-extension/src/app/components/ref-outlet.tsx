@@ -26,12 +26,12 @@ import React, {
   useState,
 } from 'react';
 import { Menu, MenuItem, MenuList, styled } from '@mui/material';
-import { useDispatch } from '@app/store';
 import { refOutletActions } from '@app/actions/ref-outlet-actions';
 import { Indent } from '@app/components/indent';
 import { openResourceAvailable } from '@app/features';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import { Action } from '@lib/state-fx/store';
+import { useDispatch } from '@lib/state-fx/store-react';
 
 interface TagRendererProps<REF extends Ref> {
   reference: REF;
