@@ -50,20 +50,29 @@ interface FakeState {
 const fakeStore = createStore({
   namespace: 'fake',
   state: typeOf<FakeState>({ value: 'initial' }),
-  deps: [fooStore, barStore],
+  deps: { fooStore, barStore },
 })({
   update: tx([fakeActions.update], (state, action, deps) => {
-    state.deps = deps;
+    state.deps = {
+      foo: deps.fooStore.getState(),
+      bar: deps.barStore.getState(),
+    };
     state.value = action.payload;
   }),
   updateAll: tx([fakeActions.updateAll], (state, action, deps) => {
-    state.deps = deps;
+    state.deps = {
+      foo: deps.fooStore.getState(),
+      bar: deps.barStore.getState(),
+    };
     state.value = action.payload;
   }),
   set: tx(
     [fakeActions.updateByA, fakeActions.updateByB],
     (state, action, deps) => {
-      state.deps = deps;
+      state.deps = {
+        foo: deps.fooStore.getState(),
+        bar: deps.barStore.getState(),
+      };
       if (fakeActions.updateByA.is(action)) {
         state.value = action.payload.a;
       }
@@ -73,11 +82,17 @@ const fakeStore = createStore({
     }
   ),
   appendA: tx([fakeActions.updateByA], (state, action, deps) => {
-    state.deps = deps;
+    state.deps = {
+      foo: deps.fooStore.getState(),
+      bar: deps.barStore.getState(),
+    };
     state.value += '_' + action.payload.a;
   }),
   appendB: tx([fakeActions.updateByB], (state, action, deps) => {
-    state.deps = deps;
+    state.deps = {
+      foo: deps.fooStore.getState(),
+      bar: deps.barStore.getState(),
+    };
     state.value += '_' + action.payload.b;
   }),
 });
@@ -128,9 +143,7 @@ describe('Store', () => {
       const { store } = createTestHarness();
 
       expect(store.getState()).toEqual({
-        fake: {
-          value: 'initial',
-        },
+        value: 'initial',
       });
     });
     it('should emit initial state when subscribed', () => {
@@ -142,9 +155,7 @@ describe('Store', () => {
         [
           'N',
           {
-            fake: {
-              value: 'initial',
-            },
+            value: 'initial',
           },
         ],
       ]);
@@ -157,12 +168,10 @@ describe('Store', () => {
       actions.dispatch(fakeActions.update('updated'));
 
       expect(store.getState()).toEqual({
-        fake: {
-          value: 'updated',
-          deps: {
-            foo: 'initial',
-            bar: 'initial',
-          },
+        value: 'updated',
+        deps: {
+          foo: 'initial',
+          bar: 'initial',
         },
       });
     });
@@ -178,12 +187,10 @@ describe('Store', () => {
         [
           'N',
           {
-            fake: {
-              value: 'updated',
-              deps: {
-                foo: 'initial',
-                bar: 'initial',
-              },
+            value: 'updated',
+            deps: {
+              foo: 'initial',
+              bar: 'initial',
             },
           },
         ],
@@ -197,12 +204,10 @@ describe('Store', () => {
         actions.dispatch(fakeActions.updateByA({ a: 'updated' }));
 
         expect(store.getState()).toEqual({
-          fake: {
-            value: 'updated_updated',
-            deps: {
-              foo: 'initial',
-              bar: 'initial',
-            },
+          value: 'updated_updated',
+          deps: {
+            foo: 'initial',
+            bar: 'initial',
           },
         });
       });
@@ -218,12 +223,10 @@ describe('Store', () => {
           [
             'N',
             {
-              fake: {
-                value: 'updated_updated',
-                deps: {
-                  foo: 'initial',
-                  bar: 'initial',
-                },
+              value: 'updated_updated',
+              deps: {
+                foo: 'initial',
+                bar: 'initial',
               },
             },
           ],
@@ -240,12 +243,10 @@ describe('Store', () => {
         actions.dispatch(fakeActions.update('updated'));
 
         expect(store.getState()).toEqual({
-          fake: {
-            value: 'updated',
-            deps: {
-              foo: 'foo',
-              bar: 'bar',
-            },
+          value: 'updated',
+          deps: {
+            foo: 'foo',
+            bar: 'bar',
           },
         });
       });
@@ -270,9 +271,7 @@ describe('Store', () => {
         actions.dispatch(fakeActions.updateBar('bar'));
 
         expect(store.getState()).toEqual({
-          fake: {
-            value: 'initial',
-          },
+          value: 'initial',
         });
       });
 
@@ -286,12 +285,10 @@ describe('Store', () => {
           actions.dispatch(fakeActions.updateAll('updated'));
 
           expect(store.getState()).toEqual({
-            fake: {
-              value: 'updated',
-              deps: {
-                foo: 'updated',
-                bar: 'updated',
-              },
+            value: 'updated',
+            deps: {
+              foo: 'updated',
+              bar: 'updated',
             },
           });
         });
@@ -307,12 +304,10 @@ describe('Store', () => {
             [
               'N',
               {
-                fake: {
-                  value: 'updated',
-                  deps: {
-                    foo: 'updated',
-                    bar: 'updated',
-                  },
+                value: 'updated',
+                deps: {
+                  foo: 'updated',
+                  bar: 'updated',
                 },
               },
             ],
@@ -330,9 +325,7 @@ describe('Store', () => {
         actions.dispatch(fakeActions.update('updated'));
 
         expect(store.getState()).toEqual({
-          fake: {
-            value: 'initial',
-          },
+          value: 'initial',
         });
       });
 
@@ -350,12 +343,8 @@ describe('Store', () => {
         actions.dispatch(fakeActions.updateFoo('updated'));
         actions.dispatch(fakeActions.updateBar('updated'));
 
-        expect(foo.getState()).toEqual({
-          foo: 'initial',
-        });
-        expect(bar.getState()).toEqual({
-          bar: 'initial',
-        });
+        expect(foo.getState()).toEqual('initial');
+        expect(bar.getState()).toEqual('initial');
       });
     });
   });

@@ -1,7 +1,8 @@
 import { Actions, actionsComponent } from './actions';
 import { catchError, merge, Observable, throwError } from 'rxjs';
-import { Action, ComponentRef } from '@lib/state-fx/store';
+import { Action } from '@lib/state-fx/store';
 import { Component, Container, InitializedComponent } from './container';
+import { Deps, useDeps } from './deps';
 
 export interface Effect {
   dispose(): void;
@@ -15,13 +16,9 @@ export type EffectInitializers<TDeps> =
   | Record<string, EffectInitializer<TDeps>>
   | Array<EffectInitializer<TDeps>>;
 
-export type Components<T> = {
-  [K in keyof T]: Component<T[K]>;
-};
-
 export interface CreateEffectOptions<TDeps> {
   namespace: string;
-  deps?: Components<TDeps>;
+  deps?: Deps<TDeps>;
 }
 
 export class EffectError extends Error {
@@ -61,28 +58,9 @@ export function createEffectInstance<TDeps>(
   };
 }
 
-function useDeps<TDeps>(
-  container: Container,
-  depsComponents: Components<TDeps>
-): { deps: TDeps; depsHandles: ComponentRef<unknown>[] } {
-  const depsHandles: ComponentRef<unknown>[] = [];
-  const deps: Record<string, unknown> = {};
-
-  for (const [key, dep] of Object.entries<Component<unknown>>(depsComponents)) {
-    const depHandle = container.use(dep);
-    deps[key] = depHandle.component;
-    depsHandles.push(depHandle);
-  }
-
-  return {
-    deps: deps as TDeps,
-    depsHandles,
-  };
-}
-
 function createEffectComponent<TDeps>(
   namespace: string,
-  depsComponents: Components<TDeps>,
+  depsComponents: Deps<TDeps>,
   initializers: EffectInitializers<TDeps>
 ): Component<Effect> {
   return {
@@ -116,6 +94,6 @@ function createEffectComponent<TDeps>(
 export function createEffect<TDeps>(
   options: CreateEffectOptions<TDeps>
 ): (initializers: EffectInitializers<TDeps>) => Component<Effect> {
-  const { namespace, deps = {} as Components<TDeps> } = options;
+  const { namespace, deps = {} as Deps<TDeps> } = options;
   return (initializers) => createEffectComponent(namespace, deps, initializers);
 }

@@ -1,19 +1,24 @@
-import { Component } from './container';
-import { Store } from './store';
+import { Component, ComponentRef, Container } from './container';
 
-type ExtractDepState<T> = T extends Component<Store<infer U>> ? U : never;
+export type Deps<T> = {
+  [K in keyof T]: Component<T[K]>;
+};
 
-export type Dep = Component<Store<unknown>>;
-export type Deps = Dep[];
+export function useDeps<TDeps>(
+  container: Container,
+  depsComponents: Deps<TDeps>
+): { deps: TDeps; depsHandles: ComponentRef<unknown>[] } {
+  const depsHandles: ComponentRef<unknown>[] = [];
+  const deps: Record<string, unknown> = {};
 
-type DepCons<THead extends Dep, TTail extends Deps> = [THead, ...TTail];
+  for (const [key, dep] of Object.entries<Component<unknown>>(depsComponents)) {
+    const depHandle = container.use(dep);
+    deps[key] = depHandle.component;
+    depsHandles.push(depHandle);
+  }
 
-export type DepsState<TDeps extends Deps> = TDeps extends [infer TDep]
-  ? ExtractDepState<TDep>
-  : TDeps extends DepCons<infer THead, infer TTail>
-  ? ExtractDepState<THead> & DepsState<TTail>
-  : {};
-
-export function getDepsState(deps: Store<any>[]) {
-  return deps.reduce((acc, dep) => ({ ...acc, ...dep.getState() }), {});
+  return {
+    deps: deps as TDeps,
+    depsHandles,
+  };
 }
