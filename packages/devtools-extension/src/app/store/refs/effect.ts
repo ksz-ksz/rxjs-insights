@@ -10,9 +10,9 @@ import { createEffect } from '@lib/state-fx/store';
 
 export const refsEffect = createEffect({
   namespace: 'refs',
-  deps: [refsStore],
+  deps: { refsStore },
 })({
-  handleExpand(actions, [refs]) {
+  handleExpand(actions, { refsStore }) {
     return merge(
       actions.ofType(refOutletActions.Expand),
       actions.ofType(refreshRefsActions.LoadExpanded),
@@ -20,8 +20,8 @@ export const refsEffect = createEffect({
     ).pipe(
       concatMap((action) => {
         const { ref, path, stateKey } = action.payload;
-        const state = getRefState(refs.getState(), stateKey);
-        const uiState = getRefUiState(refs.getState(), stateKey);
+        const state = getRefState(refsStore.getState(), stateKey);
+        const uiState = getRefUiState(refsStore.getState(), stateKey);
         return from(loadRefsForExpandedPaths(path, ref, state, uiState)).pipe(
           map((refs) =>
             refsActions.RefsForExpandedPathsLoaded({ stateKey, refs })

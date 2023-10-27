@@ -90,7 +90,7 @@ function createRouterInstance<TData, TSearchInput, THashInput>(
       throw new Error(`router initialized`);
     }
     routeConfigVisitor(routeConfig, (target) =>
-      routeConfigs.set(target.id, target)
+      routeConfigs.set(target.route.id, target)
     );
     rootRouteConfig = routeConfig;
   }

@@ -10,7 +10,14 @@ import {
   RoutingRuleContext,
   UpdatedRoutingRuleContext,
 } from '@lib/state-fx/store-router';
-import { EMPTY, ignoreElements, isObservable, map, Observable, of } from 'rxjs';
+import {
+  EMPTY,
+  first,
+  ignoreElements,
+  isObservable,
+  Observable,
+  of,
+} from 'rxjs';
 import {
   appBarRoute,
   dashboardRoute,
@@ -186,7 +193,7 @@ const routerConfig = createRouteConfig(rootRoute, {
             activate(
               ({ route }, { targetState }) =>
                 targetState.pipe(
-                  map(
+                  first(
                     () =>
                       targetState.getResult(route.route.params.targetId) !==
                       undefined

@@ -95,7 +95,6 @@ export interface RouteConfig<
   TSearch = unknown,
   THash = unknown
 > {
-  id: number;
   route: Route<TParams, TSearch, THash, TSearchInput, THashInput>;
   children?: RouteConfig<TData, TSearchInput, THashInput>[];
   data?: TData;
@@ -115,8 +114,6 @@ export interface CreateRouteConfigOptions<
   rules?: Component<RoutingRule<TData, TParams, TSearch, THash>>[];
 }
 
-let routeConfigId = 0;
-
 export function createRouteConfig<
   TData,
   TParams,
@@ -135,7 +132,7 @@ export function createRouteConfig<
     THash
   >
 ): RouteConfig<TData, TSearchInput, THashInput, TParams, TSearch, THash> {
-  return { id: routeConfigId++, route, ...options };
+  return { route, ...options };
 }
 
 export function createRouteConfigFactory<TData, TSearchInput, THashInput>(): <

@@ -72,7 +72,7 @@ function matchRoutes<TData, TSearchInput, THashInput>(
   for (const match of matches) {
     params = { ...params, ...match.params };
     routes.push({
-      id: match.routeConfig.id,
+      id: match.routeConfig.route.id,
       path: match.path,
       params: params,
       search: decodedSearch.valid

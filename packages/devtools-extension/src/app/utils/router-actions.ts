@@ -1,4 +1,4 @@
-import { filter, map, Observable } from 'rxjs';
+import { filter, map, Observable, tap } from 'rxjs';
 import {
   ActivatedRouteEvent,
   DeactivatedRouteEvent,
@@ -20,7 +20,7 @@ export function routeActivated<TParams, TSearch, THash>(
 ): ActionsSelector<Observable<RouteObject<TParams, TSearch, THash>>> {
   return {
     select(actions: Actions): Observable<RouteObject<TParams, TSearch, THash>> {
-      return actions.ofType(routerActions.RouteCommitted).pipe(
+      return actions.ofType(routerActions.RouteResolved).pipe(
         filter(
           (
             action
@@ -44,7 +44,7 @@ export function routeDeactivated<TParams, TSearch, THash>(
 ): ActionsSelector<Observable<RouteObject<TParams, TSearch, THash>>> {
   return {
     select(actions: Actions): Observable<RouteObject<TParams, TSearch, THash>> {
-      return actions.ofType(routerActions.RouteCommitted).pipe(
+      return actions.ofType(routerActions.RouteResolved).pipe(
         filter(
           (
             action

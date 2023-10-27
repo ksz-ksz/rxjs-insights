@@ -78,6 +78,7 @@ export interface RouterActions {
   NavigationStarted: NavigationStarted;
   NavigationCompleted: NavigationCompleted;
   NavigationCanceled: NavigationCanceled;
+  // todo: rename to "checked"
   RouteResolved: RouteEvent<any, any, any>;
   RouteCommitted: RouteEvent<any, any, any>;
 }
