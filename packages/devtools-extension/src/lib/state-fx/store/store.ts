@@ -115,6 +115,7 @@ function getActionSources(
 }
 
 export class StoreError extends Error {
+  readonly name = 'StoreError';
   constructor(
     readonly namespace: string,
     readonly key: string,
@@ -139,25 +140,34 @@ function createStoreInstance<TState, TDeps>(
 
   const subscription = merge(...actionSources).subscribe({
     next(action) {
-      const actionKey = `${action.namespace}::${action.name}`;
-      const transitions = transitionsByActions.get(actionKey);
-      if (transitions !== undefined) {
-        const prevState = stateSubject.getValue();
-        const nextState = produce(prevState, (draft: TState) => {
-          let nextDraft = draft;
-          for (const { key, handler } of transitions) {
-            try {
-              nextDraft = handler(nextDraft, action, deps) ?? nextDraft;
-            } catch (e) {
-              throw new StoreError(namespace, key, e);
+      try {
+        const actionKey = `${action.namespace}::${action.name}`;
+        const transitions = transitionsByActions.get(actionKey);
+        if (transitions !== undefined) {
+          const prevState = stateSubject.getValue();
+          const nextState = produce(prevState, (draft: TState) => {
+            let nextDraft = draft;
+            for (const { key, handler } of transitions) {
+              try {
+                nextDraft = handler(nextDraft, action, deps) ?? nextDraft;
+              } catch (e) {
+                throw new StoreError(namespace, key, e);
+              }
             }
-          }
-          return nextDraft;
-        });
-        stateSubject.next(nextState);
+            return nextDraft;
+          });
+          stateSubject.next(nextState);
+        }
+      } catch (error) {
+        throw new StoreError(namespace, '*', error);
       }
     },
-    // TODO: error, complete?
+    error(error: any) {
+      queueMicrotask(() => {
+        throw new StoreError(namespace, '*', error);
+      });
+    },
+    // TODO: complete?
   });
 
   const store: Store<TState> = {

@@ -276,10 +276,10 @@ function createEvents<TNamespace extends string, TData>(
     events.push({
       status: 'updated',
       activatedLocation: nextLocation,
-      activatedRoute: prevUpdatedRoute,
+      activatedRoute: nextUpdateRoute,
       activatedRoutes: nextRoutes,
       deactivatedLocation: prevLocation,
-      deactivatedRoute: nextUpdateRoute,
+      deactivatedRoute: prevUpdatedRoute,
       deactivatedRoutes: prevRoutes,
     });
   }

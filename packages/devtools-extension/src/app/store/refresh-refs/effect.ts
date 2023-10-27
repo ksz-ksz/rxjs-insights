@@ -61,9 +61,9 @@ export const refreshRefsEffect = createEffect({
       })
     );
   },
-  handleActiveEventChange(actions, { activeTarget }) {
-    return activeTarget.pipe(
-      map(() => activeTarget.getResult()),
+  handleActiveEventChange(actions, { activeEvent }) {
+    return activeEvent.pipe(
+      map(() => activeEvent.getResult()),
       distinctUntilChanged(),
       concatMap((event) => {
         if (event) {

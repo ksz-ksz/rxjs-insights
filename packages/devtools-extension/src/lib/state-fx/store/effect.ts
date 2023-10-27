@@ -22,6 +22,7 @@ export interface CreateEffectOptions<TDeps> {
 }
 
 export class EffectError extends Error {
+  readonly name = 'EffectError';
   constructor(
     readonly namespace: string,
     readonly key: string,
@@ -47,8 +48,13 @@ export function createEffectInstance<TDeps>(
     next(action) {
       actions.dispatch(action);
     },
+    error(error) {
+      queueMicrotask(() => {
+        throw new EffectError(namespace, '*', error);
+      });
+    },
+    // TODO: complete?
     // TODO: observeOn(queue)?
-    // TODO: error, complete?
   });
 
   return {
