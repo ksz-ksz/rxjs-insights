@@ -3,6 +3,9 @@ import { Encoder, EncoderResult } from './encoder';
 import { createUrlParams, UrlParams } from './url-params';
 
 function decodedUrlParams(input: string) {
+  if (input.length === 0) {
+    return createUrlParams();
+  }
   const entries: [string, string][] = [];
   for (const pair of input.split('&')) {
     const [key, val] = pair.split('=');

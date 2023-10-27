@@ -19,6 +19,16 @@ describe('UrlParamsEncoder', function () {
       expect(result.value?.get('foo')).toBe('!@#$%^&*()_+');
       expect(result.value?.get('bar')).toBe('15');
     });
+    describe('when input is empty', () => {
+      it('should decode params', function () {
+        const paramsEncoder = new UrlParamsEncoder();
+
+        const result = paramsEncoder.decode('');
+
+        expect(result.valid).toBe(true);
+        expect(count(result.value)).toBe(0);
+      });
+    });
   });
 
   describe('encode', function () {
@@ -31,6 +41,16 @@ describe('UrlParamsEncoder', function () {
 
       expect(result.valid).toBe(true);
       expect(result.value).toBe('foo=!%40%23%24%25%5E%26*()_%2B&bar=42');
+    });
+    describe('when there are no params', () => {
+      it('should encode params', function () {
+        const paramsEncoder = new UrlParamsEncoder();
+
+        const result = paramsEncoder.encode(createUrlParams());
+
+        expect(result.valid).toBe(true);
+        expect(result.value).toBe('');
+      });
     });
   });
 });
