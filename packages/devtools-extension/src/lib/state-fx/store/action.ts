@@ -1,11 +1,8 @@
-import { ActionSource } from './action-source';
-import { Component } from './container';
-
 export interface ActionType<TPayload> {
   namespace: string;
   name: string;
   (payload: TPayload): Action<TPayload>;
-  is(action: Action<unknown>): action is Action<TPayload>;
+  is(action: Action): action is Action<TPayload>;
 }
 
 export interface Action<TPayload = unknown> {
@@ -19,10 +16,25 @@ export interface CreateActionsOptions {
 }
 
 export type ActionTypes<TActionPayloads> = {
-  [TActionName in keyof TActionPayloads]: ActionType<
-    TActionPayloads[TActionName]
-  >;
+  [TActionName in keyof T]: ActionType<T[TActionName]>;
 };
+
+export type ExtractActionTypeFnPayload<T> = T extends (
+  payload: infer T
+) => unknown
+  ? T
+  : never;
+
+export type ActionTypeFn<TFn extends (payload: any) => any> = TFn & {
+  namespace: string;
+  name: string;
+  is(action: Action): action is Action<ExtractActionTypeFnPayload<TFn>>;
+};
+
+export type ActionTypeFns<TFns extends { [name: string]: ActionTypeFn<any> }> =
+  {
+    [TActionName in keyof TFns]: ActionTypeFn<TFns[TActionName]>;
+  };
 
 export function createActions<TActionPayloads>({
   namespace,
