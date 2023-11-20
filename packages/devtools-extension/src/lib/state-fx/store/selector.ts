@@ -241,6 +241,7 @@ function createSelectorWithoutArgs<STATE, RESULT>(
   };
 }
 
+// TODO: allow generic functions
 export function createSelector<STATE, ARGS extends any[], RESULT>(
   fn: SelectorFunction<STATE, ARGS, RESULT>,
   options: CreateSelectorOptions<RESULT> = {}
