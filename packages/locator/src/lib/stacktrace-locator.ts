@@ -6,10 +6,10 @@ import {
   LEAST_UPPER_BOUND,
 } from './source-map';
 import ErrorStackParser from 'error-stack-parser';
-import { PromiseOrValue } from '@rxjs-insights/core/src/lib/locator';
+import { PromiseOrValue } from '@rxjs-insights/core';
 
 function isPromise<T>(x: PromiseOrValue<T>): x is Promise<T> {
-  return 'then' in x && 'catch' in x;
+  return Boolean(x) && 'then' in x && 'catch' in x;
 }
 
 export class StacktraceLocator implements Locator {
