@@ -15,16 +15,16 @@ import {
   ResourceKey,
 } from './resource-key';
 import {
-  CancelQueries,
+  CancelQuery,
   createResourceActions,
-  InvalidateQueries,
+  InvalidateQuery,
   Mutate,
   MutationCompleted,
-  PreloadQuery,
+  ForceQuery,
   Query,
   QueryCompleted,
   ResourceActionTypes,
-  SetQueryData,
+  SetQuery,
   SubscribeMutation,
   SubscribeQuery,
   UnsubscribeMutation,
@@ -136,7 +136,7 @@ const todosResourceEffect = createResourceEffect(
             todosResourceActions.cancelQueries({
               queryKeys: [todosQueryKeys.getTodos],
             }),
-            todosResourceActions.setQueryData({
+            todosResourceActions.setQuery({
               queryKey: todosQueryKeys.getTodos,
               queryArgs: [],
               queryData: optimisticTodos,
@@ -146,12 +146,12 @@ const todosResourceEffect = createResourceEffect(
             concatMap((result) =>
               result.status === 'success'
                 ? of(
-                    todosResourceActions.invalidateQueries({
+                    todosResourceActions.invalidateQuery({
                       queryKeys: [todosQueryKeys.getTodos],
                     })
                   )
                 : of(
-                    todosResourceActions.setQueryData({
+                    todosResourceActions.setQuery({
                       queryKey: todosQueryKeys.getTodos,
                       queryArgs: [],
                       queryData: todos,
@@ -260,10 +260,10 @@ addTodo(['asd']);
 interface Resource {
   // cache manipulation
   query<T extends Fn>(payload: Query<T>): Observable<QueryCompleted<T>>;
-  preloadQuery<T extends Fn>(payload: PreloadQuery<T>): Observable<void>;
-  setQueryData<T extends Fn>(payload: SetQueryData<T>): void;
-  invalidateQueries(payload: InvalidateQueries): void;
-  cancelQueries(payload: CancelQueries): void;
+  preloadQuery<T extends Fn>(payload: ForceQuery<T>): Observable<void>;
+  setQueryData<T extends Fn>(payload: SetQuery<T>): void;
+  invalidateQueries(payload: InvalidateQuery): void;
+  cancelQueries(payload: CancelQuery): void;
   // queries activation
   subscribeQuery<T extends Fn>(payload: SubscribeQuery<T>): void;
   unsubscribeQuery<T extends Fn>(payload: UnsubscribeQuery<T>): void;

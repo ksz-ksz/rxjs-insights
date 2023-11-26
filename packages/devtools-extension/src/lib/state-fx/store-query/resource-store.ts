@@ -1,9 +1,16 @@
 import {
   MutationOptions,
   QueryOptions,
-  ResourceActions,
+  ResourceActionTypes,
 } from './resource-actions';
-import { ActionTypes, Component, Store } from '@lib/state-fx/store';
+import { Component, createStore, Store, tx, typeOf } from '@lib/state-fx/store';
+import { timeComponent } from './time';
+import { getQuery } from './get-query';
+
+const defaultQueryOptions: QueryOptions = {
+  cacheTime: 0,
+  staleTime: Infinity,
+};
 
 interface QuerySubscriber {
   subscriberKey: string;
@@ -11,52 +18,63 @@ interface QuerySubscriber {
 }
 
 interface QueryStateBase {
+  queryHash: string;
   queryKey: string;
   queryArgs: any[];
-  queryArgsHash: string;
+  // queryOptions: QueryOptions;
   subscribers: QuerySubscriber[];
   state: 'active' | 'inactive';
-  cleanupTimestamp: number | undefined;
+  volatileCacheTime: number;
 }
 
 interface QueryStateInitial extends QueryStateBase {
   status: 'initial';
   data: undefined;
   error: undefined;
-  lastDataTimestamp: undefined;
-  lastErrorTimestamp: undefined;
+  dataTimestamp: undefined;
+  errorTimestamp: undefined;
+  staleTimestamp: undefined;
+  cacheTimestamp: undefined;
 }
 
 interface QueryStateInitialData<T = unknown> extends QueryStateBase {
   status: 'initial-data';
   data: T;
   error: undefined;
-  lastDataTimestamp: undefined;
-  lastErrorTimestamp: undefined;
+  dataTimestamp: undefined;
+  errorTimestamp: undefined;
+  staleTimestamp: undefined;
+  cacheTimestamp: undefined;
 }
 
 interface QueryStateQueryData<T = unknown> extends QueryStateBase {
   status: 'query-data';
   data: T;
   error: undefined;
-  lastDataTimestamp: number;
-  lastErrorTimestamp: undefined;
+  dataTimestamp: number;
+  errorTimestamp: undefined;
+  staleTimestamp: number;
+  cacheTimestamp: number;
 }
 
 interface QueryStateQueryError extends QueryStateBase {
   status: 'query-error';
   data: undefined;
   error: unknown;
-  lastDataTimestamp: undefined;
-  lastErrorTimestamp: number;
+  dataTimestamp: undefined;
+  errorTimestamp: number;
+  staleTimestamp: number;
+  cacheTimestamp: number;
 }
 
 interface QueryStateQueryErrorData<T = unknown> extends QueryStateBase {
   status: 'query-error-data';
   data: T;
   error: unknown;
-  lastDataTimestamp: number;
-  lastErrorTimestamp: number;
+  dataTimestamp: number;
+  errorTimestamp: number;
+  staleTimestamp: number;
+  cacheTimestamp: number;
 }
 
 export type QueryState<T = unknown> =
@@ -67,11 +85,13 @@ export type QueryState<T = unknown> =
   | QueryStateQueryErrorData<T>;
 
 interface MutationStateBase {
+  mutationHash: string;
   mutationKey: string;
   mutatorKey: string;
-  options: MutationOptions;
+  mutationOptions: MutationOptions;
   state: 'active' | 'inactive';
-  cleanupTimestamp: number | undefined;
+  staleTimestamp: number | undefined;
+  cacheTimestamp: number | undefined;
 }
 
 interface MutationStateInitial extends MutationStateBase {
@@ -104,12 +124,275 @@ export type MutationState<T = unknown> =
   | MutationStateMutationError;
 
 export interface ResourceState {
-  queries: QueryState[];
-  mutations: MutationState[];
+  queries: Record<string, QueryState>;
+  mutations: Record<string, MutationState>;
+}
+
+// function getQueryOptions(queryState: QueryState) {
+//   const { minCacheTime } = queryState;
+//   let staleTime = Infinity;
+//   let cacheTime = 0;
+//   for (const subscriber of queryState.subscribers) {
+//     const { staleTime: subscriberStaleTime, cacheTime: subscriberCacheTime } =
+//       subscriber.options;
+//     staleTime = Math.min(staleTime, subscriberStaleTime);
+//     cacheTime = Math.max(cacheTime, subscriberCacheTime, minCacheTime);
+//   }
+//   return queryState.queryOptions.staleTime === staleTime &&
+//     queryState.queryOptions.cacheTime === cacheTime
+//     ? queryState.queryOptions
+//     : { staleTime, cacheTime };
+// }
+
+// function updateQueryOptions(
+//   queryState:
+//     | QueryStateInitial
+//     | QueryStateInitialData<unknown>
+//     | QueryStateQueryData<unknown>
+//     | QueryStateQueryError
+//     | QueryStateQueryErrorData<unknown>
+// ) {
+//   const queryOptions = queryState.queryOptions;
+//   const updatedQueryOptions = getQueryOptions(queryState);
+//   if (
+//     queryOptions.staleTime !== updatedQueryOptions.staleTime ||
+//     queryOptions.cacheTime !== updatedQueryOptions.cacheTime
+//   ) {
+//     queryState.queryOptions = updatedQueryOptions;
+//   }
+// }
+
+// function getStaleTime(queryState: QueryState) {
+//   const staleTime = queryState.subscribers.reduce(
+//     (result, subscriber) => Math.min(result, subscriber.options.staleTime),
+//     Infinity
+//   );
+//
+//   return staleTime;
+// }
+//
+// function getCacheTime(queryState: QueryState) {
+//   const cacheTime = queryState.subscribers.reduce(
+//     (result, subscriber) => Math.max(result, subscriber.options.cacheTime),
+//     0
+//   );
+//
+//   return Math.max(queryState.cacheTime, cacheTime);
+// }
+
+function getResultTimestamp(queryState: QueryState): undefined | number {
+  if (
+    queryState.dataTimestamp === undefined &&
+    queryState.errorTimestamp === undefined
+  ) {
+    return undefined;
+  }
+  return Math.max(
+    queryState.dataTimestamp ?? 0,
+    queryState.errorTimestamp ?? 0
+  );
+}
+
+function getStaleTime(queryState: QueryState) {
+  return queryState.subscribers.reduce(
+    (result, subscriber) => Math.min(result, subscriber.options.staleTime),
+    Infinity
+  );
+}
+
+function getStaleTimestamp(queryState: QueryState): undefined | number {
+  const resultTimestamp = getResultTimestamp(queryState);
+
+  if (resultTimestamp === undefined) {
+    return undefined;
+  }
+
+  const staleTime = getStaleTime(queryState);
+
+  return resultTimestamp + staleTime;
+}
+
+function getCacheTime(queryState: QueryState) {
+  return queryState.subscribers.reduce(
+    (result, subscriber) => Math.max(result, subscriber.options.cacheTime),
+    queryState.volatileCacheTime
+  );
+}
+
+function getCacheTimestamp(queryState: QueryState) {
+  const resultTimestamp = getResultTimestamp(queryState);
+
+  if (resultTimestamp === undefined) {
+    return undefined;
+  }
+
+  const cacheTime = getCacheTime(queryState);
+
+  return resultTimestamp + cacheTime;
+}
+
+function getStatus(queryState: QueryState): QueryState['status'] {
+  if (queryState.data !== undefined && queryState.error !== undefined) {
+    return 'query-error-data';
+  }
+  if (queryState.data !== undefined) {
+    return 'query-data';
+  }
+  if (queryState.error !== undefined) {
+    return 'query-error';
+  }
+  return queryState.status;
 }
 
 export function createResourceStore(
-  actions: ActionTypes<ResourceActions>
+  namespace: string,
+  actions: ResourceActionTypes
 ): Component<Store<ResourceState>> {
-  return undefined as any;
+  return createStore({
+    namespace,
+    state: typeOf<ResourceState>({
+      queries: {},
+      mutations: {},
+    }),
+    deps: {
+      time: timeComponent,
+    },
+  })({
+    runQuery: tx([actions.forceQuery], (state, action) => {
+      const { queryKey, queryArgs, queryOptions } = action.payload;
+      const { queryHash, queryState } = getQuery(
+        state,
+        queryKey,
+        queryArgs,
+        false
+      );
+      const runQueryOptions = {
+        ...defaultQueryOptions,
+        ...queryOptions,
+      };
+      if (queryState !== undefined) {
+        queryState.volatileCacheTime = Math.max(
+          queryState.volatileCacheTime,
+          runQueryOptions.cacheTime
+        );
+      } else {
+        state.queries[queryHash] = {
+          queryHash,
+          queryKey,
+          queryArgs,
+          state: 'inactive',
+          status: 'initial',
+          data: undefined,
+          error: undefined,
+          dataTimestamp: undefined,
+          errorTimestamp: undefined,
+          subscribers: [],
+          staleTimestamp: undefined,
+          cacheTimestamp: undefined,
+          volatileCacheTime: runQueryOptions.cacheTime,
+        };
+      }
+    }),
+    subscribeQuery: tx([actions.subscribeQuery], (state, action) => {
+      const { queryKey, queryArgs, queryOptions, subscriberKey } =
+        action.payload;
+      const { queryHash, queryState } = getQuery(
+        state,
+        queryKey,
+        queryArgs,
+        false
+      );
+      const subscriberQueryOptions = {
+        ...defaultQueryOptions,
+        ...queryOptions,
+      };
+      if (queryState !== undefined) {
+        queryState.subscribers.push({
+          subscriberKey: action.payload.subscriberKey,
+          options: subscriberQueryOptions,
+        });
+        queryState.staleTimestamp = getStaleTimestamp(queryState);
+        queryState.cacheTimestamp = getCacheTimestamp(queryState);
+        queryState.volatileCacheTime = Math.max(
+          queryState.volatileCacheTime,
+          subscriberQueryOptions.cacheTime
+        );
+      } else {
+        state.queries[queryHash] = {
+          queryHash,
+          queryKey,
+          queryArgs,
+          state: 'inactive',
+          status: 'initial',
+          data: undefined,
+          error: undefined,
+          dataTimestamp: undefined,
+          errorTimestamp: undefined,
+          subscribers: [
+            {
+              subscriberKey,
+              options: subscriberQueryOptions,
+            },
+          ],
+          staleTimestamp: undefined,
+          cacheTimestamp: undefined,
+          volatileCacheTime: subscriberQueryOptions.cacheTime,
+        };
+      }
+    }),
+    unsubscribeQuery: tx([actions.unsubscribeQuery], (state, action) => {
+      const { queryKey, queryArgs, subscriberKey } = action.payload;
+      const { queryState } = getQuery(state, queryKey, queryArgs);
+      const subscriberIndex = queryState.subscribers.findIndex(
+        (subscriber) => subscriber.subscriberKey === subscriberKey
+      );
+      if (subscriberIndex === -1) {
+        throw new Error('no subscriber');
+      }
+      queryState.subscribers.splice(subscriberIndex, 1);
+      queryState.staleTimestamp = getStaleTimestamp(queryState);
+    }),
+    startQuery: tx([actions.startQuery], (state, action) => {
+      const { queryKey, queryArgs } = action.payload;
+      const { queryState } = getQuery(state, queryKey, queryArgs);
+      queryState.state = 'active';
+    }),
+    completeQuery: tx([actions.completeQuery], (state, action, { time }) => {
+      const now = time.now();
+      const { queryKey, queryArgs, queryResult } = action.payload;
+      const { queryState } = getQuery(state, queryKey, queryArgs);
+      queryState.state = 'inactive';
+      if (queryResult.status === 'success') {
+        queryState.data = queryResult.data;
+        queryState.dataTimestamp = now;
+      } else {
+        queryState.error = queryResult.error;
+        queryState.errorTimestamp = now;
+      }
+      queryState.status = getStatus(queryState);
+      queryState.staleTimestamp = getStaleTimestamp(queryState);
+      queryState.cacheTimestamp = getCacheTimestamp(queryState);
+      queryState.volatileCacheTime = getCacheTime(queryState);
+    }),
+    cancelQuery: tx([actions.cancelQuery], (state, action) => {
+      const { queryKey, queryArgs } = action.payload;
+      const { queryState } = getQuery(state, queryKey, queryArgs);
+      queryState.state = 'inactive';
+    }),
+    cleanupQuery: tx([actions.cleanupQuery], (state, action) => {
+      const { queryKey, queryArgs } = action.payload;
+      const { queryHash } = getQuery(state, queryKey, queryArgs);
+      delete state.queries[queryHash];
+    }),
+    invalidateQuery: tx(
+      [actions.invalidateQuery],
+      (state, action, { time }) => {
+        const { queryKey, queryArgs } = action.payload;
+        const { queryState } = getQuery(state, queryKey, queryArgs, false);
+        if (queryState !== undefined) {
+          queryState.staleTimestamp = time.now();
+        }
+      }
+    ),
+  });
 }
