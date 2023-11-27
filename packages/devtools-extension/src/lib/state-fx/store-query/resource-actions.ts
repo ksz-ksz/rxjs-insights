@@ -1,6 +1,6 @@
 import { ResourceKey } from './resource-key';
 import { Fn } from './fn';
-import { Action, ActionTypeFns, createActions } from '@lib/state-fx/store';
+import { Action, ActionTypeFns, createActions } from '../store';
 import { Result } from './result';
 import { QueryState } from './resource-store';
 
@@ -57,7 +57,7 @@ export type SubscribeQuery<T extends Fn = Fn> = {
   subscriberKey: string;
   queryKey: ResourceKey<T>;
   queryArgs: Parameters<T>;
-  queryHash: string;
+  // queryHash: string;
   queryOptions?: Partial<QueryOptions>;
 };
 

@@ -4,11 +4,12 @@ import {
   concat,
   connect,
   delay,
-  distinctUntilChanged,
   EMPTY,
   exhaustMap,
   filter,
+  first,
   groupBy,
+  last,
   map,
   merge,
   mergeMap,
@@ -18,19 +19,13 @@ import {
   takeUntil,
 } from 'rxjs';
 import { Result } from './result';
-import {
-  Action,
-  createEffect,
-  Deps,
-  Store,
-  StoreComponent,
-} from '@lib/state-fx/store';
-import { CreateResourceKeysResult, ResourceKey } from './resource-key';
-import { QueryOptions, ResourceActionTypes } from './resource-actions';
+import { Action, createEffect, Deps, StoreComponent } from '../store';
+import { CreateResourceKeysResult } from './resource-key';
+import { ResourceActionTypes } from './resource-actions';
 import { QueryState, ResourceState } from './resource-store';
-import { getQueryHash } from './get-query-hash';
-import { timeComponent } from './time';
+import { schedulerComponent } from './scheduler';
 import { getQuery } from './get-query';
+import { is } from '../store/is';
 
 interface QueryDef<TQuery extends Fn, TDeps> {
   query(args: Parameters<TQuery>, deps: TDeps): Observable<ReturnType<TQuery>>;
@@ -123,7 +118,11 @@ export function createResourceEffect<
   const resourceActions = options.actions;
   return createEffect({
     namespace: options.namespace,
-    deps: { ...options.deps, __store: options.store, __time: timeComponent },
+    deps: {
+      ...options.deps,
+      __store: options.store,
+      __scheduler: schedulerComponent,
+    },
   })({
     emitQueryForced(actions, { __store: store }) {
       return actions.ofType(resourceActions.forceQuery).pipe(
@@ -216,7 +215,7 @@ export function createResourceEffect<
         )
       );
     },
-    triggerQuery(actions, { __time: time }) {
+    triggerQuery(actions, { __scheduler: scheduler }) {
       return merge(
         actions.ofType(resourceActions.queryForced),
         actions.ofType(resourceActions.querySubscribed),
@@ -228,11 +227,8 @@ export function createResourceEffect<
         groupBy(({ payload: { queryHash } }) => queryHash),
         mergeMap(
           switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
-            const now = time.now();
-            if (
-              queryState.subscribers.length !== 0 ||
-              queryState.volatileQueryOptions !== undefined
-            ) {
+            const now = scheduler.now();
+            if (queryState.subscribers.length !== 0) {
               const staleTimestamp = queryState.staleTimestamp ?? now;
               const staleDue = staleTimestamp - now;
               return staleDue !== Infinity
@@ -241,24 +237,19 @@ export function createResourceEffect<
                       queryKey,
                       queryArgs,
                     })
-                  ).pipe(delay(staleDue))
+                  ).pipe(delay(staleDue, scheduler))
                 : EMPTY;
             } else {
               const cacheTimestamp = queryState.cacheTimestamp ?? now;
               const cacheDue = cacheTimestamp - now;
-              return concat(
-                queryState.state === 'active'
-                  ? of(resourceActions.cancelQuery({ queryKey, queryArgs }))
-                  : EMPTY,
-                cacheDue !== Infinity
-                  ? of(
-                      resourceActions.cleanupQuery({
-                        queryKey,
-                        queryArgs,
-                      })
-                    ).pipe(delay(cacheDue))
-                  : EMPTY
-              );
+              return cacheDue !== Infinity
+                ? of(
+                    resourceActions.cleanupQuery({
+                      queryKey,
+                      queryArgs,
+                    })
+                  ).pipe(delay(cacheDue, scheduler))
+                : EMPTY;
             }
           })
         )
@@ -270,8 +261,8 @@ export function createResourceEffect<
         actions.ofType(resourceActions.queryCancelled)
       ).pipe(
         groupBy(({ payload: { queryHash } }) => queryHash),
-        mergeMap((groupedActions) =>
-          groupedActions.pipe(
+        mergeMap((queryActions) =>
+          queryActions.pipe(
             filter(resourceActions.queryStarted.is),
             exhaustMap(({ payload: { queryKey, queryArgs, queryState } }) => {
               const query = queries[queryKey];
@@ -279,6 +270,7 @@ export function createResourceEffect<
                 throw new Error('no query');
               }
               return query.query(queryArgs as any, deps as any).pipe(
+                last(),
                 map((data): Result => ({ status: 'success', data })),
                 catchError((error) => of<Result>({ status: 'failure', error })),
                 connect((result) =>
@@ -300,7 +292,14 @@ export function createResourceEffect<
                   )
                 ),
                 takeUntil(
-                  groupedActions.pipe(filter(resourceActions.queryCancelled.is))
+                  queryActions.pipe(
+                    filter(
+                      is(
+                        resourceActions.queryCancelled,
+                        resourceActions.queryCleanedUp
+                      )
+                    )
+                  )
                 )
               );
             })

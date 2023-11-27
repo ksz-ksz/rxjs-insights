@@ -16,7 +16,9 @@ export interface CreateActionsOptions {
 }
 
 export type ActionTypes<TActionPayloads> = {
-  [TActionName in keyof T]: ActionType<T[TActionName]>;
+  [TActionName in keyof TActionPayloads]: ActionType<
+    TActionPayloads[TActionName]
+  >;
 };
 
 export type ExtractActionTypeFnPayload<T> = T extends (

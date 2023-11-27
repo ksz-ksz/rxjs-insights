@@ -117,7 +117,7 @@ function createResolveObservable<
     const routing = router.getRouteConfig(deactivatedRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolve(rule);
+        const resolvedRule = routingRulesResolver.resolveData(rule);
         if (resolvedRule.check !== undefined) {
           resolve.push(
             resolvedRule.check({
@@ -136,7 +136,7 @@ function createResolveObservable<
     const routing = router.getRouteConfig(nextUpdateRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolve(rule);
+        const resolvedRule = routingRulesResolver.resolveData(rule);
         if (resolvedRule.check !== undefined) {
           resolve.push(
             resolvedRule.check({
@@ -157,7 +157,7 @@ function createResolveObservable<
     const routing = router.getRouteConfig(activatedRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolve(rule);
+        const resolvedRule = routingRulesResolver.resolveData(rule);
         if (resolvedRule.check !== undefined) {
           resolve.push(
             resolvedRule.check({
@@ -196,7 +196,7 @@ function createCommitObservable<
     const routing = router.getRouteConfig(deactivatedRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolve(rule);
+        const resolvedRule = routingRulesResolver.resolveData(rule);
         if (resolvedRule.commit !== undefined) {
           commit.push(
             resolvedRule.commit({
@@ -215,7 +215,7 @@ function createCommitObservable<
     const routing = router.getRouteConfig(nextUpdateRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolve(rule);
+        const resolvedRule = routingRulesResolver.resolveData(rule);
         if (resolvedRule.commit !== undefined) {
           commit.push(
             resolvedRule.commit({
@@ -236,7 +236,7 @@ function createCommitObservable<
     const routing = router.getRouteConfig(activatedRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolve(rule);
+        const resolvedRule = routingRulesResolver.resolveData(rule);
         if (resolvedRule.commit !== undefined) {
           commit.push(
             resolvedRule.commit({

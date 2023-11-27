@@ -4,8 +4,8 @@ import {
   ResourceActionTypes,
   VolatileQueryOptions,
 } from './resource-actions';
-import { Component, createStore, Store, tx, typeOf } from '@lib/state-fx/store';
-import { timeComponent } from './time';
+import { Component, createStore, Store, tx, typeOf } from '../store';
+import { schedulerComponent } from './scheduler';
 import { getQuery } from './get-query';
 
 const defaultVolatileQueryOptions: QueryOptions = {
@@ -30,7 +30,7 @@ interface QueryStateBase {
   // queryOptions: QueryOptions;
   subscribers: QuerySubscriber[];
   state: 'active' | 'inactive';
-  volatileQueryOptions: VolatileQueryOptions | undefined;
+  volatileQueryOptions: VolatileQueryOptions;
 }
 
 interface QueryStateInitial extends QueryStateBase {
@@ -56,28 +56,18 @@ interface QueryStateInitialData<T = unknown> extends QueryStateBase {
 interface QueryStateQueryData<T = unknown> extends QueryStateBase {
   status: 'query-data';
   data: T;
-  error: undefined;
+  error: unknown | undefined;
   dataTimestamp: number;
-  errorTimestamp: undefined;
+  errorTimestamp: number | undefined;
   staleTimestamp: number;
   cacheTimestamp: number;
 }
 
-interface QueryStateQueryError extends QueryStateBase {
+interface QueryStateQueryError<T> extends QueryStateBase {
   status: 'query-error';
-  data: undefined;
+  data: T | undefined;
   error: unknown;
-  dataTimestamp: undefined;
-  errorTimestamp: number;
-  staleTimestamp: number;
-  cacheTimestamp: number;
-}
-
-interface QueryStateQueryErrorData<T = unknown> extends QueryStateBase {
-  status: 'query-error-data';
-  data: T;
-  error: unknown;
-  dataTimestamp: number;
+  dataTimestamp: number | undefined;
   errorTimestamp: number;
   staleTimestamp: number;
   cacheTimestamp: number;
@@ -87,8 +77,7 @@ export type QueryState<T = unknown> =
   | QueryStateInitial
   | QueryStateInitialData<T>
   | QueryStateQueryData<T>
-  | QueryStateQueryError
-  | QueryStateQueryErrorData<T>;
+  | QueryStateQueryError<T>;
 
 interface MutationStateBase {
   mutationHash: string;
@@ -219,10 +208,13 @@ function getStaleTimestamp(queryState: QueryState): undefined | number {
   return staleTimestamp;
 }
 
-function getCacheTime(queryState: QueryState) {
+function getCacheTime(
+  queryState: QueryState,
+  minCacheTime = queryState.volatileQueryOptions.cacheTime
+) {
   return queryState.subscribers.reduce(
     (result, subscriber) => Math.max(result, subscriber.options.cacheTime),
-    queryState.volatileQueryOptions?.cacheTime ?? 0
+    minCacheTime
   );
 }
 
@@ -239,19 +231,6 @@ function getCacheTimestamp(queryState: QueryState) {
   return Math.max(queryState.cacheTimestamp ?? 0, cacheTimestamp);
 }
 
-function getStatus(queryState: QueryState): QueryState['status'] {
-  if (queryState.data !== undefined && queryState.error !== undefined) {
-    return 'query-error-data';
-  }
-  if (queryState.data !== undefined) {
-    return 'query-data';
-  }
-  if (queryState.error !== undefined) {
-    return 'query-error';
-  }
-  return queryState.status;
-}
-
 export function createResourceStore(
   namespace: string,
   actions: ResourceActionTypes
@@ -263,7 +242,7 @@ export function createResourceStore(
       mutations: {},
     }),
     deps: {
-      time: timeComponent,
+      scheduler: schedulerComponent,
     },
   })({
     runQuery: tx([actions.forceQuery], (state, action) => {
@@ -279,16 +258,10 @@ export function createResourceStore(
         ...queryOptions,
       };
       if (queryState !== undefined) {
-        if (queryState.volatileQueryOptions !== undefined) {
-          queryState.volatileQueryOptions.cacheTime = Math.max(
-            queryState.volatileQueryOptions.cacheTime,
-            runQueryOptions.cacheTime
-          );
-        } else {
-          queryState.volatileQueryOptions = {
-            cacheTime: runQueryOptions.cacheTime,
-          };
-        }
+        queryState.volatileQueryOptions.cacheTime = Math.max(
+          queryState.volatileQueryOptions.cacheTime,
+          runQueryOptions.cacheTime
+        );
       } else {
         state.queries[queryHash] = {
           queryHash,
@@ -329,16 +302,10 @@ export function createResourceStore(
         });
         queryState.staleTimestamp = getStaleTimestamp(queryState);
         queryState.cacheTimestamp = getCacheTimestamp(queryState);
-        if (queryState.volatileQueryOptions !== undefined) {
-          queryState.volatileQueryOptions.cacheTime = Math.max(
-            queryState.volatileQueryOptions.cacheTime,
-            subscriberQueryOptions.cacheTime
-          );
-        } else {
-          queryState.volatileQueryOptions = {
-            cacheTime: subscriberQueryOptions.cacheTime,
-          };
-        }
+        queryState.volatileQueryOptions.cacheTime = Math.max(
+          queryState.volatileQueryOptions.cacheTime,
+          subscriberQueryOptions.cacheTime
+        );
       } else {
         state.queries[queryHash] = {
           queryHash,
@@ -381,23 +348,29 @@ export function createResourceStore(
       const { queryState } = getQuery(state, queryKey, queryArgs);
       queryState.state = 'active';
     }),
-    completeQuery: tx([actions.completeQuery], (state, action, { time }) => {
-      const now = time.now();
-      const { queryKey, queryArgs, queryResult } = action.payload;
-      const { queryState } = getQuery(state, queryKey, queryArgs);
-      queryState.state = 'inactive';
-      if (queryResult.status === 'success') {
-        queryState.data = queryResult.data;
-        queryState.dataTimestamp = now;
-      } else {
-        queryState.error = queryResult.error;
-        queryState.errorTimestamp = now;
+    completeQuery: tx(
+      [actions.completeQuery],
+      (state, action, { scheduler }) => {
+        const now = scheduler.now();
+        const { queryKey, queryArgs, queryResult } = action.payload;
+        const { queryState } = getQuery(state, queryKey, queryArgs);
+        queryState.state = 'inactive';
+        if (queryResult.status === 'success') {
+          queryState.status = 'query-data';
+          queryState.data = queryResult.data;
+          queryState.dataTimestamp = now;
+        } else {
+          queryState.status = 'query-error';
+          queryState.error = queryResult.error;
+          queryState.errorTimestamp = now;
+        }
+        queryState.staleTimestamp = getStaleTimestamp(queryState);
+        queryState.cacheTimestamp = getCacheTimestamp(queryState);
+        queryState.volatileQueryOptions = {
+          cacheTime: getCacheTime(queryState, 0),
+        };
       }
-      queryState.status = getStatus(queryState);
-      queryState.staleTimestamp = getStaleTimestamp(queryState);
-      queryState.cacheTimestamp = getCacheTimestamp(queryState);
-      queryState.volatileQueryOptions = undefined;
-    }),
+    ),
     cancelQuery: tx([actions.cancelQuery], (state, action) => {
       const { queryKey, queryArgs } = action.payload;
       const { queryState } = getQuery(state, queryKey, queryArgs);
@@ -410,11 +383,11 @@ export function createResourceStore(
     }),
     invalidateQuery: tx(
       [actions.invalidateQuery],
-      (state, action, { time }) => {
+      (state, action, { scheduler }) => {
         const { queryKey, queryArgs } = action.payload;
         const { queryState } = getQuery(state, queryKey, queryArgs, false);
         if (queryState !== undefined) {
-          queryState.staleTimestamp = time.now();
+          queryState.staleTimestamp = scheduler.now();
         }
       }
     ),
