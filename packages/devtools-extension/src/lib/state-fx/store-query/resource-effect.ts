@@ -229,8 +229,10 @@ export function createResourceEffect<
         mergeMap(
           switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
             const now = time.now();
-            // FIXME: forceQuery without subscribers will not work
-            if (queryState.subscribers.length !== 0) {
+            if (
+              queryState.subscribers.length !== 0 ||
+              queryState.volatileQueryOptions !== undefined
+            ) {
               const staleTimestamp = queryState.staleTimestamp ?? now;
               const staleDue = staleTimestamp - now;
               return staleDue !== Infinity

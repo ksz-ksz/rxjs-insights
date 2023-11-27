@@ -4,8 +4,8 @@ import { Action, ActionTypeFns, createActions } from '@lib/state-fx/store';
 import { Result } from './result';
 import { QueryState } from './resource-store';
 
-interface InactiveQueryOptions {
-  cacheTime?: number;
+export interface VolatileQueryOptions {
+  cacheTime: number;
 }
 
 export interface QueryOptions {
@@ -21,12 +21,12 @@ export type SetQuery<T extends Fn> = {
   queryKey: ResourceKey<T>;
   queryArgs: Parameters<T>;
   queryData: ReturnType<T>;
-  queryOptions?: InactiveQueryOptions;
+  queryOptions?: VolatileQueryOptions;
 };
 export type ForceQuery<T extends Fn> = {
   queryKey: ResourceKey<T>;
   queryArgs: Parameters<T>;
-  queryOptions?: InactiveQueryOptions;
+  queryOptions?: VolatileQueryOptions;
 };
 export type InvalidateQuery<T extends Fn = Fn> = {
   queryKey: ResourceKey<T>;

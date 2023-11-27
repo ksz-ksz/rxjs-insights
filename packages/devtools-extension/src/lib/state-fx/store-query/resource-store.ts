@@ -2,13 +2,19 @@ import {
   MutationOptions,
   QueryOptions,
   ResourceActionTypes,
+  VolatileQueryOptions,
 } from './resource-actions';
 import { Component, createStore, Store, tx, typeOf } from '@lib/state-fx/store';
 import { timeComponent } from './time';
 import { getQuery } from './get-query';
 
+const defaultVolatileQueryOptions: QueryOptions = {
+  cacheTime: 10 * 60 * 1000, // 10 minutes
+  staleTime: Infinity,
+};
+
 const defaultQueryOptions: QueryOptions = {
-  cacheTime: 0,
+  cacheTime: 10 * 60 * 1000, // 10 minutes
   staleTime: Infinity,
 };
 
@@ -24,7 +30,7 @@ interface QueryStateBase {
   // queryOptions: QueryOptions;
   subscribers: QuerySubscriber[];
   state: 'active' | 'inactive';
-  volatileCacheTime: number;
+  volatileQueryOptions: VolatileQueryOptions | undefined;
 }
 
 interface QueryStateInitial extends QueryStateBase {
@@ -208,14 +214,15 @@ function getStaleTimestamp(queryState: QueryState): undefined | number {
   }
 
   const staleTime = getStaleTime(queryState);
+  const staleTimestamp = resultTimestamp + staleTime;
 
-  return resultTimestamp + staleTime;
+  return staleTimestamp;
 }
 
 function getCacheTime(queryState: QueryState) {
   return queryState.subscribers.reduce(
     (result, subscriber) => Math.max(result, subscriber.options.cacheTime),
-    queryState.volatileCacheTime
+    queryState.volatileQueryOptions?.cacheTime ?? 0
   );
 }
 
@@ -227,8 +234,9 @@ function getCacheTimestamp(queryState: QueryState) {
   }
 
   const cacheTime = getCacheTime(queryState);
+  const cacheTimestamp = resultTimestamp + cacheTime;
 
-  return resultTimestamp + cacheTime;
+  return Math.max(queryState.cacheTimestamp ?? 0, cacheTimestamp);
 }
 
 function getStatus(queryState: QueryState): QueryState['status'] {
@@ -271,10 +279,16 @@ export function createResourceStore(
         ...queryOptions,
       };
       if (queryState !== undefined) {
-        queryState.volatileCacheTime = Math.max(
-          queryState.volatileCacheTime,
-          runQueryOptions.cacheTime
-        );
+        if (queryState.volatileQueryOptions !== undefined) {
+          queryState.volatileQueryOptions.cacheTime = Math.max(
+            queryState.volatileQueryOptions.cacheTime,
+            runQueryOptions.cacheTime
+          );
+        } else {
+          queryState.volatileQueryOptions = {
+            cacheTime: runQueryOptions.cacheTime,
+          };
+        }
       } else {
         state.queries[queryHash] = {
           queryHash,
@@ -289,7 +303,9 @@ export function createResourceStore(
           subscribers: [],
           staleTimestamp: undefined,
           cacheTimestamp: undefined,
-          volatileCacheTime: runQueryOptions.cacheTime,
+          volatileQueryOptions: {
+            cacheTime: runQueryOptions.cacheTime,
+          },
         };
       }
     }),
@@ -313,10 +329,16 @@ export function createResourceStore(
         });
         queryState.staleTimestamp = getStaleTimestamp(queryState);
         queryState.cacheTimestamp = getCacheTimestamp(queryState);
-        queryState.volatileCacheTime = Math.max(
-          queryState.volatileCacheTime,
-          subscriberQueryOptions.cacheTime
-        );
+        if (queryState.volatileQueryOptions !== undefined) {
+          queryState.volatileQueryOptions.cacheTime = Math.max(
+            queryState.volatileQueryOptions.cacheTime,
+            subscriberQueryOptions.cacheTime
+          );
+        } else {
+          queryState.volatileQueryOptions = {
+            cacheTime: subscriberQueryOptions.cacheTime,
+          };
+        }
       } else {
         state.queries[queryHash] = {
           queryHash,
@@ -336,7 +358,9 @@ export function createResourceStore(
           ],
           staleTimestamp: undefined,
           cacheTimestamp: undefined,
-          volatileCacheTime: subscriberQueryOptions.cacheTime,
+          volatileQueryOptions: {
+            cacheTime: subscriberQueryOptions.cacheTime,
+          },
         };
       }
     }),
@@ -372,7 +396,7 @@ export function createResourceStore(
       queryState.status = getStatus(queryState);
       queryState.staleTimestamp = getStaleTimestamp(queryState);
       queryState.cacheTimestamp = getCacheTimestamp(queryState);
-      queryState.volatileCacheTime = getCacheTime(queryState);
+      queryState.volatileQueryOptions = undefined;
     }),
     cancelQuery: tx([actions.cancelQuery], (state, action) => {
       const { queryKey, queryArgs } = action.payload;
