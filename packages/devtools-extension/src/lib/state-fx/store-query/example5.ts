@@ -1,5 +1,5 @@
 import { createSelection } from '../store/selection';
-import { concat, concatMap, Observable, of } from 'rxjs';
+import { concat, concatMap, interval, Observable, of } from 'rxjs';
 import {
   Component,
   createContainer,
@@ -20,7 +20,7 @@ import {
   InvalidateQuery,
   Mutate,
   MutationCompleted,
-  ForceQuery,
+  PrefetchQuery,
   Query,
   QueryCompleted,
   ResourceActionTypes,
@@ -249,7 +249,10 @@ function createResourceHooks(
 const { useQuery: useTodosQuery, useMutation: useTodosMutation } =
   createResourceHooks(todosResourceStore, todosResourceActions);
 
-const todosState = useTodosQuery(todosQueryKeys.getTodo, [7]);
+const todosState = useTodosQuery(todosQueryKeys.getTodo, [7], {
+  refetch: interval(1000),
+});
+
 const { mutate: addTodo, ...addTodoMutationState } = useTodosMutation(
   todosMutationKeys.addTodo
 );
@@ -260,7 +263,7 @@ addTodo(['asd']);
 interface Resource {
   // cache manipulation
   query<T extends Fn>(payload: Query<T>): Observable<QueryCompleted<T>>;
-  preloadQuery<T extends Fn>(payload: ForceQuery<T>): Observable<void>;
+  preloadQuery<T extends Fn>(payload: PrefetchQuery<T>): Observable<void>;
   setQueryData<T extends Fn>(payload: SetQuery<T>): void;
   invalidateQueries(payload: InvalidateQuery): void;
   cancelQueries(payload: CancelQuery): void;

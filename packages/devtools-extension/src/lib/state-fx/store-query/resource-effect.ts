@@ -22,10 +22,16 @@ import { Result } from './result';
 import { Action, createEffect, Deps, StoreComponent } from '../store';
 import { CreateResourceKeysResult } from './resource-key';
 import { ResourceActionTypes } from './resource-actions';
-import { QueryState, ResourceState } from './resource-store';
+import {
+  getCacheTimestamp,
+  getStaleTimestamp,
+  QueryState,
+  ResourceState,
+} from './resource-store';
 import { schedulerComponent } from './scheduler';
 import { getQuery } from './get-query';
 import { is } from '../store/is';
+import { getQueryHash } from './get-query-hash';
 
 interface QueryDef<TQuery extends Fn, TDeps> {
   query(args: Parameters<TQuery>, deps: TDeps): Observable<ReturnType<TQuery>>;
@@ -100,6 +106,10 @@ function isStale(queryState: QueryState) {
   }
 }
 
+function hasSubscribers(queryState: QueryState) {
+  return queryState.subscriberKeys.length !== 0;
+}
+
 export function createResourceEffect<
   TQueries extends { [key: string]: Fn },
   TMutations extends { [key: string]: Fn },
@@ -124,10 +134,21 @@ export function createResourceEffect<
       __scheduler: schedulerComponent,
     },
   })({
-    emitQueryForced(actions, { __store: store }) {
-      return actions.ofType(resourceActions.forceQuery).pipe(
+    emitQueryPrefetched(actions, { __store: store }) {
+      return actions.ofType(resourceActions.prefetchQuery).pipe(
         map(({ payload: { queryKey, queryArgs } }) =>
-          resourceActions.queryForced({
+          resourceActions.queryPrefetched({
+            queryKey,
+            queryArgs,
+            ...getQuery(store.getState(), queryKey, queryArgs),
+          })
+        )
+      );
+    },
+    emitQueryFetched(actions, { __store: store }) {
+      return actions.ofType(resourceActions.fetchQuery).pipe(
+        map(({ payload: { queryKey, queryArgs } }) =>
+          resourceActions.queryFetched({
             queryKey,
             queryArgs,
             ...getQuery(store.getState(), queryKey, queryArgs),
@@ -193,13 +214,24 @@ export function createResourceEffect<
         )
       );
     },
-    emitQueryCleanedUp(actions, { __store: store }) {
-      return actions.ofType(resourceActions.cleanupQuery).pipe(
+    emitQueryStaled(actions, { __store: store }) {
+      return actions.ofType(resourceActions.staleQuery).pipe(
         map(({ payload: { queryKey, queryArgs } }) =>
-          resourceActions.queryCleanedUp({
+          resourceActions.queryStaled({
             queryKey,
             queryArgs,
             ...getQuery(store.getState(), queryKey, queryArgs),
+          })
+        )
+      );
+    },
+    emitQueryCollected(actions, { __store: store }) {
+      return actions.ofType(resourceActions.collectQuery).pipe(
+        map(({ payload: { queryKey, queryArgs } }) =>
+          resourceActions.queryCollected({
+            queryKey,
+            queryArgs,
+            queryHash: getQueryHash(queryKey, queryArgs),
           })
         )
       );
@@ -215,47 +247,113 @@ export function createResourceEffect<
         )
       );
     },
-    triggerQuery(actions, { __scheduler: scheduler }) {
+    cleanupQuery(actions, { __scheduler: scheduler }) {
       return merge(
-        actions.ofType(resourceActions.queryForced),
         actions.ofType(resourceActions.querySubscribed),
         actions.ofType(resourceActions.queryUnsubscribed),
+        actions.ofType(resourceActions.queryStarted),
         actions.ofType(resourceActions.queryCompleted),
-        actions.ofType(resourceActions.queryCancelled),
-        actions.ofType(resourceActions.queryInvalidated)
+        actions.ofType(resourceActions.queryCancelled)
       ).pipe(
         groupBy(({ payload: { queryHash } }) => queryHash),
         mergeMap(
-          switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
-            const now = scheduler.now();
-            if (queryState.subscribers.length !== 0) {
-              const staleTimestamp = queryState.staleTimestamp ?? now;
-              const staleDue = staleTimestamp - now;
-              return staleDue !== Infinity
-                ? of(
-                    resourceActions.startQuery({
-                      queryKey,
-                      queryArgs,
-                    })
-                  ).pipe(delay(staleDue, scheduler))
-                : EMPTY;
-            } else {
-              const cacheTimestamp = queryState.cacheTimestamp ?? now;
-              const cacheDue = cacheTimestamp - now;
-              return cacheDue !== Infinity
-                ? of(
-                    resourceActions.cleanupQuery({
-                      queryKey,
-                      queryArgs,
-                    })
-                  ).pipe(delay(cacheDue, scheduler))
-                : EMPTY;
+          switchMap(
+            ({ name, payload: { queryKey, queryArgs, queryState } }) => {
+              if (
+                queryState.subscriberKeys.length === 0 &&
+                queryState.state !== 'fetching'
+              ) {
+                const now = scheduler.now();
+                const cacheTimestamp = getCacheTimestamp(queryState) ?? now;
+                const cacheDue = cacheTimestamp - now;
+                return cacheDue !== Infinity
+                  ? of(
+                      resourceActions.collectQuery({
+                        queryKey,
+                        queryArgs,
+                      })
+                    ).pipe(delay(cacheDue, scheduler))
+                  : EMPTY;
+              } else {
+                return EMPTY;
+              }
             }
-          })
+          )
         )
       );
     },
-    runQuery(actions, deps) {
+    fetchQuery(actions) {
+      return actions.ofType(resourceActions.queryFetched).pipe(
+        switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
+          if (queryState.state !== 'fetching') {
+            return of(
+              resourceActions.startQuery({
+                queryKey,
+                queryArgs,
+              })
+            );
+          } else {
+            return EMPTY;
+          }
+        })
+      );
+    },
+    prefetchQuery(actions) {
+      return actions.ofType(resourceActions.queryPrefetched).pipe(
+        switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
+          // TODO: include initial-data?
+          if (
+            queryState.state !== 'fetching' &&
+            queryState.status === 'initial'
+          ) {
+            return of(
+              resourceActions.startQuery({
+                queryKey,
+                queryArgs,
+              })
+            );
+          } else {
+            return EMPTY;
+          }
+        })
+      );
+    },
+    invalidateQuery(actions) {
+      return actions.ofType(resourceActions.queryInvalidated).pipe(
+        switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
+          if (queryState.state !== 'fetching' && hasSubscribers(queryState)) {
+            return of(
+              resourceActions.startQuery({
+                queryKey,
+                queryArgs,
+              })
+            );
+          } else {
+            return EMPTY;
+          }
+        })
+      );
+    },
+    subscribeQuery(actions) {
+      return actions.ofType(resourceActions.querySubscribed).pipe(
+        switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
+          if (
+            queryState.state !== 'fetching' &&
+            queryState.status === 'initial'
+          ) {
+            return of(
+              resourceActions.startQuery({
+                queryKey,
+                queryArgs,
+              })
+            );
+          } else {
+            return EMPTY;
+          }
+        })
+      );
+    },
+    runQuery(actions, { __store, __scheduler, ...deps }) {
       return merge(
         actions.ofType(resourceActions.queryStarted),
         actions.ofType(resourceActions.queryCancelled)
@@ -292,14 +390,7 @@ export function createResourceEffect<
                   )
                 ),
                 takeUntil(
-                  queryActions.pipe(
-                    filter(
-                      is(
-                        resourceActions.queryCancelled,
-                        resourceActions.queryCleanedUp
-                      )
-                    )
-                  )
+                  queryActions.pipe(filter(is(resourceActions.queryCancelled)))
                 )
               );
             })

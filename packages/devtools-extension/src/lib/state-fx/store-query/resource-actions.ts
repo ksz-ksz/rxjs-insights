@@ -4,12 +4,12 @@ import { Action, ActionTypeFns, createActions } from '../store';
 import { Result } from './result';
 import { QueryState } from './resource-store';
 
-export interface VolatileQueryOptions {
-  cacheTime: number;
-}
-
 export interface QueryOptions {
   cacheTime: number;
+  staleTime: number;
+}
+
+export interface QuerySubscriberOptions {
   staleTime: number;
 }
 
@@ -21,12 +21,14 @@ export type SetQuery<T extends Fn> = {
   queryKey: ResourceKey<T>;
   queryArgs: Parameters<T>;
   queryData: ReturnType<T>;
-  queryOptions?: VolatileQueryOptions;
 };
-export type ForceQuery<T extends Fn> = {
+export type PrefetchQuery<T extends Fn> = {
   queryKey: ResourceKey<T>;
   queryArgs: Parameters<T>;
-  queryOptions?: VolatileQueryOptions;
+};
+export type FetchQuery<T extends Fn> = {
+  queryKey: ResourceKey<T>;
+  queryArgs: Parameters<T>;
 };
 export type InvalidateQuery<T extends Fn = Fn> = {
   queryKey: ResourceKey<T>;
@@ -48,7 +50,12 @@ export type CompleteQuery<T extends Fn = Fn> = {
   queryResult: Result<ReturnType<T>>;
 };
 
-export type CleanupQuery<T extends Fn = Fn> = {
+export type CollectQuery<T extends Fn = Fn> = {
+  queryKey: ResourceKey<T>;
+  queryArgs: Parameters<T>;
+};
+
+export type StaleQuery<T extends Fn = Fn> = {
   queryKey: ResourceKey<T>;
   queryArgs: Parameters<T>;
 };
@@ -57,8 +64,6 @@ export type SubscribeQuery<T extends Fn = Fn> = {
   subscriberKey: string;
   queryKey: ResourceKey<T>;
   queryArgs: Parameters<T>;
-  // queryHash: string;
-  queryOptions?: Partial<QueryOptions>;
 };
 
 export type UnsubscribeQuery<T extends Fn = Fn> = {
@@ -67,7 +72,14 @@ export type UnsubscribeQuery<T extends Fn = Fn> = {
   queryArgs: Parameters<T>;
 };
 
-type QueryForced<T extends Fn = Fn> = {
+type QueryPrefetched<T extends Fn = Fn> = {
+  queryKey: ResourceKey<T>;
+  queryArgs: Parameters<T>;
+  queryHash: string;
+  queryState: QueryState<ReturnType<T>>;
+};
+
+type QueryFetched<T extends Fn = Fn> = {
   queryKey: ResourceKey<T>;
   queryArgs: Parameters<T>;
   queryHash: string;
@@ -88,7 +100,12 @@ type QueryUnsubscribed<T extends Fn = Fn> = {
   queryHash: string;
   queryState: QueryState<ReturnType<T>>;
 };
-type QueryCleanedUp<T extends Fn = Fn> = {
+type QueryStaled<T extends Fn = Fn> = {
+  queryKey: ResourceKey<T>;
+  queryArgs: Parameters<T>;
+  queryHash: string;
+};
+type QueryCollected<T extends Fn = Fn> = {
   queryKey: ResourceKey<T>;
   queryArgs: Parameters<T>;
   queryHash: string;
@@ -146,33 +163,58 @@ export type MutationCompleted<T extends Fn = Fn> = {
 
 export interface ResourceActions {
   // queries activation
-  forceQuery<T extends Fn>(payload: ForceQuery<T>): Action<ForceQuery<T>>;
 
-  setQuery<T extends Fn>(payload: SetQuery<T>): Action<SetQuery<T>>;
-
-  invalidateQuery<T extends Fn>(
-    payload: InvalidateQuery<T>
-  ): Action<InvalidateQuery<T>>;
-
-  cancelQuery<T extends Fn>(payload: CancelQuery<T>): Action<CancelQuery<T>>;
-
-  startQuery<T extends Fn>(payload: StartQuery<T>): Action<StartQuery<T>>;
-  completeQuery<T extends Fn>(
-    payload: CompleteQuery<T>
-  ): Action<CompleteQuery<T>>;
-
-  cleanupQuery<T extends Fn>(payload: CleanupQuery<T>): Action<CleanupQuery<T>>;
-
+  /**
+   * Adds a subscriber to the query.
+   */
   subscribeQuery<T extends Fn>(
     payload: SubscribeQuery<T>
   ): Action<SubscribeQuery<T>>;
 
+  /**
+   * Removes a subscriber from the query.
+   */
   unsubscribeQuery<T extends Fn>(
     payload: UnsubscribeQuery<T>
   ): Action<UnsubscribeQuery<T>>;
 
+  /**
+   * If there was no data for the query fetched yet, fetches the data.
+   */
+  prefetchQuery<T extends Fn>(
+    payload: PrefetchQuery<T>
+  ): Action<PrefetchQuery<T>>;
+
+  /**
+   * Fetches the data, even if there are no subscribers for the query.
+   */
+  fetchQuery<T extends Fn>(payload: FetchQuery<T>): Action<FetchQuery<T>>;
+
+  /**
+   * Forces query into a stale state. If there are active subscribers, fetches the data.
+   */
+  invalidateQuery<T extends Fn>(
+    payload: InvalidateQuery<T>
+  ): Action<InvalidateQuery<T>>;
+
+  /**
+   * Sets query data.
+   */
+  setQuery<T extends Fn>(payload: SetQuery<T>): Action<SetQuery<T>>;
+
+  // effect -> store communication
+  startQuery<T extends Fn>(payload: StartQuery<T>): Action<StartQuery<T>>;
+  cancelQuery<T extends Fn>(payload: CancelQuery<T>): Action<CancelQuery<T>>;
+  completeQuery<T extends Fn>(
+    payload: CompleteQuery<T>
+  ): Action<CompleteQuery<T>>;
+  collectQuery<T extends Fn>(payload: CollectQuery<T>): Action<CollectQuery<T>>;
+  staleQuery<T extends Fn>(payload: StaleQuery<T>): Action<StaleQuery<T>>;
   // queries lifecycle
-  queryForced<T extends Fn>(payload: QueryForced<T>): Action<QueryForced<T>>;
+  queryPrefetched<T extends Fn>(
+    payload: QueryPrefetched<T>
+  ): Action<QueryPrefetched<T>>;
+  queryFetched<T extends Fn>(payload: QueryFetched<T>): Action<QueryFetched<T>>;
 
   querySubscribed<T extends Fn>(
     payload: QuerySubscribed<T>
@@ -182,9 +224,11 @@ export interface ResourceActions {
     payload: QueryUnsubscribed<T>
   ): Action<QueryUnsubscribed<T>>;
 
-  queryCleanedUp<T extends Fn>(
-    payload: QueryCleanedUp<T>
-  ): Action<QueryCleanedUp<T>>;
+  queryStaled<T extends Fn>(payload: QueryStaled<T>): Action<QueryStaled<T>>;
+
+  queryCollected<T extends Fn>(
+    payload: QueryCollected<T>
+  ): Action<QueryCollected<T>>;
 
   queryInvalidated<T extends Fn>(
     payload: QueryInvalidated<T>

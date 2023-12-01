@@ -1,36 +1,56 @@
 import {
   MutationOptions,
   QueryOptions,
+  QuerySubscriberOptions,
   ResourceActionTypes,
-  VolatileQueryOptions,
 } from './resource-actions';
 import { Component, createStore, Store, tx, typeOf } from '../store';
 import { schedulerComponent } from './scheduler';
 import { getQuery } from './get-query';
 
-const defaultVolatileQueryOptions: QueryOptions = {
-  cacheTime: 10 * 60 * 1000, // 10 minutes
-  staleTime: Infinity,
-};
-
 const defaultQueryOptions: QueryOptions = {
   cacheTime: 10 * 60 * 1000, // 10 minutes
-  staleTime: Infinity,
+  staleTime: 0,
+};
+
+const defaultQuerySubscriberOptions: QuerySubscriberOptions = {
+  staleTime: 0,
 };
 
 interface QuerySubscriber {
   subscriberKey: string;
-  options: QueryOptions;
 }
 
+/*
+TODO:
+- cacheTime should not be defined on subscribers
+- staleTime is specific for a subscriber
+- staleTime marks query as stale and does not start query automatically
+- query starts when:
+  - isStale & subscribeQuery is dispatched
+  - isStale & runQuery is dispatched
+  - invalidateQuery is dispatched
+
+
+  subscribe
+    if stale for new subscriber
+      startQuery
+  unsubscribe
+    if last subscriber
+      schedule cleanup
+  fetchQuery // same as invalidate
+    if force or stale for any subscriber
+      startQuery
+  prefetchQuery
+    startQuery
+    schedule cleanup
+*/
 interface QueryStateBase {
   queryHash: string;
   queryKey: string;
   queryArgs: any[];
-  // queryOptions: QueryOptions;
-  subscribers: QuerySubscriber[];
-  state: 'active' | 'inactive';
-  volatileQueryOptions: VolatileQueryOptions;
+  subscriberKeys: string[];
+  state: 'idle' | 'fetching';
 }
 
 interface QueryStateInitial extends QueryStateBase {
@@ -39,8 +59,6 @@ interface QueryStateInitial extends QueryStateBase {
   error: undefined;
   dataTimestamp: undefined;
   errorTimestamp: undefined;
-  staleTimestamp: undefined;
-  cacheTimestamp: undefined;
 }
 
 interface QueryStateInitialData<T = unknown> extends QueryStateBase {
@@ -49,8 +67,6 @@ interface QueryStateInitialData<T = unknown> extends QueryStateBase {
   error: undefined;
   dataTimestamp: undefined;
   errorTimestamp: undefined;
-  staleTimestamp: undefined;
-  cacheTimestamp: undefined;
 }
 
 interface QueryStateQueryData<T = unknown> extends QueryStateBase {
@@ -59,8 +75,6 @@ interface QueryStateQueryData<T = unknown> extends QueryStateBase {
   error: unknown | undefined;
   dataTimestamp: number;
   errorTimestamp: number | undefined;
-  staleTimestamp: number;
-  cacheTimestamp: number;
 }
 
 interface QueryStateQueryError<T> extends QueryStateBase {
@@ -69,8 +83,6 @@ interface QueryStateQueryError<T> extends QueryStateBase {
   error: unknown;
   dataTimestamp: number | undefined;
   errorTimestamp: number;
-  staleTimestamp: number;
-  cacheTimestamp: number;
 }
 
 export type QueryState<T = unknown> =
@@ -188,47 +200,32 @@ function getResultTimestamp(queryState: QueryState): undefined | number {
   );
 }
 
-function getStaleTime(queryState: QueryState) {
-  return queryState.subscribers.reduce(
-    (result, subscriber) => Math.min(result, subscriber.options.staleTime),
-    Infinity
-  );
-}
+// function getStaleTime(queryState: QueryState) {
+//   return queryState.queryOptions.staleTime;
+// }
 
-function getStaleTimestamp(queryState: QueryState): undefined | number {
+export function getStaleTimestamp(queryState: QueryState): undefined | number {
   const resultTimestamp = getResultTimestamp(queryState);
 
   if (resultTimestamp === undefined) {
     return undefined;
   }
 
-  const staleTime = getStaleTime(queryState);
-  const staleTimestamp = resultTimestamp + staleTime;
-
-  return staleTimestamp;
+  return resultTimestamp + defaultQueryOptions.staleTime;
 }
 
-function getCacheTime(
-  queryState: QueryState,
-  minCacheTime = queryState.volatileQueryOptions.cacheTime
-) {
-  return queryState.subscribers.reduce(
-    (result, subscriber) => Math.max(result, subscriber.options.cacheTime),
-    minCacheTime
-  );
-}
+// function getCacheTime(queryState: QueryState) {
+//   return queryState.queryOptions.cacheTime;
+// }
 
-function getCacheTimestamp(queryState: QueryState) {
+export function getCacheTimestamp(queryState: QueryState) {
   const resultTimestamp = getResultTimestamp(queryState);
 
   if (resultTimestamp === undefined) {
     return undefined;
   }
 
-  const cacheTime = getCacheTime(queryState);
-  const cacheTimestamp = resultTimestamp + cacheTime;
-
-  return Math.max(queryState.cacheTimestamp ?? 0, cacheTimestamp);
+  return resultTimestamp + defaultQueryOptions.cacheTime;
 }
 
 export function createResourceStore(
@@ -245,108 +242,73 @@ export function createResourceStore(
       scheduler: schedulerComponent,
     },
   })({
-    runQuery: tx([actions.forceQuery], (state, action) => {
-      const { queryKey, queryArgs, queryOptions } = action.payload;
-      const { queryHash, queryState } = getQuery(
-        state,
-        queryKey,
-        queryArgs,
-        false
-      );
-      const runQueryOptions = {
-        ...defaultQueryOptions,
-        ...queryOptions,
-      };
-      if (queryState !== undefined) {
-        queryState.volatileQueryOptions.cacheTime = Math.max(
-          queryState.volatileQueryOptions.cacheTime,
-          runQueryOptions.cacheTime
-        );
-      } else {
-        state.queries[queryHash] = {
-          queryHash,
-          queryKey,
-          queryArgs,
-          state: 'inactive',
-          status: 'initial',
-          data: undefined,
-          error: undefined,
-          dataTimestamp: undefined,
-          errorTimestamp: undefined,
-          subscribers: [],
-          staleTimestamp: undefined,
-          cacheTimestamp: undefined,
-          volatileQueryOptions: {
-            cacheTime: runQueryOptions.cacheTime,
-          },
-        };
-      }
-    }),
     subscribeQuery: tx([actions.subscribeQuery], (state, action) => {
-      const { queryKey, queryArgs, queryOptions, subscriberKey } =
-        action.payload;
+      const { queryKey, queryArgs, subscriberKey } = action.payload;
       const { queryHash, queryState } = getQuery(
         state,
         queryKey,
         queryArgs,
         false
       );
-      const subscriberQueryOptions = {
-        ...defaultQueryOptions,
-        ...queryOptions,
-      };
       if (queryState !== undefined) {
-        queryState.subscribers.push({
-          subscriberKey: action.payload.subscriberKey,
-          options: subscriberQueryOptions,
-        });
-        queryState.staleTimestamp = getStaleTimestamp(queryState);
-        queryState.cacheTimestamp = getCacheTimestamp(queryState);
-        queryState.volatileQueryOptions.cacheTime = Math.max(
-          queryState.volatileQueryOptions.cacheTime,
-          subscriberQueryOptions.cacheTime
-        );
+        if (queryState.subscriberKeys.includes(subscriberKey)) {
+          throw new Error('subscriber already exists');
+        }
+        queryState.subscriberKeys.push(subscriberKey);
       } else {
         state.queries[queryHash] = {
           queryHash,
           queryKey,
           queryArgs,
-          state: 'inactive',
+          state: 'idle',
           status: 'initial',
           data: undefined,
           error: undefined,
           dataTimestamp: undefined,
           errorTimestamp: undefined,
-          subscribers: [
-            {
-              subscriberKey,
-              options: subscriberQueryOptions,
-            },
-          ],
-          staleTimestamp: undefined,
-          cacheTimestamp: undefined,
-          volatileQueryOptions: {
-            cacheTime: subscriberQueryOptions.cacheTime,
-          },
+          subscriberKeys: [subscriberKey],
         };
       }
     }),
     unsubscribeQuery: tx([actions.unsubscribeQuery], (state, action) => {
       const { queryKey, queryArgs, subscriberKey } = action.payload;
       const { queryState } = getQuery(state, queryKey, queryArgs);
-      const subscriberIndex = queryState.subscribers.findIndex(
-        (subscriber) => subscriber.subscriberKey === subscriberKey
-      );
+      const subscriberIndex = queryState.subscriberKeys.indexOf(subscriberKey);
       if (subscriberIndex === -1) {
-        throw new Error('no subscriber');
+        throw new Error('subscriber does not exist');
       }
-      queryState.subscribers.splice(subscriberIndex, 1);
-      queryState.staleTimestamp = getStaleTimestamp(queryState);
+      queryState.subscriberKeys.splice(subscriberIndex, 1);
     }),
+    fetchQuery: tx(
+      [actions.fetchQuery, actions.prefetchQuery],
+      (state, action) => {
+        const { queryKey, queryArgs } = action.payload;
+        const { queryHash, queryState } = getQuery(
+          state,
+          queryKey,
+          queryArgs,
+          false
+        );
+        if (queryState === undefined) {
+          state.queries[queryHash] = {
+            queryHash,
+            queryKey,
+            queryArgs,
+            state: 'idle',
+            status: 'initial',
+            data: undefined,
+            error: undefined,
+            dataTimestamp: undefined,
+            errorTimestamp: undefined,
+            subscriberKeys: [],
+          };
+        }
+      }
+    ),
     startQuery: tx([actions.startQuery], (state, action) => {
       const { queryKey, queryArgs } = action.payload;
       const { queryState } = getQuery(state, queryKey, queryArgs);
-      queryState.state = 'active';
+      queryState.state = 'fetching';
     }),
     completeQuery: tx(
       [actions.completeQuery],
@@ -354,7 +316,7 @@ export function createResourceStore(
         const now = scheduler.now();
         const { queryKey, queryArgs, queryResult } = action.payload;
         const { queryState } = getQuery(state, queryKey, queryArgs);
-        queryState.state = 'inactive';
+        queryState.state = 'idle';
         if (queryResult.status === 'success') {
           queryState.status = 'query-data';
           queryState.data = queryResult.data;
@@ -364,32 +326,17 @@ export function createResourceStore(
           queryState.error = queryResult.error;
           queryState.errorTimestamp = now;
         }
-        queryState.staleTimestamp = getStaleTimestamp(queryState);
-        queryState.cacheTimestamp = getCacheTimestamp(queryState);
-        queryState.volatileQueryOptions = {
-          cacheTime: getCacheTime(queryState, 0),
-        };
       }
     ),
     cancelQuery: tx([actions.cancelQuery], (state, action) => {
       const { queryKey, queryArgs } = action.payload;
       const { queryState } = getQuery(state, queryKey, queryArgs);
-      queryState.state = 'inactive';
+      queryState.state = 'idle';
     }),
-    cleanupQuery: tx([actions.cleanupQuery], (state, action) => {
+    cleanupQuery: tx([actions.collectQuery], (state, action) => {
       const { queryKey, queryArgs } = action.payload;
       const { queryHash } = getQuery(state, queryKey, queryArgs);
       delete state.queries[queryHash];
     }),
-    invalidateQuery: tx(
-      [actions.invalidateQuery],
-      (state, action, { scheduler }) => {
-        const { queryKey, queryArgs } = action.payload;
-        const { queryState } = getQuery(state, queryKey, queryArgs, false);
-        if (queryState !== undefined) {
-          queryState.staleTimestamp = scheduler.now();
-        }
-      }
-    ),
   });
 }
