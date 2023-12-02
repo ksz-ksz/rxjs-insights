@@ -2,11 +2,25 @@ import { createResourceKeys, ResourceKey } from './resource-key';
 import { createResourceStore, QueryState } from './resource-store';
 import { createResourceActions } from './resource-actions';
 import { createResourceEffect, queries } from './resource-effect';
-import { merge, Subject, VirtualTimeScheduler } from 'rxjs';
-import { actionsComponent, createContainer } from '../store';
+import {
+  map,
+  merge,
+  Observable,
+  of,
+  Subject,
+  VirtualTimeScheduler,
+} from 'rxjs';
+import {
+  Action,
+  actionsComponent,
+  ActionType,
+  createActions,
+  createContainer,
+} from '../store';
 import { schedulerComponent } from './scheduler';
 import { Fn } from './fn';
 import { getQueryHash } from './get-query-hash';
+import { Result } from './result';
 
 const TEN_MINUTES = 10 * 60 * 1000;
 
@@ -16,7 +30,13 @@ type TestQueries = {
 
 type TestMutations = {};
 
-function createTestHarness() {
+function createTestHarness(opts?: {
+  listen?: ActionType<any>[];
+  dispatch?(
+    result: Observable<Result<string>>,
+    args: [number]
+  ): Observable<Action>;
+}) {
   const container = createContainer();
   const scheduler = new VirtualTimeScheduler();
   container.provide(schedulerComponent, {
@@ -42,6 +62,7 @@ function createTestHarness() {
       queries: queries(testQueryKeys, {
         getTest: {
           queryFn: ([id]) => (results[id] = new Subject<string>()),
+          dispatch: opts?.dispatch,
         },
       }),
     }
@@ -49,18 +70,20 @@ function createTestHarness() {
 
   const actions = container.use(actionsComponent).component;
   const listing: unknown[] = [];
-  merge(
-    actions.ofType(testActions.queryPrefetched),
-    actions.ofType(testActions.queryFetched),
-    actions.ofType(testActions.querySubscribed),
-    actions.ofType(testActions.queryUnsubscribed),
-    actions.ofType(testActions.queryStaled),
-    actions.ofType(testActions.queryCollected),
-    actions.ofType(testActions.queryInvalidated),
-    actions.ofType(testActions.queryStarted),
-    actions.ofType(testActions.queryCompleted),
-    actions.ofType(testActions.queryCancelled)
-  ).subscribe((action) => {
+  const listen: ActionType<any>[] = [
+    testActions.queryPrefetched,
+    testActions.queryFetched,
+    testActions.querySubscribed,
+    testActions.queryUnsubscribed,
+    testActions.queryStaled,
+    testActions.queryCollected,
+    testActions.queryInvalidated,
+    testActions.queryStarted,
+    testActions.queryCompleted,
+    testActions.queryCancelled,
+    ...(opts?.listen ?? []),
+  ];
+  merge(...listen.map(actions.ofType, actions)).subscribe((action) => {
     listing.push([scheduler.now(), action]);
   });
 
@@ -146,7 +169,9 @@ function createQueryHarness<T extends Fn>(
     queryHash: string;
   } & U;
   queryState(): QueryState<ReturnType<T>>;
-  queryState<U>(patch: U): QueryState<ReturnType<T>> & U;
+  queryState(
+    patch: Partial<QueryState<ReturnType<T>>>
+  ): QueryState<ReturnType<T>>;
 } {
   const queryPayloadBase = createQueryPayloadBase(queryKey, queryArgs);
   const queryStateDiff = createQueryStateDiff(queryKey, queryArgs);
@@ -1072,6 +1097,94 @@ describe('Query', () => {
               }),
             })
           ),
+        ],
+        [TEN_MINUTES, testActions.queryCollected(queryPayload())],
+      ]);
+    });
+    it('query with custom dispatch is started', () => {
+      const debugActions = createActions<{
+        started: { args: [number] };
+        completed: { args: [number]; result: Result<string> };
+      }>({ namespace: 'debug' });
+      const {
+        actions,
+        listing,
+        testQueryKeys,
+        testActions,
+        resolveData,
+        proceed,
+      } = createTestHarness({
+        listen: [debugActions.started, debugActions.completed],
+        dispatch(
+          result: Observable<Result<string>>,
+          args: [number]
+        ): Observable<Action> {
+          return merge(
+            of(debugActions.started({ args })),
+            result.pipe(
+              map((result) => debugActions.completed({ args, result }))
+            )
+          );
+        },
+      });
+
+      actions.dispatch(
+        testActions.fetchQuery({
+          queryKey: testQueryKeys.getTest,
+          queryArgs: [7],
+        })
+      );
+      resolveData(7, 'foo');
+      proceed();
+
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
+
+      expect(listing).toEqual([
+        [
+          0,
+          testActions.queryFetched(
+            queryPayload({
+              queryState: queryState(),
+            })
+          ),
+        ],
+        [
+          0,
+          testActions.queryStarted(
+            queryPayload({
+              queryState: queryState({
+                state: 'fetching',
+              }),
+            })
+          ),
+        ],
+        [0, debugActions.started({ args: [7] })],
+        [
+          0,
+          testActions.queryCompleted(
+            queryPayload({
+              queryResult: {
+                status: 'success',
+                data: 'foo',
+              },
+              queryState: queryState({
+                state: 'idle',
+                status: 'query-data',
+                data: 'foo',
+                dataTimestamp: 0,
+              }),
+            })
+          ),
+        ],
+        [
+          0,
+          debugActions.completed({
+            args: [7],
+            result: { status: 'success', data: 'foo' },
+          }),
         ],
         [TEN_MINUTES, testActions.queryCollected(queryPayload())],
       ]);
