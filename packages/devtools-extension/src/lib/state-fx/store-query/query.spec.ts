@@ -1,9 +1,9 @@
 import { createResourceKeys, ResourceKey } from './resource-key';
 import { createResourceStore, QueryState } from './resource-store';
 import { createResourceActions } from './resource-actions';
-import { createResourceEffect } from './resource-effect';
+import { createResourceEffect, queries } from './resource-effect';
 import { merge, Subject, VirtualTimeScheduler } from 'rxjs';
-import { Action, actionsComponent, createContainer } from '../store';
+import { actionsComponent, createContainer } from '../store';
 import { schedulerComponent } from './scheduler';
 import { Fn } from './fn';
 import { getQueryHash } from './get-query-hash';
@@ -16,7 +16,7 @@ type TestQueries = {
 
 type TestMutations = {};
 
-function createTestHarness(timestamps = false) {
+function createTestHarness() {
   const container = createContainer();
   const scheduler = new VirtualTimeScheduler();
   container.provide(schedulerComponent, {
@@ -24,7 +24,10 @@ function createTestHarness(timestamps = false) {
       return { component: scheduler };
     },
   });
-  const testKeys = createResourceKeys<TestQueries, TestMutations>();
+  const { query: testQueryKeys } = createResourceKeys<
+    TestQueries,
+    TestMutations
+  >();
   const testActions = createResourceActions('test');
   const testStore = createResourceStore('test', testActions);
 
@@ -32,18 +35,16 @@ function createTestHarness(timestamps = false) {
   const testEffect = createResourceEffect(
     {
       namespace: 'test',
-      keys: testKeys,
       actions: testActions,
       store: testStore,
     },
     {
-      getTest: {
-        query([id]) {
-          return (results[id] = new Subject<string>());
+      queries: queries(testQueryKeys, {
+        getTest: {
+          queryFn: ([id]) => (results[id] = new Subject<string>()),
         },
-      },
-    },
-    {}
+      }),
+    }
   );
 
   const actions = container.use(actionsComponent).component;
@@ -60,11 +61,7 @@ function createTestHarness(timestamps = false) {
     actions.ofType(testActions.queryCompleted),
     actions.ofType(testActions.queryCancelled)
   ).subscribe((action) => {
-    if (timestamps) {
-      listing.push([scheduler.now(), action]);
-    } else {
-      listing.push(action);
-    }
+    listing.push([scheduler.now(), action]);
   });
 
   container.use(testEffect);
@@ -72,7 +69,7 @@ function createTestHarness(timestamps = false) {
   return {
     actions,
     listing,
-    testKeys,
+    testQueryKeys,
     testActions,
     resolveData(id: number, value: string) {
       const result = results[id];
@@ -134,57 +131,102 @@ function createQueryPayloadBase<T extends Fn>(
   });
 }
 
+function createQueryHarness<T extends Fn>(
+  queryKey: ResourceKey<T>,
+  queryArgs: Parameters<T>
+): {
+  queryPayload(): {
+    queryKey: ResourceKey<T>;
+    queryArgs: Parameters<T>;
+    queryHash: string;
+  };
+  queryPayload<U>(patch: U): {
+    queryKey: ResourceKey<T>;
+    queryArgs: Parameters<T>;
+    queryHash: string;
+  } & U;
+  queryState(): QueryState<ReturnType<T>>;
+  queryState<U>(patch: U): QueryState<ReturnType<T>> & U;
+} {
+  const queryPayloadBase = createQueryPayloadBase(queryKey, queryArgs);
+  const queryStateDiff = createQueryStateDiff(queryKey, queryArgs);
+
+  return {
+    queryPayload(patch?: any): any {
+      return queryPayloadBase.get(patch);
+    },
+    queryState(patch?: any): any {
+      return queryStateDiff.get(patch);
+    },
+  };
+}
+
 describe('Query', () => {
   describe('scenarios', () => {
     it('query is subscribed by the first subscriber', () => {
-      const { actions, listing, testKeys, testActions, resolveData, proceed } =
-        createTestHarness();
+      const {
+        actions,
+        listing,
+        testQueryKeys,
+        testActions,
+        resolveData,
+        proceed,
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.subscribeQuery({
           subscriberKey: 'subscriber',
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       resolveData(7, 'foo');
       proceed();
 
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
 
       expect(listing).toEqual([
-        testActions.querySubscribed(
-          queryPayloadBase.get({
-            subscriberKey: 'subscriber',
-            queryState: queryStateDiff.get({
-              subscriberKeys: ['subscriber'],
-            }),
-          })
-        ),
-        testActions.queryStarted(
-          queryPayloadBase.get({
-            queryState: queryStateDiff.get({
-              state: 'fetching',
-            }),
-          })
-        ),
-        testActions.queryCompleted(
-          queryPayloadBase.get({
-            queryResult: {
-              status: 'success',
-              data: 'foo',
-            },
-            queryState: queryStateDiff.get({
-              state: 'idle',
-              status: 'query-data',
-              data: 'foo',
-              dataTimestamp: 0,
-            }),
-          })
-        ),
+        [
+          0,
+          testActions.querySubscribed(
+            queryPayload({
+              subscriberKey: 'subscriber',
+              queryState: queryState({
+                subscriberKeys: ['subscriber'],
+              }),
+            })
+          ),
+        ],
+        [
+          0,
+          testActions.queryStarted(
+            queryPayload({
+              queryState: queryState({
+                state: 'fetching',
+              }),
+            })
+          ),
+        ],
+        [
+          0,
+          testActions.queryCompleted(
+            queryPayload({
+              queryResult: {
+                status: 'success',
+                data: 'foo',
+              },
+              queryState: queryState({
+                state: 'idle',
+                status: 'query-data',
+                data: 'foo',
+                dataTimestamp: 0,
+              }),
+            })
+          ),
+        ],
       ]);
     });
     it('query is subscribed by the second subscriber after data resolves', () => {
@@ -193,7 +235,7 @@ describe('Query', () => {
         const {
           actions,
           listing,
-          testKeys,
+          testQueryKeys,
           testActions,
           resolveData,
           proceed,
@@ -202,7 +244,7 @@ describe('Query', () => {
         actions.dispatch(
           testActions.subscribeQuery({
             subscriberKey: 'subscriber1',
-            queryKey: testKeys.query.getTest,
+            queryKey: testQueryKeys.getTest,
             queryArgs: [7],
           })
         );
@@ -213,69 +255,84 @@ describe('Query', () => {
         actions.dispatch(
           testActions.subscribeQuery({
             subscriberKey: 'subscriber2',
-            queryKey: testKeys.query.getTest,
+            queryKey: testQueryKeys.getTest,
             queryArgs: [7],
           })
         );
 
         // then
-        const queryPayloadBase = createQueryPayloadBase(
-          testKeys.query.getTest,
+        const { queryPayload, queryState } = createQueryHarness(
+          testQueryKeys.getTest,
           [7]
         );
-        const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [
-          7,
-        ]);
         expect(listing).toEqual([
-          testActions.querySubscribed(
-            queryPayloadBase.get({
-              subscriberKey: 'subscriber1',
-              queryState: queryStateDiff.get({
-                subscriberKeys: ['subscriber1'],
-              }),
-            })
-          ),
-          testActions.queryStarted(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
-                state: 'fetching',
-              }),
-            })
-          ),
-          testActions.queryCompleted(
-            queryPayloadBase.get({
-              queryResult: {
-                status: 'success',
-                data: 'foo',
-              },
-              queryState: queryStateDiff.get({
-                state: 'idle',
-                status: 'query-data',
-                data: 'foo',
-                dataTimestamp: 0,
-              }),
-            })
-          ),
-          testActions.querySubscribed(
-            queryPayloadBase.get({
-              subscriberKey: 'subscriber2',
-              queryState: queryStateDiff.get({
-                subscriberKeys: ['subscriber1', 'subscriber2'],
-              }),
-            })
-          ),
+          [
+            0,
+            testActions.querySubscribed(
+              queryPayload({
+                subscriberKey: 'subscriber1',
+                queryState: queryState({
+                  subscriberKeys: ['subscriber1'],
+                }),
+              })
+            ),
+          ],
+          [
+            0,
+            testActions.queryStarted(
+              queryPayload({
+                queryState: queryState({
+                  state: 'fetching',
+                }),
+              })
+            ),
+          ],
+          [
+            0,
+            testActions.queryCompleted(
+              queryPayload({
+                queryResult: {
+                  status: 'success',
+                  data: 'foo',
+                },
+                queryState: queryState({
+                  state: 'idle',
+                  status: 'query-data',
+                  data: 'foo',
+                  dataTimestamp: 0,
+                }),
+              })
+            ),
+          ],
+          [
+            0,
+            testActions.querySubscribed(
+              queryPayload({
+                subscriberKey: 'subscriber2',
+                queryState: queryState({
+                  subscriberKeys: ['subscriber1', 'subscriber2'],
+                }),
+              })
+            ),
+          ],
         ]);
       }
     });
     it('query is subscribed by the second subscriber before the data resolves', () => {
       // given
-      const { actions, listing, testKeys, testActions, resolveData, proceed } =
-        createTestHarness();
+      const {
+        actions,
+        listing,
+        testQueryKeys,
+        testActions,
+        resolveData,
+        proceed,
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.subscribeQuery({
           subscriberKey: 'subscriber1',
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
@@ -284,7 +341,7 @@ describe('Query', () => {
       actions.dispatch(
         testActions.subscribeQuery({
           subscriberKey: 'subscriber2',
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
@@ -292,60 +349,78 @@ describe('Query', () => {
       proceed();
 
       // then
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
       expect(listing).toEqual([
-        testActions.querySubscribed(
-          queryPayloadBase.get({
-            subscriberKey: 'subscriber1',
+        [
+          0,
+          testActions.querySubscribed(
+            queryPayload({
+              subscriberKey: 'subscriber1',
 
-            queryState: queryStateDiff.get({
-              subscriberKeys: ['subscriber1'],
-            }),
-          })
-        ),
-        testActions.queryStarted(
-          queryPayloadBase.get({
-            queryState: queryStateDiff.get({
-              state: 'fetching',
-            }),
-          })
-        ),
-        testActions.querySubscribed(
-          queryPayloadBase.get({
-            subscriberKey: 'subscriber2',
+              queryState: queryState({
+                subscriberKeys: ['subscriber1'],
+              }),
+            })
+          ),
+        ],
+        [
+          0,
+          testActions.queryStarted(
+            queryPayload({
+              queryState: queryState({
+                state: 'fetching',
+              }),
+            })
+          ),
+        ],
+        [
+          0,
+          testActions.querySubscribed(
+            queryPayload({
+              subscriberKey: 'subscriber2',
 
-            queryState: queryStateDiff.get({
-              subscriberKeys: ['subscriber1', 'subscriber2'],
-            }),
-          })
-        ),
-        testActions.queryCompleted(
-          queryPayloadBase.get({
-            queryResult: {
-              status: 'success',
-              data: 'foo',
-            },
-            queryState: queryStateDiff.get({
-              state: 'idle',
-              status: 'query-data',
-              data: 'foo',
-              dataTimestamp: 0,
-            }),
-          })
-        ),
+              queryState: queryState({
+                subscriberKeys: ['subscriber1', 'subscriber2'],
+              }),
+            })
+          ),
+        ],
+        [
+          0,
+          testActions.queryCompleted(
+            queryPayload({
+              queryResult: {
+                status: 'success',
+                data: 'foo',
+              },
+              queryState: queryState({
+                state: 'idle',
+                status: 'query-data',
+                data: 'foo',
+                dataTimestamp: 0,
+              }),
+            })
+          ),
+        ],
       ]);
     });
     it('query is unsubscribed after the data resolves', () => {
-      const { actions, listing, testKeys, testActions, resolveData, proceed } =
-        createTestHarness(true);
+      const {
+        actions,
+        listing,
+        testQueryKeys,
+        testActions,
+        resolveData,
+        proceed,
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.subscribeQuery({
           subscriberKey: 'subscriber',
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
@@ -353,24 +428,24 @@ describe('Query', () => {
       actions.dispatch(
         testActions.unsubscribeQuery({
           subscriberKey: 'subscriber',
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       proceed();
 
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
 
       expect(listing).toEqual([
         [
           0,
           testActions.querySubscribed(
-            queryPayloadBase.get({
+            queryPayload({
               subscriberKey: 'subscriber',
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 subscriberKeys: ['subscriber'],
               }),
             })
@@ -379,8 +454,8 @@ describe('Query', () => {
         [
           0,
           testActions.queryStarted(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 state: 'fetching',
               }),
             })
@@ -389,12 +464,12 @@ describe('Query', () => {
         [
           0,
           testActions.queryCompleted(
-            queryPayloadBase.get({
+            queryPayload({
               queryResult: {
                 status: 'success',
                 data: 'foo',
               },
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 state: 'idle',
                 status: 'query-data',
                 data: 'foo',
@@ -406,50 +481,56 @@ describe('Query', () => {
         [
           0,
           testActions.queryUnsubscribed(
-            queryPayloadBase.get({
+            queryPayload({
               subscriberKey: 'subscriber',
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 subscriberKeys: [],
               }),
             })
           ),
         ],
-        [TEN_MINUTES, testActions.queryCollected(queryPayloadBase.get())],
+        [TEN_MINUTES, testActions.queryCollected(queryPayload())],
       ]);
     });
     it('query is unsubscribed before the data resolves', () => {
-      const { actions, listing, testKeys, testActions, resolveData, proceed } =
-        createTestHarness(true);
+      const {
+        actions,
+        listing,
+        testQueryKeys,
+        testActions,
+        resolveData,
+        proceed,
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.subscribeQuery({
           subscriberKey: 'subscriber',
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       actions.dispatch(
         testActions.unsubscribeQuery({
           subscriberKey: 'subscriber',
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       resolveData(7, 'foo');
       proceed();
 
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
 
       expect(listing).toEqual([
         [
           0,
           testActions.querySubscribed(
-            queryPayloadBase.get({
+            queryPayload({
               subscriberKey: 'subscriber',
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 subscriberKeys: ['subscriber'],
               }),
             })
@@ -458,8 +539,8 @@ describe('Query', () => {
         [
           0,
           testActions.queryStarted(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 state: 'fetching',
               }),
             })
@@ -468,9 +549,9 @@ describe('Query', () => {
         [
           0,
           testActions.queryUnsubscribed(
-            queryPayloadBase.get({
+            queryPayload({
               subscriberKey: 'subscriber',
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 subscriberKeys: [],
               }),
             })
@@ -479,12 +560,12 @@ describe('Query', () => {
         [
           0,
           testActions.queryCompleted(
-            queryPayloadBase.get({
+            queryPayload({
               queryResult: {
                 status: 'success',
                 data: 'foo',
               },
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 state: 'idle',
                 status: 'query-data',
                 data: 'foo',
@@ -493,41 +574,47 @@ describe('Query', () => {
             })
           ),
         ],
-        [TEN_MINUTES, testActions.queryCollected(queryPayloadBase.get())],
+        [TEN_MINUTES, testActions.queryCollected(queryPayload())],
       ]);
     });
     it('query is canceled', () => {
-      const { actions, listing, testKeys, testActions, resolveData, proceed } =
-        createTestHarness(true);
+      const {
+        actions,
+        listing,
+        testQueryKeys,
+        testActions,
+        resolveData,
+        proceed,
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.subscribeQuery({
           subscriberKey: 'subscriber',
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       actions.dispatch(
         testActions.cancelQuery({
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       resolveData(7, 'foo');
       proceed();
 
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
 
       expect(listing).toEqual([
         [
           0,
           testActions.querySubscribed(
-            queryPayloadBase.get({
+            queryPayload({
               subscriberKey: 'subscriber',
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 subscriberKeys: ['subscriber'],
               }),
             })
@@ -536,8 +623,8 @@ describe('Query', () => {
         [
           0,
           testActions.queryStarted(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 state: 'fetching',
               }),
             })
@@ -546,8 +633,8 @@ describe('Query', () => {
         [
           0,
           testActions.queryCancelled(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 state: 'idle',
               }),
             })
@@ -556,37 +643,43 @@ describe('Query', () => {
       ]);
     });
     it("query is prefetched when there's no data", () => {
-      const { actions, listing, testKeys, testActions, resolveData, proceed } =
-        createTestHarness(true);
+      const {
+        actions,
+        listing,
+        testQueryKeys,
+        testActions,
+        resolveData,
+        proceed,
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.prefetchQuery({
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       resolveData(7, 'foo');
       proceed();
 
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
 
       expect(listing).toEqual([
         [
           0,
           testActions.queryPrefetched(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get(),
+            queryPayload({
+              queryState: queryState(),
             })
           ),
         ],
         [
           0,
           testActions.queryStarted(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 state: 'fetching',
               }),
             })
@@ -595,12 +688,12 @@ describe('Query', () => {
         [
           0,
           testActions.queryCompleted(
-            queryPayloadBase.get({
+            queryPayload({
               queryResult: {
                 status: 'success',
                 data: 'foo',
               },
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 state: 'idle',
                 status: 'query-data',
                 data: 'foo',
@@ -609,47 +702,53 @@ describe('Query', () => {
             })
           ),
         ],
-        [TEN_MINUTES, testActions.queryCollected(queryPayloadBase.get({}))],
+        [TEN_MINUTES, testActions.queryCollected(queryPayload({}))],
       ]);
     });
     it("query is prefetched when there's some data already", () => {
-      const { actions, listing, testKeys, testActions, resolveData, proceed } =
-        createTestHarness(true);
+      const {
+        actions,
+        listing,
+        testQueryKeys,
+        testActions,
+        resolveData,
+        proceed,
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.prefetchQuery({
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       resolveData(7, 'foo');
       actions.dispatch(
         testActions.prefetchQuery({
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       proceed();
 
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
 
       expect(listing).toEqual([
         [
           0,
           testActions.queryPrefetched(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get(),
+            queryPayload({
+              queryState: queryState(),
             })
           ),
         ],
         [
           0,
           testActions.queryStarted(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 state: 'fetching',
               }),
             })
@@ -658,12 +757,12 @@ describe('Query', () => {
         [
           0,
           testActions.queryCompleted(
-            queryPayloadBase.get({
+            queryPayload({
               queryResult: {
                 status: 'success',
                 data: 'foo',
               },
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 state: 'idle',
                 status: 'query-data',
                 data: 'foo',
@@ -675,46 +774,52 @@ describe('Query', () => {
         [
           0,
           testActions.queryPrefetched(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get(),
+            queryPayload({
+              queryState: queryState(),
             })
           ),
         ],
-        [TEN_MINUTES, testActions.queryCollected(queryPayloadBase.get({}))],
+        [TEN_MINUTES, testActions.queryCollected(queryPayload({}))],
       ]);
     });
     it("query is fetched when there's no data", () => {
-      const { actions, listing, testKeys, testActions, resolveData, proceed } =
-        createTestHarness(true);
+      const {
+        actions,
+        listing,
+        testQueryKeys,
+        testActions,
+        resolveData,
+        proceed,
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.fetchQuery({
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       resolveData(7, 'foo');
       proceed();
 
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
 
       expect(listing).toEqual([
         [
           0,
           testActions.queryFetched(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get(),
+            queryPayload({
+              queryState: queryState(),
             })
           ),
         ],
         [
           0,
           testActions.queryStarted(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 state: 'fetching',
               }),
             })
@@ -723,12 +828,12 @@ describe('Query', () => {
         [
           0,
           testActions.queryCompleted(
-            queryPayloadBase.get({
+            queryPayload({
               queryResult: {
                 status: 'success',
                 data: 'foo',
               },
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 state: 'idle',
                 status: 'query-data',
                 data: 'foo',
@@ -737,48 +842,54 @@ describe('Query', () => {
             })
           ),
         ],
-        [TEN_MINUTES, testActions.queryCollected(queryPayloadBase.get({}))],
+        [TEN_MINUTES, testActions.queryCollected(queryPayload({}))],
       ]);
     });
     it("query is fetched when there's some data already", () => {
-      const { actions, listing, testKeys, testActions, resolveData, proceed } =
-        createTestHarness(true);
+      const {
+        actions,
+        listing,
+        testQueryKeys,
+        testActions,
+        resolveData,
+        proceed,
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.fetchQuery({
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       resolveData(7, 'foo');
       actions.dispatch(
         testActions.fetchQuery({
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       resolveData(7, 'bar');
       proceed();
 
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
 
       expect(listing).toEqual([
         [
           0,
           testActions.queryFetched(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get(),
+            queryPayload({
+              queryState: queryState(),
             })
           ),
         ],
         [
           0,
           testActions.queryStarted(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 state: 'fetching',
               }),
             })
@@ -787,12 +898,12 @@ describe('Query', () => {
         [
           0,
           testActions.queryCompleted(
-            queryPayloadBase.get({
+            queryPayload({
               queryResult: {
                 status: 'success',
                 data: 'foo',
               },
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 state: 'idle',
                 status: 'query-data',
                 data: 'foo',
@@ -804,16 +915,16 @@ describe('Query', () => {
         [
           0,
           testActions.queryFetched(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get(),
+            queryPayload({
+              queryState: queryState(),
             })
           ),
         ],
         [
           0,
           testActions.queryStarted(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 state: 'fetching',
               }),
             })
@@ -822,12 +933,12 @@ describe('Query', () => {
         [
           0,
           testActions.queryCompleted(
-            queryPayloadBase.get({
+            queryPayload({
               queryResult: {
                 status: 'success',
                 data: 'bar',
               },
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 state: 'idle',
                 status: 'query-data',
                 data: 'bar',
@@ -836,24 +947,24 @@ describe('Query', () => {
             })
           ),
         ],
-        [TEN_MINUTES, testActions.queryCollected(queryPayloadBase.get({}))],
+        [TEN_MINUTES, testActions.queryCollected(queryPayload({}))],
       ]);
     });
     it('query is invalidated when there are subscribers', () => {
       const {
         actions,
         listing,
-        testKeys,
+        testQueryKeys,
         testActions,
         resolveData,
         proceed,
         clearListing,
-      } = createTestHarness(true);
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.subscribeQuery({
           subscriberKey: 'subscriber',
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
@@ -861,24 +972,24 @@ describe('Query', () => {
       clearListing();
       actions.dispatch(
         testActions.invalidateQuery({
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       resolveData(7, 'bar');
       proceed();
 
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
 
       expect(listing).toEqual([
         [
           0,
           testActions.queryInvalidated(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 data: 'foo',
                 dataTimestamp: 0,
                 status: 'query-data',
@@ -890,8 +1001,8 @@ describe('Query', () => {
         [
           0,
           testActions.queryStarted(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 state: 'fetching',
               }),
             })
@@ -900,12 +1011,12 @@ describe('Query', () => {
         [
           0,
           testActions.queryCompleted(
-            queryPayloadBase.get({
+            queryPayload({
               queryResult: {
                 status: 'success',
                 data: 'bar',
               },
-              queryState: queryStateDiff.get({
+              queryState: queryState({
                 state: 'idle',
                 status: 'query-data',
                 data: 'bar',
@@ -920,16 +1031,16 @@ describe('Query', () => {
       const {
         actions,
         listing,
-        testKeys,
+        testQueryKeys,
         testActions,
         resolveData,
         proceed,
         clearListing,
-      } = createTestHarness(true);
+      } = createTestHarness();
 
       actions.dispatch(
         testActions.prefetchQuery({
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
@@ -937,23 +1048,23 @@ describe('Query', () => {
       clearListing();
       actions.dispatch(
         testActions.invalidateQuery({
-          queryKey: testKeys.query.getTest,
+          queryKey: testQueryKeys.getTest,
           queryArgs: [7],
         })
       );
       proceed();
 
-      const queryPayloadBase = createQueryPayloadBase(testKeys.query.getTest, [
-        7,
-      ]);
-      const queryStateDiff = createQueryStateDiff(testKeys.query.getTest, [7]);
+      const { queryPayload, queryState } = createQueryHarness(
+        testQueryKeys.getTest,
+        [7]
+      );
 
       expect(listing).toEqual([
         [
           0,
           testActions.queryInvalidated(
-            queryPayloadBase.get({
-              queryState: queryStateDiff.get({
+            queryPayload({
+              queryState: queryState({
                 data: 'foo',
                 dataTimestamp: 0,
                 status: 'query-data',
@@ -962,7 +1073,7 @@ describe('Query', () => {
             })
           ),
         ],
-        [TEN_MINUTES, testActions.queryCollected(queryPayloadBase.get())],
+        [TEN_MINUTES, testActions.queryCollected(queryPayload())],
       ]);
     });
   });

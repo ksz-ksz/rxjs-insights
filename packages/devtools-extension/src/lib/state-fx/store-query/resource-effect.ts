@@ -20,7 +20,11 @@ import {
 } from 'rxjs';
 import { Result } from './result';
 import { Action, createEffect, Deps, StoreComponent } from '../store';
-import { CreateResourceKeysResult } from './resource-key';
+import {
+  CreateResourceKeysResult,
+  ResourceKey,
+  ResourceKeys,
+} from './resource-key';
 import { ResourceActionTypes } from './resource-actions';
 import {
   getCacheTimestamp,
@@ -34,13 +38,23 @@ import { is } from '../store/is';
 import { getQueryHash } from './get-query-hash';
 
 interface QueryDef<TQuery extends Fn, TDeps> {
-  query(args: Parameters<TQuery>, deps: TDeps): Observable<ReturnType<TQuery>>;
-
+  queryFn(
+    args: Parameters<TQuery>,
+    deps: TDeps
+  ): Observable<ReturnType<TQuery>>;
   dispatch?(
     result: Observable<Result<ReturnType<TQuery>>>,
     args: Parameters<TQuery>,
     deps: TDeps
   ): Observable<Action>;
+  // getStaleTime?(
+  //   queryState: QueryState<ReturnType<TQuery>>,
+  //   deps: TDeps
+  // ): number;
+  // getCacheTime?(
+  //   queryState: QueryState<ReturnType<TQuery>>,
+  //   deps: TDeps
+  // ): number;
 }
 
 type QueriesDef<TQueries extends { [key: string]: Fn }, TDeps> = {
@@ -110,6 +124,24 @@ function hasSubscribers(queryState: QueryState) {
   return queryState.subscriberKeys.length !== 0;
 }
 
+export function queries<TQueries extends { [key: string]: Fn }, TDeps>(
+  queryKeys: ResourceKeys<TQueries>,
+  queryDefs: QueriesDef<TQueries, TDeps>
+): QueriesDef<TQueries, TDeps> {
+  return queryDefs;
+}
+
+function getQueryDef<TDeps>(
+  queries: QueriesDef<{ [key: string]: Fn }, TDeps> | undefined,
+  queryKey: string
+): QueryDef<Fn, TDeps> {
+  const queryDef = queries?.[queryKey];
+  if (queryDef === undefined) {
+    throw new Error(`no query def for '${queryKey}'`);
+  }
+  return queryDef;
+}
+
 export function createResourceEffect<
   TQueries extends { [key: string]: Fn },
   TMutations extends { [key: string]: Fn },
@@ -117,14 +149,16 @@ export function createResourceEffect<
 >(
   options: {
     namespace: string;
-    keys: CreateResourceKeysResult<TQueries, TMutations>;
     store: StoreComponent<ResourceState>;
     actions: ResourceActionTypes;
     deps?: Deps<TDeps>;
   },
-  queries: QueriesDef<TQueries, TDeps>,
-  mutations: MutationsDef<TMutations, TDeps>
+  defs: {
+    queries?: QueriesDef<TQueries, TDeps>;
+    mutations?: MutationsDef<TMutations, TDeps>;
+  }
 ) {
+  const { queries } = defs;
   const resourceActions = options.actions;
   return createEffect({
     namespace: options.namespace,
@@ -363,11 +397,8 @@ export function createResourceEffect<
           queryActions.pipe(
             filter(resourceActions.queryStarted.is),
             exhaustMap(({ payload: { queryKey, queryArgs, queryState } }) => {
-              const query = queries[queryKey];
-              if (query === undefined) {
-                throw new Error('no query');
-              }
-              return query.query(queryArgs as any, deps as any).pipe(
+              const query = getQueryDef(queries, queryKey);
+              return query.queryFn(queryArgs as any, deps as any).pipe(
                 last(),
                 map((data): Result => ({ status: 'success', data })),
                 catchError((error) => of<Result>({ status: 'failure', error })),

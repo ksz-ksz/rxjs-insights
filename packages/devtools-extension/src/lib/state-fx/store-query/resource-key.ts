@@ -4,7 +4,7 @@ export type ResourceKey<TFn extends Fn = Fn> = string & {
   _fn?: void & TFn;
 };
 
-type ResourceKeys<TFns extends { [key: string]: Fn }> = {
+export type ResourceKeys<TFns extends { [key: string]: Fn }> = {
   [K in keyof TFns]: ResourceKey<TFns[K]>;
 };
 
