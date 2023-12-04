@@ -1,13 +1,11 @@
 import { Fn } from './fn';
 import {
   catchError,
-  concat,
   connect,
   delay,
   EMPTY,
   exhaustMap,
   filter,
-  first,
   groupBy,
   last,
   map,
@@ -19,19 +17,16 @@ import {
   takeUntil,
 } from 'rxjs';
 import { Result } from './result';
-import { Action, createEffect, Deps, StoreComponent } from '../store';
 import {
-  CreateResourceKeysResult,
-  ResourceKey,
-  ResourceKeys,
-} from './resource-key';
+  Action,
+  createDeps,
+  createEffect,
+  Deps,
+  StoreComponent,
+} from '../store';
+import { ResourceKeys } from './resource-key';
 import { ResourceActionTypes } from './resource-actions';
-import {
-  getCacheTimestamp,
-  getStaleTimestamp,
-  QueryState,
-  ResourceState,
-} from './resource-store';
+import { getCacheTimestamp, QueryState, ResourceState } from './resource-store';
 import { schedulerComponent } from './scheduler';
 import { getQuery } from './get-query';
 import { is } from '../store/is';
@@ -163,12 +158,12 @@ export function createResourceEffect<
   return createEffect({
     namespace: options.namespace,
     deps: {
-      ...options.deps,
-      __store: options.store,
-      __scheduler: schedulerComponent,
+      store: options.store,
+      scheduler: schedulerComponent,
+      deps: createDeps(options.deps ?? ({} as Deps<TDeps>)),
     },
   })({
-    emitQueryPrefetched(actions, { __store: store }) {
+    emitQueryPrefetched(actions, { store }) {
       return actions.ofType(resourceActions.prefetchQuery).pipe(
         map(({ payload: { queryKey, queryArgs } }) =>
           resourceActions.queryPrefetched({
@@ -179,7 +174,7 @@ export function createResourceEffect<
         )
       );
     },
-    emitQueryFetched(actions, { __store: store }) {
+    emitQueryFetched(actions, { store }) {
       return actions.ofType(resourceActions.fetchQuery).pipe(
         map(({ payload: { queryKey, queryArgs } }) =>
           resourceActions.queryFetched({
@@ -190,7 +185,7 @@ export function createResourceEffect<
         )
       );
     },
-    emitQuerySubscribed(actions, { __store: store }) {
+    emitQuerySubscribed(actions, { store }) {
       return actions.ofType(resourceActions.subscribeQuery).pipe(
         map(({ payload: { queryKey, queryArgs, subscriberKey } }) =>
           resourceActions.querySubscribed({
@@ -202,7 +197,7 @@ export function createResourceEffect<
         )
       );
     },
-    emitQueryUnsubscribed(actions, { __store: store }) {
+    emitQueryUnsubscribed(actions, { store }) {
       return actions.ofType(resourceActions.unsubscribeQuery).pipe(
         map(({ payload: { queryKey, queryArgs, subscriberKey } }) =>
           resourceActions.queryUnsubscribed({
@@ -214,7 +209,7 @@ export function createResourceEffect<
         )
       );
     },
-    emitQueryStarted(actions, { __store: store }) {
+    emitQueryStarted(actions, { store }) {
       return actions.ofType(resourceActions.startQuery).pipe(
         map(({ payload: { queryKey, queryArgs } }) =>
           resourceActions.queryStarted({
@@ -225,7 +220,7 @@ export function createResourceEffect<
         )
       );
     },
-    emitQueryCompleted(actions, { __store: store }) {
+    emitQueryCompleted(actions, { store }) {
       return actions.ofType(resourceActions.completeQuery).pipe(
         map(({ payload: { queryKey, queryArgs, queryResult } }) =>
           resourceActions.queryCompleted({
@@ -237,7 +232,7 @@ export function createResourceEffect<
         )
       );
     },
-    emitQueryCancelled(actions, { __store: store }) {
+    emitQueryCancelled(actions, { store }) {
       return actions.ofType(resourceActions.cancelQuery).pipe(
         map(({ payload: { queryKey, queryArgs } }) =>
           resourceActions.queryCancelled({
@@ -248,7 +243,7 @@ export function createResourceEffect<
         )
       );
     },
-    emitQueryStaled(actions, { __store: store }) {
+    emitQueryStaled(actions, { store }) {
       return actions.ofType(resourceActions.staleQuery).pipe(
         map(({ payload: { queryKey, queryArgs } }) =>
           resourceActions.queryStaled({
@@ -259,7 +254,7 @@ export function createResourceEffect<
         )
       );
     },
-    emitQueryCollected(actions, { __store: store }) {
+    emitQueryCollected(actions) {
       return actions.ofType(resourceActions.collectQuery).pipe(
         map(({ payload: { queryKey, queryArgs } }) =>
           resourceActions.queryCollected({
@@ -270,7 +265,7 @@ export function createResourceEffect<
         )
       );
     },
-    emitQueryInvalidated(actions, { __store: store }) {
+    emitQueryInvalidated(actions, { store: store }) {
       return actions.ofType(resourceActions.invalidateQuery).pipe(
         map(({ payload: { queryKey, queryArgs } }) =>
           resourceActions.queryInvalidated({
@@ -281,7 +276,7 @@ export function createResourceEffect<
         )
       );
     },
-    cleanupQuery(actions, { __scheduler: scheduler }) {
+    cleanupQuery(actions, { scheduler }) {
       return merge(
         actions.ofType(resourceActions.querySubscribed),
         actions.ofType(resourceActions.queryUnsubscribed),
@@ -291,28 +286,26 @@ export function createResourceEffect<
       ).pipe(
         groupBy(({ payload: { queryHash } }) => queryHash),
         mergeMap(
-          switchMap(
-            ({ name, payload: { queryKey, queryArgs, queryState } }) => {
-              if (
-                queryState.subscriberKeys.length === 0 &&
-                queryState.state !== 'fetching'
-              ) {
-                const now = scheduler.now();
-                const cacheTimestamp = getCacheTimestamp(queryState) ?? now;
-                const cacheDue = cacheTimestamp - now;
-                return cacheDue !== Infinity
-                  ? of(
-                      resourceActions.collectQuery({
-                        queryKey,
-                        queryArgs,
-                      })
-                    ).pipe(delay(cacheDue, scheduler))
-                  : EMPTY;
-              } else {
-                return EMPTY;
-              }
+          switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
+            if (
+              queryState.subscriberKeys.length === 0 &&
+              queryState.state !== 'fetching'
+            ) {
+              const now = scheduler.now();
+              const cacheTimestamp = getCacheTimestamp(queryState) ?? now;
+              const cacheDue = cacheTimestamp - now;
+              return cacheDue !== Infinity
+                ? of(
+                    resourceActions.collectQuery({
+                      queryKey,
+                      queryArgs,
+                    })
+                  ).pipe(delay(cacheDue, scheduler))
+                : EMPTY;
+            } else {
+              return EMPTY;
             }
-          )
+          })
         )
       );
     },
@@ -387,7 +380,7 @@ export function createResourceEffect<
         })
       );
     },
-    runQuery(actions, { __store, __scheduler, ...deps }) {
+    runQuery(actions, { deps }) {
       return merge(
         actions.ofType(resourceActions.queryStarted),
         actions.ofType(resourceActions.queryCancelled)
@@ -398,7 +391,7 @@ export function createResourceEffect<
             filter(resourceActions.queryStarted.is),
             exhaustMap(({ payload: { queryKey, queryArgs, queryState } }) => {
               const query = getQueryDef(queries, queryKey);
-              return query.queryFn(queryArgs as any, deps as any).pipe(
+              return query.queryFn(queryArgs, deps).pipe(
                 last(),
                 map((data): Result => ({ status: 'success', data })),
                 catchError((error) => of<Result>({ status: 'failure', error })),
