@@ -1,7 +1,7 @@
 import { createResourceKeys, ResourceKey } from './resource-key';
 import { createResourceStore, QueryState } from './resource-store';
 import { createResourceActions } from './resource-actions';
-import { createResourceEffect, queries } from './resource-effect';
+import { createResourceEffect } from './resource-effect';
 import {
   map,
   merge,
@@ -21,6 +21,7 @@ import { schedulerComponent } from './scheduler';
 import { Fn } from './fn';
 import { getQueryHash } from './get-query-hash';
 import { Result } from './result';
+import { queries } from './queries';
 
 const TEN_MINUTES = 10 * 60 * 1000;
 
