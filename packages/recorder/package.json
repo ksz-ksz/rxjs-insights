@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/recorder",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "The default implementation of the rxjs-insights' recorder.",
   "keywords": [
     "rxjs",
@@ -48,10 +48,10 @@
     "postpublish": "node ../../scripts/restore-package.js"
   },
   "peerDependencies": {
-    "@rxjs-insights/core": "0.5.0"
+    "@rxjs-insights/core": "0.5.1"
   },
   "devDependencies": {
-    "@rxjs-insights/core": "^0.5.0",
+    "@rxjs-insights/core": "^0.5.1",
     "zone.js": "^0.11.4"
   }
 }

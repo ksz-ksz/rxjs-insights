@@ -1,6 +1,6 @@
 {
   "name": "@rxjs-insights/console",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "See the data gathered by RxJS Insights right in the console.",
   "keywords": [
     "rxjs",
@@ -47,8 +47,8 @@
     "postpublish": "node ../../scripts/restore-package.js"
   },
   "dependencies": {
-    "@rxjs-insights/core": "^0.5.0",
-    "@rxjs-insights/recorder": "^0.5.0",
-    "@rxjs-insights/recorder-utils": "^0.5.0"
+    "@rxjs-insights/core": "^0.5.1",
+    "@rxjs-insights/recorder": "^0.5.1",
+    "@rxjs-insights/recorder-utils": "^0.5.1"
   }
 }
