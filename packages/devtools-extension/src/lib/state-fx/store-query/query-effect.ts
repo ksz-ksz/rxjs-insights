@@ -1,4 +1,4 @@
-import { createDeps, createEffect, Deps } from '../store';
+import { createDeps, createEffect, Deps, StoreComponent } from '../store';
 import { schedulerComponent } from './scheduler';
 import {
   catchError,
@@ -16,61 +16,39 @@ import {
   switchMap,
   takeUntil,
 } from 'rxjs';
-import { getCacheTimestamp, QueryState } from './resource-store';
+import {
+  getQueryCacheTimestamp,
+  QueryState,
+  ResourceState,
+} from './resource-store';
 import { Result } from './result';
 import { is } from '../store/is';
 import { ResourceActionTypes } from './resource-actions';
 import { Fn } from './fn';
 import { QueriesDef, QueryDef } from './queries';
+import { createQueryActionsEmitter } from './query-actions-emitter';
 
 export function createQueryEffect<TDeps>(
   namespace: string,
   queries: QueriesDef<{ [key: string]: Fn }, TDeps>,
   resourceActions: ResourceActionTypes,
+  resourceStore: StoreComponent<ResourceState>,
   deps: Deps<TDeps>
 ) {
   return createEffect({
     namespace,
     deps: {
+      emitter: createQueryActionsEmitter(
+        namespace,
+        resourceActions,
+        resourceStore
+      ),
       scheduler: schedulerComponent,
       deps: createDeps(deps),
     },
   })({
-    cleanupQuery(actions, { scheduler }) {
-      return merge(
-        actions.ofType(resourceActions.querySubscribed),
-        actions.ofType(resourceActions.queryUnsubscribed),
-        actions.ofType(resourceActions.queryStarted),
-        actions.ofType(resourceActions.queryCompleted),
-        actions.ofType(resourceActions.queryCancelled)
-      ).pipe(
-        groupBy(({ payload: { queryHash } }) => queryHash),
-        mergeMap(
-          switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
-            if (
-              queryState.subscriberKeys.length === 0 &&
-              queryState.state !== 'fetching'
-            ) {
-              const now = scheduler.now();
-              const cacheTimestamp = getCacheTimestamp(queryState) ?? now;
-              const cacheDue = cacheTimestamp - now;
-              return cacheDue !== Infinity
-                ? of(
-                    resourceActions.collectQuery({
-                      queryKey,
-                      queryArgs,
-                    })
-                  ).pipe(delay(cacheDue, scheduler))
-                : EMPTY;
-            } else {
-              return EMPTY;
-            }
-          })
-        )
-      );
-    },
     fetchQuery(actions) {
-      return actions.ofType(resourceActions.queryFetched).pipe(
+      return actions.ofType(resourceActions.queryFetchRequested).pipe(
         switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
           if (queryState.state !== 'fetching') {
             return of(
@@ -86,7 +64,7 @@ export function createQueryEffect<TDeps>(
       );
     },
     prefetchQuery(actions) {
-      return actions.ofType(resourceActions.queryPrefetched).pipe(
+      return actions.ofType(resourceActions.queryPrefetchRequested).pipe(
         switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
           // TODO: include initial-data?
           if (
@@ -106,7 +84,7 @@ export function createQueryEffect<TDeps>(
       );
     },
     invalidateQuery(actions) {
-      return actions.ofType(resourceActions.queryInvalidated).pipe(
+      return actions.ofType(resourceActions.queryInvalidationRequested).pipe(
         switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
           if (queryState.state !== 'fetching' && hasSubscribers(queryState)) {
             return of(
@@ -166,11 +144,7 @@ export function createQueryEffect<TDeps>(
                         })
                       )
                     ),
-                    query.dispatch?.(
-                      result as any,
-                      queryArgs as any,
-                      deps as any
-                    ) ?? EMPTY
+                    query.dispatch?.(result, queryArgs, deps) ?? EMPTY
                   )
                 ),
                 takeUntil(
@@ -179,6 +153,39 @@ export function createQueryEffect<TDeps>(
               );
             })
           )
+        )
+      );
+    },
+    cleanupQuery(actions, { scheduler }) {
+      return merge(
+        actions.ofType(resourceActions.querySubscribed),
+        actions.ofType(resourceActions.queryUnsubscribed),
+        actions.ofType(resourceActions.queryStarted),
+        actions.ofType(resourceActions.queryCompleted),
+        actions.ofType(resourceActions.queryCancelled)
+      ).pipe(
+        groupBy(({ payload: { queryHash } }) => queryHash),
+        mergeMap(
+          switchMap(({ payload: { queryKey, queryArgs, queryState } }) => {
+            if (
+              queryState.subscriberKeys.length === 0 &&
+              queryState.state !== 'fetching'
+            ) {
+              const now = scheduler.now();
+              const cacheTimestamp = getQueryCacheTimestamp(queryState) ?? now;
+              const cacheDue = cacheTimestamp - now;
+              return cacheDue !== Infinity
+                ? of(
+                    resourceActions.collectQuery({
+                      queryKey,
+                      queryArgs,
+                    })
+                  ).pipe(delay(cacheDue, scheduler))
+                : EMPTY;
+            } else {
+              return EMPTY;
+            }
+          })
         )
       );
     },

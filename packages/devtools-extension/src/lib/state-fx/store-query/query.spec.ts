@@ -72,13 +72,12 @@ function createTestHarness(opts?: {
   const actions = container.use(actionsComponent).component;
   const listing: unknown[] = [];
   const listen: ActionType<any>[] = [
-    testActions.queryPrefetched,
-    testActions.queryFetched,
+    testActions.queryPrefetchRequested,
+    testActions.queryFetchRequested,
     testActions.querySubscribed,
     testActions.queryUnsubscribed,
-    testActions.queryStaled,
     testActions.queryCollected,
-    testActions.queryInvalidated,
+    testActions.queryInvalidationRequested,
     testActions.queryStarted,
     testActions.queryCompleted,
     testActions.queryCancelled,
@@ -695,7 +694,7 @@ describe('Query', () => {
       expect(listing).toEqual([
         [
           0,
-          testActions.queryPrefetched(
+          testActions.queryPrefetchRequested(
             queryPayload({
               queryState: queryState(),
             })
@@ -764,7 +763,7 @@ describe('Query', () => {
       expect(listing).toEqual([
         [
           0,
-          testActions.queryPrefetched(
+          testActions.queryPrefetchRequested(
             queryPayload({
               queryState: queryState(),
             })
@@ -799,7 +798,7 @@ describe('Query', () => {
         ],
         [
           0,
-          testActions.queryPrefetched(
+          testActions.queryPrefetchRequested(
             queryPayload({
               queryState: queryState(),
             })
@@ -835,7 +834,7 @@ describe('Query', () => {
       expect(listing).toEqual([
         [
           0,
-          testActions.queryFetched(
+          testActions.queryFetchRequested(
             queryPayload({
               queryState: queryState(),
             })
@@ -905,7 +904,7 @@ describe('Query', () => {
       expect(listing).toEqual([
         [
           0,
-          testActions.queryFetched(
+          testActions.queryFetchRequested(
             queryPayload({
               queryState: queryState(),
             })
@@ -940,7 +939,7 @@ describe('Query', () => {
         ],
         [
           0,
-          testActions.queryFetched(
+          testActions.queryFetchRequested(
             queryPayload({
               queryState: queryState(),
             })
@@ -1013,7 +1012,7 @@ describe('Query', () => {
       expect(listing).toEqual([
         [
           0,
-          testActions.queryInvalidated(
+          testActions.queryInvalidationRequested(
             queryPayload({
               queryState: queryState({
                 data: 'foo',
@@ -1088,7 +1087,7 @@ describe('Query', () => {
       expect(listing).toEqual([
         [
           0,
-          testActions.queryInvalidated(
+          testActions.queryInvalidationRequested(
             queryPayload({
               queryState: queryState({
                 data: 'foo',
@@ -1146,7 +1145,7 @@ describe('Query', () => {
       expect(listing).toEqual([
         [
           0,
-          testActions.queryFetched(
+          testActions.queryFetchRequested(
             queryPayload({
               queryState: queryState(),
             })

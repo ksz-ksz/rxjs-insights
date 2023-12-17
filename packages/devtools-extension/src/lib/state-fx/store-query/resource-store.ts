@@ -7,14 +7,15 @@ import {
 import { Component, createStore, Store, tx, typeOf } from '../store';
 import { schedulerComponent } from './scheduler';
 import { getQuery } from './get-query';
+import { getMutation } from './get-mutation';
 
 const defaultQueryOptions: QueryOptions = {
   cacheTime: 10 * 60 * 1000, // 10 minutes
   staleTime: 0,
 };
 
-const defaultQuerySubscriberOptions: QuerySubscriberOptions = {
-  staleTime: 0,
+const defaultMutationOptions: MutationOptions = {
+  cacheTime: 10 * 60 * 1000, // 10 minutes
 };
 
 interface QuerySubscriber {
@@ -94,11 +95,8 @@ export type QueryState<T = unknown> =
 interface MutationStateBase {
   mutationHash: string;
   mutationKey: string;
-  mutatorKey: string;
-  mutationOptions: MutationOptions;
-  state: 'active' | 'inactive';
-  staleTimestamp: number | undefined;
-  cacheTimestamp: number | undefined;
+  mutatorKey: string | undefined;
+  state: 'idle' | 'fetching';
 }
 
 interface MutationStateInitial extends MutationStateBase {
@@ -106,7 +104,8 @@ interface MutationStateInitial extends MutationStateBase {
   mutationArgs: undefined;
   data: undefined;
   error: undefined;
-  lastResultTimestamp: undefined;
+  dataTimestamp: undefined;
+  errorTimestamp: undefined;
 }
 
 interface MutationStateMutationData<T> extends MutationStateBase {
@@ -114,7 +113,8 @@ interface MutationStateMutationData<T> extends MutationStateBase {
   mutationArgs: any[];
   data: T;
   error: undefined;
-  lastResultTimestamp: number;
+  dataTimestamp: number;
+  errorTimestamp: number | undefined;
 }
 
 interface MutationStateMutationError extends MutationStateBase {
@@ -122,7 +122,8 @@ interface MutationStateMutationError extends MutationStateBase {
   mutationArgs: any[];
   data: undefined;
   error: unknown;
-  lastResultTimestamp: number;
+  dataTimestamp: number | undefined;
+  errorTimestamp: number;
 }
 
 export type MutationState<T = unknown> =
@@ -187,17 +188,13 @@ export interface ResourceState {
 //   return Math.max(queryState.cacheTime, cacheTime);
 // }
 
-function getResultTimestamp(queryState: QueryState): undefined | number {
-  if (
-    queryState.dataTimestamp === undefined &&
-    queryState.errorTimestamp === undefined
-  ) {
+function getResultTimestamp(
+  state: QueryState | MutationState
+): undefined | number {
+  if (state.dataTimestamp === undefined && state.errorTimestamp === undefined) {
     return undefined;
   }
-  return Math.max(
-    queryState.dataTimestamp ?? 0,
-    queryState.errorTimestamp ?? 0
-  );
+  return Math.max(state.dataTimestamp ?? 0, state.errorTimestamp ?? 0);
 }
 
 // function getStaleTime(queryState: QueryState) {
@@ -218,7 +215,7 @@ export function getStaleTimestamp(queryState: QueryState): undefined | number {
 //   return queryState.queryOptions.cacheTime;
 // }
 
-export function getCacheTimestamp(queryState: QueryState) {
+export function getQueryCacheTimestamp(queryState: QueryState) {
   const resultTimestamp = getResultTimestamp(queryState);
 
   if (resultTimestamp === undefined) {
@@ -226,6 +223,16 @@ export function getCacheTimestamp(queryState: QueryState) {
   }
 
   return resultTimestamp + defaultQueryOptions.cacheTime;
+}
+
+export function getMutationCacheTimestamp(mutationState: MutationState) {
+  const resultTimestamp = getResultTimestamp(mutationState);
+
+  if (resultTimestamp === undefined) {
+    return undefined;
+  }
+
+  return resultTimestamp + defaultMutationOptions.cacheTime;
 }
 
 export function createResourceStore(
@@ -333,10 +340,106 @@ export function createResourceStore(
       const { queryState } = getQuery(state, queryKey, queryArgs);
       queryState.state = 'idle';
     }),
-    cleanupQuery: tx([actions.collectQuery], (state, action) => {
+    collectQuery: tx([actions.collectQuery], (state, action) => {
       const { queryKey, queryArgs } = action.payload;
       const { queryHash } = getQuery(state, queryKey, queryArgs);
       delete state.queries[queryHash];
+    }),
+    // TODO: invalidateQuery should remove inactive queries from cache?
+    subscribeMutation: tx([actions.subscribeMutation], (state, action) => {
+      const { mutationKey, mutatorKey } = action.payload;
+      const { mutationHash, mutationState } = getMutation(
+        state,
+        mutationKey,
+        mutatorKey,
+        false
+      );
+      if (mutationState !== undefined) {
+        if (mutationState.mutatorKey !== undefined) {
+          throw new Error('mutator already exists');
+        }
+        mutationState.mutatorKey = mutatorKey;
+      } else {
+        state.mutations[mutationHash] = {
+          mutationHash,
+          mutationKey,
+          mutatorKey,
+          mutationArgs: undefined,
+          state: 'idle',
+          status: 'initial',
+          data: undefined,
+          error: undefined,
+          dataTimestamp: undefined,
+          errorTimestamp: undefined,
+        };
+      }
+    }),
+    unsubscribeMutation: tx([actions.unsubscribeMutation], (state, action) => {
+      const { mutationKey, mutatorKey } = action.payload;
+      const { mutationState } = getMutation(state, mutationKey, mutatorKey);
+      if (mutationState.mutatorKey === undefined) {
+        throw new Error('mutator does not exist');
+      }
+      mutationState.mutatorKey = undefined;
+    }),
+    mutate: tx([actions.mutate], (state, action) => {
+      const { mutationKey, mutatorKey } = action.payload;
+      const { mutationHash, mutationState } = getMutation(
+        state,
+        mutationKey,
+        mutatorKey,
+        false
+      );
+      if (mutationState === undefined) {
+        state.mutations[mutationHash] = {
+          mutationHash,
+          mutationKey,
+          mutatorKey: undefined,
+          mutationArgs: undefined,
+          state: 'idle',
+          status: 'initial',
+          data: undefined,
+          error: undefined,
+          dataTimestamp: undefined,
+          errorTimestamp: undefined,
+        };
+      }
+    }),
+    startMutation: tx([actions.startMutation], (state, action) => {
+      const { mutationKey, mutatorKey, mutationArgs } = action.payload;
+      const { mutationState } = getMutation(state, mutationKey, mutatorKey);
+      mutationState.state = 'fetching';
+      mutationState.mutationArgs = mutationArgs;
+    }),
+    completeMutation: tx(
+      [actions.completeMutation],
+      (state, action, { scheduler }) => {
+        const now = scheduler.now();
+        const { mutationKey, mutatorKey, mutationResult } = action.payload;
+        const { mutationState } = getMutation(state, mutationKey, mutatorKey);
+        mutationState.state = 'idle';
+        mutationState.mutationArgs = undefined;
+        if (mutationResult.status === 'success') {
+          mutationState.status = 'mutation-data';
+          mutationState.data = mutationResult.data;
+          mutationState.dataTimestamp = now;
+        } else {
+          mutationState.status = 'mutation-error';
+          mutationState.error = mutationResult.error;
+          mutationState.errorTimestamp = now;
+        }
+      }
+    ),
+    cancelMutation: tx([actions.cancelMutation], (state, action) => {
+      const { mutationKey, mutatorKey } = action.payload;
+      const { mutationState } = getMutation(state, mutationKey, mutatorKey);
+      mutationState.state = 'idle';
+      mutationState.mutationArgs = undefined;
+    }),
+    collectMutation: tx([actions.collectMutation], (state, action) => {
+      const { mutationKey, mutatorKey } = action.payload;
+      const { mutationHash } = getMutation(state, mutationKey, mutatorKey);
+      delete state.mutations[mutationHash];
     }),
   });
 }

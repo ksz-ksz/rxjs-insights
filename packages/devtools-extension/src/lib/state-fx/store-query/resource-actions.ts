@@ -2,7 +2,7 @@ import { ResourceKey } from './resource-key';
 import { Fn } from './fn';
 import { Action, ActionTypeFns, createActions } from '../store';
 import { Result } from './result';
-import { QueryState } from './resource-store';
+import { MutationState, QueryState } from './resource-store';
 
 export interface QueryOptions {
   cacheTime: number;
@@ -135,30 +135,87 @@ type QueryCancelled<T extends Fn = Fn> = {
   queryHash: string;
   queryState: QueryState<ReturnType<T>>;
 };
-export type SubscribeMutation = {
+export type SubscribeMutation<T extends Fn = Fn> = {
   mutatorKey: string;
-  mutationKey: ResourceKey;
-  mutationOptions?: Partial<MutationOptions>;
+  mutationKey: ResourceKey<T>;
 };
-export type UnsubscribeMutation = {
+export type UnsubscribeMutation<T extends Fn = Fn> = {
   mutatorKey: string;
-  mutationKey: ResourceKey;
+  mutationKey: ResourceKey<T>;
 };
 export type Mutate<T extends Fn = Fn> = {
   mutatorKey: string;
   mutationKey: ResourceKey<T>;
   mutationArgs: Parameters<T>;
 };
-type MutationStarted<T extends Fn = Fn> = {
+export type MutationSubscribed<T extends Fn = Fn> = {
+  mutatorKey: string;
+  mutationKey: ResourceKey<T>;
+  mutationHash: string;
+  mutationState: MutationState<ReturnType<T>>;
+};
+export type MutationUnsubscribed<T extends Fn = Fn> = {
+  mutatorKey: string;
+  mutationKey: ResourceKey<T>;
+  mutationHash: string;
+  mutationState: MutationState<ReturnType<T>>;
+};
+export type MutationRequested<T extends Fn = Fn> = {
   mutatorKey: string;
   mutationKey: ResourceKey<T>;
   mutationArgs: Parameters<T>;
+  mutationHash: string;
+  mutationState: MutationState<ReturnType<T>>;
+};
+export type MutationStarted<T extends Fn = Fn> = {
+  mutatorKey: string;
+  mutationKey: ResourceKey<T>;
+  mutationArgs: Parameters<T>;
+  mutationHash: string;
+  mutationState: MutationState<ReturnType<T>>;
 };
 export type MutationCompleted<T extends Fn = Fn> = {
   mutatorKey: string;
   mutationKey: ResourceKey<T>;
   mutationArgs: Parameters<T>;
+  mutationHash: string;
   mutationResult: Result<ReturnType<T>>;
+  mutationState: MutationState<ReturnType<T>>;
+};
+type MutationCancelled<T extends Fn = Fn> = {
+  mutatorKey: string;
+  mutationKey: ResourceKey<T>;
+  mutationHash: string;
+  mutationState: MutationState<ReturnType<T>>;
+};
+
+type MutationCollected<T extends Fn = Fn> = {
+  mutatorKey: string;
+  mutationKey: ResourceKey<T>;
+  mutationHash: string;
+};
+
+type StartMutation<T extends Fn = Fn> = {
+  mutatorKey: string;
+  mutationKey: ResourceKey<T>;
+  mutationArgs: Parameters<T>;
+};
+
+type CompleteMutation<T extends Fn = Fn> = {
+  mutatorKey: string;
+  mutationKey: ResourceKey<T>;
+  mutationArgs: Parameters<T>;
+  mutationResult: Result<ReturnType<T>>;
+};
+
+type CancelMutation<T extends Fn = Fn> = {
+  mutatorKey: string;
+  mutationKey: ResourceKey<T>;
+};
+
+type CollectMutation<T extends Fn = Fn> = {
+  mutatorKey: string;
+  mutationKey: ResourceKey<T>;
 };
 
 export interface ResourceActions {
@@ -209,12 +266,13 @@ export interface ResourceActions {
     payload: CompleteQuery<T>
   ): Action<CompleteQuery<T>>;
   collectQuery<T extends Fn>(payload: CollectQuery<T>): Action<CollectQuery<T>>;
-  staleQuery<T extends Fn>(payload: StaleQuery<T>): Action<StaleQuery<T>>;
   // queries lifecycle
-  queryPrefetched<T extends Fn>(
+  queryPrefetchRequested<T extends Fn>(
     payload: QueryPrefetched<T>
   ): Action<QueryPrefetched<T>>;
-  queryFetched<T extends Fn>(payload: QueryFetched<T>): Action<QueryFetched<T>>;
+  queryFetchRequested<T extends Fn>(
+    payload: QueryFetched<T>
+  ): Action<QueryFetched<T>>;
 
   querySubscribed<T extends Fn>(
     payload: QuerySubscribed<T>
@@ -224,13 +282,11 @@ export interface ResourceActions {
     payload: QueryUnsubscribed<T>
   ): Action<QueryUnsubscribed<T>>;
 
-  queryStaled<T extends Fn>(payload: QueryStaled<T>): Action<QueryStaled<T>>;
-
   queryCollected<T extends Fn>(
     payload: QueryCollected<T>
   ): Action<QueryCollected<T>>;
 
-  queryInvalidated<T extends Fn>(
+  queryInvalidationRequested<T extends Fn>(
     payload: QueryInvalidated<T>
   ): Action<QueryInvalidated<T>>;
 
@@ -254,13 +310,39 @@ export interface ResourceActions {
   mutate<T extends Fn>(payload: Mutate<T>): Action<Mutate<T>>;
 
   // mutations lifecycle
+  mutationSubscribed<T extends Fn>(
+    payload: MutationSubscribed<T>
+  ): Action<MutationSubscribed<T>>;
+  mutationUnsubscribed<T extends Fn>(
+    payload: MutationUnsubscribed<T>
+  ): Action<MutationUnsubscribed<T>>;
+  mutationRequested<T extends Fn>(
+    payload: MutationRequested<T>
+  ): Action<MutationRequested<T>>;
   mutationStarted<T extends Fn>(
     payload: MutationStarted<T>
   ): Action<MutationStarted<T>>;
-
   mutationCompleted<T extends Fn>(
     payload: MutationCompleted<T>
   ): Action<MutationCompleted<T>>;
+  mutationCancelled<T extends Fn>(
+    payload: MutationCancelled<T>
+  ): Action<MutationCancelled<T>>;
+  mutationCollected<T extends Fn>(
+    payload: MutationCollected<T>
+  ): Action<MutationCollected<T>>;
+  startMutation<T extends Fn>(
+    payload: StartMutation<T>
+  ): Action<StartMutation<T>>;
+  completeMutation<T extends Fn>(
+    payload: CompleteMutation<T>
+  ): Action<CompleteMutation<T>>;
+  cancelMutation<T extends Fn>(
+    payload: CancelMutation<T>
+  ): Action<CancelMutation<T>>;
+  collectMutation<T extends Fn>(
+    payload: CollectMutation<T>
+  ): Action<CollectMutation<T>>;
 }
 
 export interface ResourceActionTypes extends ActionTypeFns<ResourceActions> {}

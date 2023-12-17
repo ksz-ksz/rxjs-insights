@@ -16,7 +16,7 @@
       "@lib/operators":["./packages/devtools-extension/src/lib/operators/index.ts"],
       "@lib/rpc":["./packages/devtools-extension/src/lib/rpc/index.ts"],
       "@app/*":["./packages/devtools-extension/src/app/*"]
-    },
+    }
   },
   "references": [
     {
