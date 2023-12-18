@@ -12,7 +12,11 @@ export type Deps<T> = {
 export function useDeps<TDeps>(
   container: Container,
   depsComponents: Deps<TDeps>
-): { deps: TDeps; depsHandles: ComponentRef<unknown>[] } {
+): {
+  deps: TDeps;
+  depsHandles: ComponentRef<unknown>[];
+  releaseAll: () => void;
+} {
   const depsHandles: ComponentRef<unknown>[] = [];
   const deps: Record<string, unknown> = {};
 
@@ -25,6 +29,11 @@ export function useDeps<TDeps>(
   return {
     deps: deps as TDeps,
     depsHandles,
+    releaseAll() {
+      for (const depsHandle of depsHandles) {
+        depsHandle.release();
+      }
+    },
   };
 }
 

@@ -1,3 +1,5 @@
+import { Deps, useDeps } from './deps';
+
 export interface Container {
   provide<T>(component: Component<T>, initializer: Component<T>): void;
   use<T>(component: Component<T>): ComponentRef<T>;
@@ -77,4 +79,33 @@ function getComponentEntry(
     components.set(component, entry);
     return entry;
   }
+}
+
+export function createComponent<TInstance, TDeps>(
+  create: (deps: TDeps) => TInstance,
+  options: { deps?: Deps<TDeps>; dispose?: (instance: TInstance) => void } = {}
+): Component<TInstance> {
+  return {
+    init(container: Container): InitializedComponent<TInstance> {
+      if (options.deps !== undefined) {
+        const { deps, releaseAll } = useDeps(container, options.deps);
+        const instance = create(deps);
+        return {
+          component: instance,
+          dispose() {
+            releaseAll();
+            options?.dispose?.(instance);
+          },
+        };
+      } else {
+        const instance = create({} as TDeps);
+        return {
+          component: instance,
+          dispose() {
+            options?.dispose?.(instance);
+          },
+        };
+      }
+    },
+  };
 }

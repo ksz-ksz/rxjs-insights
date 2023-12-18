@@ -1,4 +1,4 @@
-export interface ActionType<TPayload> {
+export interface ActionType<TPayload = unknown> {
   namespace: string;
   name: string;
   (payload: TPayload): Action<TPayload>;

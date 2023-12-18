@@ -5,6 +5,7 @@ import { Component, Container, InitializedComponent } from './container';
 import { ActionSource } from './action-source';
 import { Deps, useDeps } from './deps';
 import { Action, ActionType } from './action';
+import { StoreError } from './store-error';
 
 export interface Store<TState> {
   readonly actionSources: ActionSource<any>[];
@@ -112,17 +113,6 @@ function getActionSources(
   return Array.from(
     new Set(transitions.flatMap(([, { actions }]) => actions))
   ).map((action) => actions.ofType(action));
-}
-
-export class StoreError extends Error {
-  readonly name = 'StoreError';
-  constructor(
-    readonly namespace: string,
-    readonly key: string,
-    readonly cause: any
-  ) {
-    super(`Error in ${namespace}::${key}`);
-  }
 }
 
 function createStoreInstance<TState, TDeps>(
