@@ -3,8 +3,12 @@ import { Actions, actionsComponent } from './actions';
 import { BehaviorSubject, merge, Observable } from 'rxjs';
 import { produce } from 'immer';
 import { StoreError } from './store-error';
-import { createDeps, Deps } from './deps';
-import { Component, createComponent } from './container';
+import {
+  Component,
+  Components,
+  createComponent,
+  createComponents,
+} from './container';
 
 export type ExtractPayloadFromActionType<TActionType> =
   TActionType extends ActionType<infer TPayload> ? TPayload : never;
@@ -138,12 +142,12 @@ export function createStore2<TState>(
 
 export function createStoreComponent2<TState, TDeps>(
   createStoreDef: (deps: TDeps) => StoreDef<TState>,
-  deps: Deps<TDeps> = {} as Deps<TDeps>
+  deps: Components<TDeps> = {} as Components<TDeps>
 ): Component<Store<TState>> {
   return createComponent(
     ({ actions, deps }) => createStore2(actions, createStoreDef(deps)),
     {
-      deps: { actions: actionsComponent, deps: createDeps(deps) },
+      deps: { actions: actionsComponent, deps: createComponents(deps) },
       dispose(store) {
         store.dispose();
       },
