@@ -6,7 +6,7 @@ import {
   Component,
   Container,
   Deps,
-  InitializedComponent,
+  ComponentInstance,
   useDeps,
 } from '@lib/state-fx/store';
 
@@ -160,7 +160,7 @@ export function createRoutingRule<TData, TParams, TSearch, THash, TDeps>(
   return {
     init(
       container: Container
-    ): InitializedComponent<RoutingRule<TData, TParams, TSearch, THash>> {
+    ): ComponentInstance<RoutingRule<TData, TParams, TSearch, THash>> {
       const { deps, depsHandles } = useDeps(
         container,
         depsComponents ?? ({} as Deps<TDeps>)

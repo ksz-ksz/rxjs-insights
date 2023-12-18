@@ -24,7 +24,7 @@ import {
   createActions,
   createContainer,
   createEffect,
-  InitializedComponent,
+  ComponentInstance,
 } from '../store';
 import { createRouterStore } from './router-store';
 import { RouteObject } from './route-object';
@@ -59,7 +59,7 @@ function createRuleComponent(
   rule: RoutingRule<any>
 ): Component<RoutingRule<any>> {
   return {
-    init(): InitializedComponent<RoutingRule<any>> {
+    init(): ComponentInstance<RoutingRule<any>> {
       return {
         component: rule,
       };

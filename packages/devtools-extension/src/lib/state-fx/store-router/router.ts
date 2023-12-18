@@ -1,7 +1,7 @@
 import { History, Location } from './history';
 import { RouteConfig } from './route-config';
 import { matchRoutes, RouteMatch } from './match-routes';
-import { Component, InitializedComponent } from '@lib/state-fx/store';
+import { Component, ComponentInstance } from '@lib/state-fx/store';
 import { Encoder } from './encoder';
 
 export interface Router<TData, TSearchInput, THashInput> {
@@ -112,7 +112,7 @@ function createRouterComponent<TData, TSearchInput, THashInput>(
   hashEncoder: Encoder<string, THashInput>
 ): RouterComponent<TData, TSearchInput, THashInput> {
   return {
-    init(): InitializedComponent<Router<TData, TSearchInput, THashInput>> {
+    init(): ComponentInstance<Router<TData, TSearchInput, THashInput>> {
       const component = createRouterInstance<TData, TSearchInput, THashInput>(
         history,
         searchEncoder,

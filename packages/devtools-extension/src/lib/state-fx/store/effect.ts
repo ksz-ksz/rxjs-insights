@@ -1,7 +1,7 @@
 import { Actions, actionsComponent } from './actions';
 import { catchError, merge, Observable, throwError } from 'rxjs';
 import { Action } from '@lib/state-fx/store';
-import { Component, Container, InitializedComponent } from './container';
+import { Component, Container, ComponentInstance } from './container';
 import { Deps, useDeps } from './deps';
 
 export interface Effect {
@@ -70,7 +70,7 @@ function createEffectComponent<TDeps>(
   initializers: EffectInitializers<TDeps>
 ): Component<Effect> {
   return {
-    init(container: Container): InitializedComponent<Effect> {
+    init(container: Container): ComponentInstance<Effect> {
       const actionsHandle = container.use(actionsComponent);
       const { deps, depsHandles } = useDeps(container, depsComponents);
 

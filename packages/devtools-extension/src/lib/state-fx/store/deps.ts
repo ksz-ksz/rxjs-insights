@@ -2,7 +2,7 @@ import {
   Component,
   ComponentRef,
   Container,
-  InitializedComponent,
+  ComponentInstance,
 } from './container';
 
 export type Deps<T> = {
@@ -41,7 +41,7 @@ export function createDeps<TDeps>(
   depsComponents: Deps<TDeps>
 ): Component<TDeps> {
   return {
-    init(container: Container): InitializedComponent<TDeps> {
+    init(container: Container): ComponentInstance<TDeps> {
       const { deps, depsHandles } = useDeps(container, depsComponents);
 
       return {

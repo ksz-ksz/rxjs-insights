@@ -6,7 +6,7 @@ export interface Container {
 }
 
 export interface Component<T> {
-  init(container: Container): InitializedComponent<T>;
+  init(container: Container): ComponentInstance<T>;
 }
 
 export interface ComponentRef<T> {
@@ -14,7 +14,7 @@ export interface ComponentRef<T> {
   release: () => void;
 }
 
-export interface InitializedComponent<T> {
+export interface ComponentInstance<T> {
   component: T;
   dispose?: () => void;
 }
@@ -86,7 +86,7 @@ export function createComponent<TInstance, TDeps>(
   options: { deps?: Deps<TDeps>; dispose?: (instance: TInstance) => void } = {}
 ): Component<TInstance> {
   return {
-    init(container: Container): InitializedComponent<TInstance> {
+    init(container: Container): ComponentInstance<TInstance> {
       if (options.deps !== undefined) {
         const { deps, releaseAll } = useDeps(container, options.deps);
         const instance = create(deps);

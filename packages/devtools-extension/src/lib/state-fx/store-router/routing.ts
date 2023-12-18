@@ -7,7 +7,7 @@ import {
   Container,
   createEffectInstance,
   Effect,
-  InitializedComponent,
+  ComponentInstance,
   StateSelectorFunction,
   Store,
   StoreComponent,
@@ -573,7 +573,7 @@ function createRoutingComponent<TData, TSearchInput, THashInput>(
   routerConfig: RouteConfig<TData, TSearchInput, THashInput>
 ): RoutingComponent {
   return {
-    init(container: Container): InitializedComponent<Routing> {
+    init(container: Container): ComponentInstance<Routing> {
       // refactor to component with deps
       const actionsRef = container.use(actionsComponent);
       const routerRef = container.use(router);

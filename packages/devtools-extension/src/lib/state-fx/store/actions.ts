@@ -1,6 +1,6 @@
 import { Action, ActionType } from '@lib/state-fx/store';
 import { ActionSource } from './action-source';
-import { Component, Container, InitializedComponent } from './container';
+import { Component, Container, ComponentInstance } from './container';
 import { Observable } from 'rxjs';
 
 export interface ActionsSelector<T> {
@@ -15,7 +15,7 @@ export interface Actions {
 }
 
 class ActionsComponent implements Component<Actions> {
-  init(container: Container): InitializedComponent<Actions> {
+  init(container: Container): ComponentInstance<Actions> {
     return {
       component: createActionsComponent(),
     };

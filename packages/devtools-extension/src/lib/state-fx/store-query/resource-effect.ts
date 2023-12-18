@@ -3,7 +3,7 @@ import {
   Component,
   createDeps,
   Deps,
-  InitializedComponent,
+  ComponentInstance,
   StoreComponent,
 } from '../store';
 import { ResourceActionTypes } from './resource-actions';
@@ -63,7 +63,7 @@ export function createResourceEffect<
 
 function createEmpty(): Component<void> {
   return {
-    init(): InitializedComponent<void> {
+    init(): ComponentInstance<void> {
       return {
         component: undefined,
       };

@@ -1,7 +1,7 @@
 import { BehaviorSubject, merge, Observable } from 'rxjs';
 import { Actions, actionsComponent } from './actions';
 import { produce } from 'immer';
-import { Component, Container, InitializedComponent } from './container';
+import { Component, Container, ComponentInstance } from './container';
 import { ActionSource } from './action-source';
 import { Deps, useDeps } from './deps';
 import { Action, ActionType } from './action';
@@ -183,7 +183,7 @@ function createStoreComponent<TState, TDeps>(
   transitions: StateTransitions<TState, TDeps>
 ): StoreComponent<TState> {
   return {
-    init(container: Container): InitializedComponent<Store<TState>> {
+    init(container: Container): ComponentInstance<Store<TState>> {
       const actionsHandle = container.use(actionsComponent);
       const { deps, depsHandles } = useDeps(container, depsComponents);
 

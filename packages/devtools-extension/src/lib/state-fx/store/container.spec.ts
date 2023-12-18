@@ -2,14 +2,14 @@ import {
   Component,
   Container,
   createContainer,
-  InitializedComponent,
+  ComponentInstance,
 } from './container';
 
 class FakeComponent implements Component<number> {
   private id = 0;
   public status: 'initialized' | 'disposed' | undefined;
 
-  init(container: Container): InitializedComponent<number> {
+  init(container: Container): ComponentInstance<number> {
     this.status = 'initialized';
     const id = this.id++;
     return {
