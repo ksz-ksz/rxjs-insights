@@ -5,22 +5,23 @@ import {
   ReloadNotificationChannel,
 } from '@app/protocols/reload-notification';
 import { inspectedWindowActions } from '@app/actions/inspected-window-actions';
-import { createEffect } from '@lib/state-fx/store';
+import { createEffectComponent } from '@lib/state-fx/store';
 
-export const inspectedWindowEffect = createEffect({
-  namespace: 'inspected-window',
-})({
-  reloadNotifier: () =>
-    fromServer((observer) =>
-      startServer<ReloadNotification>(
-        createChromeRuntimeServerAdapter(
-          ReloadNotificationChannel + chrome.devtools.inspectedWindow.tabId
-        ),
-        {
-          notifyReload() {
-            observer.next(inspectedWindowActions.InspectedWindowReloaded());
-          },
-        }
-      )
-    ),
-});
+export const inspectedWindowEffect = createEffectComponent(() => ({
+  name: 'inspected-window',
+  effects: {
+    reloadNotifier: () =>
+      fromServer((observer) =>
+        startServer<ReloadNotification>(
+          createChromeRuntimeServerAdapter(
+            ReloadNotificationChannel + chrome.devtools.inspectedWindow.tabId
+          ),
+          {
+            notifyReload() {
+              observer.next(inspectedWindowActions.InspectedWindowReloaded());
+            },
+          }
+        )
+      ),
+  },
+}));

@@ -6,48 +6,53 @@ import { refsStore, RefState, RefUiState } from '@app/store/refs/store';
 import { getRefState, getRefUiState } from '@app/selectors/refs-selectors';
 import { PropertyRef, Ref } from '@app/protocols/refs';
 import { refreshRefsActions } from '@app/actions/refresh-refs-actions';
-import { createEffect } from '@lib/state-fx/store';
+import { createEffectComponent } from '@lib/state-fx/store';
 
-export const refsEffect = createEffect({
-  namespace: 'refs',
-  deps: { refsStore },
-})({
-  handleExpand(actions, { refsStore }) {
-    return merge(
-      actions.ofType(refOutletActions.Expand),
-      actions.ofType(refreshRefsActions.LoadExpanded),
-      actions.ofType(refreshRefsActions.Refresh)
-    ).pipe(
-      concatMap((action) => {
-        const { ref, path, stateKey } = action.payload;
-        const state = getRefState(refsStore.getState(), stateKey);
-        const uiState = getRefUiState(refsStore.getState(), stateKey);
-        return from(loadRefsForExpandedPaths(path, ref, state, uiState)).pipe(
-          map((refs) =>
-            refsActions.RefsForExpandedPathsLoaded({ stateKey, refs })
-          )
+export const refsEffect = createEffectComponent(
+  ({ refsStore }) => ({
+    name: 'refs',
+    effects: {
+      handleExpand(actions) {
+        return merge(
+          actions.ofType(refOutletActions.Expand),
+          actions.ofType(refreshRefsActions.LoadExpanded),
+          actions.ofType(refreshRefsActions.Refresh)
+        ).pipe(
+          concatMap((action) => {
+            const { ref, path, stateKey } = action.payload;
+            const state = getRefState(refsStore.getState(), stateKey);
+            const uiState = getRefUiState(refsStore.getState(), stateKey);
+            return from(
+              loadRefsForExpandedPaths(path, ref, state, uiState)
+            ).pipe(
+              map((refs) =>
+                refsActions.RefsForExpandedPathsLoaded({ stateKey, refs })
+              )
+            );
+          })
         );
-      })
-    );
-  },
-  handleInvoke(actions) {
-    return actions.ofType(refOutletActions.InvokeGetter).pipe(
-      concatMap((action) => {
-        const { ref, stateKey, path } = action.payload;
-        return from(refsClient.invokeGetter(ref)).pipe(
-          map((resolvedRef) =>
-            refsActions.RefForInvokedGetterLoaded({
-              stateKey,
-              objectId: ref.targetObjectId,
-              keyId: path.split('.').pop()!,
-              ref: resolvedRef!,
-            })
-          )
+      },
+      handleInvoke(actions) {
+        return actions.ofType(refOutletActions.InvokeGetter).pipe(
+          concatMap((action) => {
+            const { ref, stateKey, path } = action.payload;
+            return from(refsClient.invokeGetter(ref)).pipe(
+              map((resolvedRef) =>
+                refsActions.RefForInvokedGetterLoaded({
+                  stateKey,
+                  objectId: ref.targetObjectId,
+                  keyId: path.split('.').pop()!,
+                  ref: resolvedRef!,
+                })
+              )
+            );
+          })
         );
-      })
-    );
-  },
-});
+      },
+    },
+  }),
+  { refsStore }
+);
 
 function getExpandedPaths(expandedPaths: Set<string>) {
   const prefixes = new Set(['']);

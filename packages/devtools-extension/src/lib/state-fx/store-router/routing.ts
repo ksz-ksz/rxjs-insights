@@ -5,7 +5,7 @@ import {
   ActionTypes,
   Component,
   Container,
-  createEffectInstance,
+  createEffect,
   Effect,
   ComponentInstance,
   StateSelectorFunction,
@@ -485,7 +485,7 @@ function createRoutingInstance<TData, TSearchInput, THashInput>(
   routingRulesResolver: ComponentsResolver<RoutingRule<TData>>
 ): Routing {
   {
-    return createEffectInstance(
+    return createEffect(
       'router',
       actions,
       {},

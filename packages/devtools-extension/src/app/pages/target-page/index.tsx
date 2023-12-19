@@ -13,7 +13,7 @@ import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions
 import { selectActiveTargetState } from '@app/selectors/active-target-state-selector';
 import { useSidePanelWidth } from '@app/utils';
 import { useStoreEffect } from '../../../lib/state-fx/store-react/use-store-effect';
-import { createEffect, effect } from '@lib/state-fx/store';
+import { createEffectComponent, effect } from '@lib/state-fx/store';
 import { merge } from 'rxjs';
 import { useSuperSelector } from '@lib/state-fx/store-react';
 
@@ -21,25 +21,26 @@ function useScrollToEventReaction(
   leftPanelRef: React.MutableRefObject<SidePanelControl | null>
 ) {
   useStoreEffect(
-    createEffect({
-      namespace: 'useScrollToEventReaction',
-    })({
-      handleScroll(actions) {
-        return merge(
-          actions.ofType(eventsLogActions.EventSelected),
-          actions.ofType(insightsActions.PlayNextEvent),
-          actions.ofType(refOutletContextActions.FocusEvent)
-        ).pipe(
-          effect((action) => {
-            const leftPanel = leftPanelRef.current;
-            if (leftPanel) {
-              const { event } = action.payload;
-              leftPanel.scrollToKey(`event-${event.time}`);
-            }
-          })
-        );
+    createEffectComponent(() => ({
+      name: 'useScrollToEventReaction',
+      effects: {
+        handleScroll(actions) {
+          return merge(
+            actions.ofType(eventsLogActions.EventSelected),
+            actions.ofType(insightsActions.PlayNextEvent),
+            actions.ofType(refOutletContextActions.FocusEvent)
+          ).pipe(
+            effect((action) => {
+              const leftPanel = leftPanelRef.current;
+              if (leftPanel) {
+                const { event } = action.payload;
+                leftPanel.scrollToKey(`event-${event.time}`);
+              }
+            })
+          );
+        },
       },
-    }),
+    })),
     [leftPanelRef]
   );
 }

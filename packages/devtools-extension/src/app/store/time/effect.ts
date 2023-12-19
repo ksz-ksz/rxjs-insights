@@ -2,13 +2,8 @@ import { map, merge } from 'rxjs';
 import { eventsLogActions } from '@app/actions/events-log-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import { insightsActions } from '@app/actions/insights-actions';
-import { createEffect, createSelectorFunction } from '@lib/state-fx/store';
-import {
-  router,
-  routerActions,
-  routerStore,
-  selectRouterState,
-} from '@app/router';
+import { createEffectComponent } from '@lib/state-fx/store';
+import { router, routerActions, routerStore } from '@app/router';
 import { Encoder } from '@lib/state-fx/store-router';
 
 function updateDecoded<TEncoded, TDecoded>(
@@ -27,34 +22,37 @@ function updateDecoded<TEncoded, TDecoded>(
   return undefined;
 }
 
-export const timeEffect = createEffect({
-  namespace: 'time',
-  deps: { router, routerStore },
-})({
-  syncTimeInUrl(actions, { router, routerStore }) {
-    return merge(
-      actions.ofType(eventsLogActions.EventSelected),
-      actions.ofType(refOutletContextActions.FocusEvent),
-      actions.ofType(insightsActions.PlayNextEvent)
-    ).pipe(
-      map((action) => {
-        const routerState = routerStore.getState();
+export const timeEffect = createEffectComponent(
+  ({ router, routerStore }) => ({
+    name: 'time',
+    effects: {
+      syncTimeInUrl(actions) {
+        return merge(
+          actions.ofType(eventsLogActions.EventSelected),
+          actions.ofType(refOutletContextActions.FocusEvent),
+          actions.ofType(insightsActions.PlayNextEvent)
+        ).pipe(
+          map((action) => {
+            const routerState = routerStore.getState();
 
-        return routerActions.Navigate({
-          historyMode: 'replace',
-          location: {
-            ...routerState.location,
-            search:
-              updateDecoded(
-                router.searchEncoder,
-                routerState.location.search,
-                (params) =>
-                  params.set(['time', String(action.payload.event.time)])
-              ) ?? '',
-          },
-          state: routerState.state,
-        });
-      })
-    );
-  },
-});
+            return routerActions.Navigate({
+              historyMode: 'replace',
+              location: {
+                ...routerState.location,
+                search:
+                  updateDecoded(
+                    router.searchEncoder,
+                    routerState.location.search,
+                    (params) =>
+                      params.set(['time', String(action.payload.event.time)])
+                  ) ?? '',
+              },
+              state: routerState.state,
+            });
+          })
+        );
+      },
+    },
+  }),
+  { router, routerStore }
+);

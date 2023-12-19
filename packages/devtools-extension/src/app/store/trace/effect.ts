@@ -10,28 +10,29 @@ import {
 } from 'rxjs';
 import { tracesClient } from '@app/clients/traces';
 import { traceActions } from '@app/actions/trace-actions';
-import { createEffect } from '@lib/state-fx/store';
+import { createEffectComponent } from '@lib/state-fx/store';
 import { routerActions } from '@app/router';
 import { dashboardRoute } from '@app/routes';
 
-export const traceEffect = createEffect({
-  namespace: 'trace',
-})({
-  handleDashboardEnter(actions) {
-    return actions.select(routeActivated(routerActions, dashboardRoute)).pipe(
-      switchMap(() =>
-        timer(0, 1000).pipe(
-          switchMap(() =>
-            from(tracesClient.getTrace()).pipe(
-              map((trace) => traceActions.TraceLoaded({ trace })),
-              catchError(() => EMPTY)
+export const traceEffect = createEffectComponent(() => ({
+  name: 'trace',
+  effects: {
+    handleDashboardEnter(actions) {
+      return actions.select(routeActivated(routerActions, dashboardRoute)).pipe(
+        switchMap(() =>
+          timer(0, 1000).pipe(
+            switchMap(() =>
+              from(tracesClient.getTrace()).pipe(
+                map((trace) => traceActions.TraceLoaded({ trace })),
+                catchError(() => EMPTY)
+              )
+            ),
+            takeUntil(
+              actions.select(routeDeactivated(routerActions, dashboardRoute))
             )
-          ),
-          takeUntil(
-            actions.select(routeDeactivated(routerActions, dashboardRoute))
           )
         )
-      )
-    );
+      );
+    },
   },
-});
+}));

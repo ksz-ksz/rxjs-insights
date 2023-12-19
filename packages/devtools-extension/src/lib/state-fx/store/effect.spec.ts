@@ -1,5 +1,4 @@
-import { createActions } from './index';
-import { createEffect } from './effect';
+import { createActions, createEffectComponent } from './index';
 import { map, Observer } from 'rxjs';
 import { createContainer } from './container';
 import { actionsComponent } from './actions';
@@ -44,36 +43,39 @@ const barStoreComponent = createStoreComponent(
   })
 );
 
-const fakeEffect = createEffect({
-  namespace: 'fake',
-  deps: {
+const fakeEffect = createEffectComponent(
+  ({ fooStore, barStore }) => ({
+    name: 'fake',
+    effects: {
+      handleFoo(actions) {
+        return actions.ofType(fakeActions.updateFoo).pipe(
+          map((action) =>
+            fakeActions.result({
+              value: action.payload,
+              from: 'foo',
+              deps: { foo: fooStore.getState(), bar: barStore.getState() },
+            })
+          )
+        );
+      },
+      handleBar(actions) {
+        return actions.ofType(fakeActions.updateBar).pipe(
+          map((action) =>
+            fakeActions.result({
+              value: action.payload,
+              from: 'bar',
+              deps: { foo: fooStore.getState(), bar: barStore.getState() },
+            })
+          )
+        );
+      },
+    },
+  }),
+  {
     fooStore: fooStoreComponent,
     barStore: barStoreComponent,
-  },
-})({
-  handleFoo(actions, { fooStore, barStore }) {
-    return actions.ofType(fakeActions.updateFoo).pipe(
-      map((action) =>
-        fakeActions.result({
-          value: action.payload,
-          from: 'foo',
-          deps: { foo: fooStore.getState(), bar: barStore.getState() },
-        })
-      )
-    );
-  },
-  handleBar(actions, { fooStore, barStore }) {
-    return actions.ofType(fakeActions.updateBar).pipe(
-      map((action) =>
-        fakeActions.result({
-          value: action.payload,
-          from: 'bar',
-          deps: { foo: fooStore.getState(), bar: barStore.getState() },
-        })
-      )
-    );
-  },
-});
+  }
+);
 
 function createTestHarness() {
   const container = createContainer();

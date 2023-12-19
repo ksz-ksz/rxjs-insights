@@ -1,4 +1,4 @@
-import { createEffect, Store, StoreComponent } from '../store';
+import { createEffectComponent, Store, StoreComponent } from '../store';
 import { getMutation } from './get-mutation';
 import { getMutationHash } from './get-mutation-hash';
 import { ResourceState } from './resource-store';
@@ -12,48 +12,58 @@ export function createMutationActionsEmitter(
   resourceActions: ResourceActionTypes,
   resourceStore: StoreComponent<ResourceState>
 ) {
-  return createEffect({
-    namespace,
-    deps: {
+  return createEffectComponent(
+    (deps) => ({
+      name: namespace,
+      effects: {
+        emitMutationSubscribed: mapAction(
+          resourceActions.subscribeMutation,
+          resourceActions.mutationSubscribed,
+          mapMutationActionPayloadWithSubscriber,
+          deps
+        ),
+        emitMutationUnsubscribed: mapAction(
+          resourceActions.unsubscribeMutation,
+          resourceActions.mutationUnsubscribed,
+          mapMutationActionPayloadWithSubscriber,
+          deps
+        ),
+        emitMutationRequested: mapAction(
+          resourceActions.mutate,
+          resourceActions.mutationRequested,
+          mapMutationActionPayloadWithArgs,
+          deps
+        ),
+        emitMutationStarted: mapAction(
+          resourceActions.startMutation,
+          resourceActions.mutationStarted,
+          mapMutationActionPayloadWithArgs,
+          deps
+        ),
+        emitMutationCancelled: mapAction(
+          resourceActions.cancelMutation,
+          resourceActions.mutationCancelled,
+          mapMutationActionPayload,
+          deps
+        ),
+        emitMutationCompleted: mapAction(
+          resourceActions.completeMutation,
+          resourceActions.mutationCompleted,
+          mapMutationActionPayloadWithResult,
+          deps
+        ),
+        emitMutationCollected: mapAction(
+          resourceActions.collectMutation,
+          resourceActions.mutationCollected,
+          mapMutationActionPayloadWithoutState,
+          deps
+        ),
+      },
+    }),
+    {
       store: resourceStore,
-    },
-  })({
-    emitMutationSubscribed: mapAction(
-      resourceActions.subscribeMutation,
-      resourceActions.mutationSubscribed,
-      mapMutationActionPayloadWithSubscriber
-    ),
-    emitMutationUnsubscribed: mapAction(
-      resourceActions.unsubscribeMutation,
-      resourceActions.mutationUnsubscribed,
-      mapMutationActionPayloadWithSubscriber
-    ),
-    emitMutationRequested: mapAction(
-      resourceActions.mutate,
-      resourceActions.mutationRequested,
-      mapMutationActionPayloadWithArgs
-    ),
-    emitMutationStarted: mapAction(
-      resourceActions.startMutation,
-      resourceActions.mutationStarted,
-      mapMutationActionPayloadWithArgs
-    ),
-    emitMutationCancelled: mapAction(
-      resourceActions.cancelMutation,
-      resourceActions.mutationCancelled,
-      mapMutationActionPayload
-    ),
-    emitMutationCompleted: mapAction(
-      resourceActions.completeMutation,
-      resourceActions.mutationCompleted,
-      mapMutationActionPayloadWithResult
-    ),
-    emitMutationCollected: mapAction(
-      resourceActions.collectMutation,
-      resourceActions.mutationCollected,
-      mapMutationActionPayloadWithoutState
-    ),
-  });
+    }
+  );
 }
 
 function mapMutationActionPayload(

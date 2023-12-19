@@ -2,7 +2,7 @@ import { MutationDef, MutationsDef } from './mutations';
 import { ResourceActionTypes } from './resource-actions';
 import {
   createDeps,
-  createEffect,
+  createEffectComponent,
   Deps,
   StoreComponent,
 } from '@lib/state-fx/store';
@@ -36,9 +36,113 @@ export function createMutationEffect<TDeps>(
   resourceStore: StoreComponent<ResourceState>,
   deps: Deps<TDeps>
 ) {
-  return createEffect({
-    namespace,
-    deps: {
+  return createEffectComponent(
+    ({ scheduler, deps }) => ({
+      name: namespace,
+      effects: {
+        mutate(actions) {
+          return actions.ofType(resourceActions.mutationRequested).pipe(
+            map(({ payload: { mutationKey, mutationArgs, mutatorKey } }) =>
+              resourceActions.startMutation({
+                mutationKey,
+                mutationArgs,
+                mutatorKey,
+              })
+            )
+          );
+        },
+        runMutation(actions) {
+          return merge(
+            actions.ofType(resourceActions.mutationStarted),
+            actions.ofType(resourceActions.mutationCancelled)
+          ).pipe(
+            groupBy(({ payload: { mutationHash } }) => mutationHash),
+            mergeMap((mutationActions) =>
+              mutationActions.pipe(
+                filter(resourceActions.mutationStarted.is),
+                concatMap(
+                  ({
+                    payload: {
+                      mutatorKey,
+                      mutationKey,
+                      mutationArgs,
+                      mutationState,
+                    },
+                  }) => {
+                    const mutation = getMutationDef(mutations, mutationKey);
+                    return mutation.mutateFn(mutationArgs, deps).pipe(
+                      last(),
+                      map((data): Result => ({ status: 'success', data })),
+                      catchError((error) =>
+                        of<Result>({ status: 'failure', error })
+                      ),
+                      connect((result) =>
+                        merge(
+                          result.pipe(
+                            map((mutationResult) =>
+                              resourceActions.completeMutation({
+                                mutatorKey,
+                                mutationKey,
+                                mutationArgs,
+                                mutationResult,
+                              })
+                            )
+                          ),
+                          mutation.dispatch?.(result, mutationArgs, deps) ??
+                            EMPTY
+                        )
+                      ),
+                      takeUntil(
+                        mutationActions.pipe(
+                          filter(is(resourceActions.mutationCancelled))
+                        )
+                      )
+                    );
+                  }
+                )
+              )
+            )
+          );
+        },
+        cleanupMutation(actions) {
+          return merge(
+            actions.ofType(resourceActions.mutationSubscribed),
+            actions.ofType(resourceActions.mutationUnsubscribed),
+            actions.ofType(resourceActions.mutationStarted),
+            actions.ofType(resourceActions.mutationCompleted),
+            actions.ofType(resourceActions.mutationCancelled)
+          ).pipe(
+            groupBy(({ payload: { mutationHash } }) => mutationHash),
+            mergeMap(
+              switchMap(
+                ({ payload: { mutationKey, mutatorKey, mutationState } }) => {
+                  if (
+                    mutationState.mutatorKey === undefined &&
+                    mutationState.state !== 'fetching'
+                  ) {
+                    const now = scheduler.now();
+                    const cacheTimestamp =
+                      getMutationCacheTimestamp(mutationState) ?? now;
+                    const cacheDue = cacheTimestamp - now;
+                    return cacheDue !== Infinity
+                      ? of(
+                          resourceActions.collectMutation({
+                            mutationKey,
+                            mutatorKey,
+                          })
+                        ).pipe(delay(cacheDue, scheduler))
+                      : EMPTY;
+                  } else {
+                    return EMPTY;
+                  }
+                }
+              )
+            )
+          );
+        },
+      },
+    }),
+    {
       emitter: createMutationActionsEmitter(
         namespace,
         resourceActions,
@@ -46,108 +150,8 @@ export function createMutationEffect<TDeps>(
       ),
       scheduler: schedulerComponent,
       deps: createDeps(deps),
-    },
-  })({
-    mutate(actions) {
-      return actions.ofType(resourceActions.mutationRequested).pipe(
-        map(({ payload: { mutationKey, mutationArgs, mutatorKey } }) =>
-          resourceActions.startMutation({
-            mutationKey,
-            mutationArgs,
-            mutatorKey,
-          })
-        )
-      );
-    },
-    runMutation(actions, { deps }) {
-      return merge(
-        actions.ofType(resourceActions.mutationStarted),
-        actions.ofType(resourceActions.mutationCancelled)
-      ).pipe(
-        groupBy(({ payload: { mutationHash } }) => mutationHash),
-        mergeMap((mutationActions) =>
-          mutationActions.pipe(
-            filter(resourceActions.mutationStarted.is),
-            concatMap(
-              ({
-                payload: {
-                  mutatorKey,
-                  mutationKey,
-                  mutationArgs,
-                  mutationState,
-                },
-              }) => {
-                const mutation = getMutationDef(mutations, mutationKey);
-                return mutation.mutateFn(mutationArgs, deps).pipe(
-                  last(),
-                  map((data): Result => ({ status: 'success', data })),
-                  catchError((error) =>
-                    of<Result>({ status: 'failure', error })
-                  ),
-                  connect((result) =>
-                    merge(
-                      result.pipe(
-                        map((mutationResult) =>
-                          resourceActions.completeMutation({
-                            mutatorKey,
-                            mutationKey,
-                            mutationArgs,
-                            mutationResult,
-                          })
-                        )
-                      ),
-                      mutation.dispatch?.(result, mutationArgs, deps) ?? EMPTY
-                    )
-                  ),
-                  takeUntil(
-                    mutationActions.pipe(
-                      filter(is(resourceActions.mutationCancelled))
-                    )
-                  )
-                );
-              }
-            )
-          )
-        )
-      );
-    },
-    cleanupMutation(actions, { scheduler }) {
-      return merge(
-        actions.ofType(resourceActions.mutationSubscribed),
-        actions.ofType(resourceActions.mutationUnsubscribed),
-        actions.ofType(resourceActions.mutationStarted),
-        actions.ofType(resourceActions.mutationCompleted),
-        actions.ofType(resourceActions.mutationCancelled)
-      ).pipe(
-        groupBy(({ payload: { mutationHash } }) => mutationHash),
-        mergeMap(
-          switchMap(
-            ({ payload: { mutationKey, mutatorKey, mutationState } }) => {
-              if (
-                mutationState.mutatorKey === undefined &&
-                mutationState.state !== 'fetching'
-              ) {
-                const now = scheduler.now();
-                const cacheTimestamp =
-                  getMutationCacheTimestamp(mutationState) ?? now;
-                const cacheDue = cacheTimestamp - now;
-                return cacheDue !== Infinity
-                  ? of(
-                      resourceActions.collectMutation({
-                        mutationKey,
-                        mutatorKey,
-                      })
-                    ).pipe(delay(cacheDue, scheduler))
-                  : EMPTY;
-              } else {
-                return EMPTY;
-              }
-            }
-          )
-        )
-      );
-    },
-  });
+    }
+  );
 }
 
 function getMutationDef<TDeps>(

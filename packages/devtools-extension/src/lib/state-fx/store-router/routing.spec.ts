@@ -21,10 +21,10 @@ import {
   Action,
   actionsComponent,
   Component,
+  ComponentInstance,
   createActions,
   createContainer,
-  createEffect,
-  ComponentInstance,
+  createEffectComponent,
 } from '../store';
 import { createRouterStore } from './router-store';
 import { RouteObject } from './route-object';
@@ -127,33 +127,34 @@ function createTestHarness(
   });
 
   const listing: ListingEntry[] = [];
-  const listingEffect = createEffect({
-    namespace: 'listing',
-  })({
-    listing: (actions) =>
-      merge(
-        actions.ofType(routerActions.Navigate),
-        actions.ofType(routerActions.NavigationRequested),
-        actions.ofType(routerActions.NavigationStarted),
-        actions.ofType(routerActions.NavigationCompleted),
-        actions.ofType(routerActions.NavigationCanceled),
-        actions.ofType(routerActions.RouteResolved),
-        actions.ofType(routerActions.RouteCommitted)
-      ).pipe(
-        tap({
-          next(x) {
-            listing.push(['N', x]);
-          },
-          error(x) {
-            listing.push(['E', x]);
-          },
-          complete() {
-            listing.push(['C']);
-          },
-        }),
-        ignoreElements()
-      ),
-  });
+  const listingEffect = createEffectComponent(() => ({
+    name: 'listing',
+    effects: {
+      listing: (actions) =>
+        merge(
+          actions.ofType(routerActions.Navigate),
+          actions.ofType(routerActions.NavigationRequested),
+          actions.ofType(routerActions.NavigationStarted),
+          actions.ofType(routerActions.NavigationCompleted),
+          actions.ofType(routerActions.NavigationCanceled),
+          actions.ofType(routerActions.RouteResolved),
+          actions.ofType(routerActions.RouteCommitted)
+        ).pipe(
+          tap({
+            next(x) {
+              listing.push(['N', x]);
+            },
+            error(x) {
+              listing.push(['E', x]);
+            },
+            complete() {
+              listing.push(['C']);
+            },
+          }),
+          ignoreElements()
+        ),
+    },
+  }));
 
   const container = createContainer();
 
