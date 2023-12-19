@@ -1,13 +1,13 @@
 import {
   MutationOptions,
   QueryOptions,
-  QuerySubscriberOptions,
   ResourceActionTypes,
 } from './resource-actions';
-import { Component, createStore, Store, tx, typeOf } from '../store';
+import { Component } from '../store';
 import { schedulerComponent } from './scheduler';
 import { getQuery } from './get-query';
 import { getMutation } from './get-mutation';
+import { createStoreComponent, Store, StoreDef, tx } from '../store/store';
 
 const defaultQueryOptions: QueryOptions = {
   cacheTime: 10 * 60 * 1000, // 10 minutes
@@ -236,210 +236,215 @@ export function getMutationCacheTimestamp(mutationState: MutationState) {
 }
 
 export function createResourceStore(
-  namespace: string,
+  name: string,
   actions: ResourceActionTypes
 ): Component<Store<ResourceState>> {
-  return createStore({
-    namespace,
-    state: typeOf<ResourceState>({
-      queries: {},
-      mutations: {},
-    }),
-    deps: {
-      scheduler: schedulerComponent,
-    },
-  })({
-    subscribeQuery: tx([actions.subscribeQuery], (state, action) => {
-      const { queryKey, queryArgs, subscriberKey } = action.payload;
-      const { queryHash, queryState } = getQuery(
-        state,
-        queryKey,
-        queryArgs,
-        false
-      );
-      if (queryState !== undefined) {
-        if (queryState.subscriberKeys.includes(subscriberKey)) {
-          throw new Error('subscriber already exists');
-        }
-        queryState.subscriberKeys.push(subscriberKey);
-      } else {
-        state.queries[queryHash] = {
-          queryHash,
-          queryKey,
-          queryArgs,
-          state: 'idle',
-          status: 'initial',
-          data: undefined,
-          error: undefined,
-          dataTimestamp: undefined,
-          errorTimestamp: undefined,
-          subscriberKeys: [subscriberKey],
-        };
-      }
-    }),
-    unsubscribeQuery: tx([actions.unsubscribeQuery], (state, action) => {
-      const { queryKey, queryArgs, subscriberKey } = action.payload;
-      const { queryState } = getQuery(state, queryKey, queryArgs);
-      const subscriberIndex = queryState.subscriberKeys.indexOf(subscriberKey);
-      if (subscriberIndex === -1) {
-        throw new Error('subscriber does not exist');
-      }
-      queryState.subscriberKeys.splice(subscriberIndex, 1);
-    }),
-    fetchQuery: tx(
-      [actions.fetchQuery, actions.prefetchQuery],
-      (state, action) => {
-        const { queryKey, queryArgs } = action.payload;
-        const { queryHash, queryState } = getQuery(
-          state,
-          queryKey,
-          queryArgs,
-          false
-        );
-        if (queryState === undefined) {
-          state.queries[queryHash] = {
-            queryHash,
+  return createStoreComponent(
+    ({ scheduler }): StoreDef<ResourceState> => ({
+      name,
+      state: {
+        queries: {},
+        mutations: {},
+      },
+      transitions: {
+        subscribeQuery: tx([actions.subscribeQuery], (state, action) => {
+          const { queryKey, queryArgs, subscriberKey } = action.payload;
+          const { queryHash, queryState } = getQuery(
+            state,
             queryKey,
             queryArgs,
-            state: 'idle',
-            status: 'initial',
-            data: undefined,
-            error: undefined,
-            dataTimestamp: undefined,
-            errorTimestamp: undefined,
-            subscriberKeys: [],
-          };
-        }
-      }
-    ),
-    startQuery: tx([actions.startQuery], (state, action) => {
-      const { queryKey, queryArgs } = action.payload;
-      const { queryState } = getQuery(state, queryKey, queryArgs);
-      queryState.state = 'fetching';
+            false
+          );
+          if (queryState !== undefined) {
+            if (queryState.subscriberKeys.includes(subscriberKey)) {
+              throw new Error('subscriber already exists');
+            }
+            queryState.subscriberKeys.push(subscriberKey);
+          } else {
+            state.queries[queryHash] = {
+              queryHash,
+              queryKey,
+              queryArgs,
+              state: 'idle',
+              status: 'initial',
+              data: undefined,
+              error: undefined,
+              dataTimestamp: undefined,
+              errorTimestamp: undefined,
+              subscriberKeys: [subscriberKey],
+            };
+          }
+        }),
+        unsubscribeQuery: tx([actions.unsubscribeQuery], (state, action) => {
+          const { queryKey, queryArgs, subscriberKey } = action.payload;
+          const { queryState } = getQuery(state, queryKey, queryArgs);
+          const subscriberIndex =
+            queryState.subscriberKeys.indexOf(subscriberKey);
+          if (subscriberIndex === -1) {
+            throw new Error('subscriber does not exist');
+          }
+          queryState.subscriberKeys.splice(subscriberIndex, 1);
+        }),
+        fetchQuery: tx(
+          [actions.fetchQuery, actions.prefetchQuery],
+          (state, action) => {
+            const { queryKey, queryArgs } = action.payload;
+            const { queryHash, queryState } = getQuery(
+              state,
+              queryKey,
+              queryArgs,
+              false
+            );
+            if (queryState === undefined) {
+              state.queries[queryHash] = {
+                queryHash,
+                queryKey,
+                queryArgs,
+                state: 'idle',
+                status: 'initial',
+                data: undefined,
+                error: undefined,
+                dataTimestamp: undefined,
+                errorTimestamp: undefined,
+                subscriberKeys: [],
+              };
+            }
+          }
+        ),
+        startQuery: tx([actions.startQuery], (state, action) => {
+          const { queryKey, queryArgs } = action.payload;
+          const { queryState } = getQuery(state, queryKey, queryArgs);
+          queryState.state = 'fetching';
+        }),
+        completeQuery: tx([actions.completeQuery], (state, action) => {
+          const now = scheduler.now();
+          const { queryKey, queryArgs, queryResult } = action.payload;
+          const { queryState } = getQuery(state, queryKey, queryArgs);
+          queryState.state = 'idle';
+          if (queryResult.status === 'success') {
+            queryState.status = 'query-data';
+            queryState.data = queryResult.data;
+            queryState.dataTimestamp = now;
+          } else {
+            queryState.status = 'query-error';
+            queryState.error = queryResult.error;
+            queryState.errorTimestamp = now;
+          }
+        }),
+        cancelQuery: tx([actions.cancelQuery], (state, action) => {
+          const { queryKey, queryArgs } = action.payload;
+          const { queryState } = getQuery(state, queryKey, queryArgs);
+          queryState.state = 'idle';
+        }),
+        collectQuery: tx([actions.collectQuery], (state, action) => {
+          const { queryKey, queryArgs } = action.payload;
+          const { queryHash } = getQuery(state, queryKey, queryArgs);
+          delete state.queries[queryHash];
+        }),
+        // TODO: invalidateQuery should remove inactive queries from cache?
+        subscribeMutation: tx([actions.subscribeMutation], (state, action) => {
+          const { mutationKey, mutatorKey } = action.payload;
+          const { mutationHash, mutationState } = getMutation(
+            state,
+            mutationKey,
+            mutatorKey,
+            false
+          );
+          if (mutationState !== undefined) {
+            if (mutationState.mutatorKey !== undefined) {
+              throw new Error('mutator already exists');
+            }
+            mutationState.mutatorKey = mutatorKey;
+          } else {
+            state.mutations[mutationHash] = {
+              mutationHash,
+              mutationKey,
+              mutatorKey,
+              mutationArgs: undefined,
+              state: 'idle',
+              status: 'initial',
+              data: undefined,
+              error: undefined,
+              dataTimestamp: undefined,
+              errorTimestamp: undefined,
+            };
+          }
+        }),
+        unsubscribeMutation: tx(
+          [actions.unsubscribeMutation],
+          (state, action) => {
+            const { mutationKey, mutatorKey } = action.payload;
+            const { mutationState } = getMutation(
+              state,
+              mutationKey,
+              mutatorKey
+            );
+            if (mutationState.mutatorKey === undefined) {
+              throw new Error('mutator does not exist');
+            }
+            mutationState.mutatorKey = undefined;
+          }
+        ),
+        mutate: tx([actions.mutate], (state, action) => {
+          const { mutationKey, mutatorKey } = action.payload;
+          const { mutationHash, mutationState } = getMutation(
+            state,
+            mutationKey,
+            mutatorKey,
+            false
+          );
+          if (mutationState === undefined) {
+            state.mutations[mutationHash] = {
+              mutationHash,
+              mutationKey,
+              mutatorKey: undefined,
+              mutationArgs: undefined,
+              state: 'idle',
+              status: 'initial',
+              data: undefined,
+              error: undefined,
+              dataTimestamp: undefined,
+              errorTimestamp: undefined,
+            };
+          }
+        }),
+        startMutation: tx([actions.startMutation], (state, action) => {
+          const { mutationKey, mutatorKey, mutationArgs } = action.payload;
+          const { mutationState } = getMutation(state, mutationKey, mutatorKey);
+          mutationState.state = 'fetching';
+          mutationState.mutationArgs = mutationArgs;
+        }),
+        completeMutation: tx([actions.completeMutation], (state, action) => {
+          const now = scheduler.now();
+          const { mutationKey, mutatorKey, mutationResult } = action.payload;
+          const { mutationState } = getMutation(state, mutationKey, mutatorKey);
+          mutationState.state = 'idle';
+          mutationState.mutationArgs = undefined;
+          if (mutationResult.status === 'success') {
+            mutationState.status = 'mutation-data';
+            mutationState.data = mutationResult.data;
+            mutationState.dataTimestamp = now;
+          } else {
+            mutationState.status = 'mutation-error';
+            mutationState.error = mutationResult.error;
+            mutationState.errorTimestamp = now;
+          }
+        }),
+        cancelMutation: tx([actions.cancelMutation], (state, action) => {
+          const { mutationKey, mutatorKey } = action.payload;
+          const { mutationState } = getMutation(state, mutationKey, mutatorKey);
+          mutationState.state = 'idle';
+          mutationState.mutationArgs = undefined;
+        }),
+        collectMutation: tx([actions.collectMutation], (state, action) => {
+          const { mutationKey, mutatorKey } = action.payload;
+          const { mutationHash } = getMutation(state, mutationKey, mutatorKey);
+          delete state.mutations[mutationHash];
+        }),
+      },
     }),
-    completeQuery: tx(
-      [actions.completeQuery],
-      (state, action, { scheduler }) => {
-        const now = scheduler.now();
-        const { queryKey, queryArgs, queryResult } = action.payload;
-        const { queryState } = getQuery(state, queryKey, queryArgs);
-        queryState.state = 'idle';
-        if (queryResult.status === 'success') {
-          queryState.status = 'query-data';
-          queryState.data = queryResult.data;
-          queryState.dataTimestamp = now;
-        } else {
-          queryState.status = 'query-error';
-          queryState.error = queryResult.error;
-          queryState.errorTimestamp = now;
-        }
-      }
-    ),
-    cancelQuery: tx([actions.cancelQuery], (state, action) => {
-      const { queryKey, queryArgs } = action.payload;
-      const { queryState } = getQuery(state, queryKey, queryArgs);
-      queryState.state = 'idle';
-    }),
-    collectQuery: tx([actions.collectQuery], (state, action) => {
-      const { queryKey, queryArgs } = action.payload;
-      const { queryHash } = getQuery(state, queryKey, queryArgs);
-      delete state.queries[queryHash];
-    }),
-    // TODO: invalidateQuery should remove inactive queries from cache?
-    subscribeMutation: tx([actions.subscribeMutation], (state, action) => {
-      const { mutationKey, mutatorKey } = action.payload;
-      const { mutationHash, mutationState } = getMutation(
-        state,
-        mutationKey,
-        mutatorKey,
-        false
-      );
-      if (mutationState !== undefined) {
-        if (mutationState.mutatorKey !== undefined) {
-          throw new Error('mutator already exists');
-        }
-        mutationState.mutatorKey = mutatorKey;
-      } else {
-        state.mutations[mutationHash] = {
-          mutationHash,
-          mutationKey,
-          mutatorKey,
-          mutationArgs: undefined,
-          state: 'idle',
-          status: 'initial',
-          data: undefined,
-          error: undefined,
-          dataTimestamp: undefined,
-          errorTimestamp: undefined,
-        };
-      }
-    }),
-    unsubscribeMutation: tx([actions.unsubscribeMutation], (state, action) => {
-      const { mutationKey, mutatorKey } = action.payload;
-      const { mutationState } = getMutation(state, mutationKey, mutatorKey);
-      if (mutationState.mutatorKey === undefined) {
-        throw new Error('mutator does not exist');
-      }
-      mutationState.mutatorKey = undefined;
-    }),
-    mutate: tx([actions.mutate], (state, action) => {
-      const { mutationKey, mutatorKey } = action.payload;
-      const { mutationHash, mutationState } = getMutation(
-        state,
-        mutationKey,
-        mutatorKey,
-        false
-      );
-      if (mutationState === undefined) {
-        state.mutations[mutationHash] = {
-          mutationHash,
-          mutationKey,
-          mutatorKey: undefined,
-          mutationArgs: undefined,
-          state: 'idle',
-          status: 'initial',
-          data: undefined,
-          error: undefined,
-          dataTimestamp: undefined,
-          errorTimestamp: undefined,
-        };
-      }
-    }),
-    startMutation: tx([actions.startMutation], (state, action) => {
-      const { mutationKey, mutatorKey, mutationArgs } = action.payload;
-      const { mutationState } = getMutation(state, mutationKey, mutatorKey);
-      mutationState.state = 'fetching';
-      mutationState.mutationArgs = mutationArgs;
-    }),
-    completeMutation: tx(
-      [actions.completeMutation],
-      (state, action, { scheduler }) => {
-        const now = scheduler.now();
-        const { mutationKey, mutatorKey, mutationResult } = action.payload;
-        const { mutationState } = getMutation(state, mutationKey, mutatorKey);
-        mutationState.state = 'idle';
-        mutationState.mutationArgs = undefined;
-        if (mutationResult.status === 'success') {
-          mutationState.status = 'mutation-data';
-          mutationState.data = mutationResult.data;
-          mutationState.dataTimestamp = now;
-        } else {
-          mutationState.status = 'mutation-error';
-          mutationState.error = mutationResult.error;
-          mutationState.errorTimestamp = now;
-        }
-      }
-    ),
-    cancelMutation: tx([actions.cancelMutation], (state, action) => {
-      const { mutationKey, mutatorKey } = action.payload;
-      const { mutationState } = getMutation(state, mutationKey, mutatorKey);
-      mutationState.state = 'idle';
-      mutationState.mutationArgs = undefined;
-    }),
-    collectMutation: tx([actions.collectMutation], (state, action) => {
-      const { mutationKey, mutatorKey } = action.payload;
-      const { mutationHash } = getMutation(state, mutationKey, mutatorKey);
-      delete state.mutations[mutationHash];
-    }),
-  });
+    {
+      scheduler: schedulerComponent,
+    }
+  );
 }

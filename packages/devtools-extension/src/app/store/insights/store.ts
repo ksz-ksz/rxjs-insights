@@ -11,7 +11,11 @@ import {
   getSourceChildren,
 } from '@app/utils/related-children';
 import { getTargetIdFromKey } from '@app/pages/target-page/get-root-target-id';
-import { createStore, tx } from '@lib/state-fx/store';
+import {
+  createStoreComponent,
+  StoreDef,
+  tx,
+} from '../../../lib/state-fx/store/store';
 
 let nextKeyId = 0;
 
@@ -134,107 +138,116 @@ const initialState: InsightsState = {
   targetsUi: {},
   targets: {},
 };
-export const insightsStore = createStore({
-  namespace: 'insights',
-  state: initialState,
-})({
-  resetState: tx(
-    [inspectedWindowActions.InspectedWindowReloaded],
-    () => initialState
-  ),
-  targetStateLoaded: tx(
-    [insightsActions.TargetStateLoaded],
-    (state, action) => {
-      const { state: targetState } = action.payload;
-      if (targetState !== undefined) {
-        state.targets[targetState.target.id] = targetState;
-        if (!state.targetsUi[targetState.target.id]) {
-          const expandedKeys = new Set([`<${targetState.target.id}>`]);
-          state.targetsUi[targetState.target.id] = {
-            expandedKeys: expandedKeys,
-            keysMapping: getKeysMapping(targetState, expandedKeys),
-          };
-        } else {
-          updateKeyMapping(state, targetState.target.id);
+export const insightsStore = createStoreComponent(
+  (): StoreDef<InsightsState> => ({
+    name: 'insights',
+    state: initialState,
+    transitions: {
+      resetState: tx(
+        [inspectedWindowActions.InspectedWindowReloaded],
+        () => initialState
+      ),
+      targetStateLoaded: tx(
+        [insightsActions.TargetStateLoaded],
+        (state, action) => {
+          const { state: targetState } = action.payload;
+          if (targetState !== undefined) {
+            state.targets[targetState.target.id] = targetState;
+            if (!state.targetsUi[targetState.target.id]) {
+              const expandedKeys = new Set([`<${targetState.target.id}>`]);
+              state.targetsUi[targetState.target.id] = {
+                expandedKeys: expandedKeys,
+                keysMapping: getKeysMapping(targetState, expandedKeys),
+              };
+            } else {
+              updateKeyMapping(state, targetState.target.id);
+            }
+          }
         }
-      }
-    }
-  ),
-  play: tx([eventsLogActions.Play], (state) => {
-    state.playing = true;
-  }),
-  pause: tx([eventsLogActions.Pause, insightsActions.PlayDone], (state) => {
-    state.playing = false;
-  }),
-  expand: tx([subscribersGraphActions.Expand], (state, action) => {
-    const { target, key } = action.payload;
-    const { expandedKeys } = state.targetsUi[target];
-    expandedKeys.add(key);
-    updateKeyMapping(state, target);
-  }),
-  collapse: tx([subscribersGraphActions.Collapse], (state, action) => {
-    const { target, key } = action.payload;
-    const { expandedKeys } = state.targetsUi[target];
-    expandedKeys.delete(key);
-    updateKeyMapping(state, target);
-  }),
-  expandAll: tx([subscribersGraphActions.ExpandAll], (state, action) => {
-    const { target, key } = action.payload;
-    const { relations } = state.targets[target];
-    const { expandedKeys } = state.targetsUi[target];
-    expandVisitor(
-      new Set(),
-      relations,
-      getSourceChildren,
-      getSourceChildKey,
-      expandedKeys,
-      key
-    );
-    expandVisitor(
-      new Set(),
-      relations,
-      getDestinationChildren,
-      getDestinationChildKey,
-      expandedKeys,
-      key
-    );
-    updateKeyMapping(state, target);
-  }),
-  collapseAll: tx([subscribersGraphActions.CollapseAll], (state, action) => {
-    const { target, key } = action.payload;
-    const { expandedKeys } = state.targetsUi[target];
-    for (const expandedKey of Array.from(expandedKeys.values())) {
-      if (expandedKey.startsWith(key) || expandedKey.endsWith(key)) {
-        expandedKeys.delete(expandedKey);
-      }
-    }
-    updateKeyMapping(state, target);
-  }),
-  focusTarget: tx([subscribersGraphActions.FocusTarget], (state, action) => {
-    const { fromTarget, toTarget, toKey } = action.payload;
-    const { keysMapping } = state.targetsUi[fromTarget.id];
-    const rebasedKeysMapping = rebaseKeys(keysMapping, toKey);
-    state.targetsUi[toTarget.id] = state.targetsUi[toTarget.id] ?? {
-      expandedKeys: new Set([`<${toTarget.id}>`]),
-    };
-    state.targetsUi[toTarget.id].keysMapping = rebasedKeysMapping;
-  }),
-  followEvent: tx([subscribersGraphActions.FollowEvent], (state) => {
-    state.following = true;
-  }),
-  unfollowEvent: tx([subscribersGraphActions.UnfollowEvent], (state) => {
-    state.following = false;
-  }),
-  showExcludedEvents: tx(
-    [subscribersGraphActions.ShowExcludedEvents],
-    (state) => {
-      state.showExcludedEvents = true;
-    }
-  ),
-  hideExcludedEvents: tx(
-    [subscribersGraphActions.HideExcludedEvents],
-    (state) => {
-      state.showExcludedEvents = false;
-    }
-  ),
-});
+      ),
+      play: tx([eventsLogActions.Play], (state) => {
+        state.playing = true;
+      }),
+      pause: tx([eventsLogActions.Pause, insightsActions.PlayDone], (state) => {
+        state.playing = false;
+      }),
+      expand: tx([subscribersGraphActions.Expand], (state, action) => {
+        const { target, key } = action.payload;
+        const { expandedKeys } = state.targetsUi[target];
+        expandedKeys.add(key);
+        updateKeyMapping(state, target);
+      }),
+      collapse: tx([subscribersGraphActions.Collapse], (state, action) => {
+        const { target, key } = action.payload;
+        const { expandedKeys } = state.targetsUi[target];
+        expandedKeys.delete(key);
+        updateKeyMapping(state, target);
+      }),
+      expandAll: tx([subscribersGraphActions.ExpandAll], (state, action) => {
+        const { target, key } = action.payload;
+        const { relations } = state.targets[target];
+        const { expandedKeys } = state.targetsUi[target];
+        expandVisitor(
+          new Set(),
+          relations,
+          getSourceChildren,
+          getSourceChildKey,
+          expandedKeys,
+          key
+        );
+        expandVisitor(
+          new Set(),
+          relations,
+          getDestinationChildren,
+          getDestinationChildKey,
+          expandedKeys,
+          key
+        );
+        updateKeyMapping(state, target);
+      }),
+      collapseAll: tx(
+        [subscribersGraphActions.CollapseAll],
+        (state, action) => {
+          const { target, key } = action.payload;
+          const { expandedKeys } = state.targetsUi[target];
+          for (const expandedKey of Array.from(expandedKeys.values())) {
+            if (expandedKey.startsWith(key) || expandedKey.endsWith(key)) {
+              expandedKeys.delete(expandedKey);
+            }
+          }
+          updateKeyMapping(state, target);
+        }
+      ),
+      focusTarget: tx(
+        [subscribersGraphActions.FocusTarget],
+        (state, action) => {
+          const { fromTarget, toTarget, toKey } = action.payload;
+          const { keysMapping } = state.targetsUi[fromTarget.id];
+          const rebasedKeysMapping = rebaseKeys(keysMapping, toKey);
+          state.targetsUi[toTarget.id] = state.targetsUi[toTarget.id] ?? {
+            expandedKeys: new Set([`<${toTarget.id}>`]),
+          };
+          state.targetsUi[toTarget.id].keysMapping = rebasedKeysMapping;
+        }
+      ),
+      followEvent: tx([subscribersGraphActions.FollowEvent], (state) => {
+        state.following = true;
+      }),
+      unfollowEvent: tx([subscribersGraphActions.UnfollowEvent], (state) => {
+        state.following = false;
+      }),
+      showExcludedEvents: tx(
+        [subscribersGraphActions.ShowExcludedEvents],
+        (state) => {
+          state.showExcludedEvents = true;
+        }
+      ),
+      hideExcludedEvents: tx(
+        [subscribersGraphActions.HideExcludedEvents],
+        (state) => {
+          state.showExcludedEvents = false;
+        }
+      ),
+    },
+  })
+);

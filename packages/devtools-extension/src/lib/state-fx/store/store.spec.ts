@@ -1,8 +1,8 @@
-import { createStore, tx } from './store';
 import { createActions, typeOf } from './index';
 import { createContainer } from './container';
 import { Observer } from 'rxjs';
 import { actionsComponent } from './actions';
+import { createStoreComponent, StoreDef, tx } from './store';
 
 const fakeActions = createActions<{
   updateFoo: string;
@@ -15,29 +15,35 @@ const fakeActions = createActions<{
   namespace: 'fake',
 });
 
-const fooStore = createStore({
-  namespace: 'foo',
-  state: typeOf<string>('initial'),
-})({
-  update: tx([fakeActions.updateFoo], (state, action) => {
-    return action.payload;
-  }),
-  updateAll: tx([fakeActions.updateAll], (state, action) => {
-    return action.payload;
-  }),
-});
+const fooStore = createStoreComponent(
+  (): StoreDef<string> => ({
+    name: 'foo',
+    state: 'initial',
+    transitions: {
+      update: tx([fakeActions.updateFoo], (state, action) => {
+        return action.payload;
+      }),
+      updateAll: tx([fakeActions.updateAll], (state, action) => {
+        return action.payload;
+      }),
+    },
+  })
+);
 
-const barStore = createStore({
-  namespace: 'bar',
-  state: typeOf<string>('initial'),
-})({
-  update: tx([fakeActions.updateBar], (state, action) => {
-    return action.payload;
-  }),
-  updateAll: tx([fakeActions.updateAll], (state, action) => {
-    return action.payload;
-  }),
-});
+const barStore = createStoreComponent(
+  (): StoreDef<string> => ({
+    name: 'bar',
+    state: 'initial',
+    transitions: {
+      update: tx([fakeActions.updateBar], (state, action) => {
+        return action.payload;
+      }),
+      updateAll: tx([fakeActions.updateAll], (state, action) => {
+        return action.payload;
+      }),
+    },
+  })
+);
 
 interface FakeState {
   value: string;
@@ -47,55 +53,58 @@ interface FakeState {
   };
 }
 
-const fakeStore = createStore({
-  namespace: 'fake',
-  state: typeOf<FakeState>({ value: 'initial' }),
-  deps: { fooStore, barStore },
-})({
-  update: tx([fakeActions.update], (state, action, deps) => {
-    state.deps = {
-      foo: deps.fooStore.getState(),
-      bar: deps.barStore.getState(),
-    };
-    state.value = action.payload;
+const fakeStore = createStoreComponent(
+  (deps): StoreDef<FakeState> => ({
+    name: 'fake',
+    state: { value: 'initial' },
+    transitions: {
+      update: tx([fakeActions.update], (state, action) => {
+        state.deps = {
+          foo: deps.fooStore.getState(),
+          bar: deps.barStore.getState(),
+        };
+        state.value = action.payload;
+      }),
+      updateAll: tx([fakeActions.updateAll], (state, action) => {
+        state.deps = {
+          foo: deps.fooStore.getState(),
+          bar: deps.barStore.getState(),
+        };
+        state.value = action.payload;
+      }),
+      set: tx(
+        [fakeActions.updateByA, fakeActions.updateByB],
+        (state, action) => {
+          state.deps = {
+            foo: deps.fooStore.getState(),
+            bar: deps.barStore.getState(),
+          };
+          if (fakeActions.updateByA.is(action)) {
+            state.value = action.payload.a;
+          }
+          if (fakeActions.updateByB.is(action)) {
+            state.value = action.payload.b;
+          }
+        }
+      ),
+      appendA: tx([fakeActions.updateByA], (state, action) => {
+        state.deps = {
+          foo: deps.fooStore.getState(),
+          bar: deps.barStore.getState(),
+        };
+        state.value += '_' + action.payload.a;
+      }),
+      appendB: tx([fakeActions.updateByB], (state, action) => {
+        state.deps = {
+          foo: deps.fooStore.getState(),
+          bar: deps.barStore.getState(),
+        };
+        state.value += '_' + action.payload.b;
+      }),
+    },
   }),
-  updateAll: tx([fakeActions.updateAll], (state, action, deps) => {
-    state.deps = {
-      foo: deps.fooStore.getState(),
-      bar: deps.barStore.getState(),
-    };
-    state.value = action.payload;
-  }),
-  set: tx(
-    [fakeActions.updateByA, fakeActions.updateByB],
-    (state, action, deps) => {
-      state.deps = {
-        foo: deps.fooStore.getState(),
-        bar: deps.barStore.getState(),
-      };
-      if (fakeActions.updateByA.is(action)) {
-        state.value = action.payload.a;
-      }
-      if (fakeActions.updateByB.is(action)) {
-        state.value = action.payload.b;
-      }
-    }
-  ),
-  appendA: tx([fakeActions.updateByA], (state, action, deps) => {
-    state.deps = {
-      foo: deps.fooStore.getState(),
-      bar: deps.barStore.getState(),
-    };
-    state.value += '_' + action.payload.a;
-  }),
-  appendB: tx([fakeActions.updateByB], (state, action, deps) => {
-    state.deps = {
-      foo: deps.fooStore.getState(),
-      bar: deps.barStore.getState(),
-    };
-    state.value += '_' + action.payload.b;
-  }),
-});
+  { fooStore, barStore }
+);
 
 function createTestHarness() {
   const container = createContainer();

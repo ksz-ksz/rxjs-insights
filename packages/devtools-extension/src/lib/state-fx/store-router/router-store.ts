@@ -1,7 +1,8 @@
 import { Location } from './history';
 import { RouteObject } from './route-object';
-import { ActionTypes, createStore, StoreComponent, tx, typeOf } from '../store';
+import { ActionTypes, Component } from '../store';
 import { RouterActions } from './router-actions';
+import { createStoreComponent, Store, StoreDef, tx } from '../store/store';
 
 export interface RouterState {
   location: Location;
@@ -17,28 +18,31 @@ export interface CreateRouterStoreOptions {
 
 export function createRouterStore(
   options: CreateRouterStoreOptions
-): StoreComponent<RouterState> {
-  const { namespace, actions } = options;
-  return createStore({
-    namespace,
-    state: typeOf<RouterState>({
-      location: {
-        pathname: '',
-        search: '',
-        hash: '',
+): Component<Store<RouterState>> {
+  const { namespace: name, actions } = options;
+  return createStoreComponent(
+    (): StoreDef<RouterState> => ({
+      name,
+      state: {
+        location: {
+          pathname: '',
+          search: '',
+          hash: '',
+        },
+        state: null,
+        key: 'default',
+        origin: 'pop',
+        routes: [],
       },
-      state: null,
-      key: 'default',
-      origin: 'pop',
-      routes: [],
-    }),
-  })({
-    update: tx([actions.NavigationCompleted], (state, { payload }) => {
-      state.location = payload.location;
-      state.state = payload.state;
-      state.key = payload.key;
-      state.origin = payload.origin;
-      state.routes = payload.routes;
-    }),
-  });
+      transitions: {
+        update: tx([actions.NavigationCompleted], (state, { payload }) => {
+          state.location = payload.location;
+          state.state = payload.state;
+          state.key = payload.key;
+          state.origin = payload.origin;
+          state.routes = payload.routes;
+        }),
+      },
+    })
+  );
 }

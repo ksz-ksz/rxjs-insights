@@ -1,22 +1,25 @@
-import { createStore, tx } from './store';
 import { createActions } from './action';
 import { createStoreSuperSelector } from './super-selector';
 import { createSelection } from './selection';
 import { createContainer } from './container';
 import { actionsComponent } from './actions';
+import { createStoreComponent, StoreDef, tx } from './store';
 
 const testActions = createActions<{ update: string }>({
   namespace: 'test',
 });
 
-const testStore = createStore({
-  namespace: 'test',
-  state: 'initial',
-})({
-  update: tx([testActions.update], (state, action) => {
-    return action.payload;
-  }),
-});
+const testStore = createStoreComponent(
+  (): StoreDef<string> => ({
+    name: 'test',
+    state: 'initial',
+    transitions: {
+      update: tx([testActions.update], (state, action) => {
+        return action.payload;
+      }),
+    },
+  })
+);
 
 const selectTestState = createStoreSuperSelector(testStore);
 

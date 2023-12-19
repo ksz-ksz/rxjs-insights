@@ -1,15 +1,40 @@
-import { BehaviorSubject, merge, Observable } from 'rxjs';
-import { Actions, actionsComponent } from './actions';
-import { produce } from 'immer';
-import { Component, Container, ComponentInstance } from './container';
-import { ActionSource } from './action-source';
-import { Deps, useDeps } from './deps';
 import { Action, ActionType } from './action';
+import { Actions, actionsComponent } from './actions';
+import { BehaviorSubject, merge, Observable } from 'rxjs';
+import { produce } from 'immer';
 import { StoreError } from './store-error';
+import {
+  Component,
+  Components,
+  createComponent,
+  createComponents,
+} from './container';
+
+export type ExtractPayloadFromActionType<TActionType> =
+  TActionType extends ActionType<infer TPayload> ? TPayload : never;
+
+export type ExtractPayloadFromActionTypesArray<
+  TActionTypes extends ActionType[]
+> = ExtractPayloadFromActionType<TActionTypes[number]>;
+
+export interface TransitionDef<
+  TState,
+  TActionTypes extends ActionType<any>[] = ActionType<any>[]
+> {
+  actions: TActionTypes;
+  handler: (
+    state: TState,
+    action: Action<ExtractPayloadFromActionTypesArray<TActionTypes>>
+  ) => TState | void;
+}
+
+export interface StoreDef<TState> {
+  name?: string;
+  state: TState;
+  transitions: TransitionDef<TState>[] | Record<string, TransitionDef<TState>>;
+}
 
 export interface Store<TState> {
-  readonly actionSources: ActionSource<any>[];
-
   getState(): TState;
 
   getStateObservable(): Observable<TState>;
@@ -17,69 +42,13 @@ export interface Store<TState> {
   dispose(): void;
 }
 
-export interface StoreComponent<TState> extends Component<Store<TState>> {}
-
-export interface CreateStoreOptions<TState, TDeps> {
-  namespace: string;
-  state: TState;
-  deps?: Deps<TDeps>;
-}
-
-type ExtractActionTypePayload<TActionType> = TActionType extends ActionType<
-  infer TPayload
->
-  ? TPayload
-  : never;
-
-export type StateTransitionAction<TActionTypes extends ActionType<any>[]> =
-  Action<ExtractActionTypePayload<TActionTypes[number]>>;
-
-export interface StateTransition<
-  TState,
-  TActions extends ActionType<any>[],
-  TDeps
-> {
-  actions: TActions;
-  handler: (
-    state: TState,
-    action: StateTransitionAction<TActions>,
-    deps: TDeps
-  ) => TState | void;
-}
-
-export type StateTransitions<TState, TDeps> =
-  | Record<string, StateTransition<TState, ActionType<any>[], TDeps>>
-  | Array<StateTransition<TState, ActionType<any>[], TDeps>>;
-
-export function tx<TState, TActions extends ActionType<any>[], TDeps>(
-  actions: TActions,
-  handler: (
-    state: TState,
-    action: StateTransitionAction<TActions>,
-    deps: TDeps
-  ) => TState | void
-): StateTransition<TState, TActions, TDeps> {
-  return {
-    actions,
-    handler,
-  };
-}
-
-export function createStore<TState, TDeps>(
-  options: CreateStoreOptions<TState, TDeps>
-): (transitions: StateTransitions<TState, TDeps>) => StoreComponent<TState> {
-  const { namespace, state, deps = {} as Deps<TDeps> } = options;
-  return (transitions) =>
-    createStoreComponent(namespace, state, deps, transitions);
-}
-
 interface TransitionMapEntry<TState> {
   key: string;
-  handler: (state: TState, action: Action<any>, deps: any) => TState | void;
+  handler: (state: TState, action: Action<any>) => TState | void;
 }
 
 function getTransitionsByActions<TState>(
-  transitions: [string, StateTransition<TState, any, any>][]
+  transitions: [string, TransitionDef<TState>][]
 ) {
   const transitionsMap = new Map<string, TransitionMapEntry<TState>[]>();
 
@@ -106,8 +75,8 @@ function getTransitionsByActions<TState>(
   return transitionsMap;
 }
 
-function getActionSources(
-  transitions: [string, StateTransition<any, any, any>][],
+function getActionSources<TState>(
+  transitions: [string, TransitionDef<TState>][],
   actions: Actions
 ) {
   return Array.from(
@@ -115,13 +84,11 @@ function getActionSources(
   ).map((action) => actions.ofType(action));
 }
 
-function createStoreInstance<TState, TDeps>(
-  namespace: string,
-  state: TState,
+export function createStore<TState>(
   actions: Actions,
-  deps: TDeps,
-  transitions: StateTransitions<TState, TDeps>
-) {
+  def: StoreDef<TState>
+): Store<TState> {
+  const { name, state, transitions } = def;
   const transitionsEntries = Object.entries(transitions);
   const transitionsByActions = getTransitionsByActions(transitionsEntries);
   const actionSources = getActionSources(transitionsEntries, actions);
@@ -139,9 +106,9 @@ function createStoreInstance<TState, TDeps>(
             let nextDraft = draft;
             for (const { key, handler } of transitions) {
               try {
-                nextDraft = handler(nextDraft, action, deps) ?? nextDraft;
+                nextDraft = handler(nextDraft, action) ?? nextDraft;
               } catch (e) {
-                throw new StoreError(namespace, key, e);
+                throw new StoreError(name, key, e);
               }
             }
             return nextDraft;
@@ -149,19 +116,18 @@ function createStoreInstance<TState, TDeps>(
           stateSubject.next(nextState);
         }
       } catch (error) {
-        throw new StoreError(namespace, '*', error);
+        throw new StoreError(name, '*', error);
       }
     },
     error(error: any) {
       queueMicrotask(() => {
-        throw new StoreError(namespace, '*', error);
+        throw new StoreError(name, '*', error);
       });
     },
     // TODO: complete?
   });
 
-  const store: Store<TState> = {
-    actionSources,
+  return {
     getState() {
       return stateSubject.getValue();
     },
@@ -172,41 +138,29 @@ function createStoreInstance<TState, TDeps>(
       subscription.unsubscribe();
     },
   };
-
-  return store;
 }
 
-function createStoreComponent<TState, TDeps>(
-  namespace: string,
-  state: TState,
-  depsComponents: Deps<TDeps>,
-  transitions: StateTransitions<TState, TDeps>
-): StoreComponent<TState> {
-  return {
-    init(container: Container): ComponentInstance<Store<TState>> {
-      const actionsHandle = container.use(actionsComponent);
-      const { deps, depsHandles } = useDeps(container, depsComponents);
+export function createStoreComponent<TState, TDeps>(
+  createStoreDef: (deps: TDeps) => StoreDef<TState>,
+  deps: Components<TDeps> = {} as Components<TDeps>
+): Component<Store<TState>> {
+  return createComponent(
+    ({ actions, deps }) => createStore(actions, createStoreDef(deps)),
+    {
+      deps: { actions: actionsComponent, deps: createComponents(deps) },
+      dispose(store) {
+        store.dispose();
+      },
+    }
+  );
+}
 
-      const actions = actionsHandle.component;
-
-      const store = createStoreInstance(
-        namespace,
-        state,
-        actions,
-        deps,
-        transitions
-      );
-
-      return {
-        component: store,
-        dispose() {
-          store.dispose();
-          actionsHandle.release();
-          for (const depsHandle of depsHandles) {
-            depsHandle.release();
-          }
-        },
-      };
-    },
-  };
+export function tx<TState, TActionTypes extends ActionType<any>[]>(
+  actions: [...TActionTypes],
+  handler: (
+    state: TState,
+    action: Action<ExtractPayloadFromActionTypesArray<TActionTypes>>
+  ) => TState | void
+): TransitionDef<TState, TActionTypes> {
+  return { actions, handler };
 }

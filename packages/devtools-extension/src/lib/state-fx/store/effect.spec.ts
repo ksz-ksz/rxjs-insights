@@ -1,9 +1,9 @@
-import { createActions, typeOf } from './index';
-import { createStore, tx } from './store';
+import { createActions } from './index';
 import { createEffect } from './effect';
 import { map, Observer } from 'rxjs';
 import { createContainer } from './container';
 import { actionsComponent } from './actions';
+import { createStoreComponent, StoreDef, tx } from './store';
 
 const fakeActions = createActions<{
   updateFoo: string;
@@ -20,29 +20,35 @@ const fakeActions = createActions<{
   namespace: 'fake',
 });
 
-const fooStore = createStore({
-  namespace: 'foo',
-  state: typeOf<string>('initial'),
-})({
-  update: tx([fakeActions.updateFoo], (state, action) => {
-    return action.payload;
-  }),
-});
+const fooStoreComponent = createStoreComponent(
+  (): StoreDef<string> => ({
+    name: 'foo',
+    state: 'initial',
+    transitions: {
+      update: tx([fakeActions.updateFoo], (state, action) => {
+        return action.payload;
+      }),
+    },
+  })
+);
 
-const barStore = createStore({
-  namespace: 'bar',
-  state: typeOf<string>('initial'),
-})({
-  update: tx([fakeActions.updateBar], (state, action) => {
-    return action.payload;
-  }),
-});
+const barStoreComponent = createStoreComponent(
+  (): StoreDef<string> => ({
+    name: 'bar',
+    state: 'initial',
+    transitions: {
+      update: tx([fakeActions.updateBar], (state, action) => {
+        return action.payload;
+      }),
+    },
+  })
+);
 
 const fakeEffect = createEffect({
   namespace: 'fake',
   deps: {
-    fooStore,
-    barStore,
+    fooStore: fooStoreComponent,
+    barStore: barStoreComponent,
   },
 })({
   handleFoo(actions, { fooStore, barStore }) {
@@ -159,8 +165,8 @@ describe('Effect', () => {
     });
     it('should release deps', () => {
       const { actions, effectRef, container } = createTestHarness();
-      const fooStoreRef = container.use(fooStore);
-      const barStoreRef = container.use(barStore);
+      const fooStoreRef = container.use(fooStoreComponent);
+      const barStoreRef = container.use(barStoreComponent);
       const foo = fooStoreRef.component;
       const bar = barStoreRef.component;
       fooStoreRef.release();
