@@ -42,6 +42,8 @@ export interface Store<TState> {
   dispose(): void;
 }
 
+export interface StoreComponent<TState> extends Component<Store<TState>> {}
+
 interface TransitionMapEntry<TState> {
   key: string;
   handler: (state: TState, action: Action<any>) => TState | void;
@@ -143,7 +145,7 @@ export function createStore<TState>(
 export function createStoreComponent<TState, TDeps>(
   createStoreDef: (deps: TDeps) => StoreDef<TState>,
   deps: Components<TDeps> = {} as Components<TDeps>
-): Component<Store<TState>> {
+): StoreComponent<TState> {
   return createComponent(
     ({ actions, deps }) => createStore(actions, createStoreDef(deps)),
     {
