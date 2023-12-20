@@ -136,74 +136,76 @@ type QueryCancelled<T extends Fn = Fn> = {
   queryState: QueryState<ReturnType<T>>;
 };
 export type SubscribeMutation<T extends Fn = Fn> = {
-  mutatorKey: string;
+  subscriberKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
 };
 export type UnsubscribeMutation<T extends Fn = Fn> = {
-  mutatorKey: string;
+  subscriberKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
 };
 export type Mutate<T extends Fn = Fn> = {
-  mutatorKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
   mutationArgs: Parameters<T>;
 };
 export type MutationSubscribed<T extends Fn = Fn> = {
-  mutatorKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
   mutationHash: string;
   mutationState: MutationState<ReturnType<T>>;
 };
 export type MutationUnsubscribed<T extends Fn = Fn> = {
-  mutatorKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
   mutationHash: string;
   mutationState: MutationState<ReturnType<T>>;
 };
 export type MutationRequested<T extends Fn = Fn> = {
-  mutatorKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
   mutationArgs: Parameters<T>;
   mutationHash: string;
   mutationState: MutationState<ReturnType<T>>;
 };
 export type MutationStarted<T extends Fn = Fn> = {
-  mutatorKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
   mutationArgs: Parameters<T>;
   mutationHash: string;
   mutationState: MutationState<ReturnType<T>>;
 };
 export type MutationCompleted<T extends Fn = Fn> = {
-  mutatorKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
   mutationArgs: Parameters<T>;
   mutationHash: string;
   mutationResult: Result<ReturnType<T>>;
   mutationState: MutationState<ReturnType<T>>;
 };
 type MutationCancelled<T extends Fn = Fn> = {
-  mutatorKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
   mutationHash: string;
   mutationState: MutationState<ReturnType<T>>;
 };
 
 type MutationCollected<T extends Fn = Fn> = {
-  mutatorKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
   mutationHash: string;
 };
 
 type StartMutation<T extends Fn = Fn> = {
-  mutatorKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
   mutationArgs: Parameters<T>;
 };
 
 type CompleteMutation<T extends Fn = Fn> = {
-  mutatorKey: string;
   mutationKey: ResourceKey<T>;
+  mutatorKey: string;
   mutationArgs: Parameters<T>;
   mutationResult: Result<ReturnType<T>>;
 };

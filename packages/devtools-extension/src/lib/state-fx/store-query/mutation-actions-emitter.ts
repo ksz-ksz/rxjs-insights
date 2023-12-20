@@ -108,12 +108,17 @@ function mapMutationActionPayloadWithoutState({
 }
 
 function mapMutationActionPayloadWithSubscriber(
-  { mutationKey, mutatorKey }: { mutatorKey: string; mutationKey: ResourceKey },
+  {
+    mutationKey,
+    mutatorKey,
+    subscriberKey,
+  }: { mutatorKey: string; mutationKey: ResourceKey; subscriberKey: string },
   { store }: { store: Store<ResourceState> }
 ) {
   return {
     mutationKey,
     mutatorKey,
+    subscriberKey,
     ...getMutation(store.getState(), mutationKey, mutatorKey),
   };
 }

@@ -22,8 +22,10 @@ import {
   merge,
   mergeMap,
   of,
+  startWith,
   switchMap,
   takeUntil,
+  tap,
 } from 'rxjs';
 import { Result } from './result';
 import { is } from '../store/is';
@@ -40,28 +42,18 @@ export function createMutationEffect<TDeps>(
     ({ scheduler, deps }) => ({
       name: namespace,
       effects: {
-        mutate(actions) {
-          return actions.ofType(resourceActions.mutationRequested).pipe(
-            map(({ payload: { mutationKey, mutationArgs, mutatorKey } }) =>
-              resourceActions.startMutation({
-                mutationKey,
-                mutationArgs,
-                mutatorKey,
-              })
-            )
-          );
-        },
         runMutation(actions) {
           return merge(
-            actions.ofType(resourceActions.mutationStarted),
+            actions.ofType(resourceActions.mutationRequested),
             actions.ofType(resourceActions.mutationCancelled)
           ).pipe(
             groupBy(({ payload: { mutationHash } }) => mutationHash),
             mergeMap((mutationActions) =>
               mutationActions.pipe(
-                filter(resourceActions.mutationStarted.is),
+                filter(resourceActions.mutationRequested.is),
                 concatMap(
                   ({
+                    name,
                     payload: {
                       mutatorKey,
                       mutationKey,
@@ -92,6 +84,13 @@ export function createMutationEffect<TDeps>(
                             EMPTY
                         )
                       ),
+                      startWith(
+                        resourceActions.startMutation({
+                          mutatorKey,
+                          mutationKey,
+                          mutationArgs,
+                        })
+                      ),
                       takeUntil(
                         mutationActions.pipe(
                           filter(is(resourceActions.mutationCancelled))
@@ -115,9 +114,12 @@ export function createMutationEffect<TDeps>(
             groupBy(({ payload: { mutationHash } }) => mutationHash),
             mergeMap(
               switchMap(
-                ({ payload: { mutationKey, mutatorKey, mutationState } }) => {
+                ({
+                  name,
+                  payload: { mutationKey, mutatorKey, mutationState },
+                }) => {
                   if (
-                    mutationState.mutatorKey === undefined &&
+                    mutationState.subscriberKeys.length === 0 &&
                     mutationState.state !== 'fetching'
                   ) {
                     const now = scheduler.now();

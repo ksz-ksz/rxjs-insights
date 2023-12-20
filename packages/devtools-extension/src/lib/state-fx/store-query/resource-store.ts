@@ -95,7 +95,8 @@ export type QueryState<T = unknown> =
 interface MutationStateBase {
   mutationHash: string;
   mutationKey: string;
-  mutatorKey: string | undefined;
+  mutatorKey: string;
+  subscriberKeys: string[];
   state: 'idle' | 'fetching';
 }
 
@@ -343,7 +344,7 @@ export function createResourceStore(
         }),
         // TODO: invalidateQuery should remove inactive queries from cache?
         subscribeMutation: tx([actions.subscribeMutation], (state, action) => {
-          const { mutationKey, mutatorKey } = action.payload;
+          const { mutationKey, mutatorKey, subscriberKey } = action.payload;
           const { mutationHash, mutationState } = getMutation(
             state,
             mutationKey,
@@ -351,10 +352,10 @@ export function createResourceStore(
             false
           );
           if (mutationState !== undefined) {
-            if (mutationState.mutatorKey !== undefined) {
-              throw new Error('mutator already exists');
+            if (mutationState.subscriberKeys.includes(subscriberKey)) {
+              throw new Error('subscriber already exists');
             }
-            mutationState.mutatorKey = mutatorKey;
+            mutationState.subscriberKeys.push(subscriberKey);
           } else {
             state.mutations[mutationHash] = {
               mutationHash,
@@ -367,22 +368,25 @@ export function createResourceStore(
               error: undefined,
               dataTimestamp: undefined,
               errorTimestamp: undefined,
+              subscriberKeys: [subscriberKey],
             };
           }
         }),
         unsubscribeMutation: tx(
           [actions.unsubscribeMutation],
           (state, action) => {
-            const { mutationKey, mutatorKey } = action.payload;
+            const { mutationKey, mutatorKey, subscriberKey } = action.payload;
             const { mutationState } = getMutation(
               state,
               mutationKey,
               mutatorKey
             );
-            if (mutationState.mutatorKey === undefined) {
-              throw new Error('mutator does not exist');
+            const subscriberIndex =
+              mutationState.subscriberKeys.indexOf(subscriberKey);
+            if (subscriberIndex === -1) {
+              throw new Error('subscriber does not exist');
             }
-            mutationState.mutatorKey = undefined;
+            mutationState.subscriberKeys.splice(subscriberIndex, 1);
           }
         ),
         mutate: tx([actions.mutate], (state, action) => {
@@ -397,7 +401,7 @@ export function createResourceStore(
             state.mutations[mutationHash] = {
               mutationHash,
               mutationKey,
-              mutatorKey: undefined,
+              mutatorKey,
               mutationArgs: undefined,
               state: 'idle',
               status: 'initial',
@@ -405,6 +409,7 @@ export function createResourceStore(
               error: undefined,
               dataTimestamp: undefined,
               errorTimestamp: undefined,
+              subscriberKeys: [],
             };
           }
         }),
