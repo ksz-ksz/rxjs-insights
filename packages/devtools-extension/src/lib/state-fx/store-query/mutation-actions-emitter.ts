@@ -1,4 +1,10 @@
-import { createEffectComponent, Store, StoreComponent } from '../store';
+import {
+  Actions,
+  createEffect,
+  createEffectComponent,
+  Store,
+  StoreComponent,
+} from '../store';
 import { getMutation } from './get-mutation';
 import { getMutationHash } from './get-mutation-hash';
 import { ResourceState } from './resource-store';
@@ -8,62 +14,59 @@ import { Result } from './result';
 import { mapAction } from './map-action';
 
 export function createMutationActionsEmitter(
-  namespace: string,
-  resourceActions: ResourceActionTypes,
-  resourceStore: StoreComponent<ResourceState>
+  name: string,
+  actions: Actions,
+  resourceStore: Store<ResourceState>,
+  resourceActions: ResourceActionTypes
 ) {
-  return createEffectComponent(
-    (deps) => ({
-      name: namespace,
-      effects: {
-        emitMutationSubscribed: mapAction(
-          resourceActions.subscribeMutation,
-          resourceActions.mutationSubscribed,
-          mapMutationActionPayloadWithSubscriber,
-          deps
-        ),
-        emitMutationUnsubscribed: mapAction(
-          resourceActions.unsubscribeMutation,
-          resourceActions.mutationUnsubscribed,
-          mapMutationActionPayloadWithSubscriber,
-          deps
-        ),
-        emitMutationRequested: mapAction(
-          resourceActions.mutate,
-          resourceActions.mutationRequested,
-          mapMutationActionPayloadWithArgs,
-          deps
-        ),
-        emitMutationStarted: mapAction(
-          resourceActions.startMutation,
-          resourceActions.mutationStarted,
-          mapMutationActionPayloadWithArgs,
-          deps
-        ),
-        emitMutationCancelled: mapAction(
-          resourceActions.cancelMutation,
-          resourceActions.mutationCancelled,
-          mapMutationActionPayload,
-          deps
-        ),
-        emitMutationCompleted: mapAction(
-          resourceActions.completeMutation,
-          resourceActions.mutationCompleted,
-          mapMutationActionPayloadWithResult,
-          deps
-        ),
-        emitMutationCollected: mapAction(
-          resourceActions.collectMutation,
-          resourceActions.mutationCollected,
-          mapMutationActionPayloadWithoutState,
-          deps
-        ),
-      },
-    }),
-    {
-      store: resourceStore,
-    }
-  );
+  const deps = { store: resourceStore };
+  return createEffect(actions, {
+    name,
+    effects: {
+      emitMutationSubscribed: mapAction(
+        resourceActions.subscribeMutation,
+        resourceActions.mutationSubscribed,
+        mapMutationActionPayloadWithSubscriber,
+        deps
+      ),
+      emitMutationUnsubscribed: mapAction(
+        resourceActions.unsubscribeMutation,
+        resourceActions.mutationUnsubscribed,
+        mapMutationActionPayloadWithSubscriber,
+        deps
+      ),
+      emitMutationRequested: mapAction(
+        resourceActions.mutate,
+        resourceActions.mutationRequested,
+        mapMutationActionPayloadWithArgs,
+        deps
+      ),
+      emitMutationStarted: mapAction(
+        resourceActions.startMutation,
+        resourceActions.mutationStarted,
+        mapMutationActionPayloadWithArgs,
+        deps
+      ),
+      emitMutationCancelled: mapAction(
+        resourceActions.cancelMutation,
+        resourceActions.mutationCancelled,
+        mapMutationActionPayload,
+        deps
+      ),
+      emitMutationCompleted: mapAction(
+        resourceActions.completeMutation,
+        resourceActions.mutationCompleted,
+        mapMutationActionPayloadWithResult,
+        deps
+      ),
+      emitMutationCollected: mapAction(
+        resourceActions.collectMutation,
+        resourceActions.mutationCollected,
+        mapMutationActionPayloadWithoutState,
+        deps
+      ),
+    },
+  });
 }
 
 function mapMutationActionPayload(

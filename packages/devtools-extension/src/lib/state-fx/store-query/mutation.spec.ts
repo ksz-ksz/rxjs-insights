@@ -10,8 +10,10 @@ import { schedulerComponent } from './scheduler';
 import { createResourceKeys, ResourceKey } from './resource-key';
 import { createResourceActions } from './resource-actions';
 import { createResourceStore, MutationState } from './resource-store';
-import { createResourceEffect } from './resource-effect';
-import { mutations } from './mutations';
+import {
+  createResourceInitializerComponent,
+  ResourceInitializerDef,
+} from './resource-effect';
 import { Fn } from './fn';
 import { Base, Diff } from './test-utils';
 import { getMutationHash } from './get-mutation-hash';
@@ -42,20 +44,19 @@ function createTestHarness(opts?: {
   const testStore = createResourceStore('test', testActions);
 
   const results: Record<number, Subject<string>> = {};
-  const testEffect = createResourceEffect(
-    {
-      namespace: 'test',
+  const testResourceInitializer = createResourceInitializerComponent(
+    testStore,
+    (): ResourceInitializerDef<{}, TestMutations> => ({
+      name: 'test',
       actions: testActions,
-      store: testStore,
-    },
-    {
-      mutations: mutations(testMutationKeys, {
+      queries: {},
+      mutations: {
         setTest: {
           mutateFn: ([id]) => (results[id] = new Subject<string>()),
           dispatch: opts?.dispatch,
         },
-      }),
-    }
+      },
+    })
   );
 
   const actions = container.use(actionsComponent).component;
@@ -74,7 +75,7 @@ function createTestHarness(opts?: {
     listing.push([scheduler.now(), action]);
   });
 
-  container.use(testEffect);
+  container.use(testResourceInitializer);
 
   return {
     actions,

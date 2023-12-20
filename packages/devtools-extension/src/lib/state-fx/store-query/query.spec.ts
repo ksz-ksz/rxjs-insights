@@ -1,7 +1,10 @@
 import { createResourceKeys, ResourceKey } from './resource-key';
 import { createResourceStore, QueryState } from './resource-store';
 import { createResourceActions } from './resource-actions';
-import { createResourceEffect } from './resource-effect';
+import {
+  createResourceInitializerComponent,
+  ResourceInitializerDef,
+} from './resource-effect';
 import {
   map,
   merge,
@@ -21,7 +24,6 @@ import { schedulerComponent } from './scheduler';
 import { Fn } from './fn';
 import { getQueryHash } from './get-query-hash';
 import { Result } from './result';
-import { queries } from './queries';
 import { Base, Diff } from './test-utils';
 
 const TEN_MINUTES = 10 * 60 * 1000;
@@ -54,20 +56,19 @@ function createTestHarness(opts?: {
   const testStore = createResourceStore('test', testActions);
 
   const results: Record<number, Subject<string>> = {};
-  const testEffect = createResourceEffect(
-    {
-      namespace: 'test',
+  const testResourceInitializer = createResourceInitializerComponent(
+    testStore,
+    (): ResourceInitializerDef<TestQueries, {}> => ({
+      name: 'test',
       actions: testActions,
-      store: testStore,
-    },
-    {
-      queries: queries(testQueryKeys, {
+      queries: {
         getTest: {
           queryFn: ([id]) => (results[id] = new Subject<string>()),
           dispatch: opts?.dispatch,
         },
-      }),
-    }
+      },
+      mutations: {},
+    })
   );
 
   const actions = container.use(actionsComponent).component;
@@ -88,7 +89,7 @@ function createTestHarness(opts?: {
     listing.push([scheduler.now(), action]);
   });
 
-  container.use(testEffect);
+  container.use(testResourceInitializer);
 
   return {
     actions,

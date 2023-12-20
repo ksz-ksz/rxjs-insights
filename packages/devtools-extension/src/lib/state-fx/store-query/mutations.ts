@@ -5,26 +5,15 @@ import { Action } from '@lib/state-fx/store';
 import { ResourceKeys } from './resource-key';
 import { QueriesDef } from './queries';
 
-export interface MutationDef<TMutation extends Fn, TDeps> {
-  mutateFn(
-    args: Parameters<TMutation>,
-    deps: TDeps
-  ): Observable<ReturnType<TMutation>>;
+export interface MutationDef<TMutation extends Fn> {
+  mutateFn(args: Parameters<TMutation>): Observable<ReturnType<TMutation>>;
 
   dispatch?(
     result: Observable<Result<ReturnType<TMutation>>>,
-    args: Parameters<TMutation>,
-    deps: TDeps
+    args: Parameters<TMutation>
   ): Observable<Action>;
 }
 
-export type MutationsDef<TMutations extends { [key: string]: Fn }, TDeps> = {
-  [K in keyof TMutations]: MutationDef<TMutations[K], TDeps>;
+export type MutationsDef<TMutations extends { [key: string]: Fn }> = {
+  [K in keyof TMutations]: MutationDef<TMutations[K]>;
 };
-
-export function mutations<TQueries extends { [key: string]: Fn }, TDeps>(
-  mutationKeys: ResourceKeys<TQueries>,
-  mutationDefs: MutationsDef<TQueries, TDeps>
-): MutationsDef<TQueries, TDeps> {
-  return mutationDefs;
-}

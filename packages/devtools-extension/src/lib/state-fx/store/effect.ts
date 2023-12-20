@@ -7,10 +7,9 @@ import {
   createComponents,
 } from '@lib/state-fx/store';
 import { EffectError } from './effect-error';
+import { Disposable } from './disposable';
 
-export interface Effect {
-  dispose(): void;
-}
+export interface Effect extends Disposable {}
 
 export interface EffectInitializer {
   (actions: Actions): Observable<Action<any>>;

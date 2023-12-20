@@ -11,3 +11,4 @@ export * from './subtype';
 export * from './type-of';
 export { StoreError } from './store-error';
 export { EffectError } from './effect-error';
+export { Disposable } from './disposable';
