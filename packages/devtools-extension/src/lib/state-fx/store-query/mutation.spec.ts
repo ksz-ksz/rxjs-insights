@@ -118,7 +118,6 @@ function createMutationStateDiff<T extends Fn>(
     mutationKey,
     mutatorKey,
     mutationHash: getMutationHash(mutationKey, mutatorKey),
-    mutationArgs: undefined,
     data: undefined,
     error: undefined,
     dataTimestamp: undefined,
@@ -221,7 +220,6 @@ describe('Mutation', () => {
             mutationArgs: [7] as [number],
             mutationState: mutationState({
               state: 'fetching',
-              mutationArgs: [7],
             }),
           })
         ),
@@ -234,7 +232,6 @@ describe('Mutation', () => {
             mutationState: mutationState({
               state: 'idle',
               status: 'mutation-data',
-              mutationArgs: undefined,
               data: 'done',
               dataTimestamp: 0,
             }),
@@ -372,7 +369,6 @@ describe('Mutation', () => {
             mutationArgs: [7] as [number],
             mutationState: mutationState({
               state: 'fetching',
-              mutationArgs: [7],
             }),
           })
         ),
@@ -396,7 +392,6 @@ describe('Mutation', () => {
             mutationState: mutationState({
               state: 'idle',
               status: 'mutation-data',
-              mutationArgs: undefined,
               data: 'done',
               dataTimestamp: 0,
             }),
@@ -481,7 +476,6 @@ describe('Mutation', () => {
             mutationArgs: [7] as [number],
             mutationState: mutationState({
               state: 'fetching',
-              mutationArgs: [7],
             }),
           })
         ),
@@ -494,7 +488,6 @@ describe('Mutation', () => {
             mutationState: mutationState({
               state: 'idle',
               status: 'mutation-data',
-              mutationArgs: undefined,
               data: 'done',
               dataTimestamp: 0,
             }),
@@ -571,7 +564,6 @@ describe('Mutation', () => {
             mutationArgs: [7] as [number],
             mutationState: mutationState({
               state: 'fetching',
-              mutationArgs: [7],
             }),
           })
         ),
@@ -593,7 +585,6 @@ describe('Mutation', () => {
             mutationState: mutationState({
               state: 'idle',
               status: 'mutation-data',
-              mutationArgs: undefined,
               data: 'done(A)',
               dataTimestamp: 0,
             }),
@@ -611,7 +602,6 @@ describe('Mutation', () => {
             mutationArgs: [42] as [number],
             mutationState: mutationState({
               state: 'fetching',
-              mutationArgs: [42],
             }),
           })
         ),
@@ -624,7 +614,6 @@ describe('Mutation', () => {
             mutationState: mutationState({
               state: 'idle',
               status: 'mutation-data',
-              mutationArgs: undefined,
               data: 'done(B)',
               dataTimestamp: 0,
             }),

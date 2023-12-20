@@ -102,7 +102,6 @@ interface MutationStateBase {
 
 interface MutationStateInitial extends MutationStateBase {
   status: 'initial';
-  mutationArgs: undefined;
   data: undefined;
   error: undefined;
   dataTimestamp: undefined;
@@ -111,7 +110,6 @@ interface MutationStateInitial extends MutationStateBase {
 
 interface MutationStateMutationData<T> extends MutationStateBase {
   status: 'mutation-data';
-  mutationArgs: any[];
   data: T;
   error: undefined;
   dataTimestamp: number;
@@ -120,7 +118,6 @@ interface MutationStateMutationData<T> extends MutationStateBase {
 
 interface MutationStateMutationError extends MutationStateBase {
   status: 'mutation-error';
-  mutationArgs: any[];
   data: undefined;
   error: unknown;
   dataTimestamp: number | undefined;
@@ -361,7 +358,6 @@ export function createResourceStore(
               mutationHash,
               mutationKey,
               mutatorKey,
-              mutationArgs: undefined,
               state: 'idle',
               status: 'initial',
               data: undefined,
@@ -402,7 +398,6 @@ export function createResourceStore(
               mutationHash,
               mutationKey,
               mutatorKey,
-              mutationArgs: undefined,
               state: 'idle',
               status: 'initial',
               data: undefined,
@@ -417,14 +412,12 @@ export function createResourceStore(
           const { mutationKey, mutatorKey, mutationArgs } = action.payload;
           const { mutationState } = getMutation(state, mutationKey, mutatorKey);
           mutationState.state = 'fetching';
-          mutationState.mutationArgs = mutationArgs;
         }),
         completeMutation: tx([actions.completeMutation], (state, action) => {
           const now = scheduler.now();
           const { mutationKey, mutatorKey, mutationResult } = action.payload;
           const { mutationState } = getMutation(state, mutationKey, mutatorKey);
           mutationState.state = 'idle';
-          mutationState.mutationArgs = undefined;
           if (mutationResult.status === 'success') {
             mutationState.status = 'mutation-data';
             mutationState.data = mutationResult.data;
@@ -439,7 +432,6 @@ export function createResourceStore(
           const { mutationKey, mutatorKey } = action.payload;
           const { mutationState } = getMutation(state, mutationKey, mutatorKey);
           mutationState.state = 'idle';
-          mutationState.mutationArgs = undefined;
         }),
         collectMutation: tx([actions.collectMutation], (state, action) => {
           const { mutationKey, mutatorKey } = action.payload;
