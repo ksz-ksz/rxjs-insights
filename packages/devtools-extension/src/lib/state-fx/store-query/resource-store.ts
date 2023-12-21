@@ -233,7 +233,7 @@ export function getMutationCacheTimestamp(mutationState: MutationState) {
   return resultTimestamp + defaultMutationOptions.cacheTime;
 }
 
-export function createResourceStore(
+export function createResourceStoreComponent(
   name: string,
   actions: ResourceActionTypes
 ): Component<Store<ResourceState>> {

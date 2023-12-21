@@ -2,21 +2,18 @@ import {
   Action,
   actionsComponent,
   ActionType,
+  createComponent,
   createContainer,
 } from '@lib/state-fx/store';
 import { merge, Observable, Subject, VirtualTimeScheduler } from 'rxjs';
 import { Result } from './result';
 import { schedulerComponent } from './scheduler';
-import { createResourceKeys, ResourceKey } from './resource-key';
-import { createResourceActions } from './resource-actions';
-import { createResourceStore, MutationState } from './resource-store';
-import {
-  createResourceInitializerComponent,
-  ResourceInitializerDef,
-} from './resource-effect';
+import { ResourceKey } from './resource-key';
+import { MutationState } from './resource-store';
 import { Fn } from './fn';
 import { Base, Diff } from './test-utils';
 import { getMutationHash } from './get-mutation-hash';
+import { createResource } from './resource';
 
 type TestMutations = {
   setTest(id: number): string;
@@ -30,25 +27,24 @@ function createTestHarness(opts?: {
   ): Observable<Action>;
 }) {
   const container = createContainer();
+  const {
+    keys: { mutation: testMutationKeys },
+    actions: testActions,
+    component: testResource,
+    configComponent: testResourceConfig,
+  } = createResource<{}, TestMutations>({
+    name: 'test',
+  });
+
   const scheduler = new VirtualTimeScheduler();
   container.provide(schedulerComponent, {
     init() {
       return { component: scheduler };
     },
   });
-  const { mutation: testMutationKeys } = createResourceKeys<
-    {},
-    TestMutations
-  >();
-  const testActions = createResourceActions('test');
-  const testStore = createResourceStore('test', testActions);
-
-  const results: Record<number, Subject<string>> = {};
-  const testResourceInitializer = createResourceInitializerComponent(
-    testStore,
-    (): ResourceInitializerDef<{}, TestMutations> => ({
-      name: 'test',
-      actions: testActions,
+  container.provide(
+    testResourceConfig,
+    createComponent(() => ({
       queries: {},
       mutations: {
         setTest: {
@@ -56,9 +52,10 @@ function createTestHarness(opts?: {
           dispatch: opts?.dispatch,
         },
       },
-    })
+    }))
   );
 
+  const results: Record<number, Subject<string>> = {};
   const actions = container.use(actionsComponent).component;
   const listing: unknown[] = [];
   const listen: ActionType<any>[] = [
@@ -75,7 +72,7 @@ function createTestHarness(opts?: {
     listing.push([scheduler.now(), action]);
   });
 
-  container.use(testResourceInitializer);
+  container.use(testResource);
 
   return {
     actions,

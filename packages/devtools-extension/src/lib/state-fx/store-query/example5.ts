@@ -31,7 +31,7 @@ import {
   UnsubscribeQuery,
 } from './resource-actions';
 import {
-  createResourceStore,
+  createResourceStoreComponent,
   MutationState,
   QueryState,
   ResourceState,
@@ -61,7 +61,7 @@ const todosResourceActions = createResourceActions('todos-resource');
 
 // TODO: pass querykeys for type inference?
 // TODO: initialData?
-const todosResourceStore = createResourceStore(todosResourceActions);
+const todosResourceStore = createResourceStoreComponent(todosResourceActions);
 
 type QuerySelector<T extends Fn> = SuperSelector<
   { get(store: Component<Store<ResourceState>>): ResourceState },

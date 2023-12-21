@@ -1,10 +1,5 @@
-import { createResourceKeys, ResourceKey } from './resource-key';
-import { createResourceStore, QueryState } from './resource-store';
-import { createResourceActions } from './resource-actions';
-import {
-  createResourceInitializerComponent,
-  ResourceInitializerDef,
-} from './resource-effect';
+import { ResourceKey } from './resource-key';
+import { QueryState } from './resource-store';
 import {
   map,
   merge,
@@ -18,6 +13,7 @@ import {
   actionsComponent,
   ActionType,
   createActions,
+  createComponent,
   createContainer,
 } from '../store';
 import { schedulerComponent } from './scheduler';
@@ -25,6 +21,7 @@ import { Fn } from './fn';
 import { getQueryHash } from './get-query-hash';
 import { Result } from './result';
 import { Base, Diff } from './test-utils';
+import { createResource } from './resource';
 
 const TEN_MINUTES = 10 * 60 * 1000;
 
@@ -42,25 +39,24 @@ function createTestHarness(opts?: {
   ): Observable<Action>;
 }) {
   const container = createContainer();
+  const {
+    keys: { query: testQueryKeys },
+    actions: testActions,
+    component: testResource,
+    configComponent: testResourceConfig,
+  } = createResource<TestQueries, {}>({
+    name: 'test',
+  });
+
   const scheduler = new VirtualTimeScheduler();
   container.provide(schedulerComponent, {
     init() {
       return { component: scheduler };
     },
   });
-  const { query: testQueryKeys } = createResourceKeys<
-    TestQueries,
-    TestMutations
-  >();
-  const testActions = createResourceActions('test');
-  const testStore = createResourceStore('test', testActions);
-
-  const results: Record<number, Subject<string>> = {};
-  const testResourceInitializer = createResourceInitializerComponent(
-    testStore,
-    (): ResourceInitializerDef<TestQueries, {}> => ({
-      name: 'test',
-      actions: testActions,
+  container.provide(
+    testResourceConfig,
+    createComponent(() => ({
       queries: {
         getTest: {
           queryFn: ([id]) => (results[id] = new Subject<string>()),
@@ -68,9 +64,10 @@ function createTestHarness(opts?: {
         },
       },
       mutations: {},
-    })
+    }))
   );
 
+  const results: Record<number, Subject<string>> = {};
   const actions = container.use(actionsComponent).component;
   const listing: unknown[] = [];
   const listen: ActionType<any>[] = [
@@ -89,7 +86,7 @@ function createTestHarness(opts?: {
     listing.push([scheduler.now(), action]);
   });
 
-  container.use(testResourceInitializer);
+  container.use(testResource);
 
   return {
     actions,
