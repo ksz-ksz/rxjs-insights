@@ -48,7 +48,9 @@ export function createResource<
     mutation: ResourceKeys<TMutations>;
   };
   actions: ResourceActionTypes;
+  // TODO: rename to resourceComponent
   component: Component<Disposable>;
+  // TODO: rename to resourceConfigComponent
   configComponent: Component<ResourceConfig<TQueries, TMutations>>;
 } {
   const { name } = def;

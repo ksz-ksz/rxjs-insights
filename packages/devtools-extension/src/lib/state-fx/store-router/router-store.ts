@@ -1,10 +1,12 @@
 import { Location } from './history';
 import { RouteObject } from './route-object';
 import { ActionTypes, Component } from '../store';
-import { RouterActions } from './router-actions';
+import { RouterActions, RouterActionTypes } from './router-actions';
 import { createStoreComponent, Store, StoreDef, tx } from '../store/store';
 
 export interface RouterState {
+  navigationState: 'navigating' | 'idle';
+  navigationPhase: 'check' | 'commit' | undefined;
   location: Location;
   state: any;
   key: string;
@@ -16,14 +18,16 @@ export interface CreateRouterStoreOptions {
   actions: ActionTypes<RouterActions>;
 }
 
-export function createRouterStore(
-  options: CreateRouterStoreOptions
+export function createRouterStoreComponent(
+  name: string,
+  actions: RouterActionTypes
 ): Component<Store<RouterState>> {
-  const { namespace: name, actions } = options;
   return createStoreComponent(
     (): StoreDef<RouterState> => ({
       name,
       state: {
+        navigationState: 'idle',
+        navigationPhase: undefined,
         location: {
           pathname: '',
           search: '',
@@ -35,12 +39,30 @@ export function createRouterStore(
         routes: [],
       },
       transitions: {
-        update: tx([actions.NavigationCompleted], (state, { payload }) => {
-          state.location = payload.location;
-          state.state = payload.state;
-          state.key = payload.key;
-          state.origin = payload.origin;
-          state.routes = payload.routes;
+        startNavigation: tx([actions.startNavigation], (state) => {
+          state.navigationState = 'navigating';
+        }),
+        startCheckPhase: tx([actions.startCheckPhase], (state) => {
+          state.navigationPhase = 'check';
+        }),
+        startCommitPhase: tx([actions.startCommitPhase], (state) => {
+          state.navigationPhase = 'commit';
+        }),
+        completeNavigation: tx(
+          [actions.completeNavigation],
+          (state, { payload: payload }) => {
+            state.navigationState = 'idle';
+            state.navigationPhase = undefined;
+            state.location = payload.location;
+            state.state = payload.state;
+            state.key = payload.key;
+            state.origin = payload.origin;
+            state.routes = payload.routes;
+          }
+        ),
+        cancelNavigation: tx([actions.cancelNavigation], (state) => {
+          state.navigationState = 'idle';
+          state.navigationPhase = undefined;
         }),
       },
     })

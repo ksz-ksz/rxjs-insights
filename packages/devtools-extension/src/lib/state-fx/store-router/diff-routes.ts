@@ -1,9 +1,15 @@
 import { RouteObject } from './route-object';
 
+export interface RoutesDiff {
+  activatedRoutes: RouteObject[];
+  deactivatedRoutes: RouteObject[];
+  updatedRoutes: [RouteObject, RouteObject][];
+}
+
 export function diffRoutes(
-  prevRoutes: RouteObject<any, any, any>[],
-  nextRoutes: RouteObject<any, any, any>[]
-) {
+  prevRoutes: RouteObject[],
+  nextRoutes: RouteObject[]
+): RoutesDiff {
   if (prevRoutes.length === 0) {
     return {
       updatedRoutes: [],
@@ -21,10 +27,7 @@ export function diffRoutes(
   }
 
   const n = Math.min(prevRoutes.length, nextRoutes.length);
-  const updatedRoutes: [
-    RouteObject<any, any, any>,
-    RouteObject<any, any, any>
-  ][] = [];
+  const updatedRoutes: [RouteObject, RouteObject][] = [];
   for (let i = 0; i < n; i++) {
     const prevRoute = prevRoutes[i];
     const nextRoute = nextRoutes[i];

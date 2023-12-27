@@ -25,11 +25,7 @@ import {
   of,
   tap,
 } from 'rxjs';
-import {
-  NavigationRequested,
-  RouteEvent,
-  RouterActions,
-} from './router-actions';
+import { NavigationEvent, RouteEvent, RouterActions } from './router-actions';
 import { RouterState } from './router-store';
 import { ComponentsResolver } from './components-resolver';
 import { RouteObject } from './route-object';
@@ -117,15 +113,15 @@ function createResolveObservable<
     const routing = router.getRouteConfig(deactivatedRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolveData(rule);
-        if (resolvedRule.check !== undefined) {
+        const resolvedRule = routingRulesResolver.resolve(rule);
+        if (resolvedRule.dispatchOnCheck !== undefined) {
           resolve.push(
-            resolvedRule.check({
+            resolvedRule.dispatchOnCheck({
               status: 'deactivated',
-              location: nextLocation,
-              prevLocation: prevLocation,
-              prevRoute: createRouteContext(deactivatedRoute, router),
-              prevRoutes: createRuleRoutes(prevRoutes, router),
+              activatedLocation: nextLocation,
+              deactivatedLocation: prevLocation,
+              deactivatedRoute: createRouteContext(deactivatedRoute, router),
+              deactivatedRoutes: createRuleRoutes(prevRoutes, router),
             })
           );
         }
@@ -136,17 +132,17 @@ function createResolveObservable<
     const routing = router.getRouteConfig(nextUpdateRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolveData(rule);
-        if (resolvedRule.check !== undefined) {
+        const resolvedRule = routingRulesResolver.resolve(rule);
+        if (resolvedRule.dispatchOnCheck !== undefined) {
           resolve.push(
-            resolvedRule.check({
+            resolvedRule.dispatchOnCheck({
               status: 'updated',
-              location: nextLocation,
-              prevLocation: prevLocation,
+              activatedLocation: nextLocation,
+              deactivatedLocation: prevLocation,
               route: createRouteContext(nextUpdateRoute, router),
-              routes: createRuleRoutes(nextRoutes, router),
-              prevRoute: createRouteContext(prevUpdatedRoute, router),
-              prevRoutes: createRuleRoutes(prevRoutes, router),
+              activatedRoutes: createRuleRoutes(nextRoutes, router),
+              deactivatedRoute: createRouteContext(prevUpdatedRoute, router),
+              deactivatedRoutes: createRuleRoutes(prevRoutes, router),
             })
           );
         }
@@ -157,15 +153,15 @@ function createResolveObservable<
     const routing = router.getRouteConfig(activatedRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolveData(rule);
-        if (resolvedRule.check !== undefined) {
+        const resolvedRule = routingRulesResolver.resolve(rule);
+        if (resolvedRule.dispatchOnCheck !== undefined) {
           resolve.push(
-            resolvedRule.check({
+            resolvedRule.dispatchOnCheck({
               status: 'activated',
-              location: nextLocation,
-              prevLocation: prevLocation,
+              activatedLocation: nextLocation,
+              deactivatedLocation: prevLocation,
               route: createRouteContext(activatedRoute, router),
-              routes: createRuleRoutes(nextRoutes, router),
+              activatedRoutes: createRuleRoutes(nextRoutes, router),
             })
           );
         }
@@ -196,15 +192,15 @@ function createCommitObservable<
     const routing = router.getRouteConfig(deactivatedRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolveData(rule);
+        const resolvedRule = routingRulesResolver.resolve(rule);
         if (resolvedRule.commit !== undefined) {
           commit.push(
             resolvedRule.commit({
               status: 'deactivated',
-              location: nextLocation,
-              prevLocation: prevLocation,
-              prevRoute: createRouteContext(deactivatedRoute, router),
-              prevRoutes: createRuleRoutes(prevRoutes, router),
+              activatedLocation: nextLocation,
+              deactivatedLocation: prevLocation,
+              deactivatedRoute: createRouteContext(deactivatedRoute, router),
+              deactivatedRoutes: createRuleRoutes(prevRoutes, router),
             })
           );
         }
@@ -215,17 +211,17 @@ function createCommitObservable<
     const routing = router.getRouteConfig(nextUpdateRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolveData(rule);
+        const resolvedRule = routingRulesResolver.resolve(rule);
         if (resolvedRule.commit !== undefined) {
           commit.push(
             resolvedRule.commit({
               status: 'updated',
-              location: nextLocation,
-              prevLocation: prevLocation,
+              activatedLocation: nextLocation,
+              deactivatedLocation: prevLocation,
               route: createRouteContext(nextUpdateRoute, router),
-              routes: createRuleRoutes(nextRoutes, router),
-              prevRoute: createRouteContext(prevUpdatedRoute, router),
-              prevRoutes: createRuleRoutes(prevRoutes, router),
+              activatedRoutes: createRuleRoutes(nextRoutes, router),
+              deactivatedRoute: createRouteContext(prevUpdatedRoute, router),
+              deactivatedRoutes: createRuleRoutes(prevRoutes, router),
             })
           );
         }
@@ -236,15 +232,15 @@ function createCommitObservable<
     const routing = router.getRouteConfig(activatedRoute.id);
     if (routing.rules !== undefined) {
       for (const rule of routing.rules) {
-        const resolvedRule = routingRulesResolver.resolveData(rule);
+        const resolvedRule = routingRulesResolver.resolve(rule);
         if (resolvedRule.commit !== undefined) {
           commit.push(
             resolvedRule.commit({
               status: 'activated',
-              location: nextLocation,
-              prevLocation: prevLocation,
+              activatedLocation: nextLocation,
+              deactivatedLocation: prevLocation,
               route: createRouteContext(activatedRoute, router),
-              routes: createRuleRoutes(nextRoutes, router),
+              activatedRoutes: createRuleRoutes(nextRoutes, router),
             })
           );
         }
@@ -303,7 +299,7 @@ function createRuleRoutes<TData>(
 
 function createNavigateObservable<TState, TData, TSearchInput, THashInput>(
   routingRulesResolver: ComponentsResolver<RoutingRule<TData>>,
-  action: Action<NavigationRequested>,
+  action: Action<NavigationEvent>,
   actions: Actions,
   router: Router<TData, TSearchInput, THashInput>,
   routerActions: ActionTypes<RouterActions>,

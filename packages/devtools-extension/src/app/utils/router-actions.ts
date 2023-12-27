@@ -28,8 +28,8 @@ export function routeActivated<TParams, TSearch, THash>(
             | ActivatedRouteEvent<TParams, TSearch, THash>
             | UpdatedRouteEvent<TParams, TSearch, THash>
           > =>
-            (action.payload.status === 'activated' ||
-              action.payload.status === 'updated') &&
+            (action.payload.type === 'activated' ||
+              action.payload.type === 'updated') &&
             action.payload.activatedRoute.id === route.id
         ),
         map((action) => action.payload.activatedRoute)
@@ -49,7 +49,7 @@ export function routeDeactivated<TParams, TSearch, THash>(
           (
             action
           ): action is Action<DeactivatedRouteEvent<TParams, TSearch, THash>> =>
-            action.payload.status === 'deactivated' &&
+            action.payload.type === 'deactivated' &&
             action.payload.deactivatedRoute.id === route.id
         ),
         map((action) => action.payload.deactivatedRoute)

@@ -1,14 +1,14 @@
 import { selectTargetState } from '@app/selectors/insights-selectors';
 import {
-  ActivatedRoutingRuleContext,
+  ActivatedRoutingRuleEvent,
   createRouteConfigFactory,
   createRouting,
   createRoutingRule,
-  DeactivatedRoutingRuleContext,
+  DeactivatedRoutingRuleEvent,
   Location,
   RoutingRule,
-  RoutingRuleContext,
-  UpdatedRoutingRuleContext,
+  RoutingRuleEvent,
+  UpdatedRoutingRuleEvent,
 } from '@lib/state-fx/store-router';
 import {
   EMPTY,
@@ -45,17 +45,17 @@ const createRouteConfig = createRouteConfigFactory<
 
 function redirect<TDeps, TData, TParams, TSearch, THash>(
   fn: (
-    context: ActivatedRoutingRuleContext<TData, TParams, TSearch, THash>,
+    context: ActivatedRoutingRuleEvent<TData, TParams, TSearch, THash>,
     deps: TDeps
   ) => Location | Observable<Location>,
   depsComponents?: Deps<TDeps>
 ): Component<RoutingRule<TData, TParams, TSearch, THash>> {
   return createRoutingRule(
     (deps) => ({
-      check(
-        context: RoutingRuleContext<TData, TParams, TSearch, THash>
+      dispatchOnCheck(
+        context: RoutingRuleEvent<TData, TParams, TSearch, THash>
       ): Observable<Location | boolean> {
-        if (context.status === 'activated') {
+        if (context.type === 'activated') {
           const location = fn(context, deps);
           if (isObservable(location)) {
             return location;
@@ -73,17 +73,17 @@ function redirect<TDeps, TData, TParams, TSearch, THash>(
 
 function canActivate<TDeps, TData, TParams, TSearch, THash>(
   fn: (
-    context: ActivatedRoutingRuleContext<TData, TParams, TSearch, THash>,
+    context: ActivatedRoutingRuleEvent<TData, TParams, TSearch, THash>,
     deps: TDeps
   ) => boolean | Observable<boolean>,
   depsComponents?: Deps<TDeps>
 ): Component<RoutingRule<TData, TParams, TSearch, THash>> {
   return createRoutingRule(
     (deps) => ({
-      check(
-        context: RoutingRuleContext<TData, TParams, TSearch, THash>
+      dispatchOnCheck(
+        context: RoutingRuleEvent<TData, TParams, TSearch, THash>
       ): Observable<Location | boolean> {
-        if (context.status === 'activated') {
+        if (context.type === 'activated') {
           const result = fn(context, deps);
           if (isObservable(result)) {
             return result;
@@ -101,17 +101,17 @@ function canActivate<TDeps, TData, TParams, TSearch, THash>(
 
 function canDeactivate<TDeps, TData, TParams, TSearch, THash>(
   fn: (
-    context: DeactivatedRoutingRuleContext<TData, TParams, TSearch, THash>,
+    context: DeactivatedRoutingRuleEvent<TData, TParams, TSearch, THash>,
     deps: TDeps
   ) => boolean | Observable<boolean>,
   depsComponents?: Deps<TDeps>
 ): Component<RoutingRule<TData, TParams, TSearch, THash>> {
   return createRoutingRule(
     (deps) => ({
-      check(
-        context: RoutingRuleContext<TData, TParams, TSearch, THash>
+      dispatchOnCheck(
+        context: RoutingRuleEvent<TData, TParams, TSearch, THash>
       ): Observable<Location | boolean> {
-        if (context.status === 'deactivated') {
+        if (context.type === 'deactivated') {
           const result = fn(context, deps);
           if (isObservable(result)) {
             return result;
@@ -130,8 +130,8 @@ function canDeactivate<TDeps, TData, TParams, TSearch, THash>(
 function activate<TDeps, TData, TParams, TSearch, THash>(
   fn: (
     context:
-      | ActivatedRoutingRuleContext<TData, TParams, TSearch, THash>
-      | UpdatedRoutingRuleContext<TData, TParams, TSearch, THash>,
+      | ActivatedRoutingRuleEvent<TData, TParams, TSearch, THash>
+      | UpdatedRoutingRuleEvent<TData, TParams, TSearch, THash>,
     deps: TDeps
   ) => Observable<unknown>,
   depsComponents?: Deps<TDeps>
@@ -139,9 +139,9 @@ function activate<TDeps, TData, TParams, TSearch, THash>(
   return createRoutingRule(
     (deps) => ({
       commit(
-        context: RoutingRuleContext<TData, TParams, TSearch, THash>
+        context: RoutingRuleEvent<TData, TParams, TSearch, THash>
       ): Observable<void> {
-        if (context.status === 'activated' || context.status === 'updated') {
+        if (context.type === 'activated' || context.type === 'updated') {
           return fn(context, deps).pipe(ignoreElements());
         } else {
           return EMPTY;
@@ -191,7 +191,7 @@ const routerConfig = createRouteConfig(rootRoute, {
           },
           rules: [
             activate(
-              ({ route }, { targetState }) =>
+              ({ activatedRoute }, { targetState }) =>
                 targetState.pipe(
                   first(
                     () =>

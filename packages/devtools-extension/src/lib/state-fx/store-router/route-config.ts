@@ -8,7 +8,9 @@ import {
   Deps,
   ComponentInstance,
   useDeps,
+  Action,
 } from '@lib/state-fx/store';
+import { RouterState } from './router-store';
 
 export interface RouteContext<
   TData,
@@ -20,56 +22,59 @@ export interface RouteContext<
   routeConfig: RouteConfig<TData, TParams, TSearch, THash>;
 }
 
-export interface ActivatedRoutingRuleContext<
+export interface ActivatedRoutingRuleEvent<
   TData,
   TParams = unknown,
   TSearch = unknown,
   THash = unknown
 > {
-  status: 'activated';
-  route: RouteContext<TData, TParams, TSearch, THash>;
-  routes: RouteContext<TData>[];
-  location: Location;
-  prevLocation: Location | undefined;
+  type: 'activate';
+  deactivatedLocation: Location;
+  activatedLocation: Location;
+  activatedRoute: RouteContext<TData, TParams, TSearch, THash>;
+  activatedRoutes: RouteContext<TData>[];
+  routerState: RouterState;
 }
 
-export interface DeactivatedRoutingRuleContext<
+export interface DeactivatedRoutingRuleEvent<
   TData,
   TParams = unknown,
   TSearch = unknown,
   THash = unknown
 > {
-  status: 'deactivated';
-  prevRoute: RouteContext<TData, TParams, TSearch, THash>;
-  prevRoutes: RouteContext<TData>[];
-  location: Location;
-  prevLocation: Location | undefined;
+  type: 'deactivate';
+  activatedLocation: Location;
+  deactivatedLocation: Location;
+  deactivatedRoute: RouteContext<TData, TParams, TSearch, THash>;
+  deactivatedRoutes: RouteContext<TData>[];
+  routerState: RouterState;
 }
 
-export interface UpdatedRoutingRuleContext<
+export interface UpdatedRoutingRuleEvent<
   TData,
   TParams = unknown,
   TSearch = unknown,
   THash = unknown
 > {
-  status: 'updated';
-  route: RouteContext<TData, TParams, TSearch, THash>;
-  routes: RouteContext<TData>[];
-  prevRoute: RouteContext<TData, TParams, TSearch, THash>;
-  prevRoutes: RouteContext<TData>[];
-  location: Location;
-  prevLocation: Location | undefined;
+  type: 'activate-update' | 'deactivate-update';
+  activatedLocation: Location;
+  activatedRoute: RouteContext<TData, TParams, TSearch, THash>;
+  activatedRoutes: RouteContext<TData>[];
+  deactivatedLocation: Location;
+  deactivatedRoute: RouteContext<TData, TParams, TSearch, THash>;
+  deactivatedRoutes: RouteContext<TData>[];
+  routerState: RouterState;
 }
 
-export type RoutingRuleContext<
+export type RoutingRuleEvent<
   TData,
   TParams = unknown,
   TSearch = unknown,
   THash = unknown
 > =
-  | ActivatedRoutingRuleContext<TData, TParams, TSearch, THash>
-  | DeactivatedRoutingRuleContext<TData, TParams, TSearch, THash>
-  | UpdatedRoutingRuleContext<TData, TParams, TSearch, THash>;
+  | ActivatedRoutingRuleEvent<TData, TParams, TSearch, THash>
+  | DeactivatedRoutingRuleEvent<TData, TParams, TSearch, THash>
+  | UpdatedRoutingRuleEvent<TData, TParams, TSearch, THash>;
 
 // TODO: handle cancellation (context.abortNotifier vs separate callback)
 export interface RoutingRule<
@@ -78,12 +83,16 @@ export interface RoutingRule<
   TSearch = unknown,
   THash = unknown
 > {
-  check?(
-    context: RoutingRuleContext<TData, TParams, TSearch, THash>
-  ): Observable<Location | boolean>;
+  dispatchOnCheck?(
+    context: RoutingRuleEvent<TData, TParams, TSearch, THash>
+  ): Observable<Action>;
 
-  commit?(
-    context: RoutingRuleContext<TData, TParams, TSearch, THash>
+  dispatchOnCommit?(
+    context: RoutingRuleEvent<TData, TParams, TSearch, THash>
+  ): Observable<Action>;
+
+  resolve?(
+    context: RoutingRuleEvent<TData, TParams, TSearch, THash>
   ): Observable<void>;
 }
 
@@ -98,7 +107,7 @@ export interface RouteConfig<
   route: Route<TParams, TSearch, THash, TSearchInput, THashInput>;
   children?: RouteConfig<TData, TSearchInput, THashInput>[];
   data?: TData;
-  rules?: Component<RoutingRule<TData, TParams, TSearch, THash>>[];
+  rules?: RoutingRule<TData, TParams, TSearch, THash>[];
 }
 
 export interface CreateRouteConfigOptions<
@@ -111,7 +120,7 @@ export interface CreateRouteConfigOptions<
 > {
   children?: RouteConfig<TData, TSearchInput, THashInput>[];
   data?: TData;
-  rules?: Component<RoutingRule<TData, TParams, TSearch, THash>>[];
+  rules?: RoutingRule<TData, TParams, TSearch, THash>[];
 }
 
 export function createRouteConfig<
