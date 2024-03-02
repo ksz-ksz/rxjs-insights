@@ -3,7 +3,11 @@ import { eventsLogActions } from '@app/actions/events-log-actions';
 import { refOutletContextActions } from '@app/actions/ref-outlet-context-actions';
 import { insightsActions } from '@app/actions/insights-actions';
 import { createEffectComponent } from '@lib/state-fx/store';
-import { router, routerActions, routerStore } from '@app/router';
+import {
+  routerComponent,
+  routerActions,
+  routerStoreComponent,
+} from '@app/router';
 import { Encoder } from '@lib/state-fx/store-router';
 
 function updateDecoded<TEncoded, TDecoded>(
@@ -35,7 +39,7 @@ export const timeEffect = createEffectComponent(
           map((action) => {
             const routerState = routerStore.getState();
 
-            return routerActions.Navigate({
+            return routerActions.navigate({
               historyMode: 'replace',
               location: {
                 ...routerState.location,
@@ -54,5 +58,8 @@ export const timeEffect = createEffectComponent(
       },
     },
   }),
-  { router, routerStore }
+  {
+    router: routerComponent,
+    routerStore: routerStoreComponent,
+  }
 );

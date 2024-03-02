@@ -6,7 +6,7 @@ import { createStoreComponent, Store, StoreDef, tx } from '../store/store';
 
 export interface RouterState {
   navigationState: 'navigating' | 'idle';
-  navigationPhase: 'check' | 'commit' | undefined;
+  navigationPhase: 'check' | 'prepare' | 'complete' | undefined;
   location: Location;
   state: any;
   key: string;
@@ -41,12 +41,13 @@ export function createRouterStoreComponent(
       transitions: {
         startNavigation: tx([actions.startNavigation], (state) => {
           state.navigationState = 'navigating';
-        }),
-        startCheckPhase: tx([actions.startCheckPhase], (state) => {
           state.navigationPhase = 'check';
         }),
-        startCommitPhase: tx([actions.startCommitPhase], (state) => {
-          state.navigationPhase = 'commit';
+        completeCheck: tx([actions.completeCheck], (state) => {
+          state.navigationPhase = 'prepare';
+        }),
+        completePrepare: tx([actions.completePrepare], (state) => {
+          state.navigationPhase = 'complete';
         }),
         completeNavigation: tx(
           [actions.completeNavigation],

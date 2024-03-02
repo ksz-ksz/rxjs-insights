@@ -16,7 +16,11 @@ import { selectActiveTargetState } from '@app/selectors/active-target-state-sele
 import { LocationOutlet } from '@app/components/location-outlet';
 import { selectTargetsState } from '@app/selectors/targets-selectors';
 import { useDispatch, useSuperSelector } from '@lib/state-fx/store-react';
-import { router, routerActions, routerStore } from '@app/router';
+import {
+  routerComponent,
+  routerActions,
+  routerStoreComponent,
+} from '@app/router';
 import { RouterLink } from '../../../lib/state-fx/store-router-react/router-link';
 import { dashboardRoute } from '@app/routes';
 import { RouterOutlet } from '../../../lib/state-fx/store-router-react';
@@ -122,7 +126,10 @@ export function AppBarWrapper() {
         </Toolbar>
       </AppBar>
       <Box flex="1 1 0" overflow="hidden">
-        <RouterOutlet router={router} routerStore={routerStore} />
+        <RouterOutlet
+          router={routerComponent}
+          routerStore={routerStoreComponent}
+        />
       </Box>
     </Box>
   );

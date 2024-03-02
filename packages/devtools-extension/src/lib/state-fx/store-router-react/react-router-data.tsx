@@ -1,5 +1,5 @@
 import { JSXElementConstructor } from 'react';
 
-export interface RouterData {
+export interface ReactRouterData {
   component?: JSXElementConstructor<any>;
 }

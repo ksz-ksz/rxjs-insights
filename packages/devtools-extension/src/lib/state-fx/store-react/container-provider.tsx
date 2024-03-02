@@ -4,15 +4,28 @@ import {
   ComponentRef,
   Container,
   createContainer,
-  Store,
 } from '@lib/state-fx/store';
 import { ContainerContext } from './container-context';
 
+export interface ComponentProvider<T> {
+  component: Component<T>;
+  initializer: Component<T>;
+}
+
 export interface ContainerProviderProps {
+  providers: ComponentProvider<any>[];
   components: Component<any>[];
 }
 
+export function provide<T>(
+  component: Component<T>,
+  initializer: Component<T>
+): ComponentProvider<T> {
+  return { component, initializer };
+}
+
 export function ContainerProvider({
+  providers,
   components,
   children,
 }: React.PropsWithChildren<ContainerProviderProps>) {
@@ -21,6 +34,9 @@ export function ContainerProvider({
 
   if (containerRef.current === null) {
     const container = createContainer();
+    providers.forEach(({ component, initializer }) =>
+      container.provide(component, initializer)
+    );
     const refs = components.map((component) => container.use(component));
     containerRef.current = container;
     refsRef.current = refs;

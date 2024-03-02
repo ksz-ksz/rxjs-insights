@@ -2,30 +2,24 @@ import {
   createMemoryHistory,
   createRouterHarness,
   createRouterSelectors,
-  createRouterStoreComponent,
-  RouterActions,
 } from '@lib/state-fx/store-router';
-import { createActions } from '@lib/state-fx/store';
 import { UrlParamsEncoder } from '../lib/state-fx/store-router/url-params-encoder';
 import { UrlParamEncoder } from '../lib/state-fx/store-router/url-param-encoder';
-import { RouterData } from '../lib/state-fx/store-router-react';
+import { ReactRouterData } from '../lib/state-fx/store-router-react';
 import { UrlParams } from '../lib/state-fx/store-router/url-params';
 
-export const router = createRouterHarness<RouterData, UrlParams, string>({
+export const {
+  routerActions,
+  routerComponent,
+  routerConfigComponent,
+  routerInitializerComponent,
+  routerStoreComponent,
+} = createRouterHarness<ReactRouterData, UrlParams, string>({
+  name: 'router',
   history: createMemoryHistory(),
   searchEncoder: new UrlParamsEncoder(),
   hashEncoder: new UrlParamEncoder(),
 });
-
-export const routerActions = createActions<RouterActions>({
-  namespace: 'router',
-});
-
-export const routerStore = createRouterStoreComponent({
-  namespace: 'router',
-  actions: routerActions,
-});
-
 export const { selectRouterState, selectRoute } = createRouterSelectors({
-  store: routerStore,
+  store: routerStoreComponent,
 });

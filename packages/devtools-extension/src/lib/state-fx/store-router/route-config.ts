@@ -1,16 +1,23 @@
-import { Route } from './route';
+import {
+  ExtractHash,
+  ExtractHashInput,
+  ExtractParams,
+  ExtractSearch,
+  ExtractSearchInput,
+  Route,
+} from './route';
 import { Observable } from 'rxjs';
 import { Location } from './history';
 import { RouteObject } from './route-object';
 import {
-  Component,
-  Container,
-  Deps,
-  ComponentInstance,
-  useDeps,
   Action,
+  Component,
+  Components,
+  createComponent,
 } from '@lib/state-fx/store';
 import { RouterState } from './router-store';
+import { RouteCommand } from './route-command';
+import { Router } from './router';
 
 export interface RouteContext<
   TData,
@@ -21,61 +28,6 @@ export interface RouteContext<
   route: RouteObject<TParams, TSearch, THash>;
   routeConfig: RouteConfig<TData, TParams, TSearch, THash>;
 }
-
-export interface ActivatedRoutingRuleEvent<
-  TData,
-  TParams = unknown,
-  TSearch = unknown,
-  THash = unknown
-> {
-  type: 'activate';
-  deactivatedLocation: Location;
-  activatedLocation: Location;
-  activatedRoute: RouteContext<TData, TParams, TSearch, THash>;
-  activatedRoutes: RouteContext<TData>[];
-  routerState: RouterState;
-}
-
-export interface DeactivatedRoutingRuleEvent<
-  TData,
-  TParams = unknown,
-  TSearch = unknown,
-  THash = unknown
-> {
-  type: 'deactivate';
-  activatedLocation: Location;
-  deactivatedLocation: Location;
-  deactivatedRoute: RouteContext<TData, TParams, TSearch, THash>;
-  deactivatedRoutes: RouteContext<TData>[];
-  routerState: RouterState;
-}
-
-export interface UpdatedRoutingRuleEvent<
-  TData,
-  TParams = unknown,
-  TSearch = unknown,
-  THash = unknown
-> {
-  type: 'activate-update' | 'deactivate-update';
-  activatedLocation: Location;
-  activatedRoute: RouteContext<TData, TParams, TSearch, THash>;
-  activatedRoutes: RouteContext<TData>[];
-  deactivatedLocation: Location;
-  deactivatedRoute: RouteContext<TData, TParams, TSearch, THash>;
-  deactivatedRoutes: RouteContext<TData>[];
-  routerState: RouterState;
-}
-
-export type RoutingRuleEvent<
-  TData,
-  TParams = unknown,
-  TSearch = unknown,
-  THash = unknown
-> =
-  | ActivatedRoutingRuleEvent<TData, TParams, TSearch, THash>
-  | DeactivatedRoutingRuleEvent<TData, TParams, TSearch, THash>
-  | UpdatedRoutingRuleEvent<TData, TParams, TSearch, THash>;
-
 // TODO: handle cancellation (context.abortNotifier vs separate callback)
 export interface RoutingRule<
   TData,
@@ -83,31 +35,50 @@ export interface RoutingRule<
   TSearch = unknown,
   THash = unknown
 > {
-  dispatchOnCheck?(
-    context: RoutingRuleEvent<TData, TParams, TSearch, THash>
+  check?(
+    context: RouteCommand<TParams, TSearch, THash>,
+    router: Router<TData>
   ): Observable<Action>;
 
-  dispatchOnCommit?(
-    context: RoutingRuleEvent<TData, TParams, TSearch, THash>
+  prepare?(
+    context: RouteCommand<TParams, TSearch, THash>,
+    router: Router<TData>
   ): Observable<Action>;
 
-  resolve?(
-    context: RoutingRuleEvent<TData, TParams, TSearch, THash>
-  ): Observable<void>;
+  commit?(
+    context: RouteCommand<TParams, TSearch, THash>,
+    router: Router<TData>
+  ): Observable<Action>;
 }
 
-export interface RouteConfig<
+export type RouteConfig<
   TData,
   TSearchInput,
   THashInput,
   TParams = unknown,
   TSearch = unknown,
   THash = unknown
-> {
+> = {
   route: Route<TParams, TSearch, THash, TSearchInput, THashInput>;
   children?: RouteConfig<TData, TSearchInput, THashInput>[];
   data?: TData;
   rules?: RoutingRule<TData, TParams, TSearch, THash>[];
+};
+
+export interface RouteConfigDef<TRoute extends Route, TData = unknown> {
+  route: TRoute;
+  data?: TData;
+  rules?: RoutingRule<
+    TData,
+    ExtractParams<TRoute>,
+    ExtractSearch<TRoute>,
+    ExtractHash<TRoute>
+  >[];
+  children?: RouteConfig<
+    TData,
+    ExtractSearchInput<TRoute>,
+    ExtractHashInput<TRoute>
+  >[];
 }
 
 export interface CreateRouteConfigOptions<
@@ -144,47 +115,9 @@ export function createRouteConfig<
   return { route, ...options };
 }
 
-export function createRouteConfigFactory<TData, TSearchInput, THashInput>(): <
-  TParams,
-  TSearch,
-  THash
->(
-  route: Route<TParams, TSearch, THash, TSearchInput, THashInput>,
-  routing?: CreateRouteConfigOptions<
-    TData,
-    TSearchInput,
-    THashInput,
-    TParams,
-    TSearch,
-    THash
-  >
-) => RouteConfig<TData, TSearchInput, THashInput, TParams, TSearch, THash> {
-  return createRouteConfig;
-}
-
-export function createRoutingRule<TData, TParams, TSearch, THash, TDeps>(
-  create: (deps: TDeps) => RoutingRule<TData, TParams, TSearch, THash>,
-  depsComponents?: Deps<TDeps>
-): Component<RoutingRule<TData, TParams, TSearch, THash>> {
-  return {
-    init(
-      container: Container
-    ): ComponentInstance<RoutingRule<TData, TParams, TSearch, THash>> {
-      const { deps, depsHandles } = useDeps(
-        container,
-        depsComponents ?? ({} as Deps<TDeps>)
-      );
-
-      const routingRule = create(deps);
-
-      return {
-        component: routingRule,
-        dispose() {
-          for (const depsHandle of depsHandles) {
-            depsHandle.release();
-          }
-        },
-      };
-    },
-  };
+export function createRouteConfigComponent<TRoute extends Route, TData, TDeps>(
+  createRouteConfigDef: (deps: TDeps) => RouteConfigDef<TRoute, TData>,
+  deps: Components<TDeps> = {} as Components<TDeps>
+): Component<RouteConfigDef<TRoute, TData>> {
+  return createComponent(createRouteConfigDef, { deps });
 }

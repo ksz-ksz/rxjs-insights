@@ -3,39 +3,21 @@ import { createMemoryHistory, Location } from './history';
 import { createRouteFactory } from './route';
 import { PathParam } from './path-param';
 import { z } from 'zod';
-import {
-  createRouteConfig,
-  RoutingRule,
-  RoutingRuleEvent,
-} from './route-config';
-import {
-  EMPTY,
-  ignoreElements,
-  merge,
-  Observable,
-  of,
-  Subject,
-  switchMap,
-  tap,
-} from 'rxjs';
+import { createRouteConfig } from './route-config';
+import { EMPTY, merge, Observable, of, Subject } from 'rxjs';
 import {
   Action,
   actionsComponent,
-  Component,
-  ComponentInstance,
-  createActions,
+  ActionType,
   createComponent,
   createContainer,
-  createEffectComponent,
 } from '../store';
-import { createRouterStoreComponent } from './router-store';
 import { RouteObject } from './route-object';
-import { RouterActions } from './router-actions';
-import { createRouting } from './routing';
 import { UrlParamsEncoder } from './url-params-encoder';
 import { UrlParamEncoder } from './url-param-encoder';
-
-type ListingEntry = ['N', Action<any>] | ['E', any] | ['C'];
+import { RouteCommand } from './route-command';
+import { RouterState } from './router-store';
+import { NavigationEvent } from './router-actions';
 
 const createRoute = createRouteFactory({
   searchEncoder: new UrlParamsEncoder(),
@@ -57,32 +39,20 @@ const childRoute = createRoute({
   },
 });
 
-function createRuleComponent(
-  rule: RoutingRule<any>
-): Component<RoutingRule<any>> {
-  return {
-    init(): ComponentInstance<RoutingRule<any>> {
-      return {
-        component: rule,
-      };
-    },
-  };
-}
+function createTestHarness({
+  checkParent = () => EMPTY,
+  commitParent = () => EMPTY,
+  checkChild = () => EMPTY,
+  commitChild = () => EMPTY,
+}: {
+  checkParent?(context: RouteCommand): Observable<Action>;
+  commitParent?(context: RouteCommand): Observable<Action>;
+  checkChild?(context: RouteCommand): Observable<Action>;
+  commitChild?(context: RouteCommand): Observable<Action>;
+} = {}) {
+  const container = createContainer();
+  const actions = container.use(actionsComponent).component;
 
-function createTestHarness(
-  actions: Observable<Action<any>>,
-  {
-    checkParent = () => EMPTY,
-    commitParent = () => EMPTY,
-    checkChild = () => EMPTY,
-    commitChild = () => EMPTY,
-  }: {
-    checkParent?(context: RoutingRuleEvent<any>): Observable<Action>;
-    commitParent?(context: RoutingRuleEvent<any>): Observable<Action>;
-    checkChild?(context: RoutingRuleEvent<any>): Observable<Action>;
-    commitChild?(context: RoutingRuleEvent<any>): Observable<Action>;
-  } = {}
-) {
   const {
     routerActions,
     routerComponent,
@@ -99,8 +69,8 @@ function createTestHarness(
   const childRouting = createRouteConfig(childRoute, {
     rules: [
       {
-        dispatchOnCheck: checkChild,
-        dispatchOnCommit: commitChild,
+        check: checkChild,
+        commit: commitChild,
       },
     ],
   });
@@ -109,58 +79,38 @@ function createTestHarness(
     children: [childRouting],
     rules: [
       {
-        dispatchOnCheck: checkParent,
-        dispatchOnCommit: commitParent,
+        check: checkParent,
+        commit: commitParent,
       },
     ],
   });
 
-  const listing: ListingEntry[] = [];
-  const listingEffect = createEffectComponent(() => ({
-    name: 'listing',
-    effects: {
-      listing: (actions) =>
-        merge(
-          actions.ofType(routerActions.navigationRequested),
-          actions.ofType(routerActions.navigationStarted),
-          actions.ofType(routerActions.checkPhaseStarted),
-          actions.ofType(routerActions.checkPhaseCompleted),
-          actions.ofType(routerActions.commitPhaseStarted),
-          actions.ofType(routerActions.commitPhaseCompleted),
-          actions.ofType(routerActions.navigationCompleted),
-          actions.ofType(routerActions.navigationCancelled),
-          actions.ofType(routerActions.routeChecked),
-          actions.ofType(routerActions.routeCommitted)
-        ).pipe(
-          tap({
-            next(x) {
-              listing.push(['N', x]);
-            },
-            error(x) {
-              listing.push(['E', x]);
-            },
-            complete() {
-              listing.push(['C']);
-            },
-          }),
-          ignoreElements()
-        ),
-    },
-  }));
+  const listen: ActionType<any>[] = [
+    routerActions.navigationRequested,
+    routerActions.navigationStarted,
+    routerActions.navigationChecked,
+    routerActions.navigationPrepared,
+    routerActions.navigationCompleted,
+    routerActions.navigationCancelled,
+    routerActions.routeChecked,
+    routerActions.routePrepared,
+    routerActions.routeCommitted,
+  ];
+  const listing: Action[] = [];
+  merge(...listen.map(actions.ofType, actions)).subscribe((action) => {
+    listing.push(action);
+  });
 
-  const container = createContainer();
-
-  const actionsRef = container.use(actionsComponent);
-  container.use(listingEffect);
   container.provide(
     routerConfigComponent,
     createComponent(() => parentRouting)
   );
   container.use(routerInitializerComponent);
-
-  actions.subscribe((action) => actionsRef.component.dispatch(action));
+  const router = container.use(routerComponent).component;
 
   return {
+    router,
+    actions,
     routerActions,
     listing,
     parentRouting,
@@ -168,63 +118,116 @@ function createTestHarness(
   };
 }
 
+function createLocationHarness(
+  xs: { id: number; path: string[]; params: any }[]
+) {
+  const pathname = xs.flatMap((x) => x.path).join('/');
+  const location: Location = {
+    pathname,
+    search: '',
+    hash: '',
+  };
+  const routes: RouteObject[] = [];
+  let params = {};
+  for (let x of xs) {
+    params = { ...params, ...x.params };
+    routes.push({
+      id: x.id,
+      path: x.path,
+      params,
+      search: undefined,
+      hash: undefined,
+    });
+  }
+
+  return [location, routes] as const;
+}
+
 describe('routing', () => {
   it('should emit navigation event', () => {
-    const actions = new Subject<Action<any>>();
-    const { routerActions, listing, parentRouting, childRouting } =
-      createTestHarness(actions);
+    const {
+      router,
+      actions,
+      routerActions,
+      listing,
+      parentRouting,
+      childRouting,
+    } = createTestHarness();
 
-    actions.next(
+    const [location, routes] = createLocationHarness([
+      {
+        id: parentRouting.route.id,
+        path: ['parent', '42'],
+        params: {
+          parentId: 42,
+        },
+      },
+      {
+        id: childRouting.route.id,
+        path: ['child', '7'],
+        params: {
+          childId: 7,
+        },
+      },
+    ]);
+
+    actions.dispatch(
       routerActions.navigate({
-        location: childRoute({
-          params: {
-            parentId: 42,
-            childId: 7,
-          },
-        }),
+        location,
         state: null,
       })
     );
 
-    const activeLocation: Location = {
-      pathname: 'parent/42/child/7',
-      search: '',
-      hash: '',
+    const routerStateBase: RouterState = {
+      navigationState: 'idle',
+      navigationPhase: undefined,
+      location: {
+        pathname: '',
+        search: '',
+        hash: '',
+      },
+      origin: 'pop',
+      state: null,
+      key: 'default',
+      routes: [],
     };
 
-    const activeParentRoute: RouteObject = {
-      id: parentRouting.route.id,
-      path: ['parent', '42'],
-      search: undefined,
-      hash: undefined,
-      params: {
-        parentId: 42,
-      },
+    const payloadBase: NavigationEvent = {
+      location,
+      origin: 'push',
+      state: null,
+      key: '0',
+      routerState: routerStateBase,
     };
 
-    const activeChildRoute: RouteObject = {
-      id: childRouting.route.id,
-      path: ['child', '7'],
-      search: undefined,
-      hash: undefined,
-      params: {
-        parentId: 42,
-        childId: 7,
-      },
-    };
-    const routerState: any = undefined;
-    expect(listing).toEqual([]);
+    expect(listing).toEqual([
+      routerActions.navigationRequested(payloadBase),
+      routerActions.navigationStarted({
+        ...payloadBase,
+        routerState: {
+          ...routerStateBase,
+          navigationState: 'navigating',
+          navigationPhase: 'check',
+        },
+      }),
+      // routerActions.routeChecked({
+      //   type: "activate-update",
+      //   routerState: {
+      //     ...routerStateBase
+      //   },
+      //
+      // })
+    ]);
   });
 
   describe('when parent rule resolves with false', () => {
     it('should emit navigation event', () => {
-      const actions = new Subject<Action<any>>();
       const resolveParent = () =>
         of(routerActions.cancelNavigation({ reason: 'botak' }));
-      const { routerActions, listing, parentRouting, childRouting } =
-        createTestHarness(actions, { checkParent: resolveParent });
+      const { actions, routerActions, listing, parentRouting, childRouting } =
+        createTestHarness({ checkParent: resolveParent });
 
-      actions.next(
+      actions.dispatch(
         routerActions.navigate({
           location: childRoute({
             params: {
@@ -268,13 +271,12 @@ describe('routing', () => {
 
   describe('when child rule resolves with false', () => {
     it('should emit navigation event', () => {
-      const actions = new Subject<Action<any>>();
       const resolveChild = () =>
         of(routerActions.cancelNavigation({ reason: 'botak' }));
-      const { routerActions, listing, parentRouting, childRouting } =
-        createTestHarness(actions, { checkChild: resolveChild });
+      const { actions, routerActions, listing, parentRouting, childRouting } =
+        createTestHarness({ checkChild: resolveChild });
 
-      actions.next(
+      actions.dispatch(
         routerActions.navigate({
           location: childRoute({
             params: {
@@ -318,8 +320,7 @@ describe('routing', () => {
 
   describe('when parent rule resolves with path', () => {
     it('should emit navigation event', () => {
-      const actions = new Subject<Action<any>>();
-      const resolveParent = (context: RoutingRuleEvent<any>) => {
+      const resolveParent = (context: RouteCommand) => {
         if (context.activatedLocation.pathname === 'parent/42/child/7') {
           return of(
             routerActions.navigate({
@@ -335,10 +336,10 @@ describe('routing', () => {
           return EMPTY;
         }
       };
-      const { routerActions, listing, parentRouting, childRouting } =
-        createTestHarness(actions, { checkParent: resolveParent });
+      const { actions, routerActions, listing, parentRouting, childRouting } =
+        createTestHarness({ checkParent: resolveParent });
 
-      actions.next(
+      actions.dispatch(
         routerActions.navigate({
           location: childRoute({
             params: {
@@ -409,8 +410,7 @@ describe('routing', () => {
 
   describe('when child rule resolves with path', () => {
     it('should emit navigation event', () => {
-      const actions = new Subject<Action<any>>();
-      const resolveChild = (context: RoutingRuleEvent<any>) => {
+      const resolveChild = (context: RouteCommand) => {
         if (context.activatedLocation.pathname === 'parent/42/child/7') {
           return of(
             routerActions.navigate({
@@ -426,10 +426,10 @@ describe('routing', () => {
           return EMPTY;
         }
       };
-      const { routerActions, listing, parentRouting, childRouting } =
-        createTestHarness(actions, { checkChild: resolveChild });
+      const { actions, routerActions, listing, parentRouting, childRouting } =
+        createTestHarness({ checkChild: resolveChild });
 
-      actions.next(
+      actions.dispatch(
         routerActions.navigate({
           location: childRoute({
             params: {
@@ -500,13 +500,12 @@ describe('routing', () => {
 
   describe('when navigation is overridden', () => {
     it('should emit navigation event', () => {
-      const actions = new Subject<Action<any>>();
       let resolveParentSubject: Subject<Location | boolean>;
       const resolveParent = () => (resolveParentSubject = new Subject()) as any;
-      const { routerActions, listing, parentRouting, childRouting } =
-        createTestHarness(actions, { checkParent: resolveParent });
+      const { actions, routerActions, listing, parentRouting, childRouting } =
+        createTestHarness({ checkParent: resolveParent });
 
-      actions.next(
+      actions.dispatch(
         routerActions.navigate({
           location: childRoute({
             params: {
@@ -518,7 +517,7 @@ describe('routing', () => {
         })
       );
 
-      actions.next(
+      actions.dispatch(
         routerActions.navigate({
           location: childRoute({
             params: {

@@ -2,11 +2,16 @@ import React, { PropsWithChildren } from 'react';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 import { theme } from '@app/theme';
 import { APPLICATION_LOG } from '@app/logger';
-import { ContainerProvider } from '@lib/state-fx/store-react';
+import { ContainerProvider, provide } from '@lib/state-fx/store-react';
 import { statusStore } from '@app/store/status/store';
 import { statusEffect } from '@app/store/status/effect';
-import { router, routerStore } from '@app/router';
-import { routing } from '@app/routing';
+import {
+  routerComponent,
+  routerConfigComponent,
+  routerInitializerComponent,
+  routerStoreComponent,
+} from '@app/router';
+import { appRouterConfigComponent } from '@app/routing';
 import { traceStore } from '@app/store/trace/store';
 import { inspectedWindowEffect } from '@app/store/inspected-window/effect';
 import { navigationEffect } from '@app/store/navigation/effect';
@@ -28,9 +33,9 @@ APPLICATION_LOG.info('Devtools initialized');
 function Providers(props: PropsWithChildren<{}>) {
   return (
     <ContainerProvider
+      providers={[provide(routerConfigComponent, appRouterConfigComponent)]}
       components={[
-        routing,
-        routerStore,
+        routerInitializerComponent,
         statusStore,
         targetsStore,
         insightsStore,
@@ -59,7 +64,10 @@ export function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Providers>
-        <RouterOutlet router={router} routerStore={routerStore} />
+        <RouterOutlet
+          router={routerComponent}
+          routerStore={routerStoreComponent}
+        />
       </Providers>
     </ThemeProvider>
   );

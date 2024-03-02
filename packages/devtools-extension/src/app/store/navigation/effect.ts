@@ -10,7 +10,7 @@ export const navigationEffect = createEffectComponent(() => ({
     handleInstrumentationStatus(actions) {
       return actions.ofType(statusActions.InstrumentationStatusResolved).pipe(
         map((action) =>
-          routerActions.Navigate({
+          routerActions.navigate({
             location:
               action.payload.instrumentationStatus !== 'installed'
                 ? statusRoute()

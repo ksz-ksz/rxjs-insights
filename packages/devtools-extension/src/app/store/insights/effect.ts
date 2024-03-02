@@ -53,7 +53,11 @@ export const insightsEffect = createEffectComponent(() => ({
                 merge(
                   actions.ofType(eventsLogActions.Pause),
                   actions.ofType(eventsLogActions.EventSelected),
-                  actions.select(routeDeactivated(routerActions, targetRoute))
+                  actions.select(
+                    routeDeactivated(routerActions, targetRoute, {
+                      ignoreSearchChanges: true,
+                    })
+                  )
                 )
               ),
               endWith(insightsActions.PlayDone())
@@ -71,7 +75,7 @@ export const insightsEffect = createEffectComponent(() => ({
           .pipe(map((action) => action.payload.target))
       ).pipe(
         map((target) =>
-          routerActions.Navigate({
+          routerActions.navigate({
             location: targetRoute({
               params: {
                 targetId: target.id,

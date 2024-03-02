@@ -10,6 +10,8 @@ import {
 import { RouterState } from './router-store';
 import { mapAction } from '../store-query/map-action';
 import { getRandomId } from './random-id';
+import { RouteCommand } from './route-command';
+import { RouteEvent } from './route-event';
 
 export function createRouterActionsMapper(
   name: string,
@@ -33,27 +35,15 @@ export function createRouterActionsMapper(
         mapNavigationCommandPayload,
         deps
       ),
-      startCheckPhase: mapAction(
-        routerActions.startCheckPhase,
-        routerActions.checkPhaseStarted,
-        mapNavigationCommandPayload,
-        deps
-      ),
       completeCheckPhase: mapAction(
-        routerActions.completeCheckPhase,
-        routerActions.checkPhaseCompleted,
+        routerActions.completeCheck,
+        routerActions.navigationChecked,
         mapNavigationCommandPayload,
         deps
       ),
-      startCommitPhase: mapAction(
-        routerActions.startCommitPhase,
-        routerActions.commitPhaseStarted,
-        mapNavigationCommandPayload,
-        deps
-      ),
-      completeCommitPhase: mapAction(
-        routerActions.completeCommitPhase,
-        routerActions.commitPhaseCompleted,
+      completePreparePhase: mapAction(
+        routerActions.completePrepare,
+        routerActions.navigationPrepared,
         mapNavigationCommandPayload,
         deps
       ),
@@ -67,6 +57,24 @@ export function createRouterActionsMapper(
         routerActions.cancelNavigation,
         routerActions.navigationCancelled,
         mapNavigationCancelledCommandPayload,
+        deps
+      ),
+      checkRoute: mapAction(
+        routerActions.checkRoute,
+        routerActions.routeChecked,
+        mapRouteCommandPayload,
+        deps
+      ),
+      prepareRoute: mapAction(
+        routerActions.prepareRoute,
+        routerActions.routePrepared,
+        mapRouteCommandPayload,
+        deps
+      ),
+      commitRoute: mapAction(
+        routerActions.commitRoute,
+        routerActions.routeCommitted,
+        mapRouteCommandPayload,
         deps
       ),
     },
@@ -105,6 +113,16 @@ function mapNavigationCancelledCommandPayload(
 ): NavigationCancelledEvent {
   return {
     reason,
+    routerState: store.getState(),
+  };
+}
+
+function mapRouteCommandPayload(
+  command: RouteCommand,
+  { store }: { store: Store<RouterState> }
+): RouteEvent {
+  return {
+    ...command,
     routerState: store.getState(),
   };
 }

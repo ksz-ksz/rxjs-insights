@@ -19,7 +19,7 @@ type Params<TPath extends string> = {
   [name in ParamNames<TPath>]: unknown;
 };
 
-type ExtractParams<TRoute> = TRoute extends Route<
+export type ExtractParams<TRoute> = TRoute extends Route<
   infer TParams,
   unknown,
   unknown
@@ -27,7 +27,7 @@ type ExtractParams<TRoute> = TRoute extends Route<
   ? TParams
   : never;
 
-type ExtractSearch<TRoute> = TRoute extends Route<
+export type ExtractSearch<TRoute> = TRoute extends Route<
   unknown,
   infer TSearch,
   unknown
@@ -35,8 +35,32 @@ type ExtractSearch<TRoute> = TRoute extends Route<
   ? TSearch
   : never;
 
-type ExtractHash<TRoute> = TRoute extends Route<unknown, unknown, infer THash>
+export type ExtractHash<TRoute> = TRoute extends Route<
+  unknown,
+  unknown,
+  infer THash
+>
   ? THash
+  : never;
+
+export type ExtractSearchInput<TRoute> = TRoute extends Route<
+  unknown,
+  unknown,
+  unknown,
+  infer TSearchInput,
+  unknown
+>
+  ? TSearchInput
+  : never;
+
+export type ExtractHashInput<TRoute> = TRoute extends Route<
+  unknown,
+  unknown,
+  unknown,
+  unknown,
+  infer THashInput
+>
+  ? THashInput
   : never;
 
 export interface Route<

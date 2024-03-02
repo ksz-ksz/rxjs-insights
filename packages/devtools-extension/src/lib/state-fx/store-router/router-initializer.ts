@@ -23,7 +23,7 @@ export function createRouterInitializer<TData, TSearchInput, THashInput>(
   const { name, actions: routerActions } = routerInitializerDef;
   const disposables: Disposable[] = [
     createRouterActionsMapper(name, actions, routerActions, routerStore),
-    createRouterController(name, actions, router, routerActions),
+    createRouterController(name, actions, router, routerActions, routerStore),
   ];
   return {
     dispose() {

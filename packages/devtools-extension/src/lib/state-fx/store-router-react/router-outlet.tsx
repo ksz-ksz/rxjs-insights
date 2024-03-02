@@ -5,12 +5,12 @@ import {
   RouterState,
 } from '@lib/state-fx/store-router';
 import { StoreComponent } from '@lib/state-fx/store';
-import { RouterData } from './router-data';
+import { ReactRouterData } from './react-router-data';
 import { useComponent, useStoreState } from '@lib/state-fx/store-react';
 import React, { useContext, useMemo } from 'react';
 
 export interface RouterOutletProps {
-  router: RouterComponent<RouterData, unknown, unknown>;
+  router: RouterComponent<ReactRouterData, unknown, unknown>;
   routerStore: StoreComponent<RouterState>;
 }
 
@@ -22,9 +22,9 @@ function useRoutes(
 }
 
 function useRouteContexts(
-  routerComponent: RouterComponent<RouterData, unknown, unknown>,
+  routerComponent: RouterComponent<ReactRouterData, unknown, unknown>,
   routerStoreComponent: StoreComponent<RouterState>
-): RouteContext<RouterData>[] {
+): RouteContext<ReactRouterData>[] {
   const router = useComponent(routerComponent);
   const routes = useRoutes(routerStoreComponent);
   return useMemo(
@@ -48,7 +48,7 @@ const routerOutletContext = React.createContext<RouterOutletContext>({
 const RouterOutletContextProvider = routerOutletContext.Provider;
 
 function findRouteWithComponent(
-  routeContexts: RouteContext<RouterData>[],
+  routeContexts: RouteContext<ReactRouterData>[],
   index: number
 ) {
   let i = 0;

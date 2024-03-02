@@ -62,7 +62,7 @@ function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
         event.preventDefault();
 
         dispatch(
-          routerActions.Navigate({
+          routerActions.navigate({
             historyMode,
             location,
             state,

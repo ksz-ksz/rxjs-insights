@@ -1,14 +1,9 @@
 import { selectTargetState } from '@app/selectors/insights-selectors';
 import {
-  ActivatedRoutingRuleEvent,
-  createRouteConfigFactory,
-  createRouting,
-  createRoutingRule,
-  DeactivatedRoutingRuleEvent,
+  createRouteConfigComponent,
   Location,
+  Router,
   RoutingRule,
-  RoutingRuleEvent,
-  UpdatedRoutingRuleEvent,
 } from '@lib/state-fx/store-router';
 import {
   EMPTY,
@@ -17,6 +12,8 @@ import {
   isObservable,
   Observable,
   of,
+  switchMap,
+  tap,
 } from 'rxjs';
 import {
   appBarRoute,
@@ -26,196 +23,184 @@ import {
   statusRoute,
   targetRoute,
 } from '@app/routes';
-import { router, routerActions, routerStore } from '@app/router';
-import { UrlParams } from '../lib/state-fx/store-router/url-params';
-import { RouterData } from '../lib/state-fx/store-router-react';
+import { routerActions } from '@app/router';
+import { ReactRouterConfig } from '../lib/state-fx/store-router-react';
 import { AppBarWrapper } from '@app/pages/app-bar-wrapper';
 import { InstrumentationStatusPage } from '@app/pages/instrumentation-status-page';
 import { TargetPage } from '@app/pages/target-page';
 import { DashboardPage } from '@app/pages/dashboard-page';
-import { Component, Deps } from '@lib/state-fx/store';
 import { createSelection } from '../lib/state-fx/store/selection';
 import { selectInstrumentationStatus } from '@app/selectors/status-selectors';
+import {
+  ActivatedRouteCommand,
+  DeactivatedRouteCommand,
+  UpdatedRouteCommand,
+} from '../lib/state-fx/store-router/route-command';
 
-const createRouteConfig = createRouteConfigFactory<
-  RouterData,
-  UrlParams,
-  string
->();
-
-function redirect<TDeps, TData, TParams, TSearch, THash>(
-  fn: (
-    context: ActivatedRoutingRuleEvent<TData, TParams, TSearch, THash>,
-    deps: TDeps
-  ) => Location | Observable<Location>,
-  depsComponents?: Deps<TDeps>
-): Component<RoutingRule<TData, TParams, TSearch, THash>> {
-  return createRoutingRule(
-    (deps) => ({
-      dispatchOnCheck(
-        context: RoutingRuleEvent<TData, TParams, TSearch, THash>
-      ): Observable<Location | boolean> {
-        if (context.type === 'activated') {
-          const location = fn(context, deps);
-          if (isObservable(location)) {
-            return location;
-          } else {
-            return of(location);
-          }
-        } else {
-          return of(true);
-        }
-      },
-    }),
-    depsComponents
-  );
+function toObservable<T>(result: Observable<T> | T): Observable<T> {
+  if (isObservable(result)) {
+    return result;
+  } else {
+    return of(result);
+  }
 }
 
-function canActivate<TDeps, TData, TParams, TSearch, THash>(
+function canActivate<TData, TParams, TSearch, THash>(
   fn: (
-    context: ActivatedRoutingRuleEvent<TData, TParams, TSearch, THash>,
-    deps: TDeps
-  ) => boolean | Observable<boolean>,
-  depsComponents?: Deps<TDeps>
-): Component<RoutingRule<TData, TParams, TSearch, THash>> {
-  return createRoutingRule(
-    (deps) => ({
-      dispatchOnCheck(
-        context: RoutingRuleEvent<TData, TParams, TSearch, THash>
-      ): Observable<Location | boolean> {
-        if (context.type === 'activated') {
-          const result = fn(context, deps);
-          if (isObservable(result)) {
-            return result;
-          } else {
-            return of(result);
-          }
-        } else {
-          return of(true);
-        }
-      },
-    }),
-    depsComponents
-  );
+    context: ActivatedRouteCommand<TParams, TSearch, THash>,
+    router: Router<TData>
+  ) => boolean | Observable<boolean>
+): RoutingRule<TData, TParams, TSearch, THash> {
+  return {
+    check(context, router) {
+      if (context.type === 'activate') {
+        return toObservable(fn(context, router)).pipe(
+          switchMap((result) =>
+            result
+              ? EMPTY
+              : of(
+                  routerActions.cancelNavigation({
+                    reason: 'guard.canActivate',
+                  })
+                )
+          )
+        );
+      } else {
+        return EMPTY;
+      }
+    },
+  };
 }
 
-function canDeactivate<TDeps, TData, TParams, TSearch, THash>(
+function canDeactivate<TData, TParams, TSearch, THash>(
   fn: (
-    context: DeactivatedRoutingRuleEvent<TData, TParams, TSearch, THash>,
-    deps: TDeps
-  ) => boolean | Observable<boolean>,
-  depsComponents?: Deps<TDeps>
-): Component<RoutingRule<TData, TParams, TSearch, THash>> {
-  return createRoutingRule(
-    (deps) => ({
-      dispatchOnCheck(
-        context: RoutingRuleEvent<TData, TParams, TSearch, THash>
-      ): Observable<Location | boolean> {
-        if (context.type === 'deactivated') {
-          const result = fn(context, deps);
-          if (isObservable(result)) {
-            return result;
-          } else {
-            return of(result);
-          }
-        } else {
-          return of(true);
-        }
-      },
-    }),
-    depsComponents
-  );
+    context: DeactivatedRouteCommand<TParams, TSearch, THash>,
+    router: Router<TData>
+  ) => boolean | Observable<boolean>
+): RoutingRule<TData, TParams, TSearch, THash> {
+  return {
+    check(context, router) {
+      if (context.type === 'deactivate') {
+        return toObservable(fn(context, router)).pipe(
+          switchMap((result) =>
+            result
+              ? EMPTY
+              : of(
+                  routerActions.cancelNavigation({
+                    reason: 'guard.canDeactivate',
+                  })
+                )
+          )
+        );
+      } else {
+        return EMPTY;
+      }
+    },
+  };
 }
 
-function activate<TDeps, TData, TParams, TSearch, THash>(
+function resolve<TData, TParams, TSearch, THash>(
   fn: (
     context:
-      | ActivatedRoutingRuleEvent<TData, TParams, TSearch, THash>
-      | UpdatedRoutingRuleEvent<TData, TParams, TSearch, THash>,
-    deps: TDeps
-  ) => Observable<unknown>,
-  depsComponents?: Deps<TDeps>
-): Component<RoutingRule<TData, TParams, TSearch, THash>> {
-  return createRoutingRule(
-    (deps) => ({
-      commit(
-        context: RoutingRuleEvent<TData, TParams, TSearch, THash>
-      ): Observable<void> {
-        if (context.type === 'activated' || context.type === 'updated') {
-          return fn(context, deps).pipe(ignoreElements());
-        } else {
-          return EMPTY;
-        }
-      },
-    }),
-    depsComponents
-  );
+      | ActivatedRouteCommand<TParams, TSearch, THash>
+      | UpdatedRouteCommand<TParams, TSearch, THash>,
+    router: Router<TData>
+  ) => Observable<unknown>
+): RoutingRule<TData, TParams, TSearch, THash> {
+  return {
+    commit(context, router) {
+      if (context.type === 'activate' || context.type === 'activate-update') {
+        return fn(context, router).pipe(ignoreElements());
+      } else {
+        return EMPTY;
+      }
+    },
+  };
 }
 
-const routerConfig = createRouteConfig(rootRoute, {
-  children: [
-    createRouteConfig(statusRoute, {
-      data: {
-        component: InstrumentationStatusPage,
+function redirect<TData, TParams, TSearch, THash>(
+  fn: (
+    context: DeactivatedRouteCommand<TParams, TSearch, THash>,
+    router: Router<TData>
+  ) => Location | Observable<Location>
+): RoutingRule<TData, TParams, TSearch, THash> {
+  return {
+    check(context, router) {
+      if (context.type === 'deactivate') {
+        return toObservable(fn(context, router)).pipe(
+          switchMap((result) =>
+            result
+              ? EMPTY
+              : of(
+                  routerActions.navigate({
+                    location: result,
+                  })
+                )
+          )
+        );
+      } else {
+        return EMPTY;
+      }
+    },
+  };
+}
+
+export const appRouterConfigComponent = createRouteConfigComponent(
+  ({ instrumentationStatus, targetState }): ReactRouterConfig => ({
+    route: rootRoute,
+    children: [
+      {
+        route: statusRoute,
+        data: {
+          component: InstrumentationStatusPage,
+        },
+        rules: [
+          canActivate(() => instrumentationStatus.getResult() !== 'installed'),
+          canDeactivate(
+            () => instrumentationStatus.getResult() === 'installed'
+          ),
+        ],
       },
-      rules: [
-        canActivate(
-          (context, { instrumentationStatus }) =>
-            instrumentationStatus.getResult() !== 'installed',
-          {
-            instrumentationStatus: createSelection(selectInstrumentationStatus),
-          }
-        ),
-        canDeactivate(
-          (context, { instrumentationStatus }) =>
-            instrumentationStatus.getResult() === 'installed',
-          {
-            instrumentationStatus: createSelection(selectInstrumentationStatus),
-          }
-        ),
-      ],
-    }),
-    createRouteConfig(dashboardRoute, {
-      data: {
-        component: DashboardPage,
+      {
+        route: dashboardRoute,
+        data: {
+          component: DashboardPage,
+        },
       },
-    }),
-    createRouteConfig(appBarRoute, {
-      data: {
-        component: AppBarWrapper,
-      },
-      children: [
-        createRouteConfig(targetRoute, {
-          data: {
-            component: TargetPage,
-          },
-          rules: [
-            activate(
-              ({ activatedRoute }, { targetState }) =>
+      {
+        route: appBarRoute,
+        data: {
+          component: AppBarWrapper,
+        },
+        children: [
+          <ReactRouterConfig<typeof targetRoute>>{
+            route: targetRoute,
+            data: {
+              component: TargetPage,
+            },
+            rules: [
+              resolve(({ activatedRoute }) =>
                 targetState.pipe(
+                  tap((X) => console.log('tap', X)),
                   first(
                     () =>
-                      targetState.getResult(route.route.params.targetId) !==
+                      targetState.getResult(activatedRoute.params.targetId) !==
                       undefined
                   )
-                ),
-              {
-                targetState: createSelection(selectTargetState),
-              }
-            ),
-          ],
-        }),
-      ],
-    }),
-    createRouteConfig(fallbackRoute, {
-      rules: [redirect(() => statusRoute())],
-    }),
-  ],
-});
-
-export const routing = createRouting({
-  router,
-  routerActions,
-  routerStore,
-  routerConfig,
-});
+                )
+              ),
+            ],
+          },
+        ],
+      },
+      {
+        route: fallbackRoute,
+        rules: [redirect(() => statusRoute())],
+      },
+    ],
+  }),
+  {
+    instrumentationStatus: createSelection(selectInstrumentationStatus),
+    targetState: createSelection(selectTargetState),
+  }
+);

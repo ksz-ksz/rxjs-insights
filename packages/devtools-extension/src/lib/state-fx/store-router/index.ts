@@ -13,4 +13,7 @@ export * from './router-actions';
 export * from './router-store';
 export * from './router-selectors';
 export * from './route-config';
-export * from './routing';
+export { RouteEvent } from './route-event';
+export { UpdatedRouteEvent } from './route-event';
+export { DeactivatedRouteEvent } from './route-event';
+export { ActivatedRouteEvent } from './route-event';
