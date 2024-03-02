@@ -7,7 +7,7 @@ import {
 function setupAliases(aliases: Record<string, string>, build: PluginBuild) {
   const filter = new RegExp(`^(${Object.keys(aliases).join('|')})$`);
   build.onResolve({ filter }, ({ path, ...args }) =>
-    build.resolveData(aliases[path], args)
+    build.resolve(aliases[path], args)
   );
 }
 
