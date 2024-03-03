@@ -1,7 +1,6 @@
 import { Action, ActionType } from '@lib/state-fx/store';
 import { ActionSource } from './action-source';
-import { Component, Container, ComponentInstance } from './container';
-import { Observable } from 'rxjs';
+import { Component, ComponentInstance, Container } from './container';
 
 export interface ActionsSelector<T> {
   select(actions: Actions): T;
@@ -10,7 +9,6 @@ export interface ActionsSelector<T> {
 export interface Actions {
   dispatch(action: Action<any>): void;
   select<T>(selector: ActionsSelector<T>): T;
-  of<T>(namespace: string, name: string): ActionSource<T>;
   ofType<T>(factory: ActionType<T>): ActionSource<T>;
 }
 
@@ -23,29 +21,52 @@ class ActionsComponent implements Component<Actions> {
 }
 
 function createActionsComponent(): Actions {
-  const sources = new Map<string, ActionSource<any>>();
+  const sources = new Map<string, WeakRef<ActionSource<any>>>();
+
+  function getSource<T>(
+    namespace: string,
+    name: string,
+    create?: true
+  ): ActionSource<T>;
+  function getSource<T>(
+    namespace: string,
+    name: string,
+    create: false
+  ): ActionSource<T> | undefined;
+  function getSource<T>(
+    namespace: string,
+    name: string,
+    create = true
+  ): ActionSource<T> | undefined {
+    const actionKey = `${namespace}::${name}`;
+    const source = sources.get(actionKey)?.deref();
+    if (source !== undefined) {
+      return source;
+    } else if (create) {
+      const source = new ActionSource<any>(namespace, name);
+      sources.set(actionKey, new WeakRef(source));
+      return source;
+    } else {
+      return undefined;
+    }
+  }
 
   return {
     dispatch(action: Action<any>) {
-      const source = this.of(action.namespace, action.name);
-      source.dispatchAction(action);
+      const source = getSource(action.namespace, action.name, false);
+      console.log(
+        `DISPATCH${source === undefined ? '?' : '!'}`,
+        action.namespace,
+        action.name,
+        action.payload
+      );
+      source?.dispatchAction(action);
     },
     select<T>(selector: ActionsSelector<T>): T {
       return selector.select(this);
     },
-    of<T>(namespace: string, name: string): ActionSource<T> {
-      const actionKey = `${namespace}::${name}`;
-      const source = sources.get(actionKey);
-      if (source !== undefined) {
-        return source;
-      } else {
-        const source = new ActionSource<any>(namespace, name);
-        sources.set(actionKey, source);
-        return source;
-      }
-    },
     ofType<T>(factory: ActionType<T>): ActionSource<T> {
-      return this.of(factory.namespace, factory.name);
+      return getSource(factory.namespace, factory.name);
     },
   };
 }
