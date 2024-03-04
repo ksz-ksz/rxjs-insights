@@ -13,12 +13,13 @@ import { traceActions } from '@app/actions/trace-actions';
 import { createEffectComponent } from '@lib/state-fx/store';
 import { routerActions } from '@app/router';
 import { dashboardRoute } from '@app/routes';
+import { dashboardRouteActions } from '@app/router-actions';
 
 export const traceEffect = createEffectComponent(() => ({
   name: 'trace',
   effects: {
     handleDashboardEnter(actions) {
-      return actions.select(routeActivated(routerActions, dashboardRoute)).pipe(
+      return actions.select(routeActivated(dashboardRouteActions)).pipe(
         switchMap(() =>
           timer(0, 1000).pipe(
             switchMap(() =>
@@ -27,9 +28,7 @@ export const traceEffect = createEffectComponent(() => ({
                 catchError(() => EMPTY)
               )
             ),
-            takeUntil(
-              actions.select(routeDeactivated(routerActions, dashboardRoute))
-            )
+            takeUntil(actions.select(routeDeactivated(dashboardRouteActions)))
           )
         )
       );

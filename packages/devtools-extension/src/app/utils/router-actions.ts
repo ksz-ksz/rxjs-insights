@@ -1,27 +1,20 @@
-import { filter, map, Observable, tap } from 'rxjs';
+import { filter, map, Observable } from 'rxjs';
 import {
   ActivatedRouteEvent,
   DeactivatedRouteEvent,
-  Route,
+  RouteActionTypes,
   RouteObject,
-  RouterActions,
   UpdatedRouteEvent,
 } from '@lib/state-fx/store-router';
-import {
-  Action,
-  Actions,
-  ActionsSelector,
-  ActionTypes,
-} from '@lib/state-fx/store';
+import { Action, Actions, ActionsSelector } from '@lib/state-fx/store';
 
 // TODO: needs to ignore updates
 export function routeActivated<TParams, TSearch, THash>(
-  routerActions: ActionTypes<RouterActions>,
-  route: Route<TParams, TSearch, THash>
+  routeActions: RouteActionTypes<TParams, TSearch, THash>
 ): ActionsSelector<Observable<RouteObject<TParams, TSearch, THash>>> {
   return {
     select(actions: Actions): Observable<RouteObject<TParams, TSearch, THash>> {
-      return actions.ofType(routerActions.routePrepared).pipe(
+      return actions.ofType(routeActions.routePrepared).pipe(
         filter(
           (
             action
@@ -29,9 +22,8 @@ export function routeActivated<TParams, TSearch, THash>(
             | ActivatedRouteEvent<TParams, TSearch, THash>
             | UpdatedRouteEvent<TParams, TSearch, THash>
           > =>
-            (action.payload.type === 'activate' ||
-              action.payload.type === 'activate-update') &&
-            action.payload.activatedRoute.id === route.id
+            action.payload.type === 'activate' ||
+            action.payload.type === 'activate-update'
         ),
         map((action) => action.payload.activatedRoute)
       );
@@ -52,8 +44,7 @@ function areArraysEqual<T>(a: T[], b: T[]) {
 
 // TODO: needs to ignore updates
 export function routeDeactivated<TParams, TSearch, THash>(
-  routerActions: ActionTypes<RouterActions>,
-  route: Route<TParams, TSearch, THash>,
+  routeActions: RouteActionTypes<TParams, TSearch, THash>,
   {
     ignoreParamsChanges = true,
     ignoreHashChanges = false,
@@ -66,7 +57,7 @@ export function routeDeactivated<TParams, TSearch, THash>(
 ): ActionsSelector<Observable<RouteObject<TParams, TSearch, THash>>> {
   return {
     select(actions: Actions): Observable<RouteObject<TParams, TSearch, THash>> {
-      return actions.ofType(routerActions.routePrepared).pipe(
+      return actions.ofType(routeActions.routePrepared).pipe(
         filter(
           (
             action
@@ -75,10 +66,9 @@ export function routeDeactivated<TParams, TSearch, THash>(
           > => {
             switch (action.payload.type) {
               case 'deactivate':
-                return action.payload.deactivatedRoute.id === route.id;
+                return true;
               case 'deactivate-update':
                 return (
-                  action.payload.deactivatedRoute.id === route.id &&
                   (!ignoreParamsChanges ||
                     areArraysEqual(
                       action.payload.deactivatedRoute.path,

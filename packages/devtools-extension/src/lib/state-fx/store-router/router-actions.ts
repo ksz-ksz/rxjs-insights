@@ -3,7 +3,7 @@ import { Location } from './history';
 import { ActionTypes, createActions } from '@lib/state-fx/store';
 import { RouterState } from './router-store';
 import { RouteEvent } from './route-event';
-import { RouteCommand } from './route-command';
+import { Route } from './route';
 
 export interface NavigateCommand {
   location: Location;
@@ -47,9 +47,6 @@ export interface RouterActions {
   completePrepare: NavigationCommand;
   completeNavigation: NavigationCommand;
   cancelNavigation: CancelNavigationCommand;
-  checkRoute: RouteCommand;
-  prepareRoute: RouteCommand;
-  commitRoute: RouteCommand;
 
   // events
   navigationRequested: NavigationEvent;
@@ -58,13 +55,30 @@ export interface RouterActions {
   navigationPrepared: NavigationEvent;
   navigationCompleted: NavigationEvent;
   navigationCancelled: NavigationCancelledEvent;
-  routeChecked: RouteEvent;
-  routePrepared: RouteEvent;
-  routeCommitted: RouteEvent;
 }
 
 export type RouterActionTypes = ActionTypes<RouterActions>;
 
+export interface RouteActions<TParams, TSearch, THash> {
+  routeChecked: RouteEvent<TParams, TSearch, THash>;
+  routePrepared: RouteEvent<TParams, TSearch, THash>;
+  routeCommitted: RouteEvent<TParams, TSearch, THash>;
+}
+
+export type RouteActionTypes<TParams, TSearch, THash> = ActionTypes<
+  RouteActions<TParams, TSearch, THash>
+>;
+
 export function createRouterActions(namespace: string): RouterActionTypes {
   return createActions<RouterActions>({ namespace });
+}
+
+export function createRouteActions<TParams, TSearch, THash>(
+  namespace: string,
+  route: Route<TParams, TSearch, THash>
+): RouteActionTypes<TParams, TSearch, THash> {
+  return createActions<RouteActions<TParams, TSearch, THash>>({
+    namespace,
+    createName: (name) => `${name}/${route.id}`,
+  });
 }

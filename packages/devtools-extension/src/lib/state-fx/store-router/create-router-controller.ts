@@ -33,31 +33,20 @@ function collectRules<TData>(
   commit: Observable<Action>[],
   rules: RoutingRule<TData>[],
   command: RouteCommand,
-  router: Router<TData>
+  router: Router<TData>,
+  routerStore: Store<RouterState>
 ) {
   for (const rule of rules) {
     if (rule.check !== undefined) {
-      check.push(defer(() => rule.check!(command, router)));
+      check.push(defer(() => rule.check!(command, router, routerStore)));
     }
     if (rule.prepare !== undefined) {
-      prepare.push(defer(() => rule.prepare!(command, router)));
+      prepare.push(defer(() => rule.prepare!(command, router, routerStore)));
     }
     if (rule.commit !== undefined) {
-      commit.push(defer(() => rule.commit!(command, router)));
+      commit.push(defer(() => rule.commit!(command, router, routerStore)));
     }
   }
-}
-
-function collectEvents(
-  check: Observable<Action>[],
-  prepare: Observable<Action>[],
-  commit: Observable<Action>[],
-  routerActions: RouterActionTypes,
-  event: RouteCommand
-) {
-  check.push(of(routerActions.checkRoute(event)));
-  prepare.push(of(routerActions.prepareRoute(event)));
-  commit.push(of(routerActions.commitRoute(event)));
 }
 
 function collectDeactivatedRoutes<TData, TSearchInput, THashInput>(
@@ -83,9 +72,16 @@ function collectDeactivatedRoutes<TData, TSearchInput, THashInput>(
       deactivatedRoutes: prevRoutes,
     };
     if (routing.rules !== undefined) {
-      collectRules(check, prepare, commit, routing.rules, event, router);
+      collectRules(
+        check,
+        prepare,
+        commit,
+        routing.rules,
+        event,
+        router,
+        routerStore
+      );
     }
-    collectEvents(check, prepare, commit, routerActions, event);
   }
 }
 
@@ -115,9 +111,16 @@ function collectDeactivateUpdateRoutes<TData, TSearchInput, THashInput>(
       deactivatedRoutes: prevRoutes,
     };
     if (routing.rules !== undefined) {
-      collectRules(check, prepare, commit, routing.rules, event, router);
+      collectRules(
+        check,
+        prepare,
+        commit,
+        routing.rules,
+        event,
+        router,
+        routerStore
+      );
     }
-    collectEvents(check, prepare, commit, routerActions, event);
   }
 }
 
@@ -146,9 +149,16 @@ function collectActivateUpdateRoutes<TData, TSearchInput, THashInput>(
       deactivatedRoutes: prevRoutes,
     };
     if (routing.rules !== undefined) {
-      collectRules(check, prepare, commit, routing.rules, event, router);
+      collectRules(
+        check,
+        prepare,
+        commit,
+        routing.rules,
+        event,
+        router,
+        routerStore
+      );
     }
-    collectEvents(check, prepare, commit, routerActions, event);
   }
 }
 
@@ -174,9 +184,16 @@ function collectActivatedRoutes<TData, TSearchInput, THashInput>(
       activatedRoutes: nextRoutes,
     };
     if (routing.rules !== undefined && routing.rules.length !== 0) {
-      collectRules(check, prepare, commit, routing.rules, event, router);
+      collectRules(
+        check,
+        prepare,
+        commit,
+        routing.rules,
+        event,
+        router,
+        routerStore
+      );
     }
-    collectEvents(check, prepare, commit, routerActions, event);
   }
 }
 

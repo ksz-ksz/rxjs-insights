@@ -20,19 +20,18 @@ import { routeActivated, routeDeactivated } from '@app/utils';
 import { createEffectComponent } from '@lib/state-fx/store';
 import { routerActions } from '@app/router';
 import { targetRoute } from '@app/routes';
+import { targetRouteActions } from '@app/router-actions';
 
 export const insightsEffect = createEffectComponent(() => ({
   name: 'insights',
   effects: {
     loadTargetAfterActivatingTheRoute(actions) {
-      return actions.select(routeActivated(routerActions, targetRoute)).pipe(
+      return actions.select(routeActivated(targetRouteActions)).pipe(
         switchMap((route) => {
           const targetId = route.params.targetId;
           return actions.ofType(appBarActions.RefreshData).pipe(
             startWith(undefined),
-            takeUntil(
-              actions.select(routeDeactivated(routerActions, targetRoute))
-            ),
+            takeUntil(actions.select(routeDeactivated(targetRouteActions))),
             switchMap(() => from(insightsClient.getTargetState(targetId)))
           );
         }),
@@ -40,30 +39,28 @@ export const insightsEffect = createEffectComponent(() => ({
       );
     },
     autoplayEvents(actions) {
-      return actions
-        .ofType(eventsLogActions.Play)
-        .pipe(
-          switchMap((action) =>
-            concat(
-              ...action.payload.events.map((event) =>
-                of(insightsActions.PlayNextEvent({ event })).pipe(delay(1000))
-              )
-            ).pipe(
-              takeUntil(
-                merge(
-                  actions.ofType(eventsLogActions.Pause),
-                  actions.ofType(eventsLogActions.EventSelected),
-                  actions.select(
-                    routeDeactivated(routerActions, targetRoute, {
-                      ignoreSearchChanges: true,
-                    })
-                  )
-                )
-              ),
-              endWith(insightsActions.PlayDone())
+      return actions.ofType(eventsLogActions.Play).pipe(
+        switchMap((action) =>
+          concat(
+            ...action.payload.events.map((event) =>
+              of(insightsActions.PlayNextEvent({ event })).pipe(delay(1000))
             )
+          ).pipe(
+            takeUntil(
+              merge(
+                actions.ofType(eventsLogActions.Pause),
+                actions.ofType(eventsLogActions.EventSelected),
+                actions.select(
+                  routeDeactivated(targetRouteActions, {
+                    ignoreSearchChanges: true,
+                  })
+                )
+              )
+            ),
+            endWith(insightsActions.PlayDone())
           )
-        );
+        )
+      );
     },
     navigateToTarget(actions) {
       return merge(

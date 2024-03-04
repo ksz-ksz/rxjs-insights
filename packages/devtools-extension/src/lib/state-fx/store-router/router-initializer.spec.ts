@@ -92,9 +92,6 @@ function createTestHarness({
     routerActions.navigationPrepared,
     routerActions.navigationCompleted,
     routerActions.navigationCancelled,
-    routerActions.routeChecked,
-    routerActions.routePrepared,
-    routerActions.routeCommitted,
   ];
   const listing: Action[] = [];
   merge(...listen.map(actions.ofType, actions)).subscribe((action) => {

@@ -13,6 +13,7 @@ export interface Action<TPayload = unknown> {
 
 export interface CreateActionsOptions {
   namespace: string;
+  createName?(name: string): string;
 }
 
 export type ActionTypes<TActionPayloads> = {
@@ -40,14 +41,16 @@ export type ActionTypeFns<TFns extends { [name: string]: ActionTypeFn<any> }> =
 
 export function createActions<TActionPayloads>({
   namespace,
+  createName = (name) => name,
 }: CreateActionsOptions): ActionTypes<TActionPayloads> {
   return new Proxy(
     {},
     {
       get(
         target: Record<string, ActionType<unknown>>,
-        name: string
+        key: string
       ): ActionType<unknown> {
+        const name = createName(key);
         let actionFactory = target[name];
         if (actionFactory === undefined) {
           actionFactory = Object.defineProperties(

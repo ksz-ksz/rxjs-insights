@@ -2,6 +2,7 @@ import { selectTargetState } from '@app/selectors/insights-selectors';
 import {
   createRouteConfigComponent,
   Location,
+  RouteActionTypes,
   Router,
   RoutingRule,
 } from '@lib/state-fx/store-router';
@@ -36,6 +37,7 @@ import {
   DeactivatedRouteCommand,
   UpdatedRouteCommand,
 } from '../lib/state-fx/store-router/route-command';
+import { dashboardRouteActions, targetRouteActions } from '@app/router-actions';
 
 function toObservable<T>(result: Observable<T> | T): Observable<T> {
   if (isObservable(result)) {
@@ -145,6 +147,37 @@ function redirect<TData, TParams, TSearch, THash>(
   };
 }
 
+function dispatchRouteActions<TParams, TSearch, THash>(
+  routeActions: RouteActionTypes<TParams, TSearch, THash>
+): RoutingRule<unknown, TParams, TSearch, THash> {
+  return {
+    check(context, router, routerStore) {
+      return of(
+        routeActions.routeChecked({
+          ...context,
+          routerState: routerStore.getState(),
+        })
+      );
+    },
+    prepare(context, router, routerStore) {
+      return of(
+        routeActions.routePrepared({
+          ...context,
+          routerState: routerStore.getState(),
+        })
+      );
+    },
+    commit(context, router, routerStore) {
+      return of(
+        routeActions.routeCommitted({
+          ...context,
+          routerState: routerStore.getState(),
+        })
+      );
+    },
+  };
+}
+
 export const appRouterConfigComponent = createRouteConfigComponent(
   ({ instrumentationStatus, targetState }): ReactRouterConfig => ({
     route: rootRoute,
@@ -166,6 +199,7 @@ export const appRouterConfigComponent = createRouteConfigComponent(
         data: {
           component: DashboardPage,
         },
+        rules: [dispatchRouteActions(dashboardRouteActions)],
       },
       {
         route: appBarRoute,
@@ -179,6 +213,7 @@ export const appRouterConfigComponent = createRouteConfigComponent(
               component: TargetPage,
             },
             rules: [
+              dispatchRouteActions(targetRouteActions),
               resolve(({ activatedRoute }) =>
                 targetState.pipe(
                   tap((X) => console.log('tap', X)),

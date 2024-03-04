@@ -27,23 +27,22 @@ import { routerActions } from '@app/router';
 import { dashboardRoute } from '@app/routes';
 import { selectActiveTarget } from '@app/selectors/active-target-state-selector';
 import { createSelection } from '../../../lib/state-fx/store/selection';
+import { dashboardRouteActions } from '@app/router-actions';
 
 export const targetEffect = createEffectComponent(
   ({ activeTarget }) => ({
     name: 'target',
     effects: {
       handleDashboardEnter(actions) {
-        return actions
-          .select(routeActivated(routerActions, dashboardRoute))
-          .pipe(
-            switchMap(() =>
-              from(targetsClient.getTargets()).pipe(
-                filter(Boolean),
-                map((targets) => targetsActions.TargetsLoaded({ targets })),
-                catchError(() => EMPTY)
-              )
+        return actions.select(routeActivated(dashboardRouteActions)).pipe(
+          switchMap(() =>
+            from(targetsClient.getTargets()).pipe(
+              filter(Boolean),
+              map((targets) => targetsActions.TargetsLoaded({ targets })),
+              catchError(() => EMPTY)
             )
-          );
+          )
+        );
       },
       handleTargetsNotifications() {
         return fromServer((observer) =>

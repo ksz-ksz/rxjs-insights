@@ -23,6 +23,7 @@ export const dashboardRoute = createRoute({
   parent: rootRoute,
   path: 'dashboard',
 });
+
 export const appBarRoute = createRoute({
   parent: rootRoute,
   path: '',
@@ -37,6 +38,7 @@ export const targetRoute = createRoute({
     time: z.coerce.number(),
   }),
 });
+
 export const fallbackRoute = createRoute({
   parent: rootRoute,
   path: ':any',

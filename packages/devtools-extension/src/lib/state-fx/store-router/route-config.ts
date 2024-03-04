@@ -14,6 +14,7 @@ import {
   Component,
   Components,
   createComponent,
+  Store,
 } from '@lib/state-fx/store';
 import { RouterState } from './router-store';
 import { RouteCommand } from './route-command';
@@ -37,17 +38,20 @@ export interface RoutingRule<
 > {
   check?(
     context: RouteCommand<TParams, TSearch, THash>,
-    router: Router<TData>
+    router: Router<TData>,
+    routerStore: Store<RouterState>
   ): Observable<Action>;
 
   prepare?(
     context: RouteCommand<TParams, TSearch, THash>,
-    router: Router<TData>
+    router: Router<TData>,
+    routerStore: Store<RouterState>
   ): Observable<Action>;
 
   commit?(
     context: RouteCommand<TParams, TSearch, THash>,
-    router: Router<TData>
+    router: Router<TData>,
+    routerStore: Store<RouterState>
   ): Observable<Action>;
 }
 

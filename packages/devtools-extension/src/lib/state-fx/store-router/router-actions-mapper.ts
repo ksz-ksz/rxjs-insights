@@ -59,24 +59,6 @@ export function createRouterActionsMapper(
         mapNavigationCancelledCommandPayload,
         deps
       ),
-      checkRoute: mapAction(
-        routerActions.checkRoute,
-        routerActions.routeChecked,
-        mapRouteCommandPayload,
-        deps
-      ),
-      prepareRoute: mapAction(
-        routerActions.prepareRoute,
-        routerActions.routePrepared,
-        mapRouteCommandPayload,
-        deps
-      ),
-      commitRoute: mapAction(
-        routerActions.commitRoute,
-        routerActions.routeCommitted,
-        mapRouteCommandPayload,
-        deps
-      ),
     },
   });
 }
@@ -113,16 +95,6 @@ function mapNavigationCancelledCommandPayload(
 ): NavigationCancelledEvent {
   return {
     reason,
-    routerState: store.getState(),
-  };
-}
-
-function mapRouteCommandPayload(
-  command: RouteCommand,
-  { store }: { store: Store<RouterState> }
-): RouteEvent {
-  return {
-    ...command,
     routerState: store.getState(),
   };
 }
