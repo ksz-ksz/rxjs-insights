@@ -27,15 +27,24 @@ import { traceEffect } from '@app/store/trace/effect';
 import { timeEffect } from '@app/store/time/effect';
 import { refOutletContextEffect } from '@app/store/ref-outlet-context/effect';
 import { RouterOutlet } from '../lib/state-fx/store-router-react';
+import {
+  insightsConfigComponent,
+  insightsResourceComponent,
+} from '@app/store/insights/insights-resource';
+import { insightsResourceConfigComponent } from '@app/store/insights/insights-resource-config';
 
 APPLICATION_LOG.info('Devtools initialized');
 
 function Providers(props: PropsWithChildren<{}>) {
   return (
     <ContainerProvider
-      providers={[provide(routerConfigComponent, appRouterConfigComponent)]}
+      providers={[
+        provide(routerConfigComponent, appRouterConfigComponent),
+        provide(insightsConfigComponent, insightsResourceConfigComponent),
+      ]}
       components={[
         routerInitializerComponent,
+        insightsResourceComponent,
         statusStore,
         targetsStore,
         insightsStore,

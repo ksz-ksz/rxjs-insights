@@ -2,11 +2,14 @@ import { selectTargetState } from '@app/selectors/insights-selectors';
 import {
   createRouteConfigComponent,
   Location,
+  Route,
   RouteActionTypes,
+  RouteObject,
   Router,
   RoutingRule,
 } from '@lib/state-fx/store-router';
 import {
+  concat,
   EMPTY,
   first,
   ignoreElements,
@@ -38,6 +41,19 @@ import {
   UpdatedRouteCommand,
 } from '../lib/state-fx/store-router/route-command';
 import { dashboardRouteActions, targetRouteActions } from '@app/router-actions';
+import {
+  Fn,
+  getQueryHash,
+  ResourceActionTypes,
+  ResourceKey,
+  ResourceState,
+} from '@lib/state-fx/store-resource';
+import { Store } from '@lib/state-fx/store';
+import {
+  insightsQueryKeys,
+  insightsResourceActions,
+  insightsResourceStoreComponent,
+} from '@app/store/insights/insights-resource';
 
 function toObservable<T>(result: Observable<T> | T): Observable<T> {
   if (isObservable(result)) {
@@ -120,6 +136,56 @@ function resolve<TData, TParams, TSearch, THash>(
   };
 }
 
+function resource<TData, TParams, TSearch, THash, TFn extends Fn>(
+  resourceActions: ResourceActionTypes,
+  resourceStore: Store<ResourceState>,
+  queryKey: ResourceKey<TFn>,
+  getQueryArgs: (route: RouteObject<TParams, TSearch, THash>) => Parameters<TFn>
+): RoutingRule<TData, TParams, TSearch, THash> {
+  const subscriberKey = crypto.randomUUID();
+  return {
+    prepare(context, router) {
+      if (context.type === 'activate' || context.type === 'activate-update') {
+        return of(
+          resourceActions.prefetchQuery({
+            queryKey: queryKey,
+            queryArgs: getQueryArgs(context.activatedRoute),
+          })
+        );
+      } else {
+        return EMPTY;
+      }
+    },
+    commit(context, router) {
+      if (context.type === 'activate' || context.type === 'activate-update') {
+        const queryArgs = getQueryArgs(context.activatedRoute);
+        const queryHash = getQueryHash(queryKey, queryArgs);
+        return concat(
+          of(
+            resourceActions.subscribeQuery({
+              subscriberKey,
+              queryKey,
+              queryArgs,
+            })
+          ),
+          resourceStore.getStateObservable().pipe(
+            first((state) => state.queries[queryHash]?.data !== undefined),
+            ignoreElements()
+          )
+        );
+      } else {
+        return of(
+          resourceActions.unsubscribeQuery({
+            subscriberKey,
+            queryKey: queryKey,
+            queryArgs: getQueryArgs(context.deactivatedRoute),
+          })
+        );
+      }
+    },
+  };
+}
+
 function redirect<TData, TParams, TSearch, THash>(
   fn: (
     context: DeactivatedRouteCommand<TParams, TSearch, THash>,
@@ -179,7 +245,11 @@ function dispatchRouteActions<TParams, TSearch, THash>(
 }
 
 export const appRouterConfigComponent = createRouteConfigComponent(
-  ({ instrumentationStatus, targetState }): ReactRouterConfig => ({
+  ({
+    instrumentationStatus,
+    targetState,
+    insightsResourceStore,
+  }): ReactRouterConfig => ({
     route: rootRoute,
     children: [
       {
@@ -214,9 +284,14 @@ export const appRouterConfigComponent = createRouteConfigComponent(
             },
             rules: [
               dispatchRouteActions(targetRouteActions),
+              resource(
+                insightsResourceActions,
+                insightsResourceStore,
+                insightsQueryKeys.getTargetState,
+                (route) => [route.params.targetId] as [number]
+              ),
               resolve(({ activatedRoute }) =>
                 targetState.pipe(
-                  tap((X) => console.log('tap', X)),
                   first(
                     () =>
                       targetState.getResult(activatedRoute.params.targetId) !==
@@ -237,5 +312,6 @@ export const appRouterConfigComponent = createRouteConfigComponent(
   {
     instrumentationStatus: createSelection(selectInstrumentationStatus),
     targetState: createSelection(selectTargetState),
+    insightsResourceStore: insightsResourceStoreComponent,
   }
 );

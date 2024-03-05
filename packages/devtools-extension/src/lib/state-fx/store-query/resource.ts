@@ -4,11 +4,12 @@ import {
   Component,
   createComponent,
   Disposable,
+  Store,
 } from '@lib/state-fx/store';
 import { SchedulerLike } from 'rxjs';
 import { createResourceKeys, ResourceKeys } from './resource-key';
 import { createResourceActions, ResourceActionTypes } from './resource-actions';
-import { createResourceStoreComponent } from './resource-store';
+import { createResourceStoreComponent, ResourceState } from './resource-store';
 import {
   createResourceInitializerComponent,
   ResourceInitializerDef,
@@ -51,6 +52,7 @@ export function createResource<
   // TODO: rename to resourceComponent
   component: Component<Disposable>;
   // TODO: rename to resourceConfigComponent
+  storeComponent: Component<Store<ResourceState>>;
   configComponent: Component<ResourceConfig<TQueries, TMutations>>;
 } {
   const { name } = def;
@@ -74,6 +76,7 @@ export function createResource<
     keys,
     actions,
     component,
+    storeComponent,
     configComponent,
   };
 }
