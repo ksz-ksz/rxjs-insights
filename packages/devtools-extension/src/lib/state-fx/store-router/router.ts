@@ -20,11 +20,14 @@ import {
   createRouterInitializerComponent,
   RouterInitializerDef,
 } from './router-initializer';
+import { Merger } from './merger';
 
 export interface Router<TData, TSearchInput = unknown, THashInput = unknown> {
   readonly history: History;
   readonly searchEncoder: Encoder<string, TSearchInput>;
+  readonly searchMerger: Merger<string>;
   readonly hashEncoder: Encoder<string, THashInput>;
+  readonly hashMerger: Merger<string>;
   createHref(location: Location): string;
   match(pathname: string): RouteMatch<TData, TSearchInput, THashInput>[];
   getRouteConfig(id: number): RouteConfig<TData, TSearchInput, THashInput>;
@@ -37,7 +40,9 @@ export interface RouterHarnessDef<TData, TSearchInput, THashInput> {
   name: string;
   history: History;
   searchEncoder: Encoder<string, TSearchInput>;
+  searchMerger: Merger<string>;
   hashEncoder: Encoder<string, THashInput>;
+  hashMerger: Merger<string>;
 }
 
 function createRouterConfigComponent<TData, TSearchInput, THashInput>() {
@@ -50,7 +55,9 @@ export function createRouterHarness<TData, TSearchInput, THashInput>({
   name,
   history,
   searchEncoder,
+  searchMerger,
   hashEncoder,
+  hashMerger,
 }: RouterHarnessDef<TData, TSearchInput, THashInput>): {
   routerActions: RouterActionTypes;
   routerStoreComponent: Component<Store<RouterState>>;
@@ -72,7 +79,9 @@ export function createRouterHarness<TData, TSearchInput, THashInput>({
       name,
       history,
       searchEncoder,
+      searchMerger,
       hashEncoder,
+      hashMerger,
       routeConfig,
     }),
     {
@@ -122,7 +131,14 @@ function getRouteConfigs<TData, TSearchInput, THashInput>(
 function createRouter<TData, TSearchInput, THashInput>(
   routerDef: RouterDef<TData, TSearchInput, THashInput>
 ): Router<TData, TSearchInput, THashInput> {
-  const { history, searchEncoder, hashEncoder, routeConfig } = routerDef;
+  const {
+    history,
+    searchEncoder,
+    searchMerger,
+    hashEncoder,
+    hashMerger,
+    routeConfig,
+  } = routerDef;
   const routeConfigs = getRouteConfigs(routeConfig);
 
   function createHref(location: Location): string {
@@ -149,7 +165,9 @@ function createRouter<TData, TSearchInput, THashInput>(
   return {
     history,
     searchEncoder,
+    searchMerger,
     hashEncoder,
+    hashMerger,
     createHref,
     match,
     getRouteConfig,
@@ -160,7 +178,9 @@ export interface RouterDef<TData, TSearchInput, THashInput> {
   name: string;
   history: History;
   searchEncoder: Encoder<string, TSearchInput>;
+  searchMerger: Merger<string>;
   hashEncoder: Encoder<string, THashInput>;
+  hashMerger: Merger<string>;
   routeConfig: RouteConfig<TData, TSearchInput, THashInput>;
 }
 

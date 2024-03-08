@@ -1,6 +1,7 @@
 import { safeDecode } from './safe-decode';
 import { Encoder, EncoderResult } from './encoder';
 import { createUrlParams, UrlParams } from './url-params';
+import { Merger } from './merger';
 
 function decodedUrlParams(input: string) {
   if (input.length === 0) {
@@ -33,5 +34,13 @@ export class UrlParamsEncoder implements Encoder<string, UrlParams> {
 
   encode(input: UrlParams): EncoderResult<string> {
     return { valid: true, value: encodeUrlParams(input) };
+  }
+}
+
+export class UrlParamsMerger implements Merger<string> {
+  merge(base: string, ext: string): string {
+    return encodeUrlParams(
+      decodedUrlParams(base).set(...decodedUrlParams(ext))
+    );
   }
 }

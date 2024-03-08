@@ -43,6 +43,7 @@ export const timeEffect = createEffectComponent(
               historyMode: 'replace',
               location: {
                 ...routerState.location,
+                // TODO: replace with searchMode: merge
                 search:
                   updateDecoded(
                     router.searchEncoder,

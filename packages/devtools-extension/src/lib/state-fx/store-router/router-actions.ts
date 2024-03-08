@@ -10,8 +10,8 @@ export interface NavigateCommand {
   state?: any;
   historyMode?: 'push' | 'replace';
   // TODO: we need a global Encoder defined in order to be able to merge/replace search/hash
-  // searchMode?: 'merge' | 'replace';
-  // hashMode?: 'merge' | 'replace';
+  searchMode?: 'merge' | 'replace';
+  hashMode?: 'merge' | 'replace';
 }
 
 export interface NavigationCommand {

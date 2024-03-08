@@ -10,16 +10,16 @@ import {
 import { RouterState } from './router-store';
 import { mapAction } from '../store-query/map-action';
 import { getRandomId } from './random-id';
-import { RouteCommand } from './route-command';
-import { RouteEvent } from './route-event';
+import { Router } from './router';
 
 export function createRouterActionsMapper(
   name: string,
   actions: Actions,
   routerActions: RouterActionTypes,
-  routerStore: Store<RouterState>
+  routerStore: Store<RouterState>,
+  router: Router<unknown>
 ) {
-  const deps = { store: routerStore };
+  const deps = { store: routerStore, router };
   return createEffect(actions, {
     name,
     effects: {
@@ -64,15 +64,36 @@ export function createRouterActionsMapper(
 }
 
 function mapNavigateCommandPayload(
-  { location, state, historyMode: origin = 'push' }: NavigateCommand,
-  { store }: { store: Store<RouterState> }
-): NavigationEvent {
-  return {
-    origin,
+  {
     location,
     state,
+    historyMode: origin = 'push',
+    searchMode = 'replace',
+    hashMode = 'replace',
+  }: NavigateCommand,
+  { store, router }: { store: Store<RouterState>; router: Router<unknown> }
+): NavigationEvent {
+  const routerState = store.getState();
+  return {
+    origin,
+    location: {
+      pathname: location.pathname,
+      search:
+        searchMode === 'replace'
+          ? location.search
+          : router.searchMerger.merge(
+              routerState.location.search,
+              location.search
+            ) ?? '',
+      hash:
+        hashMode === 'replace'
+          ? location.hash
+          : router.hashMerger.merge(routerState.location.hash, location.hash) ??
+            '',
+    },
+    state,
     key: getRandomId(),
-    routerState: store.getState(),
+    routerState,
   };
 }
 

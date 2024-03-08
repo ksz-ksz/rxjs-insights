@@ -78,6 +78,7 @@ export const insightsEffect = createEffectComponent(() => ({
                 targetId: target.id,
               },
             }),
+            searchMode: 'merge',
           })
         )
       );

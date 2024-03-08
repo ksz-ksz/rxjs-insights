@@ -205,6 +205,7 @@ export function playground() {
   // longStackExample();
   internalExample();
   tagExample();
+  expandExample();
 }
 
 function subscriber(name: string) {

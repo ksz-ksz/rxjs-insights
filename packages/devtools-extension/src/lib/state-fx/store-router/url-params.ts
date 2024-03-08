@@ -3,10 +3,10 @@ export function createUrlParams(...entries: [string, string][]) {
 }
 
 export class UrlParams {
-  *[Symbol.iterator]() {
+  *[Symbol.iterator](): Generator<[string, string]> {
     for (let [key, vals] of this.map.entries()) {
       for (let val of vals) {
-        yield [key, val] as const;
+        yield [key, val];
       }
     }
   }
