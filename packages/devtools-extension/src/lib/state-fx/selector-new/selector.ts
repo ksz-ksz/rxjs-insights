@@ -108,7 +108,6 @@ export interface SelectorExecutionResult<
   TArgs extends any[] = any[]
 > {
   selector: AnySelector<TState, TResult, TArgs>;
-  state: TState;
   inputs: SelectorExecutionResult<TState>[];
   args: TArgs;
   result: TResult;
@@ -216,7 +215,6 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       result,
       args,
       inputs,
-      state: this.state,
       hasRun: true,
     };
     addExecutionResult(this.currentExecutionResultsMap, executionResult);
@@ -238,24 +236,6 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       return currentExecutionResult;
     }
 
-    if (this.cachedExecutionResultsMap !== undefined) {
-      const cachedExecutionResult = findExecutionResult(
-        this.cachedExecutionResultsMap,
-        selector,
-        args
-      );
-      if (cachedExecutionResult !== undefined) {
-        const executionResult = this.getCachedStateSelectorExecutionResult(
-          cachedExecutionResult
-        );
-        if (executionResult !== undefined) {
-          addExecutionResult(this.currentExecutionResultsMap, executionResult);
-          this.currentInputs?.push(executionResult);
-          return executionResult;
-        }
-      }
-    }
-
     const prevInputs = this.currentInputs;
     this.currentInputs = undefined;
     const result = selector.meta.run(this.state, ...args);
@@ -265,7 +245,6 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       result,
       args,
       inputs: [],
-      state: this.state,
       hasRun: true,
     };
     addExecutionResult(this.currentExecutionResultsMap, executionResult);
@@ -282,7 +261,7 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
   ): SelectorExecutionResult<TState, TResult, TArgs> | undefined {
     const prevInputs = this.currentInputs;
     this.currentInputs = [];
-    for (let input of executionResult.inputs) {
+    for (const input of executionResult.inputs) {
       const inputResult = input.selector(this, ...input.args);
       if (input.result !== inputResult) {
         this.currentInputs = prevInputs;
@@ -297,24 +276,6 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       result: executionResult.result,
       args: executionResult.args,
       inputs,
-      state: this.state,
-      hasRun: false,
-    };
-  }
-
-  private getCachedStateSelectorExecutionResult<TResult, TArgs extends any[]>(
-    executionResult: SelectorExecutionResult<TState, TResult, TArgs>
-  ): SelectorExecutionResult<TState, TResult, TArgs> | undefined {
-    if (executionResult.state !== this.state) {
-      return undefined;
-    }
-
-    return {
-      selector: executionResult.selector,
-      result: executionResult.result,
-      args: executionResult.args,
-      inputs: [],
-      state: this.state,
       hasRun: false,
     };
   }
