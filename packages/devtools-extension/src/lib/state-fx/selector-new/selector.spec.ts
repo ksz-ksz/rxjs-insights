@@ -33,7 +33,7 @@ describe('selector-new', () => {
     });
 
     const result1 = selectFOOBAR(ctx1);
-    const execution1 = ctx1.getExecutionResults();
+    const execution1 = ctx1.getExecutionResultsMap();
 
     const ctx2 = createSelectorContext(
       {
@@ -44,7 +44,7 @@ describe('selector-new', () => {
     );
 
     const result2 = selectFOOBAR(ctx2);
-    const execution2 = ctx2.getExecutionResults();
+    const execution2 = ctx2.getExecutionResultsMap();
 
     console.log({ ctx1, result1, execution1, ctx2, result2, execution2 });
   });
@@ -65,14 +65,14 @@ describe('selector-new', () => {
 
     const ctx1 = createSelectorContext<void>(undefined);
     const result1 = selectFibonacci(ctx1, 5);
-    const exec1 = ctx1.getExecutionResults();
+    const exec1 = ctx1.getExecutionResultsMap();
 
     const ctx2 = createSelectorContext<void>(
       undefined,
-      ctx1.getExecutionResults()
+      ctx1.getExecutionResultsMap()
     );
     const result2 = selectFibonacci(ctx2, 7);
-    const exec2 = ctx2.getExecutionResults();
+    const exec2 = ctx2.getExecutionResultsMap();
 
     console.log({ ctx1, result1, exec1, ctx2, result2, exec2 });
   });
