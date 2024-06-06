@@ -63,11 +63,14 @@ describe('selector-new', () => {
       }
     );
 
-    const ctx1 = createSelectorContext(undefined);
+    const ctx1 = createSelectorContext<void>(undefined);
     const result1 = selectFibonacci(ctx1, 5);
     const exec1 = ctx1.getExecutionResults();
 
-    const ctx2 = createSelectorContext(undefined, ctx1.getExecutionResults());
+    const ctx2 = createSelectorContext<void>(
+      undefined,
+      ctx1.getExecutionResults()
+    );
     const result2 = selectFibonacci(ctx2, 7);
     const exec2 = ctx2.getExecutionResults();
 
