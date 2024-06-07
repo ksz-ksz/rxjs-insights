@@ -120,7 +120,7 @@ export type CurrentInputs<TState> = SelectorExecutionResult<TState>[] & {
   ): void;
 };
 
-function areArgsEqual(args1: any[], args2: any[]) {
+export function areArgsEqual(args1: any[], args2: any[]) {
   const n = Math.max(args1.length, args2.length);
   for (let i = 0; i < n; i++) {
     const arg1 = args1[i];
@@ -132,7 +132,7 @@ function areArgsEqual(args1: any[], args2: any[]) {
   return true;
 }
 
-function findExecutionResult<TState, TResult, TArgs extends any[]>(
+export function findExecutionResult<TState, TResult, TArgs extends any[]>(
   executionResultsMap: SelectorExecutionResultsMap<TState>,
   selector: AnySelector<TState, TResult, TArgs>,
   args: TArgs
@@ -150,7 +150,7 @@ function findExecutionResult<TState, TResult, TArgs extends any[]>(
   return undefined;
 }
 
-function addExecutionResult<TState, TResult, TArgs extends any[]>(
+export function addExecutionResult<TState, TResult, TArgs extends any[]>(
   executionResultsMap: SelectorExecutionResultsMap<TState>,
   executionResult: SelectorExecutionResult<TState, TResult, TArgs>
 ) {
