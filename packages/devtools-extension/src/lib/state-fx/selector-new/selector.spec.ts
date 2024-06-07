@@ -11,7 +11,6 @@ import {
   SelectorExecutionResult,
   SelectorExecutionResultsMap,
 } from './selector';
-import { TestSelectorContext } from './test-selector-context';
 
 interface State {
   foo: string;
@@ -20,15 +19,16 @@ interface State {
 
 type Case = 'uppercase' | 'lowercase' | 'flipcase';
 
-function createTestSelectorContext<TState>(
-  state: TState,
-  cachedExecutionResultsMap?: SelectorExecutionResultsMap<TState>
-) {
-  return new TestSelectorContext(state, cachedExecutionResultsMap);
-}
+const hasRuns: AnySelector<any, any, any>[] = [];
 
-const selectFoo = createStateSelector((state: State) => state.foo);
-const selectBar = createStateSelector((state: State) => state.bar);
+const selectFoo = createStateSelector((state: State) => {
+  hasRuns.push(selectFoo);
+  return state.foo;
+});
+const selectBar = createStateSelector((state: State) => {
+  hasRuns.push(selectBar);
+  return state.bar;
+});
 
 function isLowerCase(str: string) {
   return str === str.toLowerCase() && str !== str.toUpperCase();
@@ -44,6 +44,7 @@ function toFlipCase(str: string) {
 
 const selectCasedFoo = createSelector(
   (ctx: SelectorContext<State>, fooCase: Case) => {
+    hasRuns.push(selectCasedFoo);
     switch (fooCase) {
       case 'lowercase':
         return selectFoo(ctx).toLowerCase();
@@ -57,6 +58,7 @@ const selectCasedFoo = createSelector(
 
 const selectCasedBar = createSelector(
   (ctx: SelectorContext<State>, barCase: Case) => {
+    hasRuns.push(selectCasedBar);
     switch (barCase) {
       case 'lowercase':
         return selectBar(ctx).toLowerCase();
@@ -70,9 +72,19 @@ const selectCasedBar = createSelector(
 
 const selectCasedFooBar = createSelector(
   (ctx: SelectorContext<State>, fooCase: Case, barCase: Case) => {
+    hasRuns.push(selectCasedFooBar);
     return selectCasedFoo(ctx, fooCase) + selectCasedBar(ctx, barCase);
   }
 );
+
+interface TestSelectorExecutionResult<
+  TState,
+  TResult = any,
+  TArgs extends any[] = any[]
+> extends SelectorExecutionResult<TState, TResult, TArgs> {
+  hasRun: boolean;
+  inputs: TestSelectorExecutionResult<TState>[];
+}
 
 function createExecutionResult<TState, TResult, TArgs extends any[]>({
   selector,
@@ -85,8 +97,8 @@ function createExecutionResult<TState, TResult, TArgs extends any[]>({
   args: TArgs;
   result: TResult;
   hasRun?: boolean;
-  inputs?: SelectorExecutionResult<TState>[];
-}): SelectorExecutionResult<TState, TResult, TArgs> {
+  inputs?: TestSelectorExecutionResult<TState>[];
+}): TestSelectorExecutionResult<TState, TResult, TArgs> {
   return {
     selector,
     args,
@@ -123,9 +135,9 @@ function createExecutionResultsMap<TState>(
 
 interface TestCase {
   description: string;
-  prevExecutionResult?: SelectorExecutionResult<State>;
+  prevExecutionResult?: TestSelectorExecutionResult<State>;
   state: State;
-  executionResult: SelectorExecutionResult<State>;
+  executionResult: TestSelectorExecutionResult<State>;
 }
 
 const initialExecutionResult = createExecutionResult({
@@ -667,7 +679,7 @@ function fail(message: string, a: any, b: any) {
 
 function verifyExecutionResultsEqual(
   a: SelectorExecutionResult<State>,
-  b: SelectorExecutionResult<State>,
+  b: TestSelectorExecutionResult<State>,
   path: string = 'root'
 ): void {
   if (a.selector !== b.selector) {
@@ -682,8 +694,9 @@ function verifyExecutionResultsEqual(
     fail(`results are different at ${path}`, a.result, b.result);
   }
 
-  if (a.hasRun !== b.hasRun) {
-    fail(`hasRuns are different at ${path}`, a.hasRun, b.hasRun);
+  const aHasRun = hasRuns.includes(a.selector);
+  if (aHasRun !== b.hasRun) {
+    fail(`hasRuns are different at ${path}`, aHasRun, b.hasRun);
   }
 
   if (a.inputs.length !== b.inputs.length) {
@@ -728,6 +741,7 @@ function verifyExecutionResultsMapEqual(
 describe('selector', () => {
   for (const testCase of testCases) {
     it(testCase.description, () => {
+      hasRuns.length = 0;
       const ctx = createSelectorContext(
         testCase.state,
         testCase.prevExecutionResult !== undefined

@@ -111,7 +111,6 @@ export interface SelectorExecutionResult<
   inputs: SelectorExecutionResult<TState>[];
   args: TArgs;
   result: TResult;
-  hasRun: boolean;
 }
 
 export type CurrentInputs<TState> = SelectorExecutionResult<TState>[] & {
@@ -215,7 +214,6 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       result,
       args,
       inputs,
-      hasRun: true,
     };
     addExecutionResult(this.currentExecutionResultsMap, executionResult);
     this.currentInputs?.push(executionResult);
@@ -245,7 +243,6 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       result,
       args,
       inputs: [],
-      hasRun: true,
     };
     addExecutionResult(this.currentExecutionResultsMap, executionResult);
     this.currentInputs?.push(executionResult);
@@ -276,7 +273,6 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       result: executionResult.result,
       args: executionResult.args,
       inputs,
-      hasRun: false,
     };
   }
 }
@@ -287,3 +283,7 @@ export function createSelectorContext<TState>(
 ): SelectorContext<TState> {
   return new SelectorContextImpl(state, cachedExecutionResultsMap);
 }
+
+// TODO:
+// remove hasRun
+// remove separate executionresults from inputs
