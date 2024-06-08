@@ -102,20 +102,30 @@ export function createStateSelector<TState, TResult, TArgs extends any[]>(
   return stateSelector;
 }
 
+export interface SelectorInput<
+  TState,
+  TResult = any,
+  TArgs extends any[] = any[]
+> {
+  selector: AnySelector<TState, TResult, TArgs>;
+  args: TArgs;
+  result: TResult;
+}
+
 export interface SelectorExecutionResult<
   TState,
   TResult = any,
   TArgs extends any[] = any[]
 > {
   selector: AnySelector<TState, TResult, TArgs>;
-  inputs: SelectorExecutionResult<TState>[];
   args: TArgs;
   result: TResult;
+  inputs: SelectorInput<TState>[];
 }
 
-export type CurrentInputs<TState> = SelectorExecutionResult<TState>[] & {
+export type CurrentInputs<TState> = SelectorInput<TState>[] & {
   push<TResult, TArgs extends any[]>(
-    input: SelectorExecutionResult<TState, TResult, TArgs>
+    input: SelectorInput<TState, TResult, TArgs>
   ): void;
 };
 
@@ -182,7 +192,13 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       args
     );
     if (currentExecutionResult !== undefined) {
-      this.currentInputs?.push(currentExecutionResult);
+      if (this.currentInputs !== undefined) {
+        this.currentInputs.push({
+          selector: currentExecutionResult.selector,
+          args: currentExecutionResult.args,
+          result: currentExecutionResult.result,
+        });
+      }
       return currentExecutionResult;
     }
 
@@ -198,7 +214,13 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
         );
         if (executionResult !== undefined) {
           addExecutionResult(this.currentExecutionResultsMap, executionResult);
-          this.currentInputs?.push(executionResult);
+          if (this.currentInputs !== undefined) {
+            this.currentInputs.push({
+              selector: executionResult.selector,
+              args: executionResult.args,
+              result: executionResult.result,
+            });
+          }
           return executionResult;
         }
       }
@@ -216,7 +238,13 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       inputs,
     };
     addExecutionResult(this.currentExecutionResultsMap, executionResult);
-    this.currentInputs?.push(executionResult);
+    if (this.currentInputs !== undefined) {
+      this.currentInputs.push({
+        selector: executionResult.selector,
+        args: executionResult.args,
+        result: executionResult.result,
+      });
+    }
     return executionResult;
   }
 
@@ -230,7 +258,13 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       args
     );
     if (currentExecutionResult !== undefined) {
-      this.currentInputs?.push(currentExecutionResult);
+      if (this.currentInputs !== undefined) {
+        this.currentInputs.push({
+          selector: currentExecutionResult.selector,
+          args: currentExecutionResult.args,
+          result: currentExecutionResult.result,
+        });
+      }
       return currentExecutionResult;
     }
 
@@ -245,7 +279,13 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       inputs: [],
     };
     addExecutionResult(this.currentExecutionResultsMap, executionResult);
-    this.currentInputs?.push(executionResult);
+    if (this.currentInputs !== undefined) {
+      this.currentInputs.push({
+        selector: executionResult.selector,
+        args: executionResult.args,
+        result: executionResult.result,
+      });
+    }
     return executionResult;
   }
 
@@ -283,7 +323,3 @@ export function createSelectorContext<TState>(
 ): SelectorContext<TState> {
   return new SelectorContextImpl(state, cachedExecutionResultsMap);
 }
-
-// TODO:
-// remove hasRun
-// remove separate executionresults from inputs

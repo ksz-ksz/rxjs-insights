@@ -109,11 +109,11 @@ function createExecutionResult<TState, TResult, TArgs extends any[]>({
 }
 
 function createExecutionResultsMap<TState>(
-  rootExecutionResult: SelectorExecutionResult<TState>
+  rootExecutionResult: TestSelectorExecutionResult<TState>
 ) {
   const executionResultsMap: SelectorExecutionResultsMap<TState> = new Map();
 
-  function visit(executionResult: SelectorExecutionResult<TState>) {
+  function visit(executionResult: TestSelectorExecutionResult<TState>) {
     if (
       findExecutionResult(
         executionResultsMap,
@@ -671,13 +671,14 @@ const testCases: TestCase[] = [
   },
 ];
 
-function fail(message: string, a: any, b: any) {
+function fail(message: string, a: any, b: any): never {
   throw new Error(
     `${message}. a: ${JSON.stringify(a)}, b: ${JSON.stringify(b)}`
   );
 }
 
 function verifyExecutionResultsEqual(
+  map: SelectorExecutionResultsMap<State>,
   a: SelectorExecutionResult<State>,
   b: TestSelectorExecutionResult<State>,
   path: string = 'root'
@@ -711,7 +712,16 @@ function verifyExecutionResultsEqual(
   for (let i = 0; i < n; i++) {
     const aInput = a.inputs[i];
     const bInput = b.inputs[i];
-    verifyExecutionResultsEqual(aInput, bInput, `${path}.${i}`);
+    const aExecutionResult = findExecutionResult(
+      map,
+      aInput.selector,
+      aInput.args
+    );
+    if (aExecutionResult === undefined) {
+      fail(`executionResult not found for input at ${path}`, aInput, bInput);
+    }
+
+    verifyExecutionResultsEqual(map, aExecutionResult, bInput, `${path}.${i}`);
   }
 }
 
@@ -753,9 +763,13 @@ describe('selector', () => {
         testCase.executionResult.args
       );
 
-      verifyExecutionResultsEqual(executionResult, testCase.executionResult);
+      verifyExecutionResultsEqual(
+        ctx.getExecutionResultsMap(),
+        executionResult,
+        testCase.executionResult
+      );
       verifyExecutionResultsMapEqual(
-        createExecutionResultsMap(executionResult),
+        ctx.getExecutionResultsMap(),
         createExecutionResultsMap(testCase.executionResult)
       );
     });
