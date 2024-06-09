@@ -20,7 +20,7 @@ const selectBar = createStateSelector((state: State) => state.bar, {
 const selectN = createStateSelector((state: State) => state.n, {
   name: 'selectN',
 });
-const selectSource = createSelector(
+const selectFooOrBar = createSelector(
   (ctx: SelectorContext<State>, source: 'foo' | 'bar') => {
     switch (source) {
       case 'foo':
@@ -29,12 +29,18 @@ const selectSource = createSelector(
         return selectBar(ctx);
     }
   },
+  { name: 'selectFooOrBar' }
+);
+const selectSource = createSelector(
+  (ctx: SelectorContext<State>) => {
+    return selectN(ctx) % 2 === 0 ? 'foo' : 'bar';
+  },
   { name: 'selectSource' }
 );
 const selectRoot = createSelector(
   (ctx: SelectorContext<State>) => {
-    const source = selectN(ctx) % 2 === 0 ? 'foo' : 'bar';
-    return selectSource(ctx, source);
+    const source = selectSource(ctx);
+    return selectFooOrBar(ctx, source);
   },
   { name: 'selectRoot' }
 );
@@ -92,34 +98,40 @@ describe('selector-runner', () => {
       Array [
         "run",
         "onExecutionResultAdded selectN 0 [] []",
+        "onExecutionResultAdded selectSource \\"foo\\" [] [{\\"selector\\":\\"selectN\\",\\"args\\":[],\\"result\\":0}]",
         "onExecutionResultAdded selectFoo \\"foo\\" [] []",
-        "onExecutionResultAdded selectSource \\"foo\\" [\\"foo\\"] [{\\"selector\\":\\"selectFoo\\",\\"args\\":[],\\"result\\":\\"foo\\"}]",
-        "onExecutionResultAdded selectRoot \\"foo\\" [] [{\\"selector\\":\\"selectN\\",\\"args\\":[],\\"result\\":0},{\\"selector\\":\\"selectSource\\",\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
+        "onExecutionResultAdded selectFooOrBar \\"foo\\" [\\"foo\\"] [{\\"selector\\":\\"selectFoo\\",\\"args\\":[],\\"result\\":\\"foo\\"}]",
+        "onExecutionResultAdded selectRoot \\"foo\\" [] [{\\"selector\\":\\"selectSource\\",\\"args\\":[],\\"result\\":\\"foo\\"},{\\"selector\\":\\"selectFooOrBar\\",\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "onSelectorActivated selectN []",
+        "onSelectorActivated selectSource []",
         "onSelectorActivated selectFoo []",
-        "onSelectorActivated selectSource [\\"foo\\"]",
+        "onSelectorActivated selectFooOrBar [\\"foo\\"]",
         "onSelectorActivated selectRoot []",
         "run",
         "onExecutionResultRemoved selectN 0 [] []",
+        "onExecutionResultRemoved selectSource \\"foo\\" [] [{\\"selector\\":\\"selectN\\",\\"args\\":[],\\"result\\":0}]",
         "onExecutionResultRemoved selectFoo \\"foo\\" [] []",
-        "onExecutionResultRemoved selectSource \\"foo\\" [\\"foo\\"] [{\\"selector\\":\\"selectFoo\\",\\"args\\":[],\\"result\\":\\"foo\\"}]",
-        "onExecutionResultRemoved selectRoot \\"foo\\" [] [{\\"selector\\":\\"selectN\\",\\"args\\":[],\\"result\\":0},{\\"selector\\":\\"selectSource\\",\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
+        "onExecutionResultRemoved selectFooOrBar \\"foo\\" [\\"foo\\"] [{\\"selector\\":\\"selectFoo\\",\\"args\\":[],\\"result\\":\\"foo\\"}]",
+        "onExecutionResultRemoved selectRoot \\"foo\\" [] [{\\"selector\\":\\"selectSource\\",\\"args\\":[],\\"result\\":\\"foo\\"},{\\"selector\\":\\"selectFooOrBar\\",\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "onExecutionResultAdded selectN 1 [] []",
+        "onExecutionResultAdded selectSource \\"bar\\" [] [{\\"selector\\":\\"selectN\\",\\"args\\":[],\\"result\\":1}]",
         "onExecutionResultAdded selectBar \\"bar\\" [] []",
-        "onExecutionResultAdded selectSource \\"bar\\" [\\"bar\\"] [{\\"selector\\":\\"selectBar\\",\\"args\\":[],\\"result\\":\\"bar\\"}]",
-        "onExecutionResultAdded selectRoot \\"bar\\" [] [{\\"selector\\":\\"selectN\\",\\"args\\":[],\\"result\\":1},{\\"selector\\":\\"selectSource\\",\\"args\\":[\\"bar\\"],\\"result\\":\\"bar\\"}]",
+        "onExecutionResultAdded selectFooOrBar \\"bar\\" [\\"bar\\"] [{\\"selector\\":\\"selectBar\\",\\"args\\":[],\\"result\\":\\"bar\\"}]",
+        "onExecutionResultAdded selectRoot \\"bar\\" [] [{\\"selector\\":\\"selectSource\\",\\"args\\":[],\\"result\\":\\"bar\\"},{\\"selector\\":\\"selectFooOrBar\\",\\"args\\":[\\"bar\\"],\\"result\\":\\"bar\\"}]",
         "onSelectorDeactivated selectFoo []",
-        "onSelectorDeactivated selectSource [\\"foo\\"]",
+        "onSelectorDeactivated selectFooOrBar [\\"foo\\"]",
         "onSelectorActivated selectBar []",
-        "onSelectorActivated selectSource [\\"bar\\"]",
+        "onSelectorActivated selectFooOrBar [\\"bar\\"]",
         "destroy",
         "onExecutionResultRemoved selectN 1 [] []",
+        "onExecutionResultRemoved selectSource \\"bar\\" [] [{\\"selector\\":\\"selectN\\",\\"args\\":[],\\"result\\":1}]",
         "onExecutionResultRemoved selectBar \\"bar\\" [] []",
-        "onExecutionResultRemoved selectSource \\"bar\\" [\\"bar\\"] [{\\"selector\\":\\"selectBar\\",\\"args\\":[],\\"result\\":\\"bar\\"}]",
-        "onExecutionResultRemoved selectRoot \\"bar\\" [] [{\\"selector\\":\\"selectN\\",\\"args\\":[],\\"result\\":1},{\\"selector\\":\\"selectSource\\",\\"args\\":[\\"bar\\"],\\"result\\":\\"bar\\"}]",
+        "onExecutionResultRemoved selectFooOrBar \\"bar\\" [\\"bar\\"] [{\\"selector\\":\\"selectBar\\",\\"args\\":[],\\"result\\":\\"bar\\"}]",
+        "onExecutionResultRemoved selectRoot \\"bar\\" [] [{\\"selector\\":\\"selectSource\\",\\"args\\":[],\\"result\\":\\"bar\\"},{\\"selector\\":\\"selectFooOrBar\\",\\"args\\":[\\"bar\\"],\\"result\\":\\"bar\\"}]",
         "onSelectorDeactivated selectN []",
+        "onSelectorDeactivated selectSource []",
         "onSelectorDeactivated selectBar []",
-        "onSelectorDeactivated selectSource [\\"bar\\"]",
+        "onSelectorDeactivated selectFooOrBar [\\"bar\\"]",
         "onSelectorDeactivated selectRoot []",
       ]
     `);
