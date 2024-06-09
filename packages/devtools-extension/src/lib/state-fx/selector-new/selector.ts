@@ -1,4 +1,6 @@
-export interface SelectorOptions {}
+export interface SelectorOptions {
+  name?: string;
+}
 
 export interface SelectorContext<TState> {
   runSelector<TResult, TArgs extends any[]>(
@@ -141,6 +143,24 @@ export function areArgsEqual(args1: any[], args2: any[]) {
   return true;
 }
 
+export function findExecutionResultInArray<
+  TState,
+  TResult,
+  TArgs extends any[]
+>(
+  executionResults: SelectorExecutionResult<TState, TResult, TArgs>[],
+  selector: AnySelector<TState, TResult, TArgs>,
+  args: TArgs
+) {
+  for (const executionResult of executionResults) {
+    if (areArgsEqual(executionResult.args, args)) {
+      return executionResult;
+    }
+  }
+
+  return undefined;
+}
+
 export function findExecutionResult<TState, TResult, TArgs extends any[]>(
   executionResultsMap: SelectorExecutionResultsMap<TState>,
   selector: AnySelector<TState, TResult, TArgs>,
@@ -149,10 +169,13 @@ export function findExecutionResult<TState, TResult, TArgs extends any[]>(
   const executionResults = executionResultsMap.get(selector);
 
   if (executionResults !== undefined) {
-    for (const executionResult of executionResults) {
-      if (areArgsEqual(executionResult.args, args)) {
-        return executionResult;
-      }
+    const executionResult = findExecutionResultInArray(
+      executionResults,
+      selector,
+      args
+    );
+    if (executionResult !== undefined) {
+      return executionResult;
     }
   }
 
