@@ -320,7 +320,7 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
     executionResult: SelectorExecutionResult<TState, TResult, TArgs>
   ): SelectorExecutionResult<TState, TResult, TArgs> | undefined {
     const prevInputs = this.currentInputs;
-    this.currentInputs = [];
+    this.currentInputs = undefined;
     for (const input of executionResult.inputs) {
       const inputResult = input.selector(this, ...input.args);
       if (input.result !== inputResult) {
@@ -328,15 +328,9 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
         return undefined;
       }
     }
-    const inputs = this.currentInputs;
     this.currentInputs = prevInputs;
 
-    return {
-      selector: executionResult.selector,
-      result: executionResult.result,
-      args: executionResult.args,
-      inputs,
-    };
+    return executionResult;
   }
 }
 
