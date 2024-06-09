@@ -3,6 +3,7 @@ import {
   createSelectorContext,
   findExecutionResultInArray,
   SelectorContext,
+  SelectorExecutionResult,
   SelectorExecutionResultsMap,
 } from './selector';
 
@@ -18,23 +19,35 @@ export interface SelectorActivationCallback<
   (selector: AnySelector<TState, any, TArgs>, args: TArgs): void;
 }
 
+export interface SelectorExecutionResultCallback<
+  TState,
+  TResult = any,
+  TArgs extends any[] = any[]
+> {
+  (result: SelectorExecutionResult<TState, TResult, TArgs>): void;
+}
+
 export interface CreateSelectorRunnerOptions<TState> {
-  onActivate: SelectorActivationCallback<TState>;
-  onDeactivate: SelectorActivationCallback<TState>;
+  onSelectorActivated?: SelectorActivationCallback<TState>;
+  onSelectorDeactivated?: SelectorActivationCallback<TState>;
+  onExecutionResultAdded?: SelectorExecutionResultCallback<TState>;
+  onExecutionResultRemoved?: SelectorExecutionResultCallback<TState>;
 }
 
 export function createSelectorRunner<TState, TResult, TArgs extends any[]>(
   selector: AnySelector<TState, TResult, TArgs>,
-  options: CreateSelectorRunnerOptions<TState>
+  options: CreateSelectorRunnerOptions<TState> = {}
 ): SelectorRunner<TState, TResult, TArgs> {
   return new SelectorRunnerImpl(
     selector,
-    options.onActivate,
-    options.onDeactivate
+    options.onSelectorActivated,
+    options.onSelectorDeactivated,
+    options.onExecutionResultAdded,
+    options.onExecutionResultRemoved
   );
 }
 
-function runOnDiff<TState>(
+function runActivationCallbackOnDiff<TState>(
   targetExecutionResultsMap: SelectorExecutionResultsMap<TState>,
   diffTargetExecutionResultsMap: SelectorExecutionResultsMap<TState>,
   run: SelectorActivationCallback<TState>
@@ -61,13 +74,45 @@ function runOnDiff<TState>(
   }
 }
 
-function runOnAll<TState>(
+function runActivationCallbackOnAll<TState>(
   targetExecutionResultsMap: SelectorExecutionResultsMap<TState>,
   run: SelectorActivationCallback<TState>
 ) {
   for (const [, targetResults] of targetExecutionResultsMap) {
     for (const targetResult of targetResults) {
       run(targetResult.selector, targetResult.args);
+    }
+  }
+}
+
+function runExecutionResultCallbackOnDiff<TState>(
+  targetExecutionResultsMap: SelectorExecutionResultsMap<TState>,
+  diffTargetExecutionResultsMap: SelectorExecutionResultsMap<TState>,
+  run: SelectorExecutionResultCallback<TState>
+) {
+  for (const [selector, targetResults] of targetExecutionResultsMap) {
+    const diffTargetResults = diffTargetExecutionResultsMap.get(selector);
+    if (diffTargetResults === undefined) {
+      for (const targetResult of targetResults) {
+        run(targetResult);
+      }
+    } else {
+      for (const targetResult of targetResults) {
+        if (!diffTargetResults.includes(targetResult)) {
+          run(targetResult);
+        }
+      }
+    }
+  }
+}
+
+function runExecutionResultCallbackOnAll<TState>(
+  targetExecutionResultsMap: SelectorExecutionResultsMap<TState>,
+  run: SelectorExecutionResultCallback<TState>
+) {
+  for (const [, targetResults] of targetExecutionResultsMap) {
+    for (const targetResult of targetResults) {
+      run(targetResult);
     }
   }
 }
@@ -79,9 +124,17 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
 
   constructor(
     private readonly selector: AnySelector<TState, TResult, TArgs>,
-    private readonly onActivate: SelectorActivationCallback<TState> | undefined,
-    private readonly onDeactivate:
+    private readonly onSelectorActivated:
       | SelectorActivationCallback<TState>
+      | undefined,
+    private readonly onSelectorDeactivated:
+      | SelectorActivationCallback<TState>
+      | undefined,
+    private readonly onExecutionResultAdded:
+      | SelectorExecutionResultCallback<TState>
+      | undefined,
+    private readonly onExecutionResultRemoved:
+      | SelectorExecutionResultCallback<TState>
       | undefined
   ) {}
 
@@ -94,25 +147,53 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
     const result = this.selector(context, ...args);
     this.context = context;
 
-    if (this.onDeactivate !== undefined) {
+    if (this.onExecutionResultRemoved !== undefined) {
       if (cachedExecutionResultsMap != undefined) {
-        runOnDiff(
+        runExecutionResultCallbackOnDiff(
           cachedExecutionResultsMap,
           context.getExecutionResultsMap(),
-          this.onDeactivate
+          this.onExecutionResultRemoved
         );
       }
     }
 
-    if (this.onActivate !== undefined) {
+    if (this.onExecutionResultAdded !== undefined) {
       if (cachedExecutionResultsMap != undefined) {
-        runOnDiff(
+        runExecutionResultCallbackOnDiff(
           context.getExecutionResultsMap(),
           cachedExecutionResultsMap,
-          this.onActivate
+          this.onExecutionResultAdded
         );
       } else {
-        runOnAll(context.getExecutionResultsMap(), this.onActivate);
+        runExecutionResultCallbackOnAll(
+          context.getExecutionResultsMap(),
+          this.onExecutionResultAdded
+        );
+      }
+    }
+
+    if (this.onSelectorDeactivated !== undefined) {
+      if (cachedExecutionResultsMap != undefined) {
+        runActivationCallbackOnDiff(
+          cachedExecutionResultsMap,
+          context.getExecutionResultsMap(),
+          this.onSelectorDeactivated
+        );
+      }
+    }
+
+    if (this.onSelectorActivated !== undefined) {
+      if (cachedExecutionResultsMap != undefined) {
+        runActivationCallbackOnDiff(
+          context.getExecutionResultsMap(),
+          cachedExecutionResultsMap,
+          this.onSelectorActivated
+        );
+      } else {
+        runActivationCallbackOnAll(
+          context.getExecutionResultsMap(),
+          this.onSelectorActivated
+        );
       }
     }
 
@@ -120,9 +201,19 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
   }
 
   dispose() {
-    if (this.onDeactivate !== undefined) {
-      if (this.context !== undefined) {
-        runOnAll(this.context.getExecutionResultsMap(), this.onDeactivate);
+    if (this.context !== undefined) {
+      if (this.onExecutionResultRemoved !== undefined) {
+        runExecutionResultCallbackOnAll(
+          this.context.getExecutionResultsMap(),
+          this.onExecutionResultRemoved
+        );
+      }
+
+      if (this.onSelectorDeactivated !== undefined) {
+        runActivationCallbackOnAll(
+          this.context.getExecutionResultsMap(),
+          this.onSelectorDeactivated
+        );
       }
     }
   }
