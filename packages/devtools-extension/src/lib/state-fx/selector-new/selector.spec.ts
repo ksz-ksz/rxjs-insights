@@ -1,7 +1,6 @@
 import {
   addExecutionResult,
   AnySelector,
-  areArgsEqual,
   createSelector,
   createSelectorContext,
   createStateSelector,
@@ -12,6 +11,7 @@ import { findExecutionResult } from './find-execution-result';
 import { SelectorExecutionResultsMap } from './selector-execution-results-map';
 import { SelectorExecutionResult } from './selector-execution-result';
 import { createSelectorExecutionResultsCacheFromMap } from './selector-execution-results-cache';
+import { areArgsEqual } from './are-args-equal';
 
 interface State {
   foo: string;
