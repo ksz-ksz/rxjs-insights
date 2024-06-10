@@ -10,8 +10,8 @@ import {
 import { findExecutionResult } from './find-execution-result';
 import { SelectorExecutionResultsMap } from './selector-execution-results-map';
 import { SelectorExecutionResult } from './selector-execution-result';
-import { createSelectorExecutionResultsCacheFromMap } from './selector-execution-results-cache';
 import { areArgsEqual } from './are-args-equal';
+import { createSelectorExecutionResultsLocalCache } from './selector-execution-results-local-cache';
 
 interface State {
   foo: string;
@@ -756,7 +756,7 @@ describe('selector', () => {
       const ctx = createSelectorContext(
         testCase.state,
         testCase.prevExecutionResult !== undefined
-          ? createSelectorExecutionResultsCacheFromMap(
+          ? createSelectorExecutionResultsLocalCache(
               createExecutionResultsMap(testCase.prevExecutionResult)
             )
           : undefined

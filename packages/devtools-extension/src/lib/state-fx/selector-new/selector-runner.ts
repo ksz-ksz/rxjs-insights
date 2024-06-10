@@ -6,7 +6,8 @@ import {
 import { findExecutionResultInArray } from './find-execution-resultIn-array';
 import { SelectorExecutionResultsMap } from './selector-execution-results-map';
 import { SelectorExecutionResult } from './selector-execution-result';
-import { createSelectorExecutionResultsCacheFromMap } from './selector-execution-results-cache';
+
+import { createSelectorExecutionResultsLocalCache } from './selector-execution-results-local-cache';
 
 export interface SelectorRunner<TState, TResult, TArgs extends any[]> {
   run(state: TState, ...args: TArgs): TResult;
@@ -146,7 +147,7 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
         : undefined;
     const cache =
       prevExecutionResultsMap !== undefined
-        ? createSelectorExecutionResultsCacheFromMap(prevExecutionResultsMap)
+        ? createSelectorExecutionResultsLocalCache(prevExecutionResultsMap)
         : undefined;
     const context = createSelectorContext(state, cache);
     const result = this.selector(context, ...args);
