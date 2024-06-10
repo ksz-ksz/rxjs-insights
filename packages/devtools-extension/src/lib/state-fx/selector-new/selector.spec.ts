@@ -5,12 +5,13 @@ import {
   createSelector,
   createSelectorContext,
   createStateSelector,
-  findExecutionResult,
   Selector,
   SelectorContext,
-  SelectorExecutionResult,
-  SelectorExecutionResultsMap,
 } from './selector';
+import { findExecutionResult } from './find-execution-result';
+import { SelectorExecutionResultsMap } from './selector-execution-results-map';
+import { SelectorExecutionResult } from './selector-execution-result';
+import { createSelectorExecutionResultsCacheFromMap } from './selector-execution-results-cache';
 
 interface State {
   foo: string;
@@ -755,7 +756,9 @@ describe('selector', () => {
       const ctx = createSelectorContext(
         testCase.state,
         testCase.prevExecutionResult !== undefined
-          ? createExecutionResultsMap(testCase.prevExecutionResult)
+          ? createSelectorExecutionResultsCacheFromMap(
+              createExecutionResultsMap(testCase.prevExecutionResult)
+            )
           : undefined
       );
       const executionResult = ctx.runSelector(

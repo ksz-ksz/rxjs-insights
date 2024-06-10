@@ -1,3 +1,11 @@
+import { findExecutionResult } from './find-execution-result';
+import { SelectorExecutionResultsMap } from './selector-execution-results-map';
+import {
+  SelectorExecutionResult,
+  SelectorInput,
+} from './selector-execution-result';
+import { SelectorExecutionResultsCache } from './selector-execution-results-cache';
+
 export interface SelectorOptions {
   name?: string;
 }
@@ -50,20 +58,6 @@ export type AnySelector<TState, TResult, TArgs extends any[]> =
   | Selector<TState, TResult, TArgs>
   | StateSelector<TState, TResult, TArgs>;
 
-export interface SelectorExecutionResultsMap<TState>
-  extends Map<
-    AnySelector<TState, any, any[]>,
-    SelectorExecutionResult<TState>[]
-  > {
-  get<TResult, TArgs extends any[]>(
-    selector: AnySelector<TState, TResult, TArgs>
-  ): SelectorExecutionResult<TState, TResult, TArgs>[] | undefined;
-  set<TResult, TArgs extends any[]>(
-    selector: AnySelector<TState, TResult, TArgs>,
-    executionResults: SelectorExecutionResult<TState, TResult, TArgs>[]
-  ): this;
-}
-
 export function createSelector<TState, TResult, TArgs extends any[]>(
   run: RunSelector<TState, TResult, TArgs>,
   options: SelectorOptions = {}
@@ -104,27 +98,6 @@ export function createStateSelector<TState, TResult, TArgs extends any[]>(
   return stateSelector;
 }
 
-export interface SelectorInput<
-  TState,
-  TResult = any,
-  TArgs extends any[] = any[]
-> {
-  selector: AnySelector<TState, TResult, TArgs>;
-  args: TArgs;
-  result: TResult;
-}
-
-export interface SelectorExecutionResult<
-  TState,
-  TResult = any,
-  TArgs extends any[] = any[]
-> {
-  selector: AnySelector<TState, TResult, TArgs>;
-  args: TArgs;
-  result: TResult;
-  inputs: SelectorInput<TState>[];
-}
-
 export type CurrentInputs<TState> = SelectorInput<TState>[] & {
   push<TResult, TArgs extends any[]>(
     input: SelectorInput<TState, TResult, TArgs>
@@ -141,45 +114,6 @@ export function areArgsEqual(args1: any[], args2: any[]) {
     }
   }
   return true;
-}
-
-export function findExecutionResultInArray<
-  TState,
-  TResult,
-  TArgs extends any[]
->(
-  executionResults: SelectorExecutionResult<TState, TResult, TArgs>[],
-  selector: AnySelector<TState, TResult, TArgs>,
-  args: TArgs
-) {
-  for (const executionResult of executionResults) {
-    if (areArgsEqual(executionResult.args, args)) {
-      return executionResult;
-    }
-  }
-
-  return undefined;
-}
-
-export function findExecutionResult<TState, TResult, TArgs extends any[]>(
-  executionResultsMap: SelectorExecutionResultsMap<TState>,
-  selector: AnySelector<TState, TResult, TArgs>,
-  args: TArgs
-): SelectorExecutionResult<TState, TResult, TArgs> | undefined {
-  const executionResults = executionResultsMap.get(selector);
-
-  if (executionResults !== undefined) {
-    const executionResult = findExecutionResultInArray(
-      executionResults,
-      selector,
-      args
-    );
-    if (executionResult !== undefined) {
-      return executionResult;
-    }
-  }
-
-  return undefined;
 }
 
 export function addExecutionResult<TState, TResult, TArgs extends any[]>(
@@ -202,7 +136,7 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
   private currentInputs: CurrentInputs<TState> | undefined = undefined;
   constructor(
     private readonly state: TState,
-    private readonly cachedExecutionResultsMap?: SelectorExecutionResultsMap<TState>
+    private readonly cache?: SelectorExecutionResultsCache<TState>
   ) {}
 
   runSelector<TResult, TArgs extends any[]>(
@@ -225,27 +159,29 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
       return currentExecutionResult;
     }
 
-    if (this.cachedExecutionResultsMap !== undefined) {
-      const cachedExecutionResult = findExecutionResult(
-        this.cachedExecutionResultsMap,
+    if (this.cache !== undefined) {
+      const prevInputs = this.currentInputs;
+      this.currentInputs = undefined;
+      const cachedExecutionResult = this.cache.getExecutionResult(
+        this,
         selector,
         args
       );
+      this.currentInputs = prevInputs;
+
       if (cachedExecutionResult !== undefined) {
-        const executionResult = this.getCachedSelectorExecutionResult(
+        addExecutionResult(
+          this.currentExecutionResultsMap,
           cachedExecutionResult
         );
-        if (executionResult !== undefined) {
-          addExecutionResult(this.currentExecutionResultsMap, executionResult);
-          if (this.currentInputs !== undefined) {
-            this.currentInputs.push({
-              selector: executionResult.selector,
-              args: executionResult.args,
-              result: executionResult.result,
-            });
-          }
-          return executionResult;
+        if (this.currentInputs !== undefined) {
+          this.currentInputs.push({
+            selector: cachedExecutionResult.selector,
+            args: cachedExecutionResult.args,
+            result: cachedExecutionResult.result,
+          });
         }
+        return cachedExecutionResult;
       }
     }
 
@@ -315,28 +251,11 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
   getExecutionResultsMap() {
     return this.currentExecutionResultsMap;
   }
-
-  private getCachedSelectorExecutionResult<TResult, TArgs extends any[]>(
-    executionResult: SelectorExecutionResult<TState, TResult, TArgs>
-  ): SelectorExecutionResult<TState, TResult, TArgs> | undefined {
-    const prevInputs = this.currentInputs;
-    this.currentInputs = undefined;
-    for (const input of executionResult.inputs) {
-      const inputResult = input.selector(this, ...input.args);
-      if (input.result !== inputResult) {
-        this.currentInputs = prevInputs;
-        return undefined;
-      }
-    }
-    this.currentInputs = prevInputs;
-
-    return executionResult;
-  }
 }
 
 export function createSelectorContext<TState>(
   state: TState,
-  cachedExecutionResultsMap?: SelectorExecutionResultsMap<TState>
+  cache?: SelectorExecutionResultsCache<TState>
 ): SelectorContext<TState> {
-  return new SelectorContextImpl(state, cachedExecutionResultsMap);
+  return new SelectorContextImpl(state, cache);
 }

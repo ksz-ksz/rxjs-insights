@@ -1,11 +1,12 @@
 import {
   AnySelector,
   createSelectorContext,
-  findExecutionResultInArray,
   SelectorContext,
-  SelectorExecutionResult,
-  SelectorExecutionResultsMap,
 } from './selector';
+import { findExecutionResultInArray } from './find-execution-resultIn-array';
+import { SelectorExecutionResultsMap } from './selector-execution-results-map';
+import { SelectorExecutionResult } from './selector-execution-result';
+import { createSelectorExecutionResultsCacheFromMap } from './selector-execution-results-cache';
 
 export interface SelectorRunner<TState, TResult, TArgs extends any[]> {
   run(state: TState, ...args: TArgs): TResult;
@@ -139,59 +140,65 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
   ) {}
 
   run(state: TState, ...args: TArgs): TResult {
-    const cachedExecutionResultsMap =
+    const prevExecutionResultsMap =
       this.context !== undefined
         ? this.context.getExecutionResultsMap()
         : undefined;
-    const context = createSelectorContext(state, cachedExecutionResultsMap);
+    const cache =
+      prevExecutionResultsMap !== undefined
+        ? createSelectorExecutionResultsCacheFromMap(prevExecutionResultsMap)
+        : undefined;
+    const context = createSelectorContext(state, cache);
     const result = this.selector(context, ...args);
     this.context = context;
 
+    const executionResultsMap = context.getExecutionResultsMap();
+
     if (this.onExecutionResultRemoved !== undefined) {
-      if (cachedExecutionResultsMap != undefined) {
+      if (prevExecutionResultsMap != undefined) {
         runExecutionResultCallbackOnDiff(
-          cachedExecutionResultsMap,
-          context.getExecutionResultsMap(),
+          prevExecutionResultsMap,
+          executionResultsMap,
           this.onExecutionResultRemoved
         );
       }
     }
 
     if (this.onExecutionResultAdded !== undefined) {
-      if (cachedExecutionResultsMap != undefined) {
+      if (prevExecutionResultsMap != undefined) {
         runExecutionResultCallbackOnDiff(
-          context.getExecutionResultsMap(),
-          cachedExecutionResultsMap,
+          executionResultsMap,
+          prevExecutionResultsMap,
           this.onExecutionResultAdded
         );
       } else {
         runExecutionResultCallbackOnAll(
-          context.getExecutionResultsMap(),
+          executionResultsMap,
           this.onExecutionResultAdded
         );
       }
     }
 
     if (this.onSelectorDeactivated !== undefined) {
-      if (cachedExecutionResultsMap != undefined) {
+      if (prevExecutionResultsMap != undefined) {
         runActivationCallbackOnDiff(
-          cachedExecutionResultsMap,
-          context.getExecutionResultsMap(),
+          prevExecutionResultsMap,
+          executionResultsMap,
           this.onSelectorDeactivated
         );
       }
     }
 
     if (this.onSelectorActivated !== undefined) {
-      if (cachedExecutionResultsMap != undefined) {
+      if (prevExecutionResultsMap != undefined) {
         runActivationCallbackOnDiff(
-          context.getExecutionResultsMap(),
-          cachedExecutionResultsMap,
+          executionResultsMap,
+          prevExecutionResultsMap,
           this.onSelectorActivated
         );
       } else {
         runActivationCallbackOnAll(
-          context.getExecutionResultsMap(),
+          executionResultsMap,
           this.onSelectorActivated
         );
       }

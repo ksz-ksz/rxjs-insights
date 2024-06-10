@@ -1,13 +1,13 @@
 import {
   addExecutionResult,
   CurrentInputs,
-  findExecutionResult,
   Selector,
   SelectorContext,
-  SelectorExecutionResult,
-  SelectorExecutionResultsMap,
   StateSelector,
 } from './selector';
+import { findExecutionResult } from './find-execution-result';
+import { SelectorExecutionResultsMap } from './selector-execution-results-map';
+import { SelectorExecutionResult } from './selector-execution-result';
 
 export class TestSelectorContext<TState> implements SelectorContext<TState> {
   private readonly currentExecutionResultsMap: SelectorExecutionResultsMap<TState> =
