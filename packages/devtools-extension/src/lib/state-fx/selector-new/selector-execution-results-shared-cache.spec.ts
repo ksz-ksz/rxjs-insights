@@ -1,7 +1,7 @@
 import { createSelectorExecutionResultsSharedCache } from './selector-execution-results-shared-cache';
 import { createSelector, createSelectorContext } from './selector';
 
-describe('selector-execution-results-global-cache', () => {
+describe('selector-execution-results-shared-cache', () => {
   it('should add execution result to cache', () => {
     const listing: string[] = [];
     const selectSomething = createSelector(() => {
@@ -10,12 +10,13 @@ describe('selector-execution-results-global-cache', () => {
     });
 
     const cache = createSelectorExecutionResultsSharedCache();
-    cache.addExecutionResult('a', {
+    const executionResult = {
       selector: selectSomething,
       args: [],
       result: 'something',
       inputs: [],
-    });
+    };
+    cache.addExecutionResult(executionResult);
 
     const context = createSelectorContext(undefined, cache);
     const result = selectSomething(context);
@@ -37,8 +38,8 @@ describe('selector-execution-results-global-cache', () => {
       result: 'something',
       inputs: [],
     };
-    cache.addExecutionResult('a', executionResult);
-    cache.removeExecutionResult('a', executionResult);
+    cache.addExecutionResult(executionResult);
+    cache.removeExecutionResult(executionResult);
 
     const context = createSelectorContext(undefined, cache);
     const result = selectSomething(context);
@@ -64,9 +65,9 @@ describe('selector-execution-results-global-cache', () => {
       result: 'something',
       inputs: [],
     };
-    cache.addExecutionResult('a', executionResult);
-    cache.addExecutionResult('b', executionResult);
-    cache.removeExecutionResult('a', executionResult);
+    cache.addExecutionResult(executionResult);
+    cache.addExecutionResult(executionResult);
+    cache.removeExecutionResult(executionResult);
 
     const context = createSelectorContext(undefined, cache);
     const result = selectSomething(context);
@@ -74,7 +75,7 @@ describe('selector-execution-results-global-cache', () => {
     expect(listing).toMatchInlineSnapshot(`Array []`);
   });
 
-  it('should remove execution result from cache when is used by every ref', () => {
+  it('should remove execution result from cache when is released by every ref', () => {
     const listing: string[] = [];
     const selectSomething = createSelector(() => {
       listing.push('selectSomething.run');
@@ -88,10 +89,10 @@ describe('selector-execution-results-global-cache', () => {
       result: 'something',
       inputs: [],
     };
-    cache.addExecutionResult('a', executionResult);
-    cache.addExecutionResult('b', executionResult);
-    cache.removeExecutionResult('a', executionResult);
-    cache.removeExecutionResult('b', executionResult);
+    cache.addExecutionResult(executionResult);
+    cache.addExecutionResult(executionResult);
+    cache.removeExecutionResult(executionResult);
+    cache.removeExecutionResult(executionResult);
 
     const context = createSelectorContext(undefined, cache);
     const result = selectSomething(context);

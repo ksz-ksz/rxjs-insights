@@ -11,7 +11,7 @@ export function createSelectorExecutionResultsSharedCache<
 }
 
 interface CacheEntry<TState, TResult = any, TArgs extends any[] = any[]> {
-  refs: unknown[];
+  refs: number;
   executionResult: SelectorExecutionResult<TState, TResult, TArgs>;
 }
 
@@ -29,15 +29,9 @@ interface Cache<TState>
 
 export interface SelectorExecutionResultsSharedCache<TState>
   extends SelectorExecutionResultsCache<TState> {
-  addExecutionResult(
-    ref: unknown,
-    executionResult: SelectorExecutionResult<TState>
-  ): void;
+  addExecutionResult(executionResult: SelectorExecutionResult<TState>): void;
 
-  removeExecutionResult(
-    ref: unknown,
-    executionResult: SelectorExecutionResult<TState>
-  ): void;
+  removeExecutionResult(executionResult: SelectorExecutionResult<TState>): void;
 }
 
 export class SelectorExecutionResultsSharedCacheImpl<TState>
@@ -66,10 +60,7 @@ export class SelectorExecutionResultsSharedCacheImpl<TState>
     return undefined;
   }
 
-  addExecutionResult(
-    ref: unknown,
-    executionResult: SelectorExecutionResult<TState>
-  ) {
+  addExecutionResult(executionResult: SelectorExecutionResult<TState>) {
     const cacheEntries = this.cache.get(executionResult.selector);
 
     if (cacheEntries !== undefined) {
@@ -79,27 +70,24 @@ export class SelectorExecutionResultsSharedCacheImpl<TState>
       );
 
       if (cacheEntry !== undefined) {
-        cacheEntry.refs.push(ref);
+        cacheEntry.refs++;
       } else {
         cacheEntries.push({
-          refs: [ref],
+          refs: 1,
           executionResult,
         });
       }
     } else {
       this.cache.set(executionResult.selector, [
         {
-          refs: [ref],
+          refs: 1,
           executionResult,
         },
       ]);
     }
   }
 
-  removeExecutionResult(
-    ref: unknown,
-    executionResult: SelectorExecutionResult<TState>
-  ) {
+  removeExecutionResult(executionResult: SelectorExecutionResult<TState>) {
     const cacheEntries = this.cache.get(executionResult.selector);
 
     if (cacheEntries !== undefined) {
@@ -109,15 +97,13 @@ export class SelectorExecutionResultsSharedCacheImpl<TState>
       );
 
       if (cacheEntry !== undefined) {
-        const indexOfRef = cacheEntry.refs.indexOf(ref);
-        if (indexOfRef !== -1) {
-          cacheEntry.refs.splice(indexOfRef, 1);
-          if (cacheEntry.refs.length === 0) {
-            const indexOfCacheEntry = cacheEntries.indexOf(cacheEntry);
-            cacheEntries.splice(indexOfCacheEntry, 1);
-            if (cacheEntries.length === 0) {
-              this.cache.delete(executionResult.selector);
-            }
+        cacheEntry.refs--;
+
+        if (cacheEntry.refs === 0) {
+          const indexOfCacheEntry = cacheEntries.indexOf(cacheEntry);
+          cacheEntries.splice(indexOfCacheEntry, 1);
+          if (cacheEntries.length === 0) {
+            this.cache.delete(executionResult.selector);
           }
         }
       }
