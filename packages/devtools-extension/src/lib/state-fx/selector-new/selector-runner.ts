@@ -8,6 +8,8 @@ import { SelectorExecutionResultsMap } from './selector-execution-results-map';
 import { SelectorExecutionResult } from './selector-execution-result';
 
 import { createSelectorExecutionResultsLocalCache } from './selector-execution-results-local-cache';
+import { SelectorExecutionResultsCache } from './selector-execution-results-cache';
+import { SelectorExecutionResultsGlobalCache } from './selector-execution-results-global-cache';
 
 export interface SelectorRunner<TState, TResult, TArgs extends any[]> {
   run(state: TState, ...args: TArgs): TResult;
@@ -30,6 +32,7 @@ export interface SelectorExecutionResultCallback<
 }
 
 export interface CreateSelectorRunnerOptions<TState> {
+  globalCache?: SelectorExecutionResultsGlobalCache<TState>;
   onSelectorActivated?: SelectorActivationCallback<TState>;
   onSelectorDeactivated?: SelectorActivationCallback<TState>;
   onExecutionResultAdded?: SelectorExecutionResultCallback<TState>;
@@ -42,6 +45,7 @@ export function createSelectorRunner<TState, TResult, TArgs extends any[]>(
 ): SelectorRunner<TState, TResult, TArgs> {
   return new SelectorRunnerImpl(
     selector,
+    options.globalCache,
     options.onSelectorActivated,
     options.onSelectorDeactivated,
     options.onExecutionResultAdded,
@@ -122,60 +126,93 @@ function runExecutionResultCallbackOnAll<TState>(
 class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
   implements SelectorRunner<TState, TResult, TArgs>
 {
-  private context: SelectorContext<TState> | undefined = undefined;
+  private executionResultsMap: SelectorExecutionResultsMap<TState> | undefined =
+    undefined;
+
+  private readonly executionResultAddedCallback:
+    | SelectorExecutionResultCallback<TState>
+    | undefined;
+  private readonly executionResultRemovedCallback:
+    | SelectorExecutionResultCallback<TState>
+    | undefined;
 
   constructor(
     private readonly selector: AnySelector<TState, TResult, TArgs>,
+    private readonly globalCache:
+      | SelectorExecutionResultsGlobalCache<TState>
+      | undefined,
     private readonly onSelectorActivated:
       | SelectorActivationCallback<TState>
       | undefined,
     private readonly onSelectorDeactivated:
       | SelectorActivationCallback<TState>
       | undefined,
-    private readonly onExecutionResultAdded:
-      | SelectorExecutionResultCallback<TState>
-      | undefined,
-    private readonly onExecutionResultRemoved:
+    onExecutionResultAdded: SelectorExecutionResultCallback<TState> | undefined,
+    onExecutionResultRemoved:
       | SelectorExecutionResultCallback<TState>
       | undefined
-  ) {}
+  ) {
+    this.executionResultAddedCallback =
+      this.globalCache !== undefined || onExecutionResultAdded !== undefined
+        ? (result) => {
+            if (this.globalCache !== undefined) {
+              this.globalCache.addExecutionResult(this, result);
+            }
+            if (onExecutionResultAdded !== undefined) {
+              onExecutionResultAdded(result);
+            }
+          }
+        : undefined;
+
+    this.executionResultRemovedCallback =
+      this.globalCache !== undefined || onExecutionResultRemoved !== undefined
+        ? (result) => {
+            if (this.globalCache !== undefined) {
+              this.globalCache.removeExecutionResult(this, result);
+            }
+            if (onExecutionResultRemoved !== undefined) {
+              onExecutionResultRemoved(result);
+            }
+          }
+        : undefined;
+  }
 
   run(state: TState, ...args: TArgs): TResult {
-    const prevExecutionResultsMap =
-      this.context !== undefined
-        ? this.context.getExecutionResultsMap()
-        : undefined;
+    const prevExecutionResultsMap = this.executionResultsMap;
     const cache =
       prevExecutionResultsMap !== undefined
-        ? createSelectorExecutionResultsLocalCache(prevExecutionResultsMap)
-        : undefined;
+        ? createSelectorExecutionResultsLocalCache(
+            prevExecutionResultsMap,
+            this.globalCache
+          )
+        : this.globalCache;
     const context = createSelectorContext(state, cache);
     const result = this.selector(context, ...args);
-    this.context = context;
 
     const executionResultsMap = context.getExecutionResultsMap();
+    this.executionResultsMap = executionResultsMap;
 
-    if (this.onExecutionResultRemoved !== undefined) {
+    if (this.executionResultRemovedCallback !== undefined) {
       if (prevExecutionResultsMap != undefined) {
         runExecutionResultCallbackOnDiff(
           prevExecutionResultsMap,
           executionResultsMap,
-          this.onExecutionResultRemoved
+          this.executionResultRemovedCallback
         );
       }
     }
 
-    if (this.onExecutionResultAdded !== undefined) {
+    if (this.executionResultAddedCallback !== undefined) {
       if (prevExecutionResultsMap != undefined) {
         runExecutionResultCallbackOnDiff(
           executionResultsMap,
           prevExecutionResultsMap,
-          this.onExecutionResultAdded
+          this.executionResultAddedCallback
         );
       } else {
         runExecutionResultCallbackOnAll(
           executionResultsMap,
-          this.onExecutionResultAdded
+          this.executionResultAddedCallback
         );
       }
     }
@@ -209,17 +246,17 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
   }
 
   dispose() {
-    if (this.context !== undefined) {
-      if (this.onExecutionResultRemoved !== undefined) {
+    if (this.executionResultsMap !== undefined) {
+      if (this.executionResultRemovedCallback !== undefined) {
         runExecutionResultCallbackOnAll(
-          this.context.getExecutionResultsMap(),
-          this.onExecutionResultRemoved
+          this.executionResultsMap,
+          this.executionResultRemovedCallback
         );
       }
 
       if (this.onSelectorDeactivated !== undefined) {
         runActivationCallbackOnAll(
-          this.context.getExecutionResultsMap(),
+          this.executionResultsMap,
           this.onSelectorDeactivated
         );
       }
