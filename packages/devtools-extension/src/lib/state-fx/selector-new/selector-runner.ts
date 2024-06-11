@@ -32,7 +32,7 @@ export interface SelectorExecutionResultCallback<
 }
 
 export interface CreateSelectorRunnerOptions<TState> {
-  globalCache?: SelectorExecutionResultsSharedCache<TState>;
+  sharedCache?: SelectorExecutionResultsSharedCache<TState>;
   onSelectorActivated?: SelectorActivationCallback<TState>;
   onSelectorDeactivated?: SelectorActivationCallback<TState>;
   onExecutionResultAdded?: SelectorExecutionResultCallback<TState>;
@@ -45,7 +45,7 @@ export function createSelectorRunner<TState, TResult, TArgs extends any[]>(
 ): SelectorRunner<TState, TResult, TArgs> {
   return new SelectorRunnerImpl(
     selector,
-    options.globalCache,
+    options.sharedCache,
     options.onSelectorActivated,
     options.onSelectorDeactivated,
     options.onExecutionResultAdded,
@@ -156,7 +156,7 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
       this.sharedCache !== undefined || onExecutionResultAdded !== undefined
         ? (result) => {
             if (this.sharedCache !== undefined) {
-              this.sharedCache.addExecutionResult(this, result);
+              this.sharedCache.addExecutionResult(result);
             }
             if (onExecutionResultAdded !== undefined) {
               onExecutionResultAdded(result);
@@ -168,7 +168,7 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
       this.sharedCache !== undefined || onExecutionResultRemoved !== undefined
         ? (result) => {
             if (this.sharedCache !== undefined) {
-              this.sharedCache.removeExecutionResult(this, result);
+              this.sharedCache.removeExecutionResult(result);
             }
             if (onExecutionResultRemoved !== undefined) {
               onExecutionResultRemoved(result);
