@@ -1,4 +1,4 @@
-import { createSelectorExecutionResultsGlobalCache } from './selector-execution-results-global-cache';
+import { createSelectorExecutionResultsSharedCache } from './selector-execution-results-shared-cache';
 import { createSelector, createSelectorContext } from './selector';
 
 describe('selector-execution-results-global-cache', () => {
@@ -9,7 +9,7 @@ describe('selector-execution-results-global-cache', () => {
       return 'something';
     });
 
-    const cache = createSelectorExecutionResultsGlobalCache();
+    const cache = createSelectorExecutionResultsSharedCache();
     cache.addExecutionResult('a', {
       selector: selectSomething,
       args: [],
@@ -30,7 +30,7 @@ describe('selector-execution-results-global-cache', () => {
       return 'something';
     });
 
-    const cache = createSelectorExecutionResultsGlobalCache();
+    const cache = createSelectorExecutionResultsSharedCache();
     const executionResult = {
       selector: selectSomething,
       args: [],
@@ -57,7 +57,7 @@ describe('selector-execution-results-global-cache', () => {
       return 'something';
     });
 
-    const cache = createSelectorExecutionResultsGlobalCache();
+    const cache = createSelectorExecutionResultsSharedCache();
     const executionResult = {
       selector: selectSomething,
       args: [],
@@ -81,7 +81,7 @@ describe('selector-execution-results-global-cache', () => {
       return 'something';
     });
 
-    const cache = createSelectorExecutionResultsGlobalCache();
+    const cache = createSelectorExecutionResultsSharedCache();
     const executionResult = {
       selector: selectSomething,
       args: [],

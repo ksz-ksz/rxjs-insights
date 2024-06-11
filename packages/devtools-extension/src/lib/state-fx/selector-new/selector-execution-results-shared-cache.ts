@@ -4,10 +4,10 @@ import { areArgsEqual } from './are-args-equal';
 import { areInputsEqual } from './are-inputs-equal';
 import { SelectorExecutionResultsCache } from './selector-execution-results-cache';
 
-export function createSelectorExecutionResultsGlobalCache<
+export function createSelectorExecutionResultsSharedCache<
   TState
->(): SelectorExecutionResultsGlobalCache<TState> {
-  return new SelectorExecutionResultsGlobalCacheImpl();
+>(): SelectorExecutionResultsSharedCache<TState> {
+  return new SelectorExecutionResultsSharedCacheImpl();
 }
 
 interface CacheEntry<TState, TResult = any, TArgs extends any[] = any[]> {
@@ -27,7 +27,7 @@ interface Cache<TState>
   ): this;
 }
 
-export interface SelectorExecutionResultsGlobalCache<TState>
+export interface SelectorExecutionResultsSharedCache<TState>
   extends SelectorExecutionResultsCache<TState> {
   addExecutionResult(
     ref: unknown,
@@ -40,8 +40,8 @@ export interface SelectorExecutionResultsGlobalCache<TState>
   ): void;
 }
 
-export class SelectorExecutionResultsGlobalCacheImpl<TState>
-  implements SelectorExecutionResultsGlobalCache<TState>
+export class SelectorExecutionResultsSharedCacheImpl<TState>
+  implements SelectorExecutionResultsSharedCache<TState>
 {
   private readonly cache: Cache<TState> = new Map();
 

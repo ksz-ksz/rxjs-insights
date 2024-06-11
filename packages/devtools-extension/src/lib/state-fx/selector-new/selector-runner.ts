@@ -9,7 +9,7 @@ import { SelectorExecutionResult } from './selector-execution-result';
 
 import { createSelectorExecutionResultsLocalCache } from './selector-execution-results-local-cache';
 import { SelectorExecutionResultsCache } from './selector-execution-results-cache';
-import { SelectorExecutionResultsGlobalCache } from './selector-execution-results-global-cache';
+import { SelectorExecutionResultsSharedCache } from './selector-execution-results-shared-cache';
 
 export interface SelectorRunner<TState, TResult, TArgs extends any[]> {
   run(state: TState, ...args: TArgs): TResult;
@@ -32,7 +32,7 @@ export interface SelectorExecutionResultCallback<
 }
 
 export interface CreateSelectorRunnerOptions<TState> {
-  globalCache?: SelectorExecutionResultsGlobalCache<TState>;
+  globalCache?: SelectorExecutionResultsSharedCache<TState>;
   onSelectorActivated?: SelectorActivationCallback<TState>;
   onSelectorDeactivated?: SelectorActivationCallback<TState>;
   onExecutionResultAdded?: SelectorExecutionResultCallback<TState>;
@@ -138,8 +138,8 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
 
   constructor(
     private readonly selector: AnySelector<TState, TResult, TArgs>,
-    private readonly globalCache:
-      | SelectorExecutionResultsGlobalCache<TState>
+    private readonly sharedCache:
+      | SelectorExecutionResultsSharedCache<TState>
       | undefined,
     private readonly onSelectorActivated:
       | SelectorActivationCallback<TState>
@@ -153,10 +153,10 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
       | undefined
   ) {
     this.executionResultAddedCallback =
-      this.globalCache !== undefined || onExecutionResultAdded !== undefined
+      this.sharedCache !== undefined || onExecutionResultAdded !== undefined
         ? (result) => {
-            if (this.globalCache !== undefined) {
-              this.globalCache.addExecutionResult(this, result);
+            if (this.sharedCache !== undefined) {
+              this.sharedCache.addExecutionResult(this, result);
             }
             if (onExecutionResultAdded !== undefined) {
               onExecutionResultAdded(result);
@@ -165,10 +165,10 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
         : undefined;
 
     this.executionResultRemovedCallback =
-      this.globalCache !== undefined || onExecutionResultRemoved !== undefined
+      this.sharedCache !== undefined || onExecutionResultRemoved !== undefined
         ? (result) => {
-            if (this.globalCache !== undefined) {
-              this.globalCache.removeExecutionResult(this, result);
+            if (this.sharedCache !== undefined) {
+              this.sharedCache.removeExecutionResult(this, result);
             }
             if (onExecutionResultRemoved !== undefined) {
               onExecutionResultRemoved(result);
@@ -183,9 +183,9 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
       prevExecutionResultsMap !== undefined
         ? createSelectorExecutionResultsLocalCache(
             prevExecutionResultsMap,
-            this.globalCache
+            this.sharedCache
           )
-        : this.globalCache;
+        : this.sharedCache;
     const context = createSelectorContext(state, cache);
     const result = this.selector(context, ...args);
 
