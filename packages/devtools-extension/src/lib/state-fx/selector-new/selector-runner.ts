@@ -1,5 +1,5 @@
 import { AnySelector, createSelectorContext } from './selector';
-import { findExecutionResultInArray } from './find-execution-resultIn-array';
+import { findExecutionResultByArgs } from './find-execution-result-by-args';
 import { SelectorExecutionResultsMap } from './selector-execution-results-map';
 import { AnySelectorExecutionResult } from './selector-execution-result';
 
@@ -63,11 +63,8 @@ function runActivationCallbackOnDiff<TState>(
     } else {
       for (const targetResult of targetResults) {
         if (
-          findExecutionResultInArray(
-            diffTargetResults,
-            targetResult.selector,
-            targetResult.args
-          ) === undefined
+          findExecutionResultByArgs(diffTargetResults, targetResult.args) ===
+          undefined
         ) {
           run(targetResult.selector, targetResult.args);
         }

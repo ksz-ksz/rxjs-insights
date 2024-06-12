@@ -1,5 +1,5 @@
 import { AnySelector, Selector, StateSelector } from './selector';
-import { findExecutionResultInArray } from './find-execution-resultIn-array';
+import { findExecutionResultByArgs } from './find-execution-result-by-args';
 import { SelectorExecutionResultsMap } from './selector-execution-results-map';
 import {
   AnySelectorExecutionResult,
@@ -30,11 +30,7 @@ export function findExecutionResult<TState, TResult, TArgs extends any[]>(
   const executionResults = executionResultsMap.get(selector);
 
   if (executionResults !== undefined) {
-    const executionResult = findExecutionResultInArray(
-      executionResults,
-      selector,
-      args
-    );
+    const executionResult = findExecutionResultByArgs(executionResults, args);
     if (executionResult !== undefined) {
       return executionResult;
     }
