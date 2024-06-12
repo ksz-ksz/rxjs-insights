@@ -16,13 +16,13 @@ interface CacheEntry<TState, TResult = any, TArgs extends any[] = any[]> {
 }
 
 interface Cache<TState>
-  extends Map<AnySelector<TState, any, any[]>, CacheEntry<TState>[]> {
+  extends Map<Selector<TState, any, any[]>, CacheEntry<TState>[]> {
   get<TResult, TArgs extends any[]>(
-    selector: AnySelector<TState, TResult, TArgs>
+    selector: Selector<TState, TResult, TArgs>
   ): CacheEntry<TState, TResult, TArgs>[] | undefined;
 
   set<TResult, TArgs extends any[]>(
-    selector: AnySelector<TState, TResult, TArgs>,
+    selector: Selector<TState, TResult, TArgs>,
     executionResults: CacheEntry<TState, TResult, TArgs>[]
   ): this;
 }

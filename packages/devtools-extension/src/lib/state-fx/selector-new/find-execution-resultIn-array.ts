@@ -1,8 +1,5 @@
 import { AnySelector } from './selector';
-import {
-  AnySelectorExecutionResult,
-  SelectorExecutionResult,
-} from './selector-execution-result';
+import { AnySelectorExecutionResult } from './selector-execution-result';
 import { areArgsEqual } from './are-args-equal';
 
 export function findExecutionResultInArray<

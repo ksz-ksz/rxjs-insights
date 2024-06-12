@@ -5,7 +5,7 @@ import {
 } from './selector-execution-result';
 import { AnySelector, Selector, StateSelector } from './selector';
 
-function isSelector<TState, TResult, TArgs extends any[]>(
+export function isSelector<TState, TResult, TArgs extends any[]>(
   selector: AnySelector<TState, TResult, TArgs>
 ): selector is Selector<TState, TResult, TArgs> {
   return selector.meta.type === 'selector';
@@ -17,7 +17,7 @@ export function isSelectorExecutionResult<TState, TResult, TArgs extends any[]>(
   return isSelector(executionResult.selector);
 }
 
-function isStateSelector<TState, TResult, TArgs extends any[]>(
+export function isStateSelector<TState, TResult, TArgs extends any[]>(
   selector: AnySelector<TState, TResult, TArgs>
 ): selector is StateSelector<TState, TResult, TArgs> {
   return selector.meta.type === 'selector';
