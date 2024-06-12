@@ -12,7 +12,6 @@ import { createSelectorRunner } from './selector-runner';
 import {
   createSelectorExecutionResultsSharedCache,
   SelectorExecutionResultsSharedCache,
-  SelectorExecutionResultsSharedCacheImpl,
 } from './selector-execution-results-shared-cache';
 import { SelectorExecutionResult } from './selector-execution-result';
 
@@ -52,7 +51,7 @@ describe('selector-runner', () => {
   function createTestSelectorExecutionResultsSharedCache<
     TState
   >(): SelectorExecutionResultsSharedCache<TState> {
-    const delegate = createSelectorExecutionResultsSharedCache();
+    const delegate = createSelectorExecutionResultsSharedCache<TState>();
     return {
       getExecutionResult<TResult, TArgs extends any[]>(
         context: SelectorContext<TState>,
@@ -153,9 +152,7 @@ describe('selector-runner', () => {
         "cache miss selectFooOrBar [\\"foo\\"] undefined",
         "selectFooOrBar run [\\"foo\\"]",
         "selectFoo run []",
-        "cache add selectN [] 0 []",
         "cache add selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache add selectFoo [] \\"foo\\" []",
         "cache add selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache add selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "runner2 run",
@@ -164,9 +161,7 @@ describe('selector-runner', () => {
         "selectFoo run []",
         "cache hit selectFooOrBar [\\"foo\\"] {\\"result\\":\\"foo\\",\\"args\\":[\\"foo\\"],\\"inputs\\":[{\\"args\\":[],\\"result\\":\\"foo\\"}]}",
         "cache hit selectRoot [] {\\"result\\":\\"foo\\",\\"args\\":[],\\"inputs\\":[{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]}",
-        "cache add selectN [] 0 []",
         "cache add selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache add selectFoo [] \\"foo\\" []",
         "cache add selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache add selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
       ]
@@ -199,9 +194,7 @@ describe('selector-runner', () => {
         "cache miss selectFooOrBar [\\"foo\\"] undefined",
         "selectFooOrBar run [\\"foo\\"]",
         "selectFoo run []",
-        "cache add selectN [] 0 []",
         "cache add selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache add selectFoo [] \\"foo\\" []",
         "cache add selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache add selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "runner2 run",
@@ -210,15 +203,11 @@ describe('selector-runner', () => {
         "selectFoo run []",
         "cache hit selectFooOrBar [\\"foo\\"] {\\"result\\":\\"foo\\",\\"args\\":[\\"foo\\"],\\"inputs\\":[{\\"args\\":[],\\"result\\":\\"foo\\"}]}",
         "cache hit selectRoot [] {\\"result\\":\\"foo\\",\\"args\\":[],\\"inputs\\":[{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]}",
-        "cache add selectN [] 0 []",
         "cache add selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache add selectFoo [] \\"foo\\" []",
         "cache add selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache add selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "runner1 dispose",
-        "cache remove selectN [] 0 []",
         "cache remove selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache remove selectFoo [] \\"foo\\" []",
         "cache remove selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache remove selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "runner3 run",
@@ -227,9 +216,7 @@ describe('selector-runner', () => {
         "selectFoo run []",
         "cache hit selectFooOrBar [\\"foo\\"] {\\"result\\":\\"foo\\",\\"args\\":[\\"foo\\"],\\"inputs\\":[{\\"args\\":[],\\"result\\":\\"foo\\"}]}",
         "cache hit selectRoot [] {\\"result\\":\\"foo\\",\\"args\\":[],\\"inputs\\":[{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]}",
-        "cache add selectN [] 0 []",
         "cache add selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache add selectFoo [] \\"foo\\" []",
         "cache add selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache add selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
       ]
@@ -264,9 +251,7 @@ describe('selector-runner', () => {
         "cache miss selectFooOrBar [\\"foo\\"] undefined",
         "selectFooOrBar run [\\"foo\\"]",
         "selectFoo run []",
-        "cache add selectN [] 0 []",
         "cache add selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache add selectFoo [] \\"foo\\" []",
         "cache add selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache add selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "runner2 run",
@@ -275,21 +260,15 @@ describe('selector-runner', () => {
         "selectFoo run []",
         "cache hit selectFooOrBar [\\"foo\\"] {\\"result\\":\\"foo\\",\\"args\\":[\\"foo\\"],\\"inputs\\":[{\\"args\\":[],\\"result\\":\\"foo\\"}]}",
         "cache hit selectRoot [] {\\"result\\":\\"foo\\",\\"args\\":[],\\"inputs\\":[{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]}",
-        "cache add selectN [] 0 []",
         "cache add selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache add selectFoo [] \\"foo\\" []",
         "cache add selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache add selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "runner1 dispose",
-        "cache remove selectN [] 0 []",
         "cache remove selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache remove selectFoo [] \\"foo\\" []",
         "cache remove selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache remove selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "runner2 dispose",
-        "cache remove selectN [] 0 []",
         "cache remove selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache remove selectFoo [] \\"foo\\" []",
         "cache remove selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache remove selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "runner3 run",
@@ -301,9 +280,7 @@ describe('selector-runner', () => {
         "cache miss selectFooOrBar [\\"foo\\"] undefined",
         "selectFooOrBar run [\\"foo\\"]",
         "selectFoo run []",
-        "cache add selectN [] 0 []",
         "cache add selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache add selectFoo [] \\"foo\\" []",
         "cache add selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache add selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
       ]
@@ -331,9 +308,7 @@ describe('selector-runner', () => {
         "cache miss selectFooOrBar [\\"foo\\"] undefined",
         "selectFooOrBar run [\\"foo\\"]",
         "selectFoo run []",
-        "cache add selectN [] 0 []",
         "cache add selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":0}]",
-        "cache add selectFoo [] \\"foo\\" []",
         "cache add selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache add selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
         "runner2 run",
@@ -343,9 +318,7 @@ describe('selector-runner', () => {
         "selectFoo run []",
         "cache hit selectFooOrBar [\\"foo\\"] {\\"result\\":\\"foo\\",\\"args\\":[\\"foo\\"],\\"inputs\\":[{\\"args\\":[],\\"result\\":\\"foo\\"}]}",
         "cache hit selectRoot [] {\\"result\\":\\"foo\\",\\"args\\":[],\\"inputs\\":[{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]}",
-        "cache add selectN [] 2 []",
         "cache add selectSource [] \\"foo\\" [{\\"args\\":[],\\"result\\":2}]",
-        "cache add selectFoo [] \\"foo\\" []",
         "cache add selectFooOrBar [\\"foo\\"] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"}]",
         "cache add selectRoot [] \\"foo\\" [{\\"args\\":[],\\"result\\":\\"foo\\"},{\\"args\\":[\\"foo\\"],\\"result\\":\\"foo\\"}]",
       ]

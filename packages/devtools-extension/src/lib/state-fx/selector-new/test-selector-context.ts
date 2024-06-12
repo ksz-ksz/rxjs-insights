@@ -7,7 +7,10 @@ import {
 } from './selector';
 import { findExecutionResult } from './find-execution-result';
 import { SelectorExecutionResultsMap } from './selector-execution-results-map';
-import { SelectorExecutionResult } from './selector-execution-result';
+import {
+  SelectorExecutionResult,
+  StateSelectorExecutionResult,
+} from './selector-execution-result';
 
 export class TestSelectorContext<TState> implements SelectorContext<TState> {
   private readonly currentExecutionResultsMap: SelectorExecutionResultsMap<TState> =
@@ -45,7 +48,6 @@ export class TestSelectorContext<TState> implements SelectorContext<TState> {
       args,
       result,
       inputs,
-      hasRun: this.shouldRun(selector, args, inputs),
     };
 
     this.currentInputs?.push(executionResult);
@@ -56,15 +58,18 @@ export class TestSelectorContext<TState> implements SelectorContext<TState> {
   runStateSelector<TResult, TArgs extends any[]>(
     selector: StateSelector<TState, TResult, TArgs>,
     args: TArgs
-  ): SelectorExecutionResult<TState, TResult, TArgs> {
+  ): StateSelectorExecutionResult<TState, TResult, TArgs> {
     const result = selector.meta.run(this.state, ...args);
 
-    const executionResult: SelectorExecutionResult<TState, TResult, TArgs> = {
+    const executionResult: StateSelectorExecutionResult<
+      TState,
+      TResult,
+      TArgs
+    > = {
       selector,
       args,
       result,
       inputs: [],
-      hasRun: false,
     };
 
     this.currentInputs?.push(executionResult);

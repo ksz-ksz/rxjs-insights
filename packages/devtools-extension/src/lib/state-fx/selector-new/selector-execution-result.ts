@@ -1,4 +1,4 @@
-import { AnySelector } from './selector';
+import { AnySelector, Selector, StateSelector } from './selector';
 
 export interface SelectorInput<
   TState,
@@ -15,8 +15,27 @@ export interface SelectorExecutionResult<
   TResult = any,
   TArgs extends any[] = any[]
 > {
-  selector: AnySelector<TState, TResult, TArgs>;
+  selector: Selector<TState, TResult, TArgs>;
   args: TArgs;
   result: TResult;
   inputs: SelectorInput<TState>[];
 }
+
+export interface StateSelectorExecutionResult<
+  TState,
+  TResult = any,
+  TArgs extends any[] = any[]
+> {
+  selector: StateSelector<TState, TResult, TArgs>;
+  args: TArgs;
+  result: TResult;
+  inputs: SelectorInput<TState>[];
+}
+
+export type AnySelectorExecutionResult<
+  TState,
+  TResult = any,
+  TArgs extends any[] = any[]
+> =
+  | SelectorExecutionResult<TState, TResult, TArgs>
+  | StateSelectorExecutionResult<TState, TResult, TArgs>;

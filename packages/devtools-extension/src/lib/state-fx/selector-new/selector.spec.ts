@@ -6,10 +6,15 @@ import {
   createStateSelector,
   Selector,
   SelectorContext,
+  StateSelector,
 } from './selector';
 import { findExecutionResult } from './find-execution-result';
 import { SelectorExecutionResultsMap } from './selector-execution-results-map';
-import { SelectorExecutionResult } from './selector-execution-result';
+import {
+  AnySelectorExecutionResult,
+  SelectorExecutionResult,
+  StateSelectorExecutionResult,
+} from './selector-execution-result';
 import { areArgsEqual } from './are-args-equal';
 import { createSelectorExecutionResultsLocalCache } from './selector-execution-results-local-cache';
 
@@ -84,9 +89,40 @@ interface TestSelectorExecutionResult<
   TArgs extends any[] = any[]
 > extends SelectorExecutionResult<TState, TResult, TArgs> {
   hasRun: boolean;
-  inputs: TestSelectorExecutionResult<TState>[];
+  inputs: TestAnySelectorExecutionResult<TState>[];
 }
 
+interface TestStateSelectorExecutionResult<
+  TState,
+  TResult = any,
+  TArgs extends any[] = any[]
+> extends StateSelectorExecutionResult<TState, TResult, TArgs> {
+  hasRun: boolean;
+  inputs: TestAnySelectorExecutionResult<TState>[];
+}
+
+type TestAnySelectorExecutionResult<
+  TState,
+  TResult = any,
+  TArgs extends any[] = any[]
+> =
+  | TestSelectorExecutionResult<TState, TResult, TArgs>
+  | TestStateSelectorExecutionResult<TState, TResult, TArgs>;
+
+function createExecutionResult<TState, TResult, TArgs extends any[]>(options: {
+  selector: Selector<TState, TResult, TArgs>;
+  args: TArgs;
+  result: TResult;
+  hasRun?: boolean;
+  inputs?: TestAnySelectorExecutionResult<TState>[];
+}): TestSelectorExecutionResult<TState, TResult, TArgs>;
+function createExecutionResult<TState, TResult, TArgs extends any[]>(options: {
+  selector: StateSelector<TState, TResult, TArgs>;
+  args: TArgs;
+  result: TResult;
+  hasRun?: boolean;
+  inputs?: undefined;
+}): TestStateSelectorExecutionResult<TState, TResult, TArgs>;
 function createExecutionResult<TState, TResult, TArgs extends any[]>({
   selector,
   args,
@@ -98,8 +134,9 @@ function createExecutionResult<TState, TResult, TArgs extends any[]>({
   args: TArgs;
   result: TResult;
   hasRun?: boolean;
-  inputs?: TestSelectorExecutionResult<TState>[];
-}): TestSelectorExecutionResult<TState, TResult, TArgs> {
+  inputs?: TestAnySelectorExecutionResult<TState>[];
+}): TestAnySelectorExecutionResult<TState, TResult, TArgs> {
+  // @ts-ignore
   return {
     selector,
     args,
@@ -110,11 +147,11 @@ function createExecutionResult<TState, TResult, TArgs extends any[]>({
 }
 
 function createExecutionResultsMap<TState>(
-  rootExecutionResult: TestSelectorExecutionResult<TState>
+  rootExecutionResult: TestAnySelectorExecutionResult<TState>
 ) {
   const executionResultsMap: SelectorExecutionResultsMap<TState> = new Map();
 
-  function visit(executionResult: TestSelectorExecutionResult<TState>) {
+  function visit(executionResult: TestAnySelectorExecutionResult<TState>) {
     if (
       findExecutionResult(
         executionResultsMap,
@@ -680,8 +717,8 @@ function fail(message: string, a: any, b: any): never {
 
 function verifyExecutionResultsEqual(
   map: SelectorExecutionResultsMap<State>,
-  a: SelectorExecutionResult<State>,
-  b: TestSelectorExecutionResult<State>,
+  a: AnySelectorExecutionResult<State>,
+  b: TestAnySelectorExecutionResult<State>,
   path: string = 'root'
 ): void {
   if (a.selector !== b.selector) {
@@ -778,58 +815,3 @@ describe('selector', () => {
     });
   }
 });
-
-// describe('selector-new', () => {
-//   it('should return correct value', () => {});
-//
-//   it('should work', () => {
-//     const ctx1 = createSelectorContext({
-//       foo: 'foo',
-//       bar: 'bar',
-//     });
-//
-//     const result1 = selectCasedFooBar(ctx1);
-//     const execution1 = ctx1.getExecutionResultsMap();
-//
-//     const ctx2 = createSelectorContext(
-//       {
-//         foo: 'FOO',
-//         bar: 'bar',
-//       },
-//       execution1
-//     );
-//
-//     const result2 = selectCasedFooBar(ctx2);
-//     const execution2 = ctx2.getExecutionResultsMap();
-//
-//     console.log({ ctx1, result1, execution1, ctx2, result2, execution2 });
-//   });
-//
-//   it('should fibonacci', () => {
-//     const selectFibonacci = createSelector(
-//       (ctx: SelectorContext<void>, i: number): number => {
-//         switch (i) {
-//           case 0:
-//             return 0;
-//           case 1:
-//             return 1;
-//           default:
-//             return selectFibonacci(ctx, i - 1) + selectFibonacci(ctx, i - 2);
-//         }
-//       }
-//     );
-//
-//     const ctx1 = createTestSelectorContext<void>(undefined);
-//     const result1 = selectFibonacci(ctx1, 5);
-//     const exec1 = ctx1.getExecutionResultsMap();
-//
-//     const ctx2 = createTestSelectorContext<void>(
-//       undefined,
-//       ctx1.getExecutionResultsMap()
-//     );
-//     const result2 = selectFibonacci(ctx2, 7);
-//     const exec2 = ctx2.getExecutionResultsMap();
-//
-//     console.log({ ctx1, result1, exec1, ctx2, result2, exec2 });
-//   });
-// });

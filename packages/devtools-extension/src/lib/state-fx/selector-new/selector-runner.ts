@@ -1,15 +1,11 @@
-import {
-  AnySelector,
-  createSelectorContext,
-  SelectorContext,
-} from './selector';
+import { AnySelector, createSelectorContext } from './selector';
 import { findExecutionResultInArray } from './find-execution-resultIn-array';
 import { SelectorExecutionResultsMap } from './selector-execution-results-map';
-import { SelectorExecutionResult } from './selector-execution-result';
+import { AnySelectorExecutionResult } from './selector-execution-result';
 
 import { createSelectorExecutionResultsLocalCache } from './selector-execution-results-local-cache';
-import { SelectorExecutionResultsCache } from './selector-execution-results-cache';
 import { SelectorExecutionResultsSharedCache } from './selector-execution-results-shared-cache';
+import { isSelectorExecutionResult } from './selector-guards';
 
 export interface SelectorRunner<TState, TResult, TArgs extends any[]> {
   run(state: TState, ...args: TArgs): TResult;
@@ -28,7 +24,7 @@ export interface SelectorExecutionResultCallback<
   TResult = any,
   TArgs extends any[] = any[]
 > {
-  (result: SelectorExecutionResult<TState, TResult, TArgs>): void;
+  (result: AnySelectorExecutionResult<TState, TResult, TArgs>): void;
 }
 
 export interface CreateSelectorRunnerOptions<TState> {
@@ -156,7 +152,9 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
       this.sharedCache !== undefined || onExecutionResultAdded !== undefined
         ? (result) => {
             if (this.sharedCache !== undefined) {
-              this.sharedCache.addExecutionResult(result);
+              if (isSelectorExecutionResult(result)) {
+                this.sharedCache.addExecutionResult(result);
+              }
             }
             if (onExecutionResultAdded !== undefined) {
               onExecutionResultAdded(result);
@@ -168,7 +166,9 @@ class SelectorRunnerImpl<TState, TResult, TArgs extends any[]>
       this.sharedCache !== undefined || onExecutionResultRemoved !== undefined
         ? (result) => {
             if (this.sharedCache !== undefined) {
-              this.sharedCache.removeExecutionResult(result);
+              if (isSelectorExecutionResult(result)) {
+                this.sharedCache.removeExecutionResult(result);
+              }
             }
             if (onExecutionResultRemoved !== undefined) {
               onExecutionResultRemoved(result);

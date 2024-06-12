@@ -1,8 +1,10 @@
 import { findExecutionResult } from './find-execution-result';
 import { SelectorExecutionResultsMap } from './selector-execution-results-map';
 import {
+  AnySelectorExecutionResult,
   SelectorExecutionResult,
   SelectorInput,
+  StateSelectorExecutionResult,
 } from './selector-execution-result';
 import { SelectorExecutionResultsCache } from './selector-execution-results-cache';
 
@@ -18,16 +20,18 @@ export interface SelectorContext<TState> {
   runStateSelector<TResult, TArgs extends any[]>(
     selector: StateSelector<TState, TResult, TArgs>,
     args: TArgs
-  ): SelectorExecutionResult<TState, TResult, TArgs>;
+  ): StateSelectorExecutionResult<TState, TResult, TArgs>;
   getExecutionResultsMap(): SelectorExecutionResultsMap<TState>;
 }
 
 export interface SelectorMetadata<TState, TResult, TArgs extends any[]> {
+  type: 'selector';
   run: RunSelector<TState, TResult, TArgs>;
   options: SelectorOptions;
 }
 
 export interface StateSelectorMetadata<TState, TResult, TArgs extends any[]> {
+  type: 'state-selector';
   run: RunStateSelector<TState, TResult, TArgs>;
   options: SelectorOptions;
 }
@@ -63,6 +67,7 @@ export function createSelector<TState, TResult, TArgs extends any[]>(
   options: SelectorOptions = {}
 ): Selector<TState, TResult, TArgs> {
   const meta: SelectorMetadata<TState, TResult, TArgs> = {
+    type: 'selector',
     run,
     options,
   };
@@ -84,6 +89,7 @@ export function createStateSelector<TState, TResult, TArgs extends any[]>(
   options: SelectorOptions = {}
 ): StateSelector<TState, TResult, TArgs> {
   const meta: StateSelectorMetadata<TState, TResult, TArgs> = {
+    type: 'state-selector',
     run,
     options,
   };
@@ -106,7 +112,7 @@ export type CurrentInputs<TState> = SelectorInput<TState>[] & {
 
 export function addExecutionResult<TState, TResult, TArgs extends any[]>(
   executionResultsMap: SelectorExecutionResultsMap<TState>,
-  executionResult: SelectorExecutionResult<TState, TResult, TArgs>
+  executionResult: AnySelectorExecutionResult<TState, TResult, TArgs>
 ) {
   const executionResults = executionResultsMap.get(executionResult.selector);
   if (executionResults !== undefined) {
@@ -198,7 +204,7 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
   runStateSelector<TResult, TArgs extends any[]>(
     selector: StateSelector<TState, TResult, TArgs>,
     args: TArgs
-  ): SelectorExecutionResult<TState, TResult, TArgs> {
+  ): StateSelectorExecutionResult<TState, TResult, TArgs> {
     const currentExecutionResult = findExecutionResult(
       this.currentExecutionResultsMap,
       selector,
@@ -219,7 +225,11 @@ class SelectorContextImpl<TState> implements SelectorContext<TState> {
     this.currentInputs = undefined;
     const result = selector.meta.run(this.state, ...args);
     this.currentInputs = prevInputs;
-    const executionResult: SelectorExecutionResult<TState, TResult, TArgs> = {
+    const executionResult: StateSelectorExecutionResult<
+      TState,
+      TResult,
+      TArgs
+    > = {
       selector,
       result,
       args,

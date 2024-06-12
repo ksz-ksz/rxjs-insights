@@ -1,13 +1,32 @@
-import { AnySelector } from './selector';
+import { AnySelector, Selector, StateSelector } from './selector';
 import { findExecutionResultInArray } from './find-execution-resultIn-array';
 import { SelectorExecutionResultsMap } from './selector-execution-results-map';
-import { SelectorExecutionResult } from './selector-execution-result';
+import {
+  AnySelectorExecutionResult,
+  SelectorExecutionResult,
+  StateSelectorExecutionResult,
+} from './selector-execution-result';
 
+export function findExecutionResult<TState, TResult, TArgs extends any[]>(
+  executionResultsMap: SelectorExecutionResultsMap<TState>,
+  selector: Selector<TState, TResult, TArgs>,
+  args: TArgs
+): SelectorExecutionResult<TState, TResult, TArgs> | undefined;
+export function findExecutionResult<TState, TResult, TArgs extends any[]>(
+  executionResultsMap: SelectorExecutionResultsMap<TState>,
+  selector: StateSelector<TState, TResult, TArgs>,
+  args: TArgs
+): StateSelectorExecutionResult<TState, TResult, TArgs> | undefined;
 export function findExecutionResult<TState, TResult, TArgs extends any[]>(
   executionResultsMap: SelectorExecutionResultsMap<TState>,
   selector: AnySelector<TState, TResult, TArgs>,
   args: TArgs
-): SelectorExecutionResult<TState, TResult, TArgs> | undefined {
+): AnySelectorExecutionResult<TState, TResult, TArgs> | undefined;
+export function findExecutionResult<TState, TResult, TArgs extends any[]>(
+  executionResultsMap: SelectorExecutionResultsMap<TState>,
+  selector: AnySelector<TState, TResult, TArgs>,
+  args: TArgs
+): AnySelectorExecutionResult<TState, TResult, TArgs> | undefined {
   const executionResults = executionResultsMap.get(selector);
 
   if (executionResults !== undefined) {
