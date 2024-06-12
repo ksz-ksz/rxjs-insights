@@ -10,6 +10,7 @@ import { SelectorExecutionResultsCache } from './selector-execution-results-cach
 
 export interface SelectorOptions {
   name?: string;
+  share?: boolean;
 }
 
 export interface SelectorContext<TState> {
@@ -30,10 +31,14 @@ export interface SelectorMetadata<TState, TResult, TArgs extends any[]> {
   options: SelectorOptions;
 }
 
+export interface StateSelectorOptions {
+  name?: string;
+}
+
 export interface StateSelectorMetadata<TState, TResult, TArgs extends any[]> {
   type: 'state-selector';
   run: RunStateSelector<TState, TResult, TArgs>;
-  options: SelectorOptions;
+  options: StateSelectorOptions;
 }
 
 export interface RunSelector<TState, TResult, TArgs extends any[]> {
@@ -86,7 +91,7 @@ export function createSelector<TState, TResult, TArgs extends any[]>(
 
 export function createStateSelector<TState, TResult, TArgs extends any[]>(
   run: RunStateSelector<TState, TResult, TArgs>,
-  options: SelectorOptions = {}
+  options: StateSelectorOptions = {}
 ): StateSelector<TState, TResult, TArgs> {
   const meta: StateSelectorMetadata<TState, TResult, TArgs> = {
     type: 'state-selector',

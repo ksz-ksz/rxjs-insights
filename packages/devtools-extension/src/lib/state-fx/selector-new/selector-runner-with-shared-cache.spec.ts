@@ -115,20 +115,20 @@ describe('selector-runner', () => {
           return selectBar(ctx);
       }
     },
-    { name: 'selectFooOrBar' }
+    { name: 'selectFooOrBar', share: true }
   );
   const selectSource = createTestSelector(
     (ctx: SelectorContext<State>) => {
       return selectN(ctx) % 2 === 0 ? 'foo' : 'bar';
     },
-    { name: 'selectSource' }
+    { name: 'selectSource', share: true }
   );
   const selectRoot = createTestSelector(
     (ctx: SelectorContext<State>) => {
       const source = selectSource(ctx);
       return selectFooOrBar(ctx, source);
     },
-    { name: 'selectRoot' }
+    { name: 'selectRoot', share: true }
   );
 
   it('should share execution results', () => {

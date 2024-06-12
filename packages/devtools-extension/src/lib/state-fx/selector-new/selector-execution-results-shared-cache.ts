@@ -44,6 +44,10 @@ export class SelectorExecutionResultsSharedCacheImpl<TState>
     selector: Selector<TState, TResult, TArgs>,
     args: TArgs
   ): SelectorExecutionResult<TState, TResult, TArgs> | undefined {
+    if (!selector.meta.options.share) {
+      return undefined;
+    }
+
     const cacheEntries = this.cache.get(selector);
 
     if (cacheEntries !== undefined) {
@@ -61,6 +65,10 @@ export class SelectorExecutionResultsSharedCacheImpl<TState>
   }
 
   addExecutionResult(executionResult: SelectorExecutionResult<TState>) {
+    if (!executionResult.selector.meta.options.share) {
+      return;
+    }
+
     const cacheEntries = this.cache.get(executionResult.selector);
 
     if (cacheEntries !== undefined) {
@@ -88,6 +96,10 @@ export class SelectorExecutionResultsSharedCacheImpl<TState>
   }
 
   removeExecutionResult(executionResult: SelectorExecutionResult<TState>) {
+    if (!executionResult.selector.meta.options.share) {
+      return;
+    }
+
     const cacheEntries = this.cache.get(executionResult.selector);
 
     if (cacheEntries !== undefined) {
